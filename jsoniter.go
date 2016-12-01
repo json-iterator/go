@@ -304,18 +304,18 @@ func appendRune(p []byte, r rune) []byte {
 	}
 }
 
-func (iter *Iterator) ReadArray() bool {
+func (iter *Iterator) ReadArray() (ret bool) {
 	iter.skipWhitespaces()
 	c := iter.readByte()
 	if iter.Error != nil {
-		return false
+		return
 	}
-	if c == '[' {
+	switch c {
+	case '[': {
 		iter.skipWhitespaces()
 		c = iter.readByte()
 		if iter.Error != nil {
-			iter.ReportError("ReadArray", "eof after [")
-			return false
+			return
 		}
 		if c == ']' {
 			return false
@@ -324,11 +324,71 @@ func (iter *Iterator) ReadArray() bool {
 			return true
 		}
 	}
-	if c == ']' {
-		return false
-	} else if c == ',' {
-		return true
+	case ']': return false
+	case ',': return true
+	default:
+		iter.ReportError("ReadArray", "expect [ or , or ]")
+		return
 	}
-	iter.ReportError("ReadArray", "expect [ or ,")
-	return false
+}
+
+func (iter *Iterator) ReadObject() (ret string) {
+	iter.skipWhitespaces()
+	c := iter.readByte()
+	if iter.Error != nil {
+		return
+	}
+	switch c {
+	case '{': {
+		iter.skipWhitespaces()
+		c = iter.readByte()
+		if iter.Error != nil {
+			return
+		}
+		switch c {
+		case '}':
+			return "" // end of object
+		case '"':
+			iter.unreadByte()
+			field := iter.readObjectField()
+			if iter.Error != nil {
+				return
+			}
+			return field
+		default:
+			iter.ReportError("ReadObject", `expect " after {`)
+			return
+		}
+	}
+	case ',':
+		iter.skipWhitespaces()
+		field := iter.readObjectField()
+		if iter.Error != nil {
+			return
+		}
+		return field
+	case '}':
+		return "" // end of object
+	default:
+		iter.ReportError("ReadObject", `expect { or , or }`)
+		return
+	}
+}
+
+func (iter *Iterator) readObjectField() (ret string) {
+	field := iter.ReadString()
+	if iter.Error != nil {
+		return
+	}
+	iter.skipWhitespaces()
+	c := iter.readByte()
+	if iter.Error != nil {
+		return
+	}
+	if c != ':' {
+		iter.ReportError("ReadObject", "expect : after object field")
+		return
+	}
+	iter.skipWhitespaces()
+	return field
 }
