@@ -15,25 +15,37 @@ type Iterator struct {
 }
 
 func Parse(reader io.Reader, bufSize int) *Iterator {
-	return &Iterator{
+	iter := &Iterator{
 		reader: reader,
 		buf: make([]byte, bufSize),
 		head: 0,
 		tail: 0,
 	}
+	iter.skipWhitespaces()
+	return iter
 }
 
 func ParseBytes(input []byte) *Iterator {
-	return &Iterator{
+	iter := &Iterator{
 		reader: nil,
 		buf: input,
 		head: 0,
 		tail: len(input),
 	}
+	iter.skipWhitespaces()
+	return iter
 }
 
 func ParseString(input string) *Iterator {
 	return ParseBytes([]byte(input))
+}
+
+func (iter *Iterator) skipWhitespaces() {
+	c := iter.readByte()
+	for c == ' ' {
+		c = iter.readByte()
+	}
+	iter.unreadByte()
 }
 
 func (iter *Iterator) ReportError(operation string, msg string) {
@@ -292,3 +304,31 @@ func appendRune(p []byte, r rune) []byte {
 	}
 }
 
+func (iter *Iterator) ReadArray() bool {
+	iter.skipWhitespaces()
+	c := iter.readByte()
+	if iter.Error != nil {
+		return false
+	}
+	if c == '[' {
+		iter.skipWhitespaces()
+		c = iter.readByte()
+		if iter.Error != nil {
+			iter.ReportError("ReadArray", "eof after [")
+			return false
+		}
+		if c == ']' {
+			return false
+		} else {
+			iter.unreadByte()
+			return true
+		}
+	}
+	if c == ']' {
+		return false
+	} else if c == ',' {
+		return true
+	}
+	iter.ReportError("ReadArray", "expect [ or ,")
+	return false
+}
