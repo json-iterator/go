@@ -43,7 +43,7 @@ func ParseString(input string) *Iterator {
 
 func (iter *Iterator) skipWhitespaces() {
 	c := iter.readByte()
-	for c == ' ' {
+	for c == ' ' || c == '\n' {
 		c = iter.readByte()
 	}
 	iter.unreadByte()
@@ -326,7 +326,9 @@ func (iter *Iterator) ReadArray() (ret bool) {
 		}
 	}
 	case ']': return false
-	case ',': return true
+	case ',':
+		iter.skipWhitespaces()
+		return true
 	default:
 		iter.ReportError("ReadArray", "expect [ or , or ]")
 		return
@@ -397,18 +399,8 @@ func (iter *Iterator) readObjectField() (ret string) {
 func (iter *Iterator) ReadFloat64() (ret float64) {
 	str := make([]byte, 0, 10)
 	for c := iter.readByte(); iter.Error == nil; c = iter.readByte() {
-		switch {
-		case c == '+':
-			fallthrough
-		case c == '-':
-			fallthrough
-		case c == '.':
-			fallthrough
-		case c == 'e':
-			fallthrough
-		case c == 'E':
-			fallthrough
-		case c > '0' && c < '9':
+		switch c {
+		case '-', '+', '.', 'e', 'E', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
 			str = append(str, c)
 		default:
 			iter.unreadByte()
@@ -429,4 +421,118 @@ func (iter *Iterator) ReadFloat64() (ret float64) {
 		return val
 	}
 	return
+}
+
+func (iter *Iterator) Skip() {
+	c := iter.readByte()
+	if iter.Error != nil {
+		return
+	}
+	switch c {
+	case '"':
+		iter.skipString()
+	case '-', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+		iter.skipNumber()
+	case '[':
+		iter.skipArray()
+	case '{':
+		iter.skipObject()
+	default:
+		iter.ReportError("Skip", fmt.Sprintf("do not know how to skip: %v", c))
+		return
+	}
+}
+
+func (iter *Iterator) skipString() {
+	for c := iter.readByte(); iter.Error == nil; c = iter.readByte() {
+		switch c {
+		case '"':
+			return // end of string found
+		case '\\':
+			iter.readByte() // " after \\ does not count
+			if iter.Error != nil {
+				return
+			}
+		}
+	}
+}
+
+func (iter *Iterator) skipNumber() {
+	for c := iter.readByte(); iter.Error == nil; c = iter.readByte() {
+		switch c {
+		case '-', '+', '.', 'e', 'E', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+			continue
+		default:
+			iter.unreadByte()
+			return
+		}
+	}
+}
+
+func (iter *Iterator) skipArray() {
+	for {
+		iter.skipWhitespaces()
+		c := iter.readByte()
+		if iter.Error != nil {
+			return
+		}
+		if c == ']' {
+			return
+		}
+		iter.unreadByte()
+		iter.Skip()
+		iter.skipWhitespaces()
+		c = iter.readByte()
+		if iter.Error != nil {
+			return
+		}
+		switch c {
+		case ',':
+			iter.skipWhitespaces()
+			continue
+		case ']':
+			return
+		default:
+			iter.ReportError("skipArray", "expects , or ]")
+			return
+		}
+	}
+}
+
+func (iter *Iterator) skipObject() {
+	for {
+		iter.skipWhitespaces()
+		c := iter.readByte()
+		if c != '"' {
+			iter.ReportError("skipObject", `expects "`)
+			return
+		}
+		iter.skipString()
+		iter.skipWhitespaces()
+		c = iter.readByte()
+		if iter.Error != nil {
+			return
+		}
+		if c != ':' {
+			iter.ReportError("skipObject", `expects :`)
+			return
+		}
+		iter.skipWhitespaces()
+		iter.Skip()
+		iter.skipWhitespaces()
+		c = iter.readByte()
+		if iter.Error != nil {
+			return
+		}
+		switch c {
+		case ',':
+			iter.skipWhitespaces()
+			continue
+		case '}':
+			return // end of object
+		default:
+			iter.ReportError("skipObject", "expects , or }")
+			return
+		}
+	}
 }
