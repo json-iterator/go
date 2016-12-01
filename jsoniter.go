@@ -4,6 +4,7 @@ import (
 	"io"
 	"fmt"
 	"unicode/utf16"
+	"strconv"
 )
 
 type Iterator struct {
@@ -391,4 +392,41 @@ func (iter *Iterator) readObjectField() (ret string) {
 	}
 	iter.skipWhitespaces()
 	return field
+}
+
+func (iter *Iterator) ReadFloat64() (ret float64) {
+	str := make([]byte, 0, 10)
+	for c := iter.readByte(); iter.Error == nil; c = iter.readByte() {
+		switch {
+		case c == '+':
+			fallthrough
+		case c == '-':
+			fallthrough
+		case c == '.':
+			fallthrough
+		case c == 'e':
+			fallthrough
+		case c == 'E':
+			fallthrough
+		case c > '0' && c < '9':
+			str = append(str, c)
+		default:
+			iter.unreadByte()
+			val, err := strconv.ParseFloat(string(str), 64)
+			if err != nil {
+				iter.Error = err
+				return
+			}
+			return val
+		}
+	}
+	if iter.Error == io.EOF {
+		val, err := strconv.ParseFloat(string(str), 64)
+		if err != nil {
+			iter.Error = err
+			return
+		}
+		return val
+	}
+	return
 }
