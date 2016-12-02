@@ -55,25 +55,29 @@ func Benchmark_jsoniter_nested(b *testing.B) {
 		for l1Field := iter.ReadObject(); l1Field != ""; l1Field = iter.ReadObject() {
 			switch l1Field {
 			case "hello":
-				l2Array := make([]Level2, 0, 2)
-				for iter.ReadArray() {
-					l2 := Level2{}
-					for l2Field := iter.ReadObject(); l2Field != ""; l2Field = iter.ReadObject() {
-						switch l2Field {
-						case "world":
-							l2.World = iter.ReadString()
-						default:
-							iter.ReportError("bind l2", "unexpected field: " + l2Field)
-						}
-					}
-					l2Array = append(l2Array, l2)
-				}
-				l1.Hello = l2Array
+				l1.Hello = readLevel1Hello(iter)
 			default:
-				iter.ReportError("bind l1", "unexpected field: " + l1Field)
+				iter.Skip()
 			}
 		}
 	}
+}
+
+func readLevel1Hello(iter *Iterator) []Level2 {
+	l2Array := make([]Level2, 0, 2)
+	for iter.ReadArray() {
+		l2 := Level2{}
+		for l2Field := iter.ReadObject(); l2Field != ""; l2Field = iter.ReadObject() {
+			switch l2Field {
+			case "world":
+				l2.World = iter.ReadString()
+			default:
+				iter.Skip()
+			}
+		}
+		l2Array = append(l2Array, l2)
+	}
+	return l2Array
 }
 
 func Benchmark_json_nested(b *testing.B) {

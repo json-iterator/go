@@ -45,8 +45,28 @@ func Test_skip_array(t *testing.T) {
 	}
 }
 
+func Test_skip_empty_array(t *testing.T) {
+	iter := ParseString(`[ [ ], "b"]`)
+	iter.ReadArray()
+	iter.Skip()
+	iter.ReadArray()
+	if iter.ReadString() != "b" {
+		t.FailNow()
+	}
+}
+
 func Test_skip_object(t *testing.T) {
 	iter := ParseString(`[ {"a" : {"b": "c"}, "d": 102 }, "b"]`)
+	iter.ReadArray()
+	iter.Skip()
+	iter.ReadArray()
+	if iter.ReadString() != "b" {
+		t.FailNow()
+	}
+}
+
+func Test_skip_empty_object(t *testing.T) {
+	iter := ParseString(`[ { }, "b"]`)
 	iter.ReadArray()
 	iter.Skip()
 	iter.ReadArray()
@@ -70,16 +90,13 @@ type TestResp struct {
 }
 
 func Benchmark_jsoniter_skip(b *testing.B) {
-	for n := 0; n < b.N; n++ {
-		result := TestResp{}
-		iter := ParseString(`
+	input := []byte(`
 {
     "_shards":{
         "total" : 5,
         "successful" : 5,
         "failed" : 0
     },
-    "code": 200,
     "hits":{
         "total" : 1,
         "hits" : [
@@ -94,8 +111,12 @@ func Benchmark_jsoniter_skip(b *testing.B) {
                 }
             }
         ]
-    }
+    },
+    "code": 200
 }`)
+	for n := 0; n < b.N; n++ {
+		result := TestResp{}
+		iter := ParseBytes(input)
 		for field := iter.ReadObject(); field != ""; field = iter.ReadObject() {
 			switch field {
 			case "code":
@@ -108,16 +129,13 @@ func Benchmark_jsoniter_skip(b *testing.B) {
 }
 
 func Benchmark_json_skip(b *testing.B) {
-	for n := 0; n < b.N; n++ {
-		result := TestResp{}
-		json.Unmarshal([]byte(`
+	input := []byte(`
 {
     "_shards":{
         "total" : 5,
         "successful" : 5,
         "failed" : 0
     },
-    "code": 200,
     "hits":{
         "total" : 1,
         "hits" : [
@@ -132,7 +150,11 @@ func Benchmark_json_skip(b *testing.B) {
                 }
             }
         ]
-    }
-}`), &result)
+    },
+    "code": 200
+}`)
+	for n := 0; n < b.N; n++ {
+		result := TestResp{}
+		json.Unmarshal(input, &result)
 	}
 }

@@ -50,7 +50,12 @@ func (iter *Iterator) skipWhitespaces() {
 }
 
 func (iter *Iterator) ReportError(operation string, msg string) {
-	iter.Error = fmt.Errorf("%s: %s, parsing %v at %s", operation, msg, iter.head, string(iter.buf[0:iter.tail]))
+	peekStart := iter.head - 10
+	if peekStart < 0 {
+		peekStart = 0
+	}
+	iter.Error = fmt.Errorf("%s: %s, parsing %v ...%s... at %s", operation, msg, iter.head,
+		string(iter.buf[peekStart: iter.head]), string(iter.buf[0:iter.tail]))
 }
 
 func (iter *Iterator) readByte() (ret byte) {
@@ -150,8 +155,17 @@ func (iter *Iterator) ReadString() (ret string) {
 	if iter.Error != nil {
 		return
 	}
-	if c != '"' {
-		iter.ReportError("ReadString", "expects quote")
+	switch c {
+	case 'n':
+		iter.skipNull()
+		if iter.Error != nil {
+			return
+		}
+		return ""
+	case '"':
+		// nothing
+	default:
+		iter.ReportError("ReadString", `expects " or n`)
 		return
 	}
 	for {
@@ -312,6 +326,13 @@ func (iter *Iterator) ReadArray() (ret bool) {
 		return
 	}
 	switch c {
+	case 'n': {
+		iter.skipNull()
+		if iter.Error != nil {
+			return
+		}
+		return false // null
+	}
 	case '[': {
 		iter.skipWhitespaces()
 		c = iter.readByte()
@@ -330,7 +351,7 @@ func (iter *Iterator) ReadArray() (ret bool) {
 		iter.skipWhitespaces()
 		return true
 	default:
-		iter.ReportError("ReadArray", "expect [ or , or ]")
+		iter.ReportError("ReadArray", "expect [ or , or ] or n")
 		return
 	}
 }
@@ -342,6 +363,13 @@ func (iter *Iterator) ReadObject() (ret string) {
 		return
 	}
 	switch c {
+	case 'n': {
+		iter.skipNull()
+		if iter.Error != nil {
+			return
+		}
+		return "" // null
+	}
 	case '{': {
 		iter.skipWhitespaces()
 		c = iter.readByte()
@@ -373,7 +401,7 @@ func (iter *Iterator) ReadObject() (ret string) {
 	case '}':
 		return "" // end of object
 	default:
-		iter.ReportError("ReadObject", `expect { or , or }`)
+		iter.ReportError("ReadObject", `expect { or , or } or n`)
 		return
 	}
 }
@@ -423,6 +451,135 @@ func (iter *Iterator) ReadFloat64() (ret float64) {
 	return
 }
 
+func (iter *Iterator) ReadBool() (ret bool) {
+	c := iter.readByte()
+	if iter.Error != nil {
+		return
+	}
+	switch c {
+	case 't':
+		iter.skipTrue()
+		if iter.Error != nil {
+			return
+		}
+		return true
+	case 'f':
+		iter.skipFalse()
+		if iter.Error != nil {
+			return
+		}
+		return false
+	default:
+		iter.ReportError("ReadBool", "expect t or f")
+		return
+	}
+}
+
+func (iter *Iterator) skipTrue() {
+	c := iter.readByte()
+	if iter.Error != nil {
+		return
+	}
+	if c != 'r' {
+		iter.ReportError("skipTrue", "expect r of true")
+		return
+	}
+	c = iter.readByte()
+	if iter.Error != nil {
+		return
+	}
+	if c != 'u' {
+		iter.ReportError("skipTrue", "expect u of true")
+		return
+	}
+	c = iter.readByte()
+	if iter.Error != nil {
+		return
+	}
+	if c != 'e' {
+		iter.ReportError("skipTrue", "expect e of true")
+		return
+	}
+}
+
+func (iter *Iterator) skipFalse() {
+	c := iter.readByte()
+	if iter.Error != nil {
+		return
+	}
+	if c != 'a' {
+		iter.ReportError("skipFalse", "expect a of false")
+		return
+	}
+	c = iter.readByte()
+	if iter.Error != nil {
+		return
+	}
+	if c != 'l' {
+		iter.ReportError("skipFalse", "expect l of false")
+		return
+	}
+	c = iter.readByte()
+	if iter.Error != nil {
+		return
+	}
+	if c != 's' {
+		iter.ReportError("skipFalse", "expect s of false")
+		return
+	}
+	c = iter.readByte()
+	if iter.Error != nil {
+		return
+	}
+	if c != 'e' {
+		iter.ReportError("skipFalse", "expect e of false")
+		return
+	}
+}
+
+func (iter *Iterator) ReadNull() (ret bool) {
+	c := iter.readByte()
+	if iter.Error != nil {
+		return
+	}
+	if c == 'n' {
+		iter.skipNull()
+		if iter.Error != nil {
+			return
+		}
+		return true
+	}
+	iter.unreadByte()
+	return false
+}
+
+func (iter *Iterator) skipNull() {
+	c := iter.readByte()
+	if iter.Error != nil {
+		return
+	}
+	if c != 'u' {
+		iter.ReportError("skipNull", "expect u of null")
+		return
+	}
+	c = iter.readByte()
+	if iter.Error != nil {
+		return
+	}
+	if c != 'l' {
+		iter.ReportError("skipNull", "expect l of null")
+		return
+	}
+	c = iter.readByte()
+	if iter.Error != nil {
+		return
+	}
+	if c != 'l' {
+		iter.ReportError("skipNull", "expect l of null")
+		return
+	}
+}
+
 func (iter *Iterator) Skip() {
 	c := iter.readByte()
 	if iter.Error != nil {
@@ -437,6 +594,12 @@ func (iter *Iterator) Skip() {
 		iter.skipArray()
 	case '{':
 		iter.skipObject()
+	case 't':
+		iter.skipTrue()
+	case 'f':
+		iter.skipFalse()
+	case 'n':
+		iter.skipNull()
 	default:
 		iter.ReportError("Skip", fmt.Sprintf("do not know how to skip: %v", c))
 		return
@@ -500,9 +663,22 @@ func (iter *Iterator) skipArray() {
 }
 
 func (iter *Iterator) skipObject() {
+	iter.skipWhitespaces()
+	c := iter.readByte()
+	if iter.Error != nil {
+		return
+	}
+	if c == '}' {
+		return // end of object
+	} else {
+		iter.unreadByte()
+	}
 	for {
 		iter.skipWhitespaces()
 		c := iter.readByte()
+		if iter.Error != nil {
+			return
+		}
 		if c != '"' {
 			iter.ReportError("skipObject", `expects "`)
 			return
