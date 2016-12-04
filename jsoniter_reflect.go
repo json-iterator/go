@@ -26,6 +26,69 @@ func (decoder *intDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 	*((*int)(ptr)) = iter.ReadInt()
 }
 
+type int8Decoder struct {
+}
+
+func (decoder *int8Decoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+	*((*int8)(ptr)) = iter.ReadInt8()
+}
+
+type int16Decoder struct {
+}
+
+func (decoder *int16Decoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+	*((*int16)(ptr)) = iter.ReadInt16()
+}
+
+type int32Decoder struct {
+}
+
+func (decoder *int32Decoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+	*((*int32)(ptr)) = iter.ReadInt32()
+}
+
+type int64Decoder struct {
+}
+
+func (decoder *int64Decoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+	*((*int64)(ptr)) = iter.ReadInt64()
+}
+
+type uintDecoder struct {
+}
+
+func (decoder *uintDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+	*((*uint)(ptr)) = iter.ReadUint()
+}
+
+type uint8Decoder struct {
+}
+
+func (decoder *uint8Decoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+	*((*uint8)(ptr)) = iter.ReadUint8()
+}
+
+type uint16Decoder struct {
+}
+
+func (decoder *uint16Decoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+	*((*uint16)(ptr)) = iter.ReadUint16()
+}
+
+type uint32Decoder struct {
+}
+
+func (decoder *uint32Decoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+	*((*uint32)(ptr)) = iter.ReadUint32()
+}
+
+type uint64Decoder struct {
+}
+
+func (decoder *uint64Decoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+	*((*uint64)(ptr)) = iter.ReadUint64()
+}
+
 type optionalDecoder struct {
 	valueType reflect.Type
 	valueDecoder Decoder
@@ -195,6 +258,24 @@ func decoderOfPtr(type_ reflect.Type) (Decoder, error) {
 		return &stringDecoder{}, nil
 	case reflect.Int:
 		return &intDecoder{}, nil
+	case reflect.Int8:
+		return &int8Decoder{}, nil
+	case reflect.Int16:
+		return &int16Decoder{}, nil
+	case reflect.Int32:
+		return &int32Decoder{}, nil
+	case reflect.Int64:
+		return &int64Decoder{}, nil
+	case reflect.Uint:
+		return &uintDecoder{}, nil
+	case reflect.Uint8:
+		return &uint8Decoder{}, nil
+	case reflect.Uint16:
+		return &uint16Decoder{}, nil
+	case reflect.Uint32:
+		return &uint32Decoder{}, nil
+	case reflect.Uint64:
+		return &uint64Decoder{}, nil
 	case reflect.Struct:
 		return decoderOfStruct(type_)
 	case reflect.Slice:

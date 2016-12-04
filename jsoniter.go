@@ -95,6 +95,46 @@ const cutoffUint64 = maxUint64 / 10 + 1
 const maxUint32 = (1 << 32 - 1)
 const cutoffUint32 = maxUint32 / 10 + 1
 
+func (iter *Iterator) ReadUint() (ret uint) {
+	val := iter.ReadUint64()
+	converted := uint(val)
+	if uint64(converted) != val {
+		iter.ReportError("ReadUint", "int overflow")
+		return
+	}
+	return converted
+}
+
+func (iter *Iterator) ReadUint8() (ret uint8) {
+	val := iter.ReadUint64()
+	converted := uint8(val)
+	if uint64(converted) != val {
+		iter.ReportError("ReadUint8", "int overflow")
+		return
+	}
+	return converted
+}
+
+func (iter *Iterator) ReadUint16() (ret uint16) {
+	val := iter.ReadUint64()
+	converted := uint16(val)
+	if uint64(converted) != val {
+		iter.ReportError("ReadUint16", "int overflow")
+		return
+	}
+	return converted
+}
+
+func (iter *Iterator) ReadUint32() (ret uint32) {
+	val := iter.ReadUint64()
+	converted := uint32(val)
+	if uint64(converted) != val {
+		iter.ReportError("ReadUint32", "int overflow")
+		return
+	}
+	return converted
+}
+
 func (iter *Iterator) ReadUint64() (ret uint64) {
 	c := iter.readByte()
 	if iter.Error != nil {
@@ -137,6 +177,36 @@ func (iter *Iterator) ReadInt() (ret int) {
 	converted := int(val)
 	if int64(converted) != val {
 		iter.ReportError("ReadInt", "int overflow")
+		return
+	}
+	return converted
+}
+
+func (iter *Iterator) ReadInt8() (ret int8) {
+	val := iter.ReadInt64()
+	converted := int8(val)
+	if int64(converted) != val {
+		iter.ReportError("ReadInt8", "int overflow")
+		return
+	}
+	return converted
+}
+
+func (iter *Iterator) ReadInt16() (ret int16) {
+	val := iter.ReadInt64()
+	converted := int16(val)
+	if int64(converted) != val {
+		iter.ReportError("ReadInt16", "int overflow")
+		return
+	}
+	return converted
+}
+
+func (iter *Iterator) ReadInt32() (ret int32) {
+	val := iter.ReadInt64()
+	converted := int32(val)
+	if int64(converted) != val {
+		iter.ReportError("ReadInt32", "int overflow")
 		return
 	}
 	return converted
