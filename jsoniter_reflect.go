@@ -19,15 +19,18 @@ func (decoder *stringDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 	*((*string)(ptr)) = iter.ReadString()
 }
 
-type stringOptionalDecoder struct {
+type optionalDecoder struct {
+	valueType reflect.Type
+	valueDecoder Decoder
 }
 
-func (decoder *stringOptionalDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (decoder *optionalDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 	if iter.ReadNull() {
-		*((**string)(ptr)) = nil
+		*((*unsafe.Pointer)(ptr)) = nil
 	} else {
-		result := iter.ReadString()
-		*((**string)(ptr)) = &result
+		value := reflect.New(decoder.valueType)
+		decoder.valueDecoder.decode(unsafe.Pointer(value.Pointer()), iter)
+		*((*uintptr)(ptr)) = value.Pointer()
 	}
 }
 
@@ -56,34 +59,88 @@ func (decoder *structFieldDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 	decoder.fieldDecoder.decode(unsafe.Pointer(fieldPtr), iter)
 }
 
-var DECODER_STRING *stringDecoder
-var DECODER_OPTIONAL_STRING *stringOptionalDecoder
-var DECODERS_STRUCT unsafe.Pointer
+type sliceDecoder struct {
+	sliceType    reflect.Type
+	elemType    reflect.Type
+	elemDecoder Decoder
+}
 
-func addStructDecoderToCache(cacheKey string, decoder *structDecoder) {
+// sliceHeader is a safe version of SliceHeader used within this package.
+type sliceHeader struct {
+	Data unsafe.Pointer
+	Len  int
+	Cap  int
+}
+
+func (decoder *sliceDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+	slice := (*sliceHeader)(ptr)
+	slice.Len = 0
+	for iter.ReadArray() {
+		offset := uintptr(slice.Len) * decoder.elemType.Size()
+		growOne(slice, decoder.sliceType, decoder.elemType)
+		dataPtr := uintptr(slice.Data) + offset
+		decoder.elemDecoder.decode(unsafe.Pointer(dataPtr), iter)
+	}
+}
+
+// grow grows the slice s so that it can hold extra more values, allocating
+// more capacity if needed. It also returns the old and new slice lengths.
+func growOne(slice *sliceHeader, sliceType reflect.Type, elementType reflect.Type) {
+	newLen := slice.Len + 1
+	if newLen <= slice.Cap {
+		slice.Len = newLen
+		return
+	}
+	newCap := slice.Cap
+	if newCap == 0 {
+		newCap = 1
+	} else {
+		for newCap < newLen {
+			if slice.Len < 1024 {
+				newCap += newCap
+			} else {
+				newCap += newCap / 4
+			}
+		}
+	}
+	dst := unsafe.Pointer(reflect.MakeSlice(sliceType, newLen, newCap).Pointer())
+	originalBytesCount := uintptr(slice.Len) * elementType.Size()
+	srcPtr := (*[1<<30]byte)(slice.Data)
+	dstPtr := (*[1<<30]byte)(dst)
+	for i := uintptr(0); i < originalBytesCount; i++ {
+		dstPtr[i] = srcPtr[i]
+	}
+	slice.Len = newLen
+	slice.Cap = newCap
+	slice.Data = dst
+}
+
+var DECODER_STRING *stringDecoder
+var DECODERS unsafe.Pointer
+
+func addDecoderToCache(cacheKey string, decoder Decoder) {
 	retry := true
 	for retry {
-		ptr := atomic.LoadPointer(&DECODERS_STRUCT)
-		cache := *(*map[string]*structDecoder)(ptr)
-		copy := map[string]*structDecoder{}
+		ptr := atomic.LoadPointer(&DECODERS)
+		cache := *(*map[string]Decoder)(ptr)
+		copy := map[string]Decoder{}
 		for k, v := range cache {
 			copy[k] = v
 		}
 		copy[cacheKey] = decoder
-		retry = !atomic.CompareAndSwapPointer(&DECODERS_STRUCT, ptr, unsafe.Pointer(&copy))
+		retry = !atomic.CompareAndSwapPointer(&DECODERS, ptr, unsafe.Pointer(&copy))
 	}
 }
 
-func getStructDecoderFromCache(cacheKey string) *structDecoder {
-	ptr := atomic.LoadPointer(&DECODERS_STRUCT)
-	cache := *(*map[string]*structDecoder)(ptr)
+func getDecoderFromCache(cacheKey string) Decoder {
+	ptr := atomic.LoadPointer(&DECODERS)
+	cache := *(*map[string]Decoder)(ptr)
 	return cache[cacheKey]
 }
 
 func init() {
 	DECODER_STRING = &stringDecoder{}
-	DECODER_OPTIONAL_STRING = &stringOptionalDecoder{}
-	atomic.StorePointer(&DECODERS_STRUCT, unsafe.Pointer(&map[string]*structDecoder{}))
+	atomic.StorePointer(&DECODERS, unsafe.Pointer(&map[string]Decoder{}))
 }
 
 // emptyInterface is the header for an interface{} value.
@@ -94,13 +151,19 @@ type emptyInterface struct {
 
 func (iter *Iterator) Read(obj interface{}) {
 	type_ := reflect.TypeOf(obj)
-	decoder, err := decoderOfType(type_)
-	if err != nil {
-		iter.Error = err
-		return
+	cacheKey := type_.String()
+	cachedDecoder := getDecoderFromCache(cacheKey)
+	if cachedDecoder == nil {
+		decoder, err := decoderOfType(type_)
+		if err != nil {
+			iter.Error = err
+			return
+		}
+		cachedDecoder = decoder
+		addDecoderToCache(cacheKey, decoder)
 	}
 	e := (*emptyInterface)(unsafe.Pointer(&obj))
-	decoder.decode(e.word, iter)
+	cachedDecoder.decode(e.word, iter)
 }
 
 type prefix string
@@ -139,7 +202,7 @@ func decoderOfPtr(type_ reflect.Type) (Decoder, error) {
 func decoderOfOptional(type_ reflect.Type) (Decoder, error) {
 	switch type_.Kind() {
 	case reflect.String:
-		return DECODER_OPTIONAL_STRING, nil
+		return &optionalDecoder{type_, DECODER_STRING}, nil
 	default:
 		return nil, errors.New("expect string")
 	}
@@ -147,25 +210,22 @@ func decoderOfOptional(type_ reflect.Type) (Decoder, error) {
 
 
 func decoderOfStruct(type_ reflect.Type) (Decoder, error) {
-	cacheKey := type_.String()
-	cachedDecoder := getStructDecoderFromCache(cacheKey)
-	if cachedDecoder == nil {
-		fields := map[string]Decoder{}
-		for i := 0; i < type_.NumField(); i++ {
-			field := type_.Field(i)
-			decoder, err := decoderOfPtr(field.Type)
-			if err != nil {
-				return prefix(fmt.Sprintf("[%s]", field.Name)).addTo(decoder, err)
-			}
-			fields[field.Name] = &structFieldDecoder{field.Offset, decoder}
+	fields := map[string]Decoder{}
+	for i := 0; i < type_.NumField(); i++ {
+		field := type_.Field(i)
+		decoder, err := decoderOfPtr(field.Type)
+		if err != nil {
+			return prefix(fmt.Sprintf("{%s}", field.Name)).addTo(decoder, err)
 		}
-		cachedDecoder = &structDecoder{fields}
-		addStructDecoderToCache(cacheKey, cachedDecoder)
+		fields[field.Name] = &structFieldDecoder{field.Offset, decoder}
 	}
-	return cachedDecoder, nil
+	return &structDecoder{fields}, nil
 }
 
 func decoderOfSlice(type_ reflect.Type) (Decoder, error) {
-	fmt.Println(type_.Elem())
-	return nil, errors.New("n/a")
+	decoder, err := decoderOfPtr(type_.Elem())
+	if err != nil {
+		return prefix("[elem]").addTo(decoder, err)
+	}
+	return &sliceDecoder{type_, type_.Elem(), decoder}, nil
 }

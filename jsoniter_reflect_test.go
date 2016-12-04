@@ -11,6 +11,16 @@ func Test_reflect_str(t *testing.T) {
 	str := ""
 	iter.Read(&str)
 	if str != "hello" {
+		fmt.Println(iter.Error)
+		t.Fatal(str)
+	}
+}
+
+func Test_reflect_ptr_str(t *testing.T) {
+	iter := ParseString(`"hello"`)
+	var str *string
+	iter.Read(&str)
+	if *str != "hello" {
 		t.Fatal(str)
 	}
 }
@@ -53,9 +63,9 @@ func Test_reflect_struct_string_ptr(t *testing.T) {
 	}
 }
 
-func Test_reflect_array(t *testing.T) {
-	iter := ParseString(`{"hello", "world"}`)
-	array := []string{}
+func Test_reflect_slice(t *testing.T) {
+	iter := ParseString(`["hello", "world"]`)
+	array := make([]string, 0, 1)
 	iter.Read(&array)
 	if len(array) != 2 {
 		fmt.Println(iter.Error)
@@ -74,26 +84,34 @@ func Test_reflect_array(t *testing.T) {
 func Benchmark_jsoniter_reflect(b *testing.B) {
 	b.ReportAllocs()
 	for n := 0; n < b.N; n++ {
-		iter := ParseString(`{"field1": "hello", "field2": "world"}`)
-		struct_ := StructOfString{}
-		iter.Read(&struct_)
+		//iter := ParseString(`{"field1": "hello", "field2": "world"}`)
+		//struct_ := StructOfString{}
+		//iter.Read(&struct_)
+		iter := ParseString(`["hello", "world"]`)
+		array := make([]string, 0, 1)
+		iter.Read(&array)
 	}
 }
 
 func Benchmark_jsoniter_direct(b *testing.B) {
 	b.ReportAllocs()
 	for n := 0; n < b.N; n++ {
-		iter := ParseString(`{"field1": "hello", "field2": "world"}`)
-		struct_ := StructOfString{}
-		for field := iter.ReadObject(); field != ""; field = iter.ReadObject() {
-			switch field {
-			case "field1":
-				struct_.field1 = iter.ReadString()
-			case "field2":
-				struct_.field2 = iter.ReadString()
-			default:
-				iter.Skip()
-			}
+		//iter := ParseString(`{"field1": "hello", "field2": "world"}`)
+		//struct_ := StructOfString{}
+		//for field := iter.ReadObject(); field != ""; field = iter.ReadObject() {
+		//	switch field {
+		//	case "field1":
+		//		struct_.field1 = iter.ReadString()
+		//	case "field2":
+		//		struct_.field2 = iter.ReadString()
+		//	default:
+		//		iter.Skip()
+		//	}
+		//}
+		iter := ParseString(`["hello", "world"]`)
+		array := make([]string, 0, 2)
+		for iter.ReadArray() {
+			array = append(array, iter.ReadString())
 		}
 	}
 }
@@ -101,7 +119,9 @@ func Benchmark_jsoniter_direct(b *testing.B) {
 func Benchmark_json_reflect(b *testing.B) {
 	b.ReportAllocs()
 	for n := 0; n < b.N; n++ {
-		struct_ := StructOfString{}
-		json.Unmarshal([]byte(`{"field1": "hello", "field2": "world"}`), &struct_)
+		//struct_ := StructOfString{}
+		//json.Unmarshal([]byte(`{"field1": "hello", "field2": "world"}`), &struct_)
+		array := make([]string, 0, 2)
+		json.Unmarshal([]byte(`["hello", "world"]`), &array)
 	}
 }
