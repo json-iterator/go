@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"unsafe"
 	"sync/atomic"
+	"strings"
 )
 
 type Decoder interface {
@@ -108,6 +109,24 @@ type boolDecoder struct {
 
 func (decoder *boolDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 	*((*bool)(ptr)) = iter.ReadBool()
+}
+
+type stringNumberDecoder struct {
+	elemDecoder Decoder
+}
+
+func (decoder *stringNumberDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+	c := iter.readByte()
+	if c != '"' {
+		iter.ReportError("stringNumberDecoder", `expect "`)
+		return
+	}
+	decoder.elemDecoder.decode(ptr, iter)
+	c = iter.readByte()
+	if c != '"' {
+		iter.ReportError("stringNumberDecoder", `expect "`)
+		return
+	}
 }
 
 type optionalDecoder struct {
@@ -327,11 +346,21 @@ func decoderOfStruct(type_ reflect.Type) (Decoder, error) {
 	fields := map[string]Decoder{}
 	for i := 0; i < type_.NumField(); i++ {
 		field := type_.Field(i)
+		tagParts := strings.Split(field.Tag.Get("json"), ",")
+		jsonFieldName := tagParts[0]
+		if jsonFieldName == "" {
+			jsonFieldName = field.Name
+		}
 		decoder, err := decoderOfPtr(field.Type)
 		if err != nil {
 			return prefix(fmt.Sprintf("{%s}", field.Name)).addTo(decoder, err)
 		}
-		fields[field.Name] = &structFieldDecoder{field.Offset, decoder}
+		if len(tagParts) > 1 && tagParts[1] == "string" {
+			decoder = &stringNumberDecoder{decoder}
+		}
+		if jsonFieldName != "-" {
+			fields[jsonFieldName] = &structFieldDecoder{field.Offset, decoder}
+		}
 	}
 	return &structDecoder{fields}, nil
 }

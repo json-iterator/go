@@ -188,7 +188,32 @@ func Test_reflect_struct_string_ptr(t *testing.T) {
 	}
 	if *struct_.field2 != "world" {
 		fmt.Println(iter.Error)
+		t.Fatal(struct_.field2)
+	}
+}
+
+
+type StructOfTag struct {
+	field1 string `json:"field-1"`
+	field2 string `json:"-"`
+	field3 int `json:",string"`
+}
+
+func Test_reflect_struct_tag_field(t *testing.T) {
+	iter := ParseString(`{"field-1": "hello", "field2": "", "field3": "100"}`)
+	struct_ := StructOfTag{field2: "world"}
+	iter.Read(&struct_)
+	if struct_.field1 != "hello" {
+		fmt.Println(iter.Error)
 		t.Fatal(struct_.field1)
+	}
+	if struct_.field2 != "world" {
+		fmt.Println(iter.Error)
+		t.Fatal(struct_.field2)
+	}
+	if struct_.field3 != 100 {
+		fmt.Println(iter.Error)
+		t.Fatal(struct_.field3)
 	}
 }
 
@@ -235,12 +260,12 @@ func Test_reflect_nested(t *testing.T) {
 func Benchmark_jsoniter_reflect(b *testing.B) {
 	b.ReportAllocs()
 	for n := 0; n < b.N; n++ {
-		//iter := ParseString(`{"field1": "hello", "field2": "world"}`)
-		//struct_ := StructOfString{}
-		//iter.Read(&struct_)
-		iter := ParseString(`["hello", "world"]`)
-		array := make([]string, 0, 1)
-		iter.Read(&array)
+		iter := ParseString(`{"field3": "100"}`)
+		struct_ := StructOfTag{}
+		iter.Read(&struct_)
+		//iter := ParseString(`["hello", "world"]`)
+		//array := make([]string, 0, 1)
+		//iter.Read(&array)
 	}
 }
 
@@ -270,9 +295,9 @@ func Benchmark_jsoniter_direct(b *testing.B) {
 func Benchmark_json_reflect(b *testing.B) {
 	b.ReportAllocs()
 	for n := 0; n < b.N; n++ {
-		//struct_ := StructOfString{}
-		//json.Unmarshal([]byte(`{"field1": "hello", "field2": "world"}`), &struct_)
-		array := make([]string, 0, 2)
-		json.Unmarshal([]byte(`["hello", "world"]`), &array)
+		struct_ := StructOfTag{}
+		json.Unmarshal([]byte(`{"field3": "100"}`), &struct_)
+		//array := make([]string, 0, 2)
+		//json.Unmarshal([]byte(`["hello", "world"]`), &array)
 	}
 }
