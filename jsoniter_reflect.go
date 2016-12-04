@@ -19,6 +19,18 @@ func (decoder *stringDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 	*((*string)(ptr)) = iter.ReadString()
 }
 
+type stringOptionalDecoder struct {
+}
+
+func (decoder *stringOptionalDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+	if iter.ReadNull() {
+		*((**string)(ptr)) = nil
+	} else {
+		result := iter.ReadString()
+		*((**string)(ptr)) = &result
+	}
+}
+
 type structDecoder struct {
 	fields map[string]Decoder
 }
@@ -45,10 +57,32 @@ func (decoder *structFieldDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 }
 
 var DECODER_STRING *stringDecoder
+var DECODER_OPTIONAL_STRING *stringOptionalDecoder
 var DECODERS_STRUCT unsafe.Pointer
+
+func addStructDecoderToCache(cacheKey string, decoder *structDecoder) {
+	retry := true
+	for retry {
+		ptr := atomic.LoadPointer(&DECODERS_STRUCT)
+		cache := *(*map[string]*structDecoder)(ptr)
+		copy := map[string]*structDecoder{}
+		for k, v := range cache {
+			copy[k] = v
+		}
+		copy[cacheKey] = decoder
+		retry = !atomic.CompareAndSwapPointer(&DECODERS_STRUCT, ptr, unsafe.Pointer(&copy))
+	}
+}
+
+func getStructDecoderFromCache(cacheKey string) *structDecoder {
+	ptr := atomic.LoadPointer(&DECODERS_STRUCT)
+	cache := *(*map[string]*structDecoder)(ptr)
+	return cache[cacheKey]
+}
 
 func init() {
 	DECODER_STRING = &stringDecoder{}
+	DECODER_OPTIONAL_STRING = &stringOptionalDecoder{}
 	atomic.StorePointer(&DECODERS_STRUCT, unsafe.Pointer(&map[string]*structDecoder{}))
 }
 
@@ -93,10 +127,24 @@ func decoderOfPtr(type_ reflect.Type) (Decoder, error) {
 		return DECODER_STRING, nil
 	case reflect.Struct:
 		return decoderOfStruct(type_)
+	case reflect.Slice:
+		return decoderOfSlice(type_)
+	case reflect.Ptr:
+		return prefix("optional").addTo(decoderOfOptional(type_.Elem()))
+	default:
+		return nil, errors.New("expect string, struct, slice")
+	}
+}
+
+func decoderOfOptional(type_ reflect.Type) (Decoder, error) {
+	switch type_.Kind() {
+	case reflect.String:
+		return DECODER_OPTIONAL_STRING, nil
 	default:
 		return nil, errors.New("expect string")
 	}
 }
+
 
 func decoderOfStruct(type_ reflect.Type) (Decoder, error) {
 	cacheKey := type_.String()
@@ -117,23 +165,7 @@ func decoderOfStruct(type_ reflect.Type) (Decoder, error) {
 	return cachedDecoder, nil
 }
 
-func addStructDecoderToCache(cacheKey string, decoder *structDecoder) {
-	retry := true
-	for retry {
-		ptr := atomic.LoadPointer(&DECODERS_STRUCT)
-		cache := *(*map[string]*structDecoder)(ptr)
-		copy := map[string]*structDecoder{}
-		for k, v := range cache {
-			copy[k] = v
-		}
-		copy[cacheKey] = decoder
-		retry = !atomic.CompareAndSwapPointer(&DECODERS_STRUCT, ptr, unsafe.Pointer(&copy))
-	}
+func decoderOfSlice(type_ reflect.Type) (Decoder, error) {
+	fmt.Println(type_.Elem())
+	return nil, errors.New("n/a")
 }
-
-func getStructDecoderFromCache(cacheKey string) *structDecoder {
-	ptr := atomic.LoadPointer(&DECODERS_STRUCT)
-	cache := *(*map[string]*structDecoder)(ptr)
-	return cache[cacheKey]
-}
-

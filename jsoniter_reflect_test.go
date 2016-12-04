@@ -20,7 +20,7 @@ type StructOfString struct {
 	field2 string
 }
 
-func Test_reflect_struct(t *testing.T) {
+func Test_reflect_struct_string(t *testing.T) {
 	iter := ParseString(`{"field1": "hello", "field2": "world"}`)
 	struct_ := StructOfString{}
 	iter.Read(&struct_)
@@ -31,6 +31,43 @@ func Test_reflect_struct(t *testing.T) {
 	if struct_.field2 != "world" {
 		fmt.Println(iter.Error)
 		t.Fatal(struct_.field1)
+	}
+}
+
+type StructOfStringPtr struct {
+	field1 *string
+	field2 *string
+}
+
+func Test_reflect_struct_string_ptr(t *testing.T) {
+	iter := ParseString(`{"field1": null, "field2": "world"}`)
+	struct_ := StructOfStringPtr{}
+	iter.Read(&struct_)
+	if struct_.field1 != nil {
+		fmt.Println(iter.Error)
+		t.Fatal(struct_.field1)
+	}
+	if *struct_.field2 != "world" {
+		fmt.Println(iter.Error)
+		t.Fatal(struct_.field1)
+	}
+}
+
+func Test_reflect_array(t *testing.T) {
+	iter := ParseString(`{"hello", "world"}`)
+	array := []string{}
+	iter.Read(&array)
+	if len(array) != 2 {
+		fmt.Println(iter.Error)
+		t.Fatal(len(array))
+	}
+	if array[0] != "hello" {
+		fmt.Println(iter.Error)
+		t.Fatal(array[0])
+	}
+	if array[1] != "world" {
+		fmt.Println(iter.Error)
+		t.Fatal(array[1])
 	}
 }
 
