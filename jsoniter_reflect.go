@@ -19,6 +19,13 @@ func (decoder *stringDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 	*((*string)(ptr)) = iter.ReadString()
 }
 
+type intDecoder struct {
+}
+
+func (decoder *intDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+	*((*int)(ptr)) = iter.ReadInt()
+}
+
 type optionalDecoder struct {
 	valueType reflect.Type
 	valueDecoder Decoder
@@ -115,7 +122,6 @@ func growOne(slice *sliceHeader, sliceType reflect.Type, elementType reflect.Typ
 	slice.Data = dst
 }
 
-var DECODER_STRING *stringDecoder
 var DECODERS unsafe.Pointer
 
 func addDecoderToCache(cacheKey string, decoder Decoder) {
@@ -139,7 +145,6 @@ func getDecoderFromCache(cacheKey string) Decoder {
 }
 
 func init() {
-	DECODER_STRING = &stringDecoder{}
 	atomic.StorePointer(&DECODERS, unsafe.Pointer(&map[string]Decoder{}))
 }
 
@@ -187,25 +192,26 @@ func decoderOfType(type_ reflect.Type) (Decoder, error) {
 func decoderOfPtr(type_ reflect.Type) (Decoder, error) {
 	switch type_.Kind() {
 	case reflect.String:
-		return DECODER_STRING, nil
+		return &stringDecoder{}, nil
+	case reflect.Int:
+		return &intDecoder{}, nil
 	case reflect.Struct:
 		return decoderOfStruct(type_)
 	case reflect.Slice:
-		return decoderOfSlice(type_)
+		return prefix("[slice]").addTo(decoderOfSlice(type_))
 	case reflect.Ptr:
-		return prefix("optional").addTo(decoderOfOptional(type_.Elem()))
+		return prefix("[optional]").addTo(decoderOfOptional(type_.Elem()))
 	default:
-		return nil, errors.New("expect string, struct, slice")
+		return nil, fmt.Errorf("unsupported type: %v", type_)
 	}
 }
 
 func decoderOfOptional(type_ reflect.Type) (Decoder, error) {
-	switch type_.Kind() {
-	case reflect.String:
-		return &optionalDecoder{type_, DECODER_STRING}, nil
-	default:
-		return nil, errors.New("expect string")
+	decoder, err := decoderOfPtr(type_)
+	if err != nil {
+		return nil, err
 	}
+	return &optionalDecoder{type_, decoder}, nil
 }
 
 
@@ -225,7 +231,7 @@ func decoderOfStruct(type_ reflect.Type) (Decoder, error) {
 func decoderOfSlice(type_ reflect.Type) (Decoder, error) {
 	decoder, err := decoderOfPtr(type_.Elem())
 	if err != nil {
-		return prefix("[elem]").addTo(decoder, err)
+		return nil, err
 	}
 	return &sliceDecoder{type_, type_.Elem(), decoder}, nil
 }

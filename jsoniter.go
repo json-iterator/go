@@ -132,6 +132,16 @@ func (iter *Iterator) ReadUint64() (ret uint64) {
 	return ret
 }
 
+func (iter *Iterator) ReadInt() (ret int) {
+	val := iter.ReadInt64()
+	converted := int(val)
+	if int64(converted) != val {
+		iter.ReportError("ReadInt", "int overflow")
+		return
+	}
+	return converted
+}
+
 func (iter *Iterator) ReadInt64() (ret int64) {
 	c := iter.readByte()
 	if iter.Error != nil {
@@ -163,7 +173,7 @@ func (iter *Iterator) ReadString() (ret string) {
 		}
 		return ""
 	case '"':
-		// nothing
+	// nothing
 	default:
 		iter.ReportError("ReadString", `expects " or n`)
 		return

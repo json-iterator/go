@@ -25,6 +25,15 @@ func Test_reflect_ptr_str(t *testing.T) {
 	}
 }
 
+func Test_reflect_int(t *testing.T) {
+	iter := ParseString(`123`)
+	val := int(0)
+	iter.Read(&val)
+	if val != 123 {
+		t.Fatal(val)
+	}
+}
+
 type StructOfString struct {
 	field1 string
 	field2 string
@@ -65,19 +74,41 @@ func Test_reflect_struct_string_ptr(t *testing.T) {
 
 func Test_reflect_slice(t *testing.T) {
 	iter := ParseString(`["hello", "world"]`)
-	array := make([]string, 0, 1)
-	iter.Read(&array)
-	if len(array) != 2 {
+	slice := make([]string, 0, 1)
+	iter.Read(&slice)
+	if len(slice) != 2 {
 		fmt.Println(iter.Error)
-		t.Fatal(len(array))
+		t.Fatal(len(slice))
 	}
-	if array[0] != "hello" {
+	if slice[0] != "hello" {
 		fmt.Println(iter.Error)
-		t.Fatal(array[0])
+		t.Fatal(slice[0])
 	}
-	if array[1] != "world" {
+	if slice[1] != "world" {
 		fmt.Println(iter.Error)
-		t.Fatal(array[1])
+		t.Fatal(slice[1])
+	}
+}
+
+func Test_reflect_nested(t *testing.T) {
+	iter := ParseString(`[{"field1": "hello"}, null, {"field2": "world"}]`)
+	slice := []*StructOfString{}
+	iter.Read(&slice)
+	if len(slice) != 3 {
+		fmt.Println(iter.Error)
+		t.Fatal(len(slice))
+	}
+	if slice[0].field1 != "hello" {
+		fmt.Println(iter.Error)
+		t.Fatal(slice[0])
+	}
+	if slice[1] != nil {
+		fmt.Println(iter.Error)
+		t.Fatal(slice[1])
+	}
+	if slice[2].field2 != "world" {
+		fmt.Println(iter.Error)
+		t.Fatal(slice[1])
 	}
 }
 
