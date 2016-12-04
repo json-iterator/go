@@ -89,6 +89,27 @@ func (decoder *uint64Decoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 	*((*uint64)(ptr)) = iter.ReadUint64()
 }
 
+type float32Decoder struct {
+}
+
+func (decoder *float32Decoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+	*((*float32)(ptr)) = iter.ReadFloat32()
+}
+
+type float64Decoder struct {
+}
+
+func (decoder *float64Decoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+	*((*float64)(ptr)) = iter.ReadFloat64()
+}
+
+type boolDecoder struct {
+}
+
+func (decoder *boolDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+	*((*bool)(ptr)) = iter.ReadBool()
+}
+
 type optionalDecoder struct {
 	valueType reflect.Type
 	valueDecoder Decoder
@@ -276,6 +297,12 @@ func decoderOfPtr(type_ reflect.Type) (Decoder, error) {
 		return &uint32Decoder{}, nil
 	case reflect.Uint64:
 		return &uint64Decoder{}, nil
+	case reflect.Float32:
+		return &float32Decoder{}, nil
+	case reflect.Float64:
+		return &float64Decoder{}, nil
+	case reflect.Bool:
+		return &boolDecoder{}, nil
 	case reflect.Struct:
 		return decoderOfStruct(type_)
 	case reflect.Slice:

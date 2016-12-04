@@ -124,6 +124,36 @@ func Test_reflect_byte(t *testing.T) {
 	}
 }
 
+func Test_reflect_float32(t *testing.T) {
+	iter := ParseString(`1.23`)
+	val := float32(0)
+	iter.Read(&val)
+	if val != 1.23 {
+		fmt.Println(iter.Error)
+		t.Fatal(val)
+	}
+}
+
+func Test_reflect_float64(t *testing.T) {
+	iter := ParseString(`1.23`)
+	val := float64(0)
+	iter.Read(&val)
+	if val != 1.23 {
+		fmt.Println(iter.Error)
+		t.Fatal(val)
+	}
+}
+
+func Test_reflect_bool(t *testing.T) {
+	iter := ParseString(`true`)
+	val := false
+	iter.Read(&val)
+	if val != true {
+		fmt.Println(iter.Error)
+		t.Fatal(val)
+	}
+}
+
 type StructOfString struct {
 	field1 string
 	field2 string

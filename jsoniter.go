@@ -504,6 +504,33 @@ func (iter *Iterator) readObjectField() (ret string) {
 	return field
 }
 
+func (iter *Iterator) ReadFloat32() (ret float32) {
+	str := make([]byte, 0, 10)
+	for c := iter.readByte(); iter.Error == nil; c = iter.readByte() {
+		switch c {
+		case '-', '+', '.', 'e', 'E', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+			str = append(str, c)
+		default:
+			iter.unreadByte()
+			val, err := strconv.ParseFloat(string(str), 32)
+			if err != nil {
+				iter.Error = err
+				return
+			}
+			return float32(val)
+		}
+	}
+	if iter.Error == io.EOF {
+		val, err := strconv.ParseFloat(string(str), 32)
+		if err != nil {
+			iter.Error = err
+			return
+		}
+		return float32(val)
+	}
+	return
+}
+
 func (iter *Iterator) ReadFloat64() (ret float64) {
 	str := make([]byte, 0, 10)
 	for c := iter.readByte(); iter.Error == nil; c = iter.readByte() {
