@@ -14,9 +14,7 @@ type StructOfTag struct {
 }
 
 func Test_reflect_struct_tag_field(t *testing.T) {
-	iter := ParseString(`{"field-1": "hello", "field2": "", "field3": "100"}`)
-	struct_ := StructOfTag{field2: "world"}
-	iter.Read(&struct_)
+	jsoniter.Unmarshal(`{"field-1": "hello", "field2": "", "field3": "100"}`, &struct_)
 	if struct_.field1 != "hello" {
 		fmt.Println(iter.Error)
 		t.Fatal(struct_.field1)
@@ -37,7 +35,7 @@ func Test_reflect_struct_tag_field(t *testing.T) {
 Array
 
 ```
-iter := ParseString(`[1,2,3]`)
+iter := jsoniter.ParseString(`[1,2,3]`)
 for iter.ReadArray() {
   iter.ReadUint64()
 }
@@ -53,7 +51,7 @@ type TestObj struct {
 ```
 
 ```
-iter := ParseString(`{"field1": "1", "field2": 2}`)
+iter := jsoniter.ParseString(`{"field1": "1", "field2": 2}`)
 obj := TestObj{}
 for field := iter.ReadObject(); field != ""; field = iter.ReadObject() {
     switch field {
@@ -70,7 +68,7 @@ for field := iter.ReadObject(); field != ""; field = iter.ReadObject() {
 Skip
 
 ```
-iter := ParseString(`[ {"a" : [{"b": "c"}], "d": 102 }, "b"]`)
+iter := jsoniter.ParseString(`[ {"a" : [{"b": "c"}], "d": 102 }, "b"]`)
 iter.ReadArray()
 iter.Skip()
 iter.ReadArray()
