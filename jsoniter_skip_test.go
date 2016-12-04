@@ -76,13 +76,13 @@ func Test_skip_empty_object(t *testing.T) {
 }
 
 func Test_skip_nested(t *testing.T) {
-	iter := ParseString(`[ {"a" : [{"b": "c"}], "d": 102 }, "b"]`)
-	iter.ReadArray()
-	iter.Skip()
-	iter.ReadArray()
-	if iter.ReadString() != "b" {
-		t.FailNow()
-	}
+iter := ParseString(`[ {"a" : [{"b": "c"}], "d": 102 }, "b"]`)
+iter.ReadArray()
+iter.Skip()
+iter.ReadArray()
+if iter.ReadString() != "b" {
+	t.FailNow()
+}
 }
 
 type TestResp struct {

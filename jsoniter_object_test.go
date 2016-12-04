@@ -71,18 +71,18 @@ type TestObj struct {
 
 func Benchmark_jsoniter_object(b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		iter := ParseString(`{"field1": "1", "field2": 2}`)
-		obj := TestObj{}
-		for field := iter.ReadObject(); field != ""; field = iter.ReadObject() {
-			switch field {
-			case "field1":
-				obj.Field1 = iter.ReadString()
-			case "field2":
-				obj.Field2 = iter.ReadUint64()
-			default:
-				iter.ReportError("bind object", "unexpected field")
-			}
-		}
+iter := ParseString(`{"field1": "1", "field2": 2}`)
+obj := TestObj{}
+for field := iter.ReadObject(); field != ""; field = iter.ReadObject() {
+	switch field {
+	case "field1":
+		obj.Field1 = iter.ReadString()
+	case "field2":
+		obj.Field2 = iter.ReadUint64()
+	default:
+		iter.ReportError("bind object", "unexpected field")
+	}
+}
 	}
 }
 
