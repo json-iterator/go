@@ -73,20 +73,25 @@ func (iter *Iterator) readByte() (ret byte) {
 			iter.Error = io.EOF
 			return
 		}
-		n, err := iter.reader.Read(iter.buf)
-		if err != nil {
-			iter.Error = err
-			return
+		for {
+			n, err := iter.reader.Read(iter.buf)
+			if n == 0 {
+				if err != nil {
+					iter.Error = err
+					return
+				} else {
+					// n == 0, err == nil is not EOF
+					continue
+				}
+			} else {
+				iter.head = 0
+				iter.tail = n
+				break
+			}
 		}
-		if n == 0 {
-			iter.Error = io.EOF
-			return
-		}
-		iter.head = 0
-		iter.tail = n
 	}
 	ret = iter.buf[iter.head]
-	iter.head += 1
+	iter.head++
 	return ret
 }
 
