@@ -14,17 +14,17 @@ type StructOfTag struct {
 }
 
 func Test_reflect_struct_tag_field(t *testing.T) {
-	jsoniter.Unmarshal(`{"field-1": "hello", "field2": "", "field3": "100"}`, &struct_)
+	err := jsoniter.Unmarshal(`{"field-1": "hello", "field2": "", "field3": "100"}`, &struct_)
 	if struct_.field1 != "hello" {
-		fmt.Println(iter.Error)
+		fmt.Println(err)
 		t.Fatal(struct_.field1)
 	}
 	if struct_.field2 != "world" {
-		fmt.Println(iter.Error)
+		fmt.Println(err)
 		t.Fatal(struct_.field2)
 	}
 	if struct_.field3 != 100 {
-		fmt.Println(iter.Error)
+		fmt.Println(err)
 		t.Fatal(struct_.field3)
 	}
 }
