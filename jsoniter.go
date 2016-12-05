@@ -43,7 +43,7 @@ func ParseString(input string) *Iterator {
 
 func (iter *Iterator) skipWhitespaces() {
 	c := iter.readByte()
-	for c == ' ' || c == '\n' {
+	for c == ' ' || c == '\n' || c == '\t' {
 		c = iter.readByte()
 	}
 	iter.unreadByte()
@@ -55,6 +55,15 @@ func (iter *Iterator) ReportError(operation string, msg string) {
 		peekStart = 0
 	}
 	iter.Error = fmt.Errorf("%s: %s, parsing %v ...%s... at %s", operation, msg, iter.head,
+		string(iter.buf[peekStart: iter.head]), string(iter.buf[0:iter.tail]))
+}
+
+func (iter *Iterator) CurrentBuffer() string {
+	peekStart := iter.head - 10
+	if peekStart < 0 {
+		peekStart = 0
+	}
+	return fmt.Sprintf("parsing %v ...%s... at %s", iter.head,
 		string(iter.buf[peekStart: iter.head]), string(iter.buf[0:iter.tail]))
 }
 
