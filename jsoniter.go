@@ -70,6 +70,9 @@ func (iter *Iterator) skipWhitespaces() {
 }
 
 func (iter *Iterator) ReportError(operation string, msg string) {
+	if iter.Error != nil {
+		return
+	}
 	peekStart := iter.head - 10
 	if peekStart < 0 {
 		peekStart = 0
@@ -591,25 +594,16 @@ func (iter *Iterator) ReadBool() (ret bool) {
 
 func (iter *Iterator) skipTrue() {
 	c := iter.readByte()
-	if iter.Error != nil {
-		return
-	}
 	if c != 'r' {
 		iter.ReportError("skipTrue", "expect r of true")
 		return
 	}
 	c = iter.readByte()
-	if iter.Error != nil {
-		return
-	}
 	if c != 'u' {
 		iter.ReportError("skipTrue", "expect u of true")
 		return
 	}
 	c = iter.readByte()
-	if iter.Error != nil {
-		return
-	}
 	if c != 'e' {
 		iter.ReportError("skipTrue", "expect e of true")
 		return
@@ -618,33 +612,21 @@ func (iter *Iterator) skipTrue() {
 
 func (iter *Iterator) skipFalse() {
 	c := iter.readByte()
-	if iter.Error != nil {
-		return
-	}
 	if c != 'a' {
 		iter.ReportError("skipFalse", "expect a of false")
 		return
 	}
 	c = iter.readByte()
-	if iter.Error != nil {
-		return
-	}
 	if c != 'l' {
 		iter.ReportError("skipFalse", "expect l of false")
 		return
 	}
 	c = iter.readByte()
-	if iter.Error != nil {
-		return
-	}
 	if c != 's' {
 		iter.ReportError("skipFalse", "expect s of false")
 		return
 	}
 	c = iter.readByte()
-	if iter.Error != nil {
-		return
-	}
 	if c != 'e' {
 		iter.ReportError("skipFalse", "expect e of false")
 		return
@@ -653,14 +635,8 @@ func (iter *Iterator) skipFalse() {
 
 func (iter *Iterator) ReadNull() (ret bool) {
 	c := iter.readByte()
-	if iter.Error != nil {
-		return
-	}
 	if c == 'n' {
 		iter.skipNull()
-		if iter.Error != nil {
-			return
-		}
 		return true
 	}
 	iter.unreadByte()
@@ -669,25 +645,16 @@ func (iter *Iterator) ReadNull() (ret bool) {
 
 func (iter *Iterator) skipNull() {
 	c := iter.readByte()
-	if iter.Error != nil {
-		return
-	}
 	if c != 'u' {
 		iter.ReportError("skipNull", "expect u of null")
 		return
 	}
 	c = iter.readByte()
-	if iter.Error != nil {
-		return
-	}
 	if c != 'l' {
 		iter.ReportError("skipNull", "expect l of null")
 		return
 	}
 	c = iter.readByte()
-	if iter.Error != nil {
-		return
-	}
 	if c != 'l' {
 		iter.ReportError("skipNull", "expect l of null")
 		return
@@ -727,9 +694,6 @@ func (iter *Iterator) skipString() {
 			return // end of string found
 		case '\\':
 			iter.readByte() // " after \\ does not count
-			if iter.Error != nil {
-				return
-			}
 		}
 	}
 }
@@ -760,9 +724,6 @@ func (iter *Iterator) skipArray() {
 		iter.Skip()
 		iter.skipWhitespaces()
 		c = iter.readByte()
-		if iter.Error != nil {
-			return
-		}
 		switch c {
 		case ',':
 			iter.skipWhitespaces()
@@ -790,9 +751,6 @@ func (iter *Iterator) skipObject() {
 	for {
 		iter.skipWhitespaces()
 		c := iter.readByte()
-		if iter.Error != nil {
-			return
-		}
 		if c != '"' {
 			iter.ReportError("skipObject", `expects "`)
 			return
@@ -800,9 +758,6 @@ func (iter *Iterator) skipObject() {
 		iter.skipString()
 		iter.skipWhitespaces()
 		c = iter.readByte()
-		if iter.Error != nil {
-			return
-		}
 		if c != ':' {
 			iter.ReportError("skipObject", `expects :`)
 			return
@@ -811,9 +766,6 @@ func (iter *Iterator) skipObject() {
 		iter.Skip()
 		iter.skipWhitespaces()
 		c = iter.readByte()
-		if iter.Error != nil {
-			return
-		}
 		switch c {
 		case ',':
 			iter.skipWhitespaces()

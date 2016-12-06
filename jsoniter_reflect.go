@@ -118,9 +118,6 @@ type stringNumberDecoder struct {
 
 func (decoder *stringNumberDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 	c := iter.readByte()
-	if iter.Error != nil {
-		return
-	}
 	if c != '"' {
 		iter.ReportError("stringNumberDecoder", `expect "`)
 		return
@@ -130,9 +127,6 @@ func (decoder *stringNumberDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 		return
 	}
 	c = iter.readByte()
-	if iter.Error != nil {
-		return
-	}
 	if c != '"' {
 		iter.ReportError("stringNumberDecoder", `expect "`)
 		return
@@ -160,7 +154,7 @@ type structDecoder struct {
 }
 
 func (decoder *structDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
-	for field := iter.ReadObject(); field != "" && iter.Error == nil; field = iter.ReadObject() {
+	for field := iter.ReadObject(); field != ""; field = iter.ReadObject() {
 		fieldDecoder := decoder.fields[field]
 		if fieldDecoder == nil {
 			iter.Skip()
@@ -202,7 +196,7 @@ type sliceHeader struct {
 func (decoder *sliceDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 	slice := (*sliceHeader)(ptr)
 	slice.Len = 0
-	for iter.ReadArray() && iter.Error == nil {
+	for iter.ReadArray() {
 		offset := uintptr(slice.Len) * decoder.elemType.Size()
 		growOne(slice, decoder.sliceType, decoder.elemType)
 		dataPtr := uintptr(slice.Data) + offset
