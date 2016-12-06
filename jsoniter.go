@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"unicode/utf16"
 	"strconv"
+	"unsafe"
 )
 
 type Iterator struct {
@@ -519,57 +520,49 @@ func (iter *Iterator) readObjectField() (ret string) {
 }
 
 func (iter *Iterator) ReadFloat32() (ret float32) {
-	str := make([]byte, 0, 10)
+	str := make([]byte, 0, 4)
 	for c := iter.readByte(); iter.Error == nil; c = iter.readByte() {
 		switch c {
 		case '-', '+', '.', 'e', 'E', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
 			str = append(str, c)
+			continue
 		default:
 			iter.unreadByte()
-			val, err := strconv.ParseFloat(string(str), 32)
-			if err != nil {
-				iter.Error = err
-				return
-			}
-			return float32(val)
 		}
+		break
 	}
-	if iter.Error == io.EOF {
-		val, err := strconv.ParseFloat(string(str), 32)
-		if err != nil {
-			iter.Error = err
-			return
-		}
-		return float32(val)
+	if iter.Error != nil && iter.Error != io.EOF {
+		return
 	}
-	return
+	val, err := strconv.ParseFloat(*(*string)(unsafe.Pointer(&str)), 32)
+	if err != nil {
+		iter.Error = err
+		return
+	}
+	return float32(val)
 }
 
 func (iter *Iterator) ReadFloat64() (ret float64) {
-	str := make([]byte, 0, 10)
+	str := make([]byte, 0, 4)
 	for c := iter.readByte(); iter.Error == nil; c = iter.readByte() {
 		switch c {
 		case '-', '+', '.', 'e', 'E', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
 			str = append(str, c)
+			continue
 		default:
 			iter.unreadByte()
-			val, err := strconv.ParseFloat(string(str), 64)
-			if err != nil {
-				iter.Error = err
-				return
-			}
-			return val
 		}
+		break
 	}
-	if iter.Error == io.EOF {
-		val, err := strconv.ParseFloat(string(str), 64)
-		if err != nil {
-			iter.Error = err
-			return
-		}
-		return val
+	if iter.Error != nil && iter.Error != io.EOF {
+		return
 	}
-	return
+	val, err := strconv.ParseFloat(*(*string)(unsafe.Pointer(&str)), 64)
+	if err != nil {
+		iter.Error = err
+		return
+	}
+	return val
 }
 
 func (iter *Iterator) ReadBool() (ret bool) {
