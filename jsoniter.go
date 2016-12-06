@@ -271,7 +271,40 @@ func (iter *Iterator) ReadInt64() (ret int64) {
 }
 
 func (iter *Iterator) ReadString() (ret string) {
-	str := make([]byte, 0, 8)
+	return string(iter.ReadStringAsBytes())
+}
+
+// Tries to find the end of string
+// Support if string contains escaped quote symbols.
+func stringEnd(data []byte) (int, bool) {
+	escaped := false
+	for i, c := range data {
+		if c == '"' {
+			if !escaped {
+				return i + 1, false
+			} else {
+				j := i - 1
+				for {
+					if j < 0 || data[j] != '\\' {
+						return i + 1, true // even number of backslashes
+					}
+					j--
+					if j < 0 || data[j] != '\\' {
+						break // odd number of backslashes
+					}
+					j--
+
+				}
+			}
+		} else if c == '\\' {
+			escaped = true
+		}
+	}
+
+	return -1, escaped
+}
+
+func (iter *Iterator) ReadStringAsBytes() (ret []byte) {
 	c := iter.readByte()
 	if c == 'n' {
 		iter.skipNull()
@@ -281,10 +314,17 @@ func (iter *Iterator) ReadString() (ret string) {
 		iter.ReportError("ReadString", `expects " or n`)
 		return
 	}
+	end, escaped := stringEnd(iter.buf[iter.head:])
+	if end != -1 && !escaped {
+		ret = iter.buf[iter.head:iter.head+end-1]
+		iter.head += end
+		return ret
+	}
+	str := make([]byte, 0, 8)
 	for iter.Error == nil {
 		c = iter.readByte()
 		if c == '"' {
-			return string(str)
+			return str
 		}
 		if c == '\\' {
 			c = iter.readByte()
@@ -543,7 +583,8 @@ func (iter *Iterator) ReadObject() (ret string) {
 }
 
 func (iter *Iterator) readObjectField() (ret string) {
-	field := iter.ReadString()
+	str := iter.ReadStringAsBytes()
+	field := *(*string)(unsafe.Pointer(&str))
 	if iter.Error != nil {
 		return
 	}

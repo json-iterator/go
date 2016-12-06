@@ -3,6 +3,7 @@ package jsoniter
 import (
 	"testing"
 	"encoding/json"
+	"fmt"
 )
 
 func Test_empty_object(t *testing.T) {
@@ -17,6 +18,7 @@ func Test_one_field(t *testing.T) {
 	iter := ParseString(`{"a": "b"}`)
 	field := iter.ReadObject()
 	if field != "a" {
+		fmt.Println(iter.Error)
 		t.Fatal(field)
 	}
 	value := iter.ReadString()

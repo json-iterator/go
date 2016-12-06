@@ -72,6 +72,18 @@ func Test_string_escape_unicode_with_surrogate(t *testing.T) {
 	}
 }
 
+func Test_string_as_bytes(t *testing.T) {
+	iter := Parse(bytes.NewBufferString(`"hello""world"`), 4096)
+	val := string(iter.ReadStringAsBytes())
+	if val != "hello" {
+		t.Fatal(val)
+	}
+	val = string(iter.ReadStringAsBytes())
+	if val != "world" {
+		t.Fatal(val)
+	}
+}
+
 func Benchmark_jsoniter_unicode(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		iter := ParseString(`"\ud83d\udc4a"`)
@@ -80,9 +92,20 @@ func Benchmark_jsoniter_unicode(b *testing.B) {
 }
 
 func Benchmark_jsoniter_ascii(b *testing.B) {
+	iter := ParseString(`"hello, world!"`)
+	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
-		iter := ParseString(`"hello"`)
+		iter.Reuse(iter.buf)
 		iter.ReadString()
+	}
+}
+
+func Benchmark_jsoniter_string_as_bytes(b *testing.B) {
+	iter := ParseString(`"hello, world!"`)
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		iter.Reuse(iter.buf)
+		iter.ReadStringAsBytes()
 	}
 }
 
