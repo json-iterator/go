@@ -89,6 +89,7 @@ func (iter *Iterator) skipWhitespaces() {
 }
 
 func (iter *Iterator) nextToken() byte {
+	// a variation of skip whitespaces, returning the next non-whitespace token
 	for {
 		for i := iter.head; i < iter.tail; i++ {
 			c := iter.buf[i]
@@ -351,24 +352,6 @@ func (iter *Iterator) findStringEnd() (int, bool) {
 
 	}
 	return -1, true // end with \
-}
-
-
-func (iter *Iterator) skipUntilBreak() {
-	// true, false, null, number
-	for {
-		for i := iter.head; i < iter.tail; i++ {
-			c := iter.buf[i]
-			switch c {
-			case ' ', '\n', '\r', '\t', ',', '}', ']':
-				iter.head = i
-				return
-			}
-		}
-		if (!iter.loadMore()) {
-			return
-		}
-	}
 }
 
 func (iter *Iterator) ReadStringAsBytes() (ret []byte) {
@@ -804,64 +787,71 @@ func (iter *Iterator) skipString() {
 }
 
 func (iter *Iterator) skipArray() {
-	c := iter.nextToken()
-	if c == ']' {
-		return
-	} else {
-		iter.unreadByte()
-	}
+	level := 1
 	for {
-		if iter.Error != nil {
-			return
+		for i := iter.head; i < iter.tail; i++ {
+			switch iter.buf[i] {
+			case '"': // If inside string, skip it
+				iter.head = i + 1
+				iter.skipString()
+				i = iter.head - 1 // it will be i++ soon
+			case '[': // If open symbol, increase level
+				level++
+			case ']': // If close symbol, increase level
+				level--
+
+				// If we have returned to the original level, we're done
+				if level == 0 {
+					iter.head = i + 1
+					return
+				}
+			}
 		}
-		iter.Skip()
-		c = iter.nextToken()
-		switch c {
-		case ',':
-			iter.skipWhitespaces()
-			continue
-		case ']':
-			return
-		default:
-			iter.ReportError("skipArray", "expects , or ]")
+		if (!iter.loadMore()) {
 			return
 		}
 	}
 }
 
 func (iter *Iterator) skipObject() {
-	c := iter.nextToken()
-	if c == '}' {
-		return // end of object
-	} else {
-		iter.unreadByte()
-	}
+	level := 1
 	for {
-		c = iter.nextToken()
-		if c != '"' {
-			iter.ReportError("skipObject", `expects "`)
+		for i := iter.head; i < iter.tail; i++ {
+			switch iter.buf[i] {
+			case '"': // If inside string, skip it
+				iter.head = i + 1
+				iter.skipString()
+				i = iter.head - 1 // it will be i++ soon
+			case '{': // If open symbol, increase level
+				level++
+			case '}': // If close symbol, increase level
+				level--
+
+				// If we have returned to the original level, we're done
+				if level == 0 {
+					iter.head = i + 1
+					return
+				}
+			}
+		}
+		if (!iter.loadMore()) {
 			return
 		}
-		iter.skipString()
-		c = iter.nextToken()
-		if c != ':' {
-			iter.ReportError("skipObject", `expects :`)
-			return
+	}
+}
+
+func (iter *Iterator) skipUntilBreak() {
+	// true, false, null, number
+	for {
+		for i := iter.head; i < iter.tail; i++ {
+			c := iter.buf[i]
+			switch c {
+			case ' ', '\n', '\r', '\t', ',', '}', ']':
+				iter.head = i
+				return
+			}
 		}
-		iter.skipWhitespaces()
-		if iter.Error != nil {
-			return
-		}
-		iter.Skip()
-		c = iter.nextToken()
-		switch c {
-		case ',':
-			iter.skipWhitespaces()
-			continue
-		case '}':
-			return // end of object
-		default:
-			iter.ReportError("skipObject", "expects , or }")
+		if (!iter.loadMore()) {
 			return
 		}
 	}

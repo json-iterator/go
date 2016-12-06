@@ -136,3 +136,35 @@ func Test_skip_string(t *testing.T) {
 		t.Fatal(iter.head)
 	}
 }
+
+func Test_skip_object(t *testing.T) {
+	iter := ParseString(`}`)
+	iter.skipObject()
+	if iter.head != 1 {
+		t.Fatal(iter.head)
+	}
+	iter = ParseString(`a}`)
+	iter.skipObject()
+	if iter.head != 2 {
+		t.Fatal(iter.head)
+	}
+	iter = ParseString(`{}}a`)
+	iter.skipObject()
+	if iter.head != 3 {
+		t.Fatal(iter.head)
+	}
+	reader := &StagedReader{
+		r1: `{`,
+		r2: `}}a`,
+	}
+	iter = Parse(reader, 4096)
+	iter.skipObject()
+	if iter.head != 2 {
+		t.Fatal(iter.head)
+	}
+	iter = ParseString(`"}"}a`)
+	iter.skipObject()
+	if iter.head != 4 {
+		t.Fatal(iter.head)
+	}
+}
