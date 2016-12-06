@@ -721,43 +721,36 @@ func (iter *Iterator) ReadBool() (ret bool) {
 }
 
 func (iter *Iterator) skipTrue() {
-	c := iter.readByte()
-	if c != 'r' {
-		iter.ReportError("skipTrue", "expect r of true")
-		return
-	}
-	c = iter.readByte()
-	if c != 'u' {
-		iter.ReportError("skipTrue", "expect u of true")
-		return
-	}
-	c = iter.readByte()
-	if c != 'e' {
-		iter.ReportError("skipTrue", "expect e of true")
-		return
+	for {
+		for i := iter.head; i < iter.tail; i++ {
+			c := iter.buf[i]
+			switch c {
+			case 'r', 'u', 'e':
+				continue
+			}
+			iter.head = i
+			return
+		}
+		if !iter.loadMore() {
+			return
+		}
 	}
 }
 
 func (iter *Iterator) skipFalse() {
-	c := iter.readByte()
-	if c != 'a' {
-		iter.ReportError("skipFalse", "expect a of false")
-		return
-	}
-	c = iter.readByte()
-	if c != 'l' {
-		iter.ReportError("skipFalse", "expect l of false")
-		return
-	}
-	c = iter.readByte()
-	if c != 's' {
-		iter.ReportError("skipFalse", "expect s of false")
-		return
-	}
-	c = iter.readByte()
-	if c != 'e' {
-		iter.ReportError("skipFalse", "expect e of false")
-		return
+	for {
+		for i := iter.head; i < iter.tail; i++ {
+			c := iter.buf[i]
+			switch c {
+			case 'a', 'l', 's', 'e':
+				continue
+			}
+			iter.head = i
+			return
+		}
+		if !iter.loadMore() {
+			return
+		}
 	}
 }
 
@@ -772,28 +765,24 @@ func (iter *Iterator) ReadNull() (ret bool) {
 }
 
 func (iter *Iterator) skipNull() {
-	c := iter.readByte()
-	if c != 'u' {
-		iter.ReportError("skipNull", "expect u of null")
-		return
-	}
-	c = iter.readByte()
-	if c != 'l' {
-		iter.ReportError("skipNull", "expect l of null")
-		return
-	}
-	c = iter.readByte()
-	if c != 'l' {
-		iter.ReportError("skipNull", "expect l of null")
-		return
+	for {
+		for i := iter.head; i < iter.tail; i++ {
+			c := iter.buf[i]
+			switch c {
+			case 'u', 'l':
+				continue
+			}
+			iter.head = i
+			return
+		}
+		if !iter.loadMore() {
+			return
+		}
 	}
 }
 
 func (iter *Iterator) Skip() {
 	c := iter.readByte()
-	if iter.Error != nil {
-		return
-	}
 	switch c {
 	case '"':
 		iter.skipString()
@@ -816,38 +805,58 @@ func (iter *Iterator) Skip() {
 }
 
 func (iter *Iterator) skipString() {
-	for c := iter.readByte(); iter.Error == nil; c = iter.readByte() {
-		switch c {
-		case '"':
-			return // end of string found
-		case '\\':
-			iter.readByte() // " after \\ does not count
+	escaped := false
+	for {
+		for i := iter.head; i < iter.tail; i++ {
+			c := iter.buf[i]
+			switch c {
+			case '"':
+				if escaped {
+					escaped = false
+				} else {
+					iter.head = i+1
+					return
+				}
+			case '\\':
+				escaped = !escaped
+			default:
+				escaped= false
+			}
+		}
+		if !iter.loadMore() {
+			return
 		}
 	}
 }
 
 func (iter *Iterator) skipNumber() {
-	for c := iter.readByte(); iter.Error == nil; c = iter.readByte() {
-		switch c {
-		case '-', '+', '.', 'e', 'E', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
-			continue
-		default:
-			iter.unreadByte()
+	for {
+		for i := iter.head; i < iter.tail; i++ {
+			c := iter.buf[i]
+			switch c {
+			case '-', '+', '.', 'e', 'E', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+				continue
+			}
+			iter.head = i
+			return
+		}
+		if !iter.loadMore() {
 			return
 		}
 	}
 }
 
 func (iter *Iterator) skipArray() {
+	c := iter.nextToken()
+	if c == ']' {
+		return
+	} else {
+		iter.unreadByte()
+	}
 	for {
-		c := iter.nextToken()
 		if iter.Error != nil {
 			return
 		}
-		if c == ']' {
-			return
-		}
-		iter.unreadByte()
 		iter.Skip()
 		c = iter.nextToken()
 		switch c {
@@ -865,9 +874,6 @@ func (iter *Iterator) skipArray() {
 
 func (iter *Iterator) skipObject() {
 	c := iter.nextToken()
-	if iter.Error != nil {
-		return
-	}
 	if c == '}' {
 		return // end of object
 	} else {
@@ -886,6 +892,9 @@ func (iter *Iterator) skipObject() {
 			return
 		}
 		iter.skipWhitespaces()
+		if iter.Error != nil {
+			return
+		}
 		iter.Skip()
 		c = iter.nextToken()
 		switch c {
