@@ -538,7 +538,7 @@ func (iter *Iterator) ReadArrayCB(cb func()) {
 		return // null
 	}
 	if c != '[' {
-		iter.ReportError("ReadArray", "expect [ or n")
+		iter.ReportError("ReadArrayCB", "expect [ or n")
 		return
 	}
 	c = iter.nextToken()
@@ -557,10 +557,44 @@ func (iter *Iterator) ReadArrayCB(cb func()) {
 			return
 		}
 		if c != ',' {
-			iter.ReportError("ReadArray", "expect , or ]")
+			iter.ReportError("ReadArrayCB", "expect , or ]")
 			return
 		}
 		iter.skipWhitespaces()
+	}
+}
+
+func (iter *Iterator) ReadObjectCB(cb func(string)) {
+	c := iter.nextToken()
+	if c == 'n' {
+		iter.skipNull()
+		return // null
+	}
+	if c != '{' {
+		iter.ReportError("ReadObjectCB", "expect { or n")
+		return
+	}
+	c = iter.nextToken()
+	if c == '}' {
+		return // []
+	} else {
+		iter.unreadByte()
+	}
+	for {
+		iter.skipWhitespaces()
+		field := iter.readObjectField()
+		if iter.Error != nil {
+			return
+		}
+		cb(field)
+		c = iter.nextToken()
+		if c == '}' {
+			return // end of object
+		}
+		if c != ',' {
+			iter.ReportError("ReadObjectCB", `expect ,`)
+			return
+		}
 	}
 }
 
@@ -607,13 +641,7 @@ func (iter *Iterator) ReadObject() (ret string) {
 func (iter *Iterator) readObjectField() (ret string) {
 	str := iter.ReadStringAsBytes()
 	field := *(*string)(unsafe.Pointer(&str))
-	if iter.Error != nil {
-		return
-	}
 	c := iter.nextToken()
-	if iter.Error != nil {
-		return
-	}
 	if c != ':' {
 		iter.ReportError("ReadObject", "expect : after object field")
 		return
