@@ -303,50 +303,89 @@ func (iter *Iterator) ReadString() (ret string) {
 	return string(iter.ReadStringAsBytes())
 }
 
+// adapted from: https://github.com/buger/jsonparser/blob/master/parser.go
 // Tries to find the end of string
 // Support if string contains escaped quote symbols.
-func stringEnd(data []byte) (int, bool) {
+func (iter *Iterator) findStringEnd() (int, bool) {
 	escaped := false
-	for i, c := range data {
+	for i := iter.head; i < iter.tail; i++ {
+		c := iter.buf[i]
 		if c == '"' {
 			if !escaped {
 				return i + 1, false
 			} else {
 				j := i - 1
 				for {
-					if j < 0 || data[j] != '\\' {
-						return i + 1, true // even number of backslashes
+					if j < iter.head || iter.buf[j] != '\\' {
+						// even number of backslashes
+						// either end of buffer, or " found
+						return i + 1, true
 					}
 					j--
-					if j < 0 || data[j] != '\\' {
-						break // odd number of backslashes
+					if j < iter.head || iter.buf[j] != '\\' {
+						// odd number of backslashes
+						// it is \" or \\\"
+						break
 					}
 					j--
-
 				}
 			}
 		} else if c == '\\' {
 			escaped = true
 		}
 	}
+	j := iter.tail - 1
+	for {
+		if j < iter.head || iter.buf[j] != '\\' {
+			// even number of backslashes
+			// either end of buffer, or " found
+			return -1, false // do not end with \
+		}
+		j--
+		if j < iter.head || iter.buf[j] != '\\' {
+			// odd number of backslashes
+			// it is \" or \\\"
+			break
+		}
+		j--
 
-	return -1, escaped
+	}
+	return -1, true // end with \
+}
+
+
+func (iter *Iterator) skipUntilBreak() {
+	// true, false, null, number
+	for {
+		for i := iter.head; i < iter.tail; i++ {
+			c := iter.buf[i]
+			switch c {
+			case ' ', '\n', '\r', '\t', ',', '}', ']':
+				iter.head = i
+				return
+			}
+		}
+		if (!iter.loadMore()) {
+			return
+		}
+	}
 }
 
 func (iter *Iterator) ReadStringAsBytes() (ret []byte) {
 	c := iter.readByte()
 	if c == 'n' {
-		iter.skipNull()
+		iter.skipUntilBreak()
 		return
 	}
 	if c != '"' {
 		iter.ReportError("ReadString", `expects " or n`)
 		return
 	}
-	end, escaped := stringEnd(iter.buf[iter.head:iter.tail])
+	end, escaped := iter.findStringEnd()
 	if end != -1 && !escaped {
-		ret = iter.buf[iter.head:iter.head+end-1]
-		iter.head += end
+		// fast path: reuse the underlying buffer
+		ret = iter.buf[iter.head:end-1]
+		iter.head = end
 		return ret
 	}
 	str := make([]byte, 0, 8)
@@ -506,7 +545,7 @@ func (iter *Iterator) ReadArray() (ret bool) {
 	}
 	switch c {
 	case 'n': {
-		iter.skipNull()
+		iter.skipUntilBreak()
 		return false // null
 	}
 	case '[': {
@@ -534,7 +573,7 @@ func (iter *Iterator) ReadArray() (ret bool) {
 func (iter *Iterator) ReadArrayCB(cb func()) {
 	c := iter.nextToken()
 	if c == 'n' {
-		iter.skipNull()
+		iter.skipUntilBreak()
 		return // null
 	}
 	if c != '[' {
@@ -567,7 +606,7 @@ func (iter *Iterator) ReadArrayCB(cb func()) {
 func (iter *Iterator) ReadObjectCB(cb func(string)) {
 	c := iter.nextToken()
 	if c == 'n' {
-		iter.skipNull()
+		iter.skipUntilBreak()
 		return // null
 	}
 	if c != '{' {
@@ -605,7 +644,7 @@ func (iter *Iterator) ReadObject() (ret string) {
 	}
 	switch c {
 	case 'n': {
-		iter.skipNull()
+		iter.skipUntilBreak()
 		if iter.Error != nil {
 			return
 		}
@@ -703,13 +742,13 @@ func (iter *Iterator) ReadBool() (ret bool) {
 	}
 	switch c {
 	case 't':
-		iter.skipTrue()
+		iter.skipUntilBreak()
 		if iter.Error != nil {
 			return
 		}
 		return true
 	case 'f':
-		iter.skipFalse()
+		iter.skipUntilBreak()
 		if iter.Error != nil {
 			return
 		}
@@ -720,65 +759,14 @@ func (iter *Iterator) ReadBool() (ret bool) {
 	}
 }
 
-func (iter *Iterator) skipTrue() {
-	for {
-		for i := iter.head; i < iter.tail; i++ {
-			c := iter.buf[i]
-			switch c {
-			case 'r', 'u', 'e':
-				continue
-			}
-			iter.head = i
-			return
-		}
-		if !iter.loadMore() {
-			return
-		}
-	}
-}
-
-func (iter *Iterator) skipFalse() {
-	for {
-		for i := iter.head; i < iter.tail; i++ {
-			c := iter.buf[i]
-			switch c {
-			case 'a', 'l', 's', 'e':
-				continue
-			}
-			iter.head = i
-			return
-		}
-		if !iter.loadMore() {
-			return
-		}
-	}
-}
-
 func (iter *Iterator) ReadNull() (ret bool) {
 	c := iter.readByte()
 	if c == 'n' {
-		iter.skipNull()
+		iter.skipUntilBreak()
 		return true
 	}
 	iter.unreadByte()
 	return false
-}
-
-func (iter *Iterator) skipNull() {
-	for {
-		for i := iter.head; i < iter.tail; i++ {
-			c := iter.buf[i]
-			switch c {
-			case 'u', 'l':
-				continue
-			}
-			iter.head = i
-			return
-		}
-		if !iter.loadMore() {
-			return
-		}
-	}
 }
 
 func (iter *Iterator) Skip() {
@@ -786,18 +774,12 @@ func (iter *Iterator) Skip() {
 	switch c {
 	case '"':
 		iter.skipString()
-	case '-', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
-		iter.skipNumber()
+	case '-', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 't', 'f', 'n':
+		iter.skipUntilBreak()
 	case '[':
 		iter.skipArray()
 	case '{':
 		iter.skipObject()
-	case 't':
-		iter.skipTrue()
-	case 'f':
-		iter.skipFalse()
-	case 'n':
-		iter.skipNull()
 	default:
 		iter.ReportError("Skip", fmt.Sprintf("do not know how to skip: %v", c))
 		return
@@ -805,42 +787,17 @@ func (iter *Iterator) Skip() {
 }
 
 func (iter *Iterator) skipString() {
-	escaped := false
 	for {
-		for i := iter.head; i < iter.tail; i++ {
-			c := iter.buf[i]
-			switch c {
-			case '"':
-				if escaped {
-					escaped = false
-				} else {
-					iter.head = i+1
-					return
-				}
-			case '\\':
-				escaped = !escaped
-			default:
-				escaped= false
+		end, escaped := iter.findStringEnd()
+		if end == -1 {
+			if !iter.loadMore() {
+				return
 			}
-		}
-		if !iter.loadMore() {
-			return
-		}
-	}
-}
-
-func (iter *Iterator) skipNumber() {
-	for {
-		for i := iter.head; i < iter.tail; i++ {
-			c := iter.buf[i]
-			switch c {
-			case '-', '+', '.', 'e', 'E', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
-				continue
+			if escaped {
+				iter.head = 1 // skip the first char as last char read is \
 			}
-			iter.head = i
-			return
-		}
-		if !iter.loadMore() {
+		} else {
+			iter.head = end
 			return
 		}
 	}

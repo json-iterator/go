@@ -5,28 +5,39 @@ import (
 	"encoding/json"
 )
 
-func Test_skip_string(t *testing.T) {
-	iter := ParseString(`["a", "b"]`)
-	iter.ReadArray()
-	iter.Skip()
-	iter.ReadArray()
-	if iter.ReadString() != "b" {
-		t.FailNow()
-	}
-}
-
-func Test_skip_string_with_escape(t *testing.T) {
-	iter := ParseString(`["a\"", "b"]`)
-	iter.ReadArray()
-	iter.Skip()
-	iter.ReadArray()
-	if iter.ReadString() != "b" {
-		t.FailNow()
-	}
-}
 
 func Test_skip_number(t *testing.T) {
 	iter := ParseString(`[-0.12, "b"]`)
+	iter.ReadArray()
+	iter.Skip()
+	iter.ReadArray()
+	if iter.ReadString() != "b" {
+		t.FailNow()
+	}
+}
+
+func Test_skip_null(t *testing.T) {
+	iter := ParseString(`[null , "b"]`)
+	iter.ReadArray()
+	iter.Skip()
+	iter.ReadArray()
+	if iter.ReadString() != "b" {
+		t.FailNow()
+	}
+}
+
+func Test_skip_true(t *testing.T) {
+	iter := ParseString(`[true , "b"]`)
+	iter.ReadArray()
+	iter.Skip()
+	iter.ReadArray()
+	if iter.ReadString() != "b" {
+		t.FailNow()
+	}
+}
+
+func Test_skip_false(t *testing.T) {
+	iter := ParseString(`[false , "b"]`)
 	iter.ReadArray()
 	iter.Skip()
 	iter.ReadArray()
