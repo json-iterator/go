@@ -72,16 +72,20 @@ func ParseString(input string) *Iterator {
 }
 
 func (iter *Iterator) skipWhitespaces() {
-	c := iter.readByte()
 	for {
-		switch c {
-		case ' ', '\n', '\t', 'r':
-			c = iter.readByte()
-			continue
+		for i := iter.head; i < iter.tail; i++ {
+			c := iter.buf[i]
+			switch c {
+			case ' ', '\n', '\t', 'r':
+				continue
+			}
+			iter.head = i
+			return
 		}
-		break
+		if !iter.loadMore() {
+			return
+		}
 	}
-	iter.unreadByte()
 }
 
 func (iter *Iterator) ReportError(operation string, msg string) {
@@ -107,30 +111,38 @@ func (iter *Iterator) CurrentBuffer() string {
 
 func (iter *Iterator) readByte() (ret byte) {
 	if iter.head == iter.tail {
-		if iter.reader == nil {
-			iter.Error = io.EOF
-			return
-		}
-		for {
-			n, err := iter.reader.Read(iter.buf)
-			if n == 0 {
-				if err != nil {
-					iter.Error = err
-					return
-				} else {
-					// n == 0, err == nil is not EOF
-					continue
-				}
-			} else {
-				iter.head = 0
-				iter.tail = n
-				break
-			}
+		if iter.loadMore() {
+			ret = iter.buf[iter.head]
+			iter.head++
+			return ret
 		}
 	}
 	ret = iter.buf[iter.head]
 	iter.head++
 	return ret
+}
+
+func (iter *Iterator) loadMore() bool {
+	if iter.reader == nil {
+		iter.Error = io.EOF
+		return false
+	}
+	for {
+		n, err := iter.reader.Read(iter.buf)
+		if n == 0 {
+			if err != nil {
+				iter.Error = err
+				return false
+			} else {
+				// n == 0, err == nil is not EOF
+				continue
+			}
+		} else {
+			iter.head = 0
+			iter.tail = n
+			return true
+		}
+	}
 }
 
 func (iter *Iterator) unreadByte() {
@@ -314,7 +326,7 @@ func (iter *Iterator) ReadStringAsBytes() (ret []byte) {
 		iter.ReportError("ReadString", `expects " or n`)
 		return
 	}
-	end, escaped := stringEnd(iter.buf[iter.head:])
+	end, escaped := stringEnd(iter.buf[iter.head:iter.tail])
 	if end != -1 && !escaped {
 		ret = iter.buf[iter.head:iter.head+end-1]
 		iter.head += end
