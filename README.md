@@ -6,19 +6,20 @@ faster than DOM, more usable than SAX/StAX
 
 ## 1. It is faster
 
-jsoniter can work as drop in replacement for json.Unmarshal, with or without reflection. Unlike https://github.com/pquerna/ffjson
-jsoniter does not require `go generate`
+jsoniter can work as drop in replacement for json.Unmarshal, reflection-api is not only supported, but recommended.
 
 for performance numbers, see https://github.com/json-iterator/go-benchmark
 
+The reflection-api is very fast, on the same scale of hand written ones.
+
 ## 2. io.Reader as input
 
-jsoniter does not read the whole json into memory, it parse the document in a streaming way. Unlike https://github.com/pquerna/ffjson
-it requires []byte as input.
+jsoniter does not read the whole json into memory, it parse the document in a streaming way.
+There are too many json parser only take []byte as input, this one does not require so.
 
 ## 3. Pull style api
 
-jsoniter can be used just like json.Unmarshal, for example
+jsoniter can be used like drop-in replacement of json.Unmarshal, for example
 
 ```
 type StructOfTag struct {
@@ -94,6 +95,33 @@ func Test_customize_field_decoder(t *testing.T) {
 It is very common the input json has certain fields massed up. We want string, but it is int, etc. The old way is to
 define a struct of exact type like the json. Then we convert from one struct to a new struct. It is just too much work.
 Using jsoniter you can tweak the field conversion.
+
+## 5. Minimum work to parse, use whatever fits the job
+
+I invented this wheel because I find it is tedious to parse json which does not match the object model you want to use.
+Parse to `map[string]interface{}` is not only ugly but also slow. Parse to struct is not flexible enough to fix
+some field type mismatch or structure mismatch.
+
+If use low level tokenizer/lexer to work at the token level, it is too much work, not to mention there is very few parser
+out there allow you to work on this level.
+
+jsoniter pull-api is designed to be easy to use, so that you can map your data structure directly to parsing code.
+It is still tedious I am not going to lie to you, but easier than pure tokenizer.
+The real power is, you can mix the pull-api with reflection-api.
+For example:
+
+```
+\\ given [1, {"a": "b"}]
+iter.ReadArray()
+iter.ReadInt()
+iter.ReadArray()
+iter.Read(&struct_) // reflection-api
+```
+
+Also by using type or field callback, we can switch from reflection-api back to pull-api. The seamless mix of both styles
+enabled a unique new way to parse our data.
+
+My advice is always use the reflection-api first. Unless you find pull-api can do a better job in certain area.
 
 # Why not json iterator?
 
