@@ -253,7 +253,7 @@ func (iter *Iterator) ReadInt64() (ret int64) {
 }
 
 func (iter *Iterator) ReadString() (ret string) {
-	str := make([]byte, 0, 10)
+	str := make([]byte, 0, 8)
 	c := iter.readByte()
 	if iter.Error != nil {
 		return
@@ -338,7 +338,7 @@ func (iter *Iterator) ReadString() (ret string) {
 				return
 			}
 		case '"':
-			return string(str)
+			return *(*string)(unsafe.Pointer(&str))
 		default:
 			str = append(str, c)
 		}
@@ -484,11 +484,7 @@ func (iter *Iterator) ReadObject() (ret string) {
 			return "" // end of object
 		case '"':
 			iter.unreadByte()
-			field := iter.readObjectField()
-			if iter.Error != nil {
-				return
-			}
-			return field
+			return iter.readObjectField()
 		default:
 			iter.ReportError("ReadObject", `expect " after {`)
 			return
@@ -496,11 +492,7 @@ func (iter *Iterator) ReadObject() (ret string) {
 	}
 	case ',':
 		iter.skipWhitespaces()
-		field := iter.readObjectField()
-		if iter.Error != nil {
-			return
-		}
-		return field
+		return iter.readObjectField()
 	case '}':
 		return "" // end of object
 	default:
