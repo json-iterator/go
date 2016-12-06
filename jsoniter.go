@@ -8,6 +8,25 @@ import (
 	"unsafe"
 )
 
+var digits []byte
+
+func init() {
+	digits = make([]byte, 256)
+	for i := 0; i < len(digits); i++ {
+		digits[i] = 255
+	}
+	for i := '0'; i <= '9'; i++ {
+		digits[i] = byte(i - '0');
+	}
+	for i := 'a'; i <= 'f'; i++ {
+		digits[i] = byte((i - 'a') + 10);
+	}
+	for i := 'A'; i <= 'F'; i++ {
+		digits[i] = byte((i - 'A') + 10);
+	}
+}
+
+
 type Iterator struct {
 	reader io.Reader
 	buf    []byte
@@ -152,37 +171,26 @@ func (iter *Iterator) ReadUint32() (ret uint32) {
 
 func (iter *Iterator) ReadUint64() (ret uint64) {
 	c := iter.readByte()
-	if iter.Error != nil {
+	v := digits[c]
+	if v == 0 {
+		return 0 // single zero
+	}
+	if v == 255 {
+		iter.ReportError("ReadUint64", "unexpected character")
 		return
 	}
-
-	/* a single zero, or a series of integers */
-	if c == '0' {
-		return 0
-	} else if c >= '1' && c <= '9' {
-		for c >= '0' && c <= '9' {
-			var v byte
-			v = c - '0'
-			if ret >= cutoffUint64 {
-				iter.ReportError("ReadUint64", "overflow")
-				return
-			}
-			ret = ret * uint64(10) + uint64(v)
-			c = iter.readByte()
-			if iter.Error != nil {
-				if iter.Error == io.EOF {
-					break
-				} else {
-					return 0
-				}
-			}
+	for {
+		if ret >= cutoffUint64 {
+			iter.ReportError("ReadUint64", "overflow")
+			return
 		}
-		if iter.Error != io.EOF {
+		ret = ret * 10 + uint64(v)
+		c = iter.readByte()
+		v = digits[c]
+		if v == 255 {
 			iter.unreadByte()
+			break
 		}
-	} else {
-		iter.ReportError("ReadUint64", "expects 0~9")
-		return
 	}
 	return ret
 }
