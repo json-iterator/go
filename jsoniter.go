@@ -26,7 +26,6 @@ func init() {
 	}
 }
 
-
 type Iterator struct {
 	reader io.Reader
 	buf    []byte
@@ -57,14 +56,30 @@ func ParseBytes(input []byte) *Iterator {
 	return iter
 }
 
+func (iter *Iterator) Reuse(input []byte) *Iterator {
+	// only for benchmarking
+	iter.reader = nil
+	iter.Error = nil
+	iter.buf = input
+	iter.head = 0
+	iter.tail = len(input)
+	iter.skipWhitespaces()
+	return iter
+}
+
 func ParseString(input string) *Iterator {
 	return ParseBytes([]byte(input))
 }
 
 func (iter *Iterator) skipWhitespaces() {
 	c := iter.readByte()
-	for c == ' ' || c == '\n' || c == '\t' {
-		c = iter.readByte()
+	for {
+		switch c {
+		case ' ', '\n', '\t', 'r':
+			c = iter.readByte()
+			continue
+		}
+		break
 	}
 	iter.unreadByte()
 }
@@ -258,29 +273,20 @@ func (iter *Iterator) ReadInt64() (ret int64) {
 func (iter *Iterator) ReadString() (ret string) {
 	str := make([]byte, 0, 8)
 	c := iter.readByte()
-	if iter.Error != nil {
+	if c == 'n' {
+		iter.skipNull()
 		return
 	}
-	switch c {
-	case 'n':
-		iter.skipNull()
-		if iter.Error != nil {
-			return
-		}
-		return ""
-	case '"':
-	// nothing
-	default:
+	if c != '"' {
 		iter.ReportError("ReadString", `expects " or n`)
 		return
 	}
-	for {
+	for iter.Error == nil {
 		c = iter.readByte()
-		if iter.Error != nil {
-			return
+		if c == '"' {
+			return string(str)
 		}
-		switch c {
-		case '\\':
+		if c == '\\' {
 			c = iter.readByte()
 			if iter.Error != nil {
 				return
@@ -340,12 +346,11 @@ func (iter *Iterator) ReadString() (ret string) {
 					`invalid escape char after \`)
 				return
 			}
-		case '"':
-			return *(*string)(unsafe.Pointer(&str))
-		default:
+		} else {
 			str = append(str, c)
 		}
 	}
+	return
 }
 
 func (iter *Iterator) readU4() (ret rune) {
@@ -434,9 +439,6 @@ func (iter *Iterator) ReadArray() (ret bool) {
 	switch c {
 	case 'n': {
 		iter.skipNull()
-		if iter.Error != nil {
-			return
-		}
 		return false // null
 	}
 	case '[': {
@@ -459,6 +461,42 @@ func (iter *Iterator) ReadArray() (ret bool) {
 	default:
 		iter.ReportError("ReadArray", "expect [ or , or ] or n")
 		return
+	}
+}
+
+func (iter *Iterator) ReadArrayCB(cb func()) {
+	iter.skipWhitespaces()
+	c := iter.readByte()
+	if c == 'n' {
+		iter.skipNull()
+		return // null
+	}
+	if c != '[' {
+		iter.ReportError("ReadArray", "expect [ or n")
+		return
+	}
+	iter.skipWhitespaces()
+	c = iter.readByte()
+	if c == ']' {
+		return // []
+	} else {
+		iter.unreadByte()
+	}
+	for {
+		if iter.Error != nil {
+			return
+		}
+		cb()
+		iter.skipWhitespaces()
+		c = iter.readByte()
+		if c == ']' {
+			return
+		}
+		if c != ',' {
+			iter.ReportError("ReadArray", "expect , or ]")
+			return
+		}
+		iter.skipWhitespaces()
 	}
 }
 
