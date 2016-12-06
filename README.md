@@ -2,42 +2,37 @@
 
 faster than DOM, more usable than SAX/StAX
 
+# Why json iterator?
+
+## 1. It is faster
+
+jsoniter can work as drop in replacement for json.Unmarshal, with or without reflection. Unlike https://github.com/pquerna/ffjson
+jsoniter does not require `go generate`
+
 for performance numbers, see https://github.com/json-iterator/go-benchmark
 
-# DOM style api
+## 2. io.Reader as input
 
-Jsoniter can work as drop in replacement for json.Unmarshal
+jsoniter does not read the whole json into memory, it parse the document in a streaming way. Unlike https://github.com/pquerna/ffjson
+it requires []byte as input.
+
+## 3. Pull style api
+
+jsoniter can be used just like json.Unmarshal, for example
 
 ```
 type StructOfTag struct {
-	field1 string `json:"field-1"`
-	field2 string `json:"-"`
-	field3 int `json:",string"`
+    field1 string `json:"field-1"`
+    field2 string `json:"-"`
+    field3 int `json:",string"`
 }
 
-func Test_reflect_struct_tag_field(t *testing.T) {
-	err := jsoniter.Unmarshal(`{"field-1": "hello", "field2": "", "field3": "100"}`, &struct_)
-	if struct_.field1 != "hello" {
-		fmt.Println(err)
-		t.Fatal(struct_.field1)
-	}
-	if struct_.field2 != "world" {
-		fmt.Println(err)
-		t.Fatal(struct_.field2)
-	}
-	if struct_.field3 != 100 {
-		fmt.Println(err)
-		t.Fatal(struct_.field3)
-	}
-}
+struct_ := StructOfTag{}
+jsoniter.Unmarshal(`{"field-1": "hello", "field2": "", "field3": "100"}`, &struct_)
 ```
 
-# StAX style api
-
-When you need the maximum performance, the pull style api allows you to control every bit of parsing process. You
-can bind value to object without reflection, or you can calculate the sum of array on the fly without intermediate objects.
-
-Array
+But it allows you to go down one level lower, to control the parsing process using pull style api (like StAX, if you
+know what I mean). Here is just a demo of what you can do
 
 ```
 iter := jsoniter.ParseString(`[1,2,3]`)
@@ -46,43 +41,7 @@ for iter.ReadArray() {
 }
 ```
 
-Object
-
-```
-type TestObj struct {
-    Field1 string
-    Field2 uint64
-}
-```
-
-```
-iter := jsoniter.ParseString(`{"field1": "1", "field2": 2}`)
-obj := TestObj{}
-for field := iter.ReadObject(); field != ""; field = iter.ReadObject() {
-    switch field {
-    case "field1":
-        obj.Field1 = iter.ReadString()
-    case "field2":
-        obj.Field2 = iter.ReadUint64()
-    default:
-        iter.ReportError("bind object", "unexpected field")
-    }
-}
-```
-
-Skip
-
-```
-iter := jsoniter.ParseString(`[ {"a" : [{"b": "c"}], "d": 102 }, "b"]`)
-iter.ReadArray()
-iter.Skip()
-iter.ReadArray()
-if iter.ReadString() != "b" {
-    t.FailNow()
-}
-```
-
-# Customization
+## 4. Customization
 
 Of course, you can use the low level pull api to do anything you like. But most of the time,
 reflection based api is fast enough. How to control the parsing process when we are using the reflection api?
@@ -111,7 +70,8 @@ func Test_customize_type_decoder(t *testing.T) {
 }
 ```
 
-there is no way to add json.Unmarshaller to time.Time as the type is not defined by you. Using jsoniter, we can.
+there is no way to add json.Unmarshaller to time.Time as the type is not defined by you (type alias time.Time is not fun to use).
+Using jsoniter, we can.
 
 ```
 type Tom struct {
@@ -135,3 +95,6 @@ It is very common the input json has certain fields massed up. We want string, b
 define a struct of exact type like the json. Then we convert from one struct to a new struct. It is just too much work.
 Using jsoniter you can tweak the field conversion.
 
+# Why not json iterator?
+
+jsoniter does not plan to support `map[string]interface{}`, period.
