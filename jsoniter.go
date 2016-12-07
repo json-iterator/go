@@ -304,55 +304,6 @@ func (iter *Iterator) ReadString() (ret string) {
 	return string(iter.ReadStringAsBytes())
 }
 
-// adapted from: https://github.com/buger/jsonparser/blob/master/parser.go
-// Tries to find the end of string
-// Support if string contains escaped quote symbols.
-func (iter *Iterator) findStringEnd() (int, bool) {
-	escaped := false
-	for i := iter.head; i < iter.tail; i++ {
-		c := iter.buf[i]
-		if c == '"' {
-			if !escaped {
-				return i + 1, false
-			} else {
-				j := i - 1
-				for {
-					if j < iter.head || iter.buf[j] != '\\' {
-						// even number of backslashes
-						// either end of buffer, or " found
-						return i + 1, true
-					}
-					j--
-					if j < iter.head || iter.buf[j] != '\\' {
-						// odd number of backslashes
-						// it is \" or \\\"
-						break
-					}
-					j--
-				}
-			}
-		} else if c == '\\' {
-			escaped = true
-		}
-	}
-	j := iter.tail - 1
-	for {
-		if j < iter.head || iter.buf[j] != '\\' {
-			// even number of backslashes
-			// either end of buffer, or " found
-			return -1, false // do not end with \
-		}
-		j--
-		if j < iter.head || iter.buf[j] != '\\' {
-			// odd number of backslashes
-			// it is \" or \\\"
-			break
-		}
-		j--
-
-	}
-	return -1, true // end with \
-}
 
 func (iter *Iterator) ReadStringAsBytes() (ret []byte) {
 	c := iter.readByte()
@@ -364,8 +315,8 @@ func (iter *Iterator) ReadStringAsBytes() (ret []byte) {
 		iter.ReportError("ReadString", `expects " or n`)
 		return
 	}
-	end, escaped := iter.findStringEnd()
-	if end != -1 && !escaped {
+	end := iter.findStringEndWithoutEscape()
+	if end != -1 {
 		// fast path: reuse the underlying buffer
 		ret = iter.buf[iter.head:end-1]
 		iter.head = end
@@ -726,15 +677,9 @@ func (iter *Iterator) ReadBool() (ret bool) {
 	switch c {
 	case 't':
 		iter.skipUntilBreak()
-		if iter.Error != nil {
-			return
-		}
 		return true
 	case 'f':
 		iter.skipUntilBreak()
-		if iter.Error != nil {
-			return
-		}
 		return false
 	default:
 		iter.ReportError("ReadBool", "expect t or f")
@@ -784,6 +729,70 @@ func (iter *Iterator) skipString() {
 			return
 		}
 	}
+}
+
+
+// adapted from: https://github.com/buger/jsonparser/blob/master/parser.go
+// Tries to find the end of string
+// Support if string contains escaped quote symbols.
+func (iter *Iterator) findStringEnd() (int, bool) {
+	escaped := false
+	for i := iter.head; i < iter.tail; i++ {
+		c := iter.buf[i]
+		if c == '"' {
+			if !escaped {
+				return i + 1, false
+			} else {
+				j := i - 1
+				for {
+					if j < iter.head || iter.buf[j] != '\\' {
+						// even number of backslashes
+						// either end of buffer, or " found
+						return i + 1, true
+					}
+					j--
+					if j < iter.head || iter.buf[j] != '\\' {
+						// odd number of backslashes
+						// it is \" or \\\"
+						break
+					}
+					j--
+				}
+			}
+		} else if c == '\\' {
+			escaped = true
+		}
+	}
+	j := iter.tail - 1
+	for {
+		if j < iter.head || iter.buf[j] != '\\' {
+			// even number of backslashes
+			// either end of buffer, or " found
+			return -1, false // do not end with \
+		}
+		j--
+		if j < iter.head || iter.buf[j] != '\\' {
+			// odd number of backslashes
+			// it is \" or \\\"
+			break
+		}
+		j--
+
+	}
+	return -1, true // end with \
+}
+
+
+func (iter *Iterator) findStringEndWithoutEscape() int {
+	for i := iter.head; i < iter.tail; i++ {
+		c := iter.buf[i]
+		if c == '"' {
+			return i + 1
+		} else if c == '\\' {
+			return -1
+		}
+	}
+	return -1
 }
 
 func (iter *Iterator) skipArray() {
