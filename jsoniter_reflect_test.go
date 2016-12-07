@@ -218,7 +218,7 @@ func Test_reflect_struct_tag_field(t *testing.T) {
 
 func Test_reflect_slice(t *testing.T) {
 	iter := ParseString(`["hello", "world"]`)
-	slice := make([]string, 0, 1)
+	slice := make([]string, 0, 5)
 	iter.Read(&slice)
 	if len(slice) != 2 {
 		fmt.Println(iter.Error)
@@ -229,6 +229,24 @@ func Test_reflect_slice(t *testing.T) {
 		t.Fatal(slice[0])
 	}
 	if slice[1] != "world" {
+		fmt.Println(iter.Error)
+		t.Fatal(slice[1])
+	}
+}
+
+func Test_reflect_large_slice(t *testing.T) {
+	iter := ParseString(`[1,2,3,4,5,6,7,8,9]`)
+	slice := make([]int, 0, 1)
+	iter.Read(&slice)
+	if len(slice) != 9 {
+		fmt.Println(iter.Error)
+		t.Fatal(len(slice))
+	}
+	if slice[0] != 1 {
+		fmt.Println(iter.Error)
+		t.Fatal(slice[0])
+	}
+	if slice[8] != 9 {
 		fmt.Println(iter.Error)
 		t.Fatal(slice[1])
 	}
@@ -267,12 +285,12 @@ type StructOfTagOne struct {
 func Benchmark_jsoniter_reflect(b *testing.B) {
 	b.ReportAllocs()
 	for n := 0; n < b.N; n++ {
-		iter := ParseString(`{"field3": "100"}`)
-		struct_ := StructOfTagOne{}
-		iter.Read(&struct_)
-		//iter := ParseString(`["hello", "world"]`)
-		//array := make([]string, 0, 1)
-		//iter.Read(&array)
+		//iter := ParseString(`{"field3": "100"}`)
+		//struct_ := StructOfTagOne{}
+		//iter.Read(&struct_)
+		iter := ParseString(`[1,2,3]`)
+		var array []int
+		iter.Read(&array)
 	}
 }
 

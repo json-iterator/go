@@ -308,16 +308,43 @@ type sliceHeader struct {
 }
 
 func (decoder *sliceDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
-	slice := (*sliceHeader)(ptr)
-	slice.Len = 0
-	for iter.ReadArray() {
-		offset := uintptr(slice.Len) * decoder.elemType.Size()
-		growOne(slice, decoder.sliceType, decoder.elemType)
-		dataPtr := uintptr(slice.Data) + offset
-		decoder.elemDecoder.decode(unsafe.Pointer(dataPtr), iter)
-	}
+	decoder.doDecode(ptr, iter)
 	if iter.Error != nil && iter.Error != io.EOF {
 		iter.Error = fmt.Errorf("%v: %s", decoder.sliceType, iter.Error.Error())
+	}
+}
+
+func (decoder *sliceDecoder) doDecode(ptr unsafe.Pointer, iter *Iterator) {
+	slice := (*sliceHeader)(ptr)
+	reuseSlice(slice, decoder.sliceType, 4)
+	if !iter.ReadArray() {
+		return
+	}
+	offset := uintptr(0)
+	decoder.elemDecoder.decode(unsafe.Pointer(uintptr(slice.Data) + offset), iter)
+	if !iter.ReadArray() {
+		slice.Len = 1
+		return
+	}
+	offset += decoder.elemType.Size()
+	decoder.elemDecoder.decode(unsafe.Pointer(uintptr(slice.Data) + offset), iter)
+	if !iter.ReadArray() {
+		slice.Len = 2
+		return
+	}
+	offset += decoder.elemType.Size()
+	decoder.elemDecoder.decode(unsafe.Pointer(uintptr(slice.Data) + offset), iter)
+	if !iter.ReadArray() {
+		slice.Len = 3
+		return
+	}
+	offset += decoder.elemType.Size()
+	decoder.elemDecoder.decode(unsafe.Pointer(uintptr(slice.Data) + offset), iter)
+	slice.Len = 4
+	for iter.ReadArray() {
+		growOne(slice, decoder.sliceType, decoder.elemType)
+		offset += decoder.elemType.Size()
+		decoder.elemDecoder.decode(unsafe.Pointer(uintptr(slice.Data) + offset), iter)
 	}
 }
 
@@ -350,6 +377,15 @@ func growOne(slice *sliceHeader, sliceType reflect.Type, elementType reflect.Typ
 	}
 	slice.Len = newLen
 	slice.Cap = newCap
+	slice.Data = dst
+}
+
+func reuseSlice(slice *sliceHeader, sliceType reflect.Type, expectedCap int) {
+	if expectedCap <= slice.Cap {
+		return
+	}
+	dst := unsafe.Pointer(reflect.MakeSlice(sliceType, 0, expectedCap).Pointer())
+	slice.Cap = expectedCap
 	slice.Data = dst
 }
 
