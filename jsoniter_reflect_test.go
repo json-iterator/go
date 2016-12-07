@@ -192,7 +192,6 @@ func Test_reflect_struct_string_ptr(t *testing.T) {
 	}
 }
 
-
 type StructOfTag struct {
 	field1 string `json:"field-1"`
 	field2 string `json:"-"`
@@ -257,11 +256,19 @@ func Test_reflect_nested(t *testing.T) {
 	}
 }
 
+
+type StructOfTagOne struct {
+	field1 string `json:"field1"`
+	field2 string `json:"field2"`
+	field3 int `json:"field3,string"`
+	field4 int `json:"field4,string"`
+}
+
 func Benchmark_jsoniter_reflect(b *testing.B) {
 	b.ReportAllocs()
 	for n := 0; n < b.N; n++ {
 		iter := ParseString(`{"field3": "100"}`)
-		struct_ := StructOfTag{}
+		struct_ := StructOfTagOne{}
 		iter.Read(&struct_)
 		//iter := ParseString(`["hello", "world"]`)
 		//array := make([]string, 0, 1)
@@ -295,7 +302,7 @@ func Benchmark_jsoniter_direct(b *testing.B) {
 func Benchmark_json_reflect(b *testing.B) {
 	b.ReportAllocs()
 	for n := 0; n < b.N; n++ {
-		struct_ := StructOfTag{}
+		struct_ := StructOfTagOne{}
 		json.Unmarshal([]byte(`{"field3": "100"}`), &struct_)
 		//array := make([]string, 0, 2)
 		//json.Unmarshal([]byte(`["hello", "world"]`), &array)
