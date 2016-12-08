@@ -50,17 +50,6 @@ func Test_two_elements(t *testing.T) {
 	}
 }
 
-func Test_two_elements_cb(t *testing.T) {
-	iter := ParseString(`[1,2]`)
-	total := int64(0)
-	iter.ReadArrayCB(func() {
-		total += iter.ReadInt64()
-	})
-	if total != 3 {
-		t.Fatal(total)
-	}
-}
-
 func Test_invalid_array(t *testing.T) {
 	iter := ParseString(`[`)
 	iter.ReadArray()
@@ -138,19 +127,6 @@ func Benchmark_jsoniter_array(b *testing.B) {
 		for iter.ReadArray() {
 			iter.ReadUint64()
 		}
-	}
-}
-
-func Benchmark_jsoniter_array_cb(b *testing.B) {
-	b.ReportAllocs()
-	input := []byte(`[1,2,3,4,5,6,7,8,9]`)
-	iter := ParseBytes(input)
-	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
-		iter.Reuse(input)
-		iter.ReadArrayCB(func() {
-			iter.ReadUint64()
-		})
 	}
 }
 

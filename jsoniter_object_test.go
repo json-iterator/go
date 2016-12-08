@@ -66,18 +66,6 @@ func Test_two_field(t *testing.T) {
 	}
 }
 
-func Test_cb(t *testing.T) {
-	iter := ParseString(`{ "a": "b" , "c": "d" }`)
-	count := 0
-	iter.ReadObjectCB(func(field string) {
-		iter.Skip()
-		count += 1
-	})
-	if count != 2 {
-		t.Fatal(count)
-	}
-}
-
 type TestObj struct {
 	Field1 string
 	Field2 uint64
@@ -97,23 +85,6 @@ func Benchmark_jsoniter_object(b *testing.B) {
 				iter.ReportError("bind object", "unexpected field")
 			}
 		}
-	}
-}
-
-func Benchmark_jsoniter_cb(b *testing.B) {
-	for n := 0; n < b.N; n++ {
-		iter := ParseString(`{"field1": "1", "field2": 2}`)
-		obj := TestObj{}
-		iter.ReadObjectCB(func(field string) {
-			switch field {
-			case "field1":
-				obj.Field1 = iter.ReadString()
-			case "field2":
-				obj.Field2 = iter.ReadUint64()
-			default:
-				iter.ReportError("bind object", "unexpected field")
-			}
-		})
 	}
 }
 
