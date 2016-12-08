@@ -4,6 +4,7 @@ import (
 	"testing"
 	"fmt"
 	"encoding/json"
+	"unsafe"
 )
 
 func Test_reflect_str(t *testing.T) {
@@ -274,6 +275,18 @@ func Test_reflect_nested(t *testing.T) {
 	}
 }
 
+func Test_reflect_base64(t *testing.T) {
+	iter := ParseString(`"YWJj"`)
+	val := []byte{}
+	RegisterTypeDecoder("[]uint8", func(ptr unsafe.Pointer, iter *Iterator) {
+		*((*[]byte)(ptr)) = iter.ReadBase64()
+	})
+	defer ClearDecoders()
+	iter.Read(&val)
+	if "abc" != string(val) {
+		t.Fatal(string(val))
+	}
+}
 
 type StructOfTagOne struct {
 	field1 string `json:"field1"`
