@@ -11,11 +11,6 @@ import (
 
 var digits []byte
 
-
-var needCheckValues []uint8
-
-var needCheckMasks []uint8
-
 func init() {
 	digits = make([]byte, 256)
 	for i := 0; i < len(digits); i++ {
@@ -29,26 +24,6 @@ func init() {
 	}
 	for i := 'A'; i <= 'F'; i++ {
 		digits[i] = byte((i - 'A') + 10);
-	}
-	needCheckValues = []uint8{
-		uint8(0xff) >> 7,
-		uint8(0xff) >> 6,
-		uint8(0xff) >> 5,
-		uint8(0xff) >> 4,
-		uint8(0xff) >> 3,
-		uint8(0xff) >> 2,
-		uint8(0xff) >> 1,
-		uint8(0xff) >> 0,
-	}
-	needCheckMasks = []uint8{
-		uint8(1) << 0,
-		uint8(1) << 1,
-		uint8(1) << 2,
-		uint8(1) << 3,
-		uint8(1) << 4,
-		uint8(1) << 5,
-		uint8(1) << 6,
-		uint8(1) << 7,
 	}
 }
 
