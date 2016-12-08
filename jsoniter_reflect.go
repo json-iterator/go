@@ -148,12 +148,12 @@ func (decoder *optionalDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 	}
 }
 
-type structDecoder struct {
+type generalStructDecoder struct {
 	type_  reflect.Type
-	fields map[string]Decoder
+	fields map[string]*structFieldDecoder
 }
 
-func (decoder *structDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (decoder *generalStructDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 	for field := iter.ReadObject(); field != ""; field = iter.ReadObject() {
 		fieldDecoder := decoder.fields[field]
 		if fieldDecoder == nil {
@@ -181,7 +181,7 @@ func (decoder *skipDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 type oneFieldStructDecoder struct {
 	type_        reflect.Type
 	fieldName    string
-	fieldDecoder Decoder
+	fieldDecoder *structFieldDecoder
 }
 
 func (decoder *oneFieldStructDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
@@ -200,9 +200,9 @@ func (decoder *oneFieldStructDecoder) decode(ptr unsafe.Pointer, iter *Iterator)
 type twoFieldsStructDecoder struct {
 	type_         reflect.Type
 	fieldName1    string
-	fieldDecoder1 Decoder
+	fieldDecoder1 *structFieldDecoder
 	fieldName2    string
-	fieldDecoder2 Decoder
+	fieldDecoder2 *structFieldDecoder
 }
 
 func (decoder *twoFieldsStructDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
@@ -224,11 +224,11 @@ func (decoder *twoFieldsStructDecoder) decode(ptr unsafe.Pointer, iter *Iterator
 type threeFieldsStructDecoder struct {
 	type_         reflect.Type
 	fieldName1    string
-	fieldDecoder1 Decoder
+	fieldDecoder1 *structFieldDecoder
 	fieldName2    string
-	fieldDecoder2 Decoder
+	fieldDecoder2 *structFieldDecoder
 	fieldName3    string
-	fieldDecoder3 Decoder
+	fieldDecoder3 *structFieldDecoder
 }
 
 func (decoder *threeFieldsStructDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
@@ -252,13 +252,13 @@ func (decoder *threeFieldsStructDecoder) decode(ptr unsafe.Pointer, iter *Iterat
 type fourFieldsStructDecoder struct {
 	type_         reflect.Type
 	fieldName1    string
-	fieldDecoder1 Decoder
+	fieldDecoder1 *structFieldDecoder
 	fieldName2    string
-	fieldDecoder2 Decoder
+	fieldDecoder2 *structFieldDecoder
 	fieldName3    string
-	fieldDecoder3 Decoder
+	fieldDecoder3 *structFieldDecoder
 	fieldName4    string
-	fieldDecoder4 Decoder
+	fieldDecoder4 *structFieldDecoder
 }
 
 func (decoder *fourFieldsStructDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
@@ -538,7 +538,7 @@ func decoderOfOptional(type_ reflect.Type) (Decoder, error) {
 }
 
 func decoderOfStruct(type_ reflect.Type) (Decoder, error) {
-	fields := map[string]Decoder{}
+	fields := map[string]*structFieldDecoder{}
 	for i := 0; i < type_.NumField(); i++ {
 		field := type_.Field(i)
 		fieldDecoderKey := fmt.Sprintf("%s/%s", type_.String(), field.Name)
@@ -572,8 +572,8 @@ func decoderOfStruct(type_ reflect.Type) (Decoder, error) {
 	case 2:
 		var fieldName1 string
 		var fieldName2 string
-		var fieldDecoder1 Decoder
-		var fieldDecoder2 Decoder
+		var fieldDecoder1 *structFieldDecoder
+		var fieldDecoder2 *structFieldDecoder
 		for fieldName, fieldDecoder := range fields {
 			if fieldName1 == "" {
 				fieldName1 = fieldName
@@ -588,9 +588,9 @@ func decoderOfStruct(type_ reflect.Type) (Decoder, error) {
 		var fieldName1 string
 		var fieldName2 string
 		var fieldName3 string
-		var fieldDecoder1 Decoder
-		var fieldDecoder2 Decoder
-		var fieldDecoder3 Decoder
+		var fieldDecoder1 *structFieldDecoder
+		var fieldDecoder2 *structFieldDecoder
+		var fieldDecoder3 *structFieldDecoder
 		for fieldName, fieldDecoder := range fields {
 			if fieldName1 == "" {
 				fieldName1 = fieldName
@@ -610,10 +610,10 @@ func decoderOfStruct(type_ reflect.Type) (Decoder, error) {
 		var fieldName2 string
 		var fieldName3 string
 		var fieldName4 string
-		var fieldDecoder1 Decoder
-		var fieldDecoder2 Decoder
-		var fieldDecoder3 Decoder
-		var fieldDecoder4 Decoder
+		var fieldDecoder1 *structFieldDecoder
+		var fieldDecoder2 *structFieldDecoder
+		var fieldDecoder3 *structFieldDecoder
+		var fieldDecoder4 *structFieldDecoder
 		for fieldName, fieldDecoder := range fields {
 			if fieldName1 == "" {
 				fieldName1 = fieldName
@@ -633,7 +633,7 @@ func decoderOfStruct(type_ reflect.Type) (Decoder, error) {
 			fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3,
 			fieldName4, fieldDecoder4}, nil
 	}
-	return &structDecoder{type_, fields}, nil
+	return &generalStructDecoder{type_, fields}, nil
 }
 
 func decoderOfSlice(type_ reflect.Type) (Decoder, error) {

@@ -285,12 +285,12 @@ type StructOfTagOne struct {
 func Benchmark_jsoniter_reflect(b *testing.B) {
 	b.ReportAllocs()
 	for n := 0; n < b.N; n++ {
-		//iter := ParseString(`{"field3": "100"}`)
-		//struct_ := StructOfTagOne{}
-		//iter.Read(&struct_)
-		iter := ParseString(`[1,2,3]`)
-		var array []int
-		iter.Read(&array)
+		iter := ParseString(`{"field3": "100"}`)
+		struct_ := StructOfTagOne{}
+		iter.Read(&struct_)
+		//iter := ParseString(`[1,2,3]`)
+		//var array []int
+		//iter.Read(&array)
 	}
 }
 
