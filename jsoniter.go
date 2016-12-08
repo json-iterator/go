@@ -6,9 +6,15 @@ import (
 	"unicode/utf16"
 	"strconv"
 	"unsafe"
+	"encoding/base64"
 )
 
 var digits []byte
+
+
+var needCheckValues []uint8
+
+var needCheckMasks []uint8
 
 func init() {
 	digits = make([]byte, 256)
@@ -23,6 +29,26 @@ func init() {
 	}
 	for i := 'A'; i <= 'F'; i++ {
 		digits[i] = byte((i - 'A') + 10);
+	}
+	needCheckValues = []uint8{
+		uint8(0xff) >> 7,
+		uint8(0xff) >> 6,
+		uint8(0xff) >> 5,
+		uint8(0xff) >> 4,
+		uint8(0xff) >> 3,
+		uint8(0xff) >> 2,
+		uint8(0xff) >> 1,
+		uint8(0xff) >> 0,
+	}
+	needCheckMasks = []uint8{
+		uint8(1) << 0,
+		uint8(1) << 1,
+		uint8(1) << 2,
+		uint8(1) << 3,
+		uint8(1) << 4,
+		uint8(1) << 5,
+		uint8(1) << 6,
+		uint8(1) << 7,
 	}
 }
 
@@ -549,8 +575,7 @@ func (iter *Iterator) ReadObject() (ret string) {
 func (iter *Iterator) readObjectField() (ret string) {
 	str := iter.ReadStringAsBytes()
 	field := *(*string)(unsafe.Pointer(&str))
-	c := iter.nextToken()
-	if c != ':' {
+	if iter.nextToken() != ':' {
 		iter.ReportError("ReadObject", "expect : after object field")
 		return
 	}
@@ -640,6 +665,21 @@ func (iter *Iterator) ReadBool() (ret bool) {
 		iter.ReportError("ReadBool", "expect t or f")
 		return
 	}
+}
+
+func (iter *Iterator) ReadBase64() (ret []byte) {
+	src := iter.ReadStringAsBytes()
+	if iter.Error != nil {
+		return
+	}
+	b64 := base64.StdEncoding
+	ret = make([]byte, b64.DecodedLen(len(src)))
+	n, err := b64.Decode(ret, src)
+	if err != nil {
+		iter.Error = err
+		return
+	}
+	return ret[:n]
 }
 
 func (iter *Iterator) ReadNull() (ret bool) {
