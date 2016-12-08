@@ -554,7 +554,27 @@ func (iter *Iterator) readObjectField() (ret string) {
 		iter.ReportError("ReadObject", "expect : after object field")
 		return
 	}
-	iter.skipWhitespaces()
+	// skip whitespaces, and detect if buffer is rotated
+	for {
+		for i := iter.head; i < iter.tail; i++ {
+			c := iter.buf[i]
+			switch c {
+			case ' ', '\n', '\t', '\r':
+				continue
+			}
+			iter.head = i
+			break
+		}
+		if iter.head == iter.tail {
+			// no longer safe to reuse buffer
+			field = string(str)
+			if !iter.loadMore() {
+				return
+			}
+		} else {
+			break
+		}
+	}
 	return field
 }
 
