@@ -133,6 +133,8 @@ func (iter *Iterator) readByte() (ret byte) {
 			ret = iter.buf[iter.head]
 			iter.head++
 			return ret
+		} else {
+			return 0
 		}
 	}
 	ret = iter.buf[iter.head]
@@ -557,16 +559,26 @@ func (iter *Iterator) readObjectField() (ret string) {
 }
 
 func (iter *Iterator) ReadFloat32() (ret float32) {
-	str := make([]byte, 0, 4)
-	for c := iter.readByte(); iter.Error == nil; c = iter.readByte() {
-		switch c {
-		case '-', '+', '.', 'e', 'E', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
-			str = append(str, c)
-			continue
-		default:
-			iter.unreadByte()
+	strBuf := [8]byte{}
+	str := strBuf[0:0]
+	hasMore := true
+	for(hasMore) {
+		for i := iter.head; i < iter.tail; i++ {
+			c := iter.buf[i]
+			switch c {
+			case '-', '+', '.', 'e', 'E', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+				str = append(str, c)
+				continue
+			default:
+				hasMore = false
+				break
+			}
 		}
-		break
+		if hasMore {
+			if !iter.loadMore() {
+				break
+			}
+		}
 	}
 	if iter.Error != nil && iter.Error != io.EOF {
 		return
@@ -580,16 +592,26 @@ func (iter *Iterator) ReadFloat32() (ret float32) {
 }
 
 func (iter *Iterator) ReadFloat64() (ret float64) {
-	str := make([]byte, 0, 4)
-	for c := iter.readByte(); iter.Error == nil; c = iter.readByte() {
-		switch c {
-		case '-', '+', '.', 'e', 'E', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
-			str = append(str, c)
-			continue
-		default:
-			iter.unreadByte()
+	strBuf := [8]byte{}
+	str := strBuf[0:0]
+	hasMore := true
+	for(hasMore) {
+		for i := iter.head; i < iter.tail; i++ {
+			c := iter.buf[i]
+			switch c {
+			case '-', '+', '.', 'e', 'E', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+				str = append(str, c)
+				continue
+			default:
+				hasMore = false
+				break
+			}
 		}
-		break
+		if hasMore {
+			if !iter.loadMore() {
+				break
+			}
+		}
 	}
 	if iter.Error != nil && iter.Error != io.EOF {
 		return

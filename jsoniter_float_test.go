@@ -3,6 +3,7 @@ package jsoniter
 import (
 	"testing"
 	"encoding/json"
+	"fmt"
 )
 
 func Test_float64_0(t *testing.T) {
@@ -25,13 +26,15 @@ func Test_float32_1_dot_1_comma(t *testing.T) {
 	iter := ParseString(`1.1,`)
 	val := iter.ReadFloat32()
 	if val != 1.1 {
+		fmt.Println(iter.Error)
 		t.Fatal(val)
 	}
 }
 
 func Benchmark_jsoniter_float(b *testing.B) {
+	b.ReportAllocs()
 	for n := 0; n < b.N; n++ {
-		iter := ParseString(`1.1`)
+		iter := ParseString(`1.1111111111`)
 		iter.ReadFloat64()
 	}
 }
