@@ -276,18 +276,21 @@ func Test_reflect_nested(t *testing.T) {
 
 
 type StructOfTagOne struct {
+	field1 string `json:"field1"`
+	field2 string `json:"field2"`
 	field3 int `json:"field3,string"`
+	field4 int `json:"field4,string"`
 }
 
 func Benchmark_jsoniter_reflect(b *testing.B) {
 	b.ReportAllocs()
 	for n := 0; n < b.N; n++ {
-		iter := ParseString(`{"field3": "100"}`)
-		struct_ := StructOfTagOne{}
-		iter.Read(&struct_)
-		//iter := ParseString(`[1,2,3]`)
-		//var array []int
-		//iter.Read(&array)
+		//iter := ParseString(`{"field3": "100"}`)
+		//struct_ := StructOfTagOne{}
+		//iter.Read(&struct_)
+		iter := ParseString(`[1,2,3]`)
+		var array []int
+		iter.Read(&array)
 	}
 }
 
