@@ -76,7 +76,7 @@ func (iter *Iterator) skipWhitespaces() {
 		for i := iter.head; i < iter.tail; i++ {
 			c := iter.buf[i]
 			switch c {
-			case ' ', '\n', '\t', 'r':
+			case ' ', '\n', '\t', '\r':
 				continue
 			}
 			iter.head = i
