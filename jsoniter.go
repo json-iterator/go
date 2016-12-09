@@ -89,6 +89,19 @@ func (iter *Iterator) skipWhitespaces() {
 	}
 }
 
+func (iter *Iterator) skipWhitespacesWithoutLoadMore() bool {
+	for i := iter.head; i < iter.tail; i++ {
+		c := iter.buf[i]
+		switch c {
+		case ' ', '\n', '\t', '\r':
+			continue
+		}
+		iter.head = i
+		return false
+	}
+	return true
+}
+
 func (iter *Iterator) nextToken() byte {
 	// a variation of skip whitespaces, returning the next non-whitespace token
 	for {
@@ -124,7 +137,7 @@ func (iter *Iterator) CurrentBuffer() string {
 	if peekStart < 0 {
 		peekStart = 0
 	}
-	return fmt.Sprintf("parsing %v ...%s... at %s", iter.head,
+	return fmt.Sprintf("parsing %v ...|%s|... at %s", iter.head,
 		string(iter.buf[peekStart: iter.head]), string(iter.buf[0:iter.tail]))
 }
 
@@ -549,33 +562,31 @@ func (iter *Iterator) ReadObject() (ret string) {
 
 func (iter *Iterator) readObjectField() (ret string) {
 	str := iter.ReadStringAsBytes()
-	field := *(*string)(unsafe.Pointer(&str))
-	if iter.nextToken() != ':' {
+	if iter.skipWhitespacesWithoutLoadMore() {
+		if ret == "" {
+			ret = string(str);
+		}
+		if !iter.loadMore() {
+			return
+		}
+	}
+	if iter.buf[iter.head] != ':' {
 		iter.ReportError("ReadObject", "expect : after object field")
 		return
 	}
-	// skip whitespaces, and detect if buffer is rotated
-	for {
-		for i := iter.head; i < iter.tail; i++ {
-			c := iter.buf[i]
-			switch c {
-			case ' ', '\n', '\t', '\r':
-				continue
-			}
-			iter.head = i
-			break
+	iter.head++
+	if iter.skipWhitespacesWithoutLoadMore() {
+		if ret == "" {
+			ret = string(str);
 		}
-		if iter.head == iter.tail {
-			// no longer safe to reuse buffer
-			field = string(str)
-			if !iter.loadMore() {
-				return
-			}
-		} else {
-			break
+		if !iter.loadMore() {
+			return
 		}
 	}
-	return field
+	if ret == "" {
+		return *(*string)(unsafe.Pointer(&str))
+	}
+	return ret
 }
 
 func (iter *Iterator) ReadFloat32() (ret float32) {
