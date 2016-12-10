@@ -123,7 +123,7 @@ func Benchmark_jsoniter_array(b *testing.B) {
 	iter := ParseBytes(input)
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
-		iter.Reuse(input)
+		iter.ResetBytes(input)
 		for iter.ReadArray() {
 			iter.ReadUint64()
 		}

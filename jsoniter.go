@@ -9,7 +9,20 @@ import (
 	"encoding/base64"
 )
 
+type ValueType int
+
+const (
+	Invalid ValueType = iota
+	String
+	Number
+	Null
+	Boolean
+	Array
+	Object
+)
+
 var digits []byte
+var valueTypes []ValueType
 
 func init() {
 	digits = make([]byte, 256)
@@ -25,6 +38,27 @@ func init() {
 	for i := 'A'; i <= 'F'; i++ {
 		digits[i] = byte((i - 'A') + 10);
 	}
+	valueTypes = make([]ValueType, 256)
+	for i := 0; i < len(valueTypes); i++ {
+		valueTypes[i] = Invalid
+	}
+	valueTypes['"'] = String;
+	valueTypes['-'] = Number;
+	valueTypes['0'] = Number;
+	valueTypes['1'] = Number;
+	valueTypes['2'] = Number;
+	valueTypes['3'] = Number;
+	valueTypes['4'] = Number;
+	valueTypes['5'] = Number;
+	valueTypes['6'] = Number;
+	valueTypes['7'] = Number;
+	valueTypes['8'] = Number;
+	valueTypes['9'] = Number;
+	valueTypes['t'] = Boolean;
+	valueTypes['f'] = Boolean;
+	valueTypes['n'] = Null;
+	valueTypes['['] = Array;
+	valueTypes['{'] = Object;
 }
 
 type Iterator struct {
@@ -57,7 +91,19 @@ func ParseBytes(input []byte) *Iterator {
 	return iter
 }
 
-func (iter *Iterator) Reuse(input []byte) *Iterator {
+func ParseString(input string) *Iterator {
+	return ParseBytes([]byte(input))
+}
+
+func (iter *Iterator) Reset(reader io.Reader) *Iterator {
+	iter.reader = reader
+	iter.head = 0
+	iter.tail = 0
+	iter.skipWhitespaces()
+	return iter
+}
+
+func (iter *Iterator) ResetBytes(input []byte) *Iterator {
 	// only for benchmarking
 	iter.reader = nil
 	iter.Error = nil
@@ -68,8 +114,10 @@ func (iter *Iterator) Reuse(input []byte) *Iterator {
 	return iter
 }
 
-func ParseString(input string) *Iterator {
-	return ParseBytes([]byte(input))
+func (iter *Iterator) WhatIsNext() ValueType {
+	valueType := valueTypes[iter.readByte()];
+	iter.unreadByte();
+	return valueType;
 }
 
 func (iter *Iterator) skipWhitespaces() {

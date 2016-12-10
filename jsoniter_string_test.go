@@ -95,7 +95,7 @@ func Benchmark_jsoniter_ascii(b *testing.B) {
 	iter := ParseString(`"hello, world!"`)
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
-		iter.Reuse(iter.buf)
+		iter.ResetBytes(iter.buf)
 		iter.ReadString()
 	}
 }
@@ -104,7 +104,7 @@ func Benchmark_jsoniter_string_as_bytes(b *testing.B) {
 	iter := ParseString(`"hello, world!"`)
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
-		iter.Reuse(iter.buf)
+		iter.ResetBytes(iter.buf)
 		iter.ReadStringAsBytes()
 	}
 }
