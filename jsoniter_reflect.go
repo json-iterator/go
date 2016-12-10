@@ -295,6 +295,27 @@ func (decoder *structFieldDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 	}
 }
 
+type mapDecoder struct {
+	mapType  reflect.Type
+	elemType  reflect.Type
+	elemDecoder Decoder
+	mapInterface emptyInterface
+}
+
+func (decoder *mapDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+	// dark magic to cast unsafe.Pointer back to interface{} using reflect.Type
+	mapInterface := decoder.mapInterface
+	mapInterface.word = ptr
+	realInterface := (*interface{})(unsafe.Pointer(&mapInterface))
+	realVal := reflect.ValueOf(*realInterface).Elem()
+
+	for field := iter.ReadObject(); field != ""; field = iter.ReadObject() {
+		elem := reflect.New(decoder.elemType)
+		decoder.elemDecoder.decode(unsafe.Pointer(elem.Pointer()), iter)
+		realVal.SetMapIndex(reflect.ValueOf(field), elem.Elem())
+	}
+}
+
 type sliceDecoder struct {
 	sliceType   reflect.Type
 	elemType    reflect.Type
@@ -582,6 +603,8 @@ func decoderOfPtr(type_ reflect.Type) (Decoder, error) {
 		return decoderOfStruct(type_)
 	case reflect.Slice:
 		return prefix("[slice]").addTo(decoderOfSlice(type_))
+	case reflect.Map:
+		return prefix("[map]").addTo(decoderOfMap(type_))
 	case reflect.Ptr:
 		return prefix("[optional]").addTo(decoderOfOptional(type_.Elem()))
 	default:
@@ -702,4 +725,13 @@ func decoderOfSlice(type_ reflect.Type) (Decoder, error) {
 		return nil, err
 	}
 	return &sliceDecoder{type_, type_.Elem(), decoder}, nil
+}
+
+func decoderOfMap(type_ reflect.Type) (Decoder, error) {
+	decoder, err := decoderOfPtr(type_.Elem())
+	if err != nil {
+		return nil, err
+	}
+	mapInterface := reflect.New(type_).Interface()
+	return &mapDecoder{type_, type_.Elem(), decoder, *((*emptyInterface)(unsafe.Pointer(&mapInterface)))}, nil
 }
