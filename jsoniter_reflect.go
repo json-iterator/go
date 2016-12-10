@@ -8,6 +8,7 @@ import (
 	"sync/atomic"
 	"strings"
 	"io"
+	"strconv"
 )
 
 type Decoder interface {
@@ -447,6 +448,65 @@ func ClearDecoders() {
 type emptyInterface struct {
 	typ  *struct{}
 	word unsafe.Pointer
+}
+
+func (iter *Iterator) ReadAny() (ret *Any) {
+	valueType := iter.WhatIsNext()
+	switch valueType {
+	case String:
+		return &Any{iter.ReadString(), nil}
+	case Number:
+		number := iter.ReadNumber()
+		if strings.Contains(number, ".") {
+			val, err := strconv.ParseFloat(number, 64)
+			if err != nil {
+				iter.Error = err
+				return
+			}
+			return &Any{val, nil}
+		}
+		if strings.HasPrefix(number, "-") {
+			val, err := strconv.ParseUint(number, 10, 64)
+			if err != nil {
+				iter.Error = err
+				return
+			}
+			return &Any{val, nil}
+		}
+		val, err := strconv.ParseInt(number, 10, 64)
+		if err != nil {
+			iter.Error = err
+			return
+		}
+		return &Any{val, nil}
+	case Null:
+		return &Any{nil, nil}
+	case Boolean:
+		return &Any{iter.ReadBool(), nil}
+	case Array:
+		val := []interface{}{}
+		for (iter.ReadArray()) {
+			element := iter.ReadAny()
+			if iter.Error != nil {
+				return
+			}
+			val = append(val, element.Val)
+		}
+		return &Any{val, nil}
+	case Object:
+		val := map[string]interface{}{}
+		for field := iter.ReadObject(); field != ""; field = iter.ReadObject() {
+			element := iter.ReadAny()
+			if iter.Error != nil {
+				return
+			}
+			val[field] = element.Val
+		}
+		return &Any{val, nil}
+	default:
+		iter.ReportError("ReadAny", fmt.Sprintf("unexpected value type: %v", valueType))
+		return nil
+	}
 }
 
 func (iter *Iterator) Read(obj interface{}) {

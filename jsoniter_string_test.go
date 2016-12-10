@@ -74,11 +74,11 @@ func Test_string_escape_unicode_with_surrogate(t *testing.T) {
 
 func Test_string_as_bytes(t *testing.T) {
 	iter := Parse(bytes.NewBufferString(`"hello""world"`), 4096)
-	val := string(iter.ReadStringAsBytes())
+	val := string(iter.readStringAsBytes())
 	if val != "hello" {
 		t.Fatal(val)
 	}
-	val = string(iter.ReadStringAsBytes())
+	val = string(iter.readStringAsBytes())
 	if val != "world" {
 		t.Fatal(val)
 	}
@@ -105,7 +105,7 @@ func Benchmark_jsoniter_string_as_bytes(b *testing.B) {
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		iter.ResetBytes(iter.buf)
-		iter.ReadStringAsBytes()
+		iter.readStringAsBytes()
 	}
 }
 

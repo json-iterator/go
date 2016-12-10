@@ -365,11 +365,11 @@ func (iter *Iterator) ReadInt64() (ret int64) {
 }
 
 func (iter *Iterator) ReadString() (ret string) {
-	return string(iter.ReadStringAsBytes())
+	return string(iter.readStringAsBytes())
 }
 
 
-func (iter *Iterator) ReadStringAsBytes() (ret []byte) {
+func (iter *Iterator) readStringAsBytes() (ret []byte) {
 	c := iter.readByte()
 	if c == 'n' {
 		iter.skipUntilBreak()
@@ -609,7 +609,7 @@ func (iter *Iterator) ReadObject() (ret string) {
 }
 
 func (iter *Iterator) readObjectField() (ret string) {
-	str := iter.ReadStringAsBytes()
+	str := iter.readStringAsBytes()
 	if iter.skipWhitespacesWithoutLoadMore() {
 		if ret == "" {
 			ret = string(str);
@@ -670,6 +670,34 @@ func (iter *Iterator) ReadFloat32() (ret float32) {
 	return float32(val)
 }
 
+func (iter *Iterator) ReadNumber() (ret string) {
+	strBuf := [8]byte{}
+	str := strBuf[0:0]
+	hasMore := true
+	for(hasMore) {
+		for i := iter.head; i < iter.tail; i++ {
+			c := iter.buf[i]
+			switch c {
+			case '-', '+', '.', 'e', 'E', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+				str = append(str, c)
+				continue
+			default:
+				hasMore = false
+				break
+			}
+		}
+		if hasMore {
+			if !iter.loadMore() {
+				break
+			}
+		}
+	}
+	if iter.Error != nil && iter.Error != io.EOF {
+		return
+	}
+	return string(str)
+}
+
 func (iter *Iterator) ReadFloat64() (ret float64) {
 	strBuf := [8]byte{}
 	str := strBuf[0:0]
@@ -722,7 +750,7 @@ func (iter *Iterator) ReadBool() (ret bool) {
 }
 
 func (iter *Iterator) ReadBase64() (ret []byte) {
-	src := iter.ReadStringAsBytes()
+	src := iter.readStringAsBytes()
 	if iter.Error != nil {
 		return
 	}
