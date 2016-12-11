@@ -327,7 +327,7 @@ func (decoder *mapDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 	for field := iter.ReadObject(); field != ""; field = iter.ReadObject() {
 		elem := reflect.New(decoder.elemType)
 		decoder.elemDecoder.decode(unsafe.Pointer(elem.Pointer()), iter)
-		realVal.SetMapIndex(reflect.ValueOf(field), elem.Elem())
+		realVal.SetMapIndex(reflect.ValueOf(string([]byte(field))), elem.Elem())
 	}
 }
 
@@ -514,7 +514,7 @@ func (iter *Iterator) ReadAny() (ret *Any) {
 			if iter.Error != nil {
 				return
 			}
-			val[field] = element.val
+			val[string([]byte(field))] = element.val
 		}
 		return MakeAny(val)
 	default:
