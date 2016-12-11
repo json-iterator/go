@@ -490,35 +490,13 @@ func (iter *Iterator) ReadAny() (ret *Any) {
 	valueType := iter.WhatIsNext()
 	switch valueType {
 	case String:
-		return &Any{iter.ReadString(), nil}
+		return MakeAny(iter.ReadString())
 	case Number:
-		number := iter.ReadNumber()
-		if strings.Contains(number, ".") {
-			val, err := strconv.ParseFloat(number, 64)
-			if err != nil {
-				iter.Error = err
-				return
-			}
-			return &Any{val, nil}
-		}
-		if strings.HasPrefix(number, "-") {
-			val, err := strconv.ParseUint(number, 10, 64)
-			if err != nil {
-				iter.Error = err
-				return
-			}
-			return &Any{val, nil}
-		}
-		val, err := strconv.ParseInt(number, 10, 64)
-		if err != nil {
-			iter.Error = err
-			return
-		}
-		return &Any{val, nil}
+		return iter.readNumber()
 	case Null:
-		return &Any{nil, nil}
+		return MakeAny(nil)
 	case Bool:
-		return &Any{iter.ReadBool(), nil}
+		return MakeAny(iter.ReadBool())
 	case Array:
 		val := []interface{}{}
 		for (iter.ReadArray()) {
@@ -528,7 +506,7 @@ func (iter *Iterator) ReadAny() (ret *Any) {
 			}
 			val = append(val, element.val)
 		}
-		return &Any{val, nil}
+		return MakeAny(val)
 	case Object:
 		val := map[string]interface{}{}
 		for field := iter.ReadObject(); field != ""; field = iter.ReadObject() {
@@ -538,11 +516,73 @@ func (iter *Iterator) ReadAny() (ret *Any) {
 			}
 			val[field] = element.val
 		}
-		return &Any{val, nil}
+		return MakeAny(val)
 	default:
 		iter.ReportError("ReadAny", fmt.Sprintf("unexpected value type: %v", valueType))
-		return nil
+		return MakeAny(nil)
 	}
+}
+
+
+
+func (iter *Iterator) readNumber() (ret *Any) {
+	strBuf := [8]byte{}
+	str := strBuf[0:0]
+	hasMore := true
+	foundFloat := false
+	foundNegative := false
+	for(hasMore) {
+		for i := iter.head; i < iter.tail; i++ {
+			c := iter.buf[i]
+			switch c {
+			case '-':
+				foundNegative = true
+				str = append(str, c)
+				continue
+			case '+', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+				str = append(str, c)
+				continue
+			case '.', 'e', 'E':
+				foundFloat = true
+				str = append(str, c)
+				continue
+			default:
+				hasMore = false
+				break
+			}
+		}
+		if hasMore {
+			if !iter.loadMore() {
+				break
+			}
+		}
+	}
+	if iter.Error != nil && iter.Error != io.EOF {
+		return
+	}
+	number := *(*string)(unsafe.Pointer(&str))
+	if foundFloat {
+		val, err := strconv.ParseFloat(number, 64)
+		if err != nil {
+			iter.Error = err
+			return
+		}
+		return MakeAny(val)
+	}
+	if foundNegative {
+		val, err := strconv.ParseInt(number, 10, 64)
+		if err != nil {
+			iter.Error = err
+			return
+		}
+		return MakeAny(val)
+	}
+	val, err := strconv.ParseUint(number, 10, 64)
+	if err != nil {
+		iter.Error = err
+		return
+	}
+	return MakeAny(val)
 }
 
 func (iter *Iterator) Read(obj interface{}) {

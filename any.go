@@ -9,14 +9,16 @@ import (
 type Any struct {
 	val   interface{}
 	Error error
+	LastAccessed interface{}
 }
 
-func any(val interface{}) Any {
-	return Any{val, nil}
+func MakeAny(val interface{}) *Any {
+	return &Any{val, nil, nil}
 }
 
 func (any *Any) Get(keys ...interface{}) interface{} {
 	ret, err := getPath(any.val, keys...)
+	any.LastAccessed = ret
 	if err != nil {
 		any.Error = err
 		return "";
@@ -26,6 +28,7 @@ func (any *Any) Get(keys ...interface{}) interface{} {
 
 func (any *Any) GetValueType(keys ...interface{}) ValueType {
 	ret, err := getPath(any.val, keys...)
+	any.LastAccessed = ret
 	if err != nil {
 		any.Error = err
 		return Invalid;
@@ -71,6 +74,7 @@ func (any *Any) GetValueType(keys ...interface{}) ValueType {
 
 func (any *Any) ToString(keys ...interface{}) string {
 	ret, err := getPath(any.val, keys...)
+	any.LastAccessed = ret
 	if err != nil {
 		any.Error = err
 		return "";
@@ -108,7 +112,7 @@ func (any *Any) ToString(keys ...interface{}) string {
 }
 
 func (any *Any) ToUint8(keys ...interface{}) uint8 {
-	ret, err := getPathAsInt64(any.val, keys...)
+	ret, err := getPathAsInt64(any, keys...)
 	if err != nil {
 		any.Error = err
 		return 0;
@@ -117,7 +121,7 @@ func (any *Any) ToUint8(keys ...interface{}) uint8 {
 }
 
 func (any *Any) ToInt8(keys ...interface{}) int8 {
-	ret, err := getPathAsInt64(any.val, keys...)
+	ret, err := getPathAsInt64(any, keys...)
 	if err != nil {
 		any.Error = err
 		return 0;
@@ -126,7 +130,7 @@ func (any *Any) ToInt8(keys ...interface{}) int8 {
 }
 
 func (any *Any) ToUint16(keys ...interface{}) uint16 {
-	ret, err := getPathAsInt64(any.val, keys...)
+	ret, err := getPathAsInt64(any, keys...)
 	if err != nil {
 		any.Error = err
 		return 0;
@@ -135,7 +139,7 @@ func (any *Any) ToUint16(keys ...interface{}) uint16 {
 }
 
 func (any *Any) ToInt16(keys ...interface{}) int16 {
-	ret, err := getPathAsInt64(any.val, keys...)
+	ret, err := getPathAsInt64(any, keys...)
 	if err != nil {
 		any.Error = err
 		return 0;
@@ -144,7 +148,7 @@ func (any *Any) ToInt16(keys ...interface{}) int16 {
 }
 
 func (any *Any) ToUint32(keys ...interface{}) uint32 {
-	ret, err := getPathAsInt64(any.val, keys...)
+	ret, err := getPathAsInt64(any, keys...)
 	if err != nil {
 		any.Error = err
 		return 0;
@@ -153,7 +157,7 @@ func (any *Any) ToUint32(keys ...interface{}) uint32 {
 }
 
 func (any *Any) ToInt32(keys ...interface{}) int32 {
-	ret, err := getPathAsInt64(any.val, keys...)
+	ret, err := getPathAsInt64(any, keys...)
 	if err != nil {
 		any.Error = err
 		return 0;
@@ -162,7 +166,7 @@ func (any *Any) ToInt32(keys ...interface{}) int32 {
 }
 
 func (any *Any) ToUint64(keys ...interface{}) uint64 {
-	ret, err := getPathAsUint64(any.val, keys...)
+	ret, err := getPathAsUint64(any, keys...)
 	if err != nil {
 		any.Error = err
 		return 0;
@@ -171,7 +175,7 @@ func (any *Any) ToUint64(keys ...interface{}) uint64 {
 }
 
 func (any *Any) ToInt64(keys ...interface{}) int64 {
-	ret, err := getPathAsInt64(any.val, keys...)
+	ret, err := getPathAsInt64(any, keys...)
 	if err != nil {
 		any.Error = err
 		return 0;
@@ -180,7 +184,7 @@ func (any *Any) ToInt64(keys ...interface{}) int64 {
 }
 
 func (any *Any) ToInt(keys ...interface{}) int {
-	ret, err := getPathAsInt64(any.val, keys...)
+	ret, err := getPathAsInt64(any, keys...)
 	if err != nil {
 		any.Error = err
 		return 0;
@@ -189,7 +193,7 @@ func (any *Any) ToInt(keys ...interface{}) int {
 }
 
 func (any *Any) ToUint(keys ...interface{}) uint {
-	ret, err := getPathAsInt64(any.val, keys...)
+	ret, err := getPathAsInt64(any, keys...)
 	if err != nil {
 		any.Error = err
 		return 0;
@@ -198,7 +202,7 @@ func (any *Any) ToUint(keys ...interface{}) uint {
 }
 
 func (any *Any) ToFloat32(keys ...interface{}) float32 {
-	ret, err := getPathAsFloat64(any.val, keys...)
+	ret, err := getPathAsFloat64(any, keys...)
 	if err != nil {
 		any.Error = err
 		return 0;
@@ -207,7 +211,7 @@ func (any *Any) ToFloat32(keys ...interface{}) float32 {
 }
 
 func (any *Any) ToFloat64(keys ...interface{}) float64 {
-	ret, err := getPathAsFloat64(any.val, keys...)
+	ret, err := getPathAsFloat64(any, keys...)
 	if err != nil {
 		any.Error = err
 		return 0;
@@ -217,6 +221,7 @@ func (any *Any) ToFloat64(keys ...interface{}) float64 {
 
 func (any *Any) ToBool(keys ...interface{}) bool {
 	ret, err := getPath(any.val, keys...)
+	any.LastAccessed = ret
 	if err != nil {
 		any.Error = err
 		return false;
@@ -231,6 +236,7 @@ func (any *Any) ToBool(keys ...interface{}) bool {
 
 func (any *Any) IsNull(keys ...interface{}) bool {
 	ret, err := getPath(any.val, keys...)
+	any.LastAccessed = ret
 	if err != nil {
 		any.Error = err
 		return false;
@@ -238,9 +244,11 @@ func (any *Any) IsNull(keys ...interface{}) bool {
 	return reflect.ValueOf(ret).IsNil()
 }
 
-func getPathAsInt64(val interface{}, keys ...interface{}) (int64, error) {
-	ret, err := getPath(val, keys...)
+func getPathAsInt64(any *Any, keys ...interface{}) (int64, error) {
+	ret, err := getPath(any.val, keys...)
+	any.LastAccessed = ret
 	if err != nil {
+		any.Error = err
 		return 0, err
 	}
 	switch ret := ret.(type) {
@@ -268,14 +276,22 @@ func getPathAsInt64(val interface{}, keys ...interface{}) (int64, error) {
 		return int64(ret), nil;
 	case float64:
 		return int64(ret), nil;
+	case string:
+		intVal, err := strconv.ParseInt(ret, 10, 64)
+		if err != nil {
+			return 0, err
+		}
+		return intVal, nil;
 	default:
 		return 0, fmt.Errorf("%v is not number", ret)
 	}
 }
 
-func getPathAsUint64(val interface{}, keys ...interface{}) (uint64, error) {
-	ret, err := getPath(val, keys...)
+func getPathAsUint64(any *Any, keys ...interface{}) (uint64, error) {
+	ret, err := getPath(any.val, keys...)
+	any.LastAccessed = ret
 	if err != nil {
+		any.Error = err
 		return 0, err
 	}
 	switch ret := ret.(type) {
@@ -303,14 +319,22 @@ func getPathAsUint64(val interface{}, keys ...interface{}) (uint64, error) {
 		return uint64(ret), nil;
 	case float64:
 		return uint64(ret), nil;
+	case string:
+		intVal, err := strconv.ParseUint(ret, 10, 64)
+		if err != nil {
+			return 0, err
+		}
+		return intVal, nil;
 	default:
 		return 0, fmt.Errorf("%v is not number", ret)
 	}
 }
 
-func getPathAsFloat64(val interface{}, keys ...interface{}) (float64, error) {
-	ret, err := getPath(val, keys...)
+func getPathAsFloat64(any *Any, keys ...interface{}) (float64, error) {
+	ret, err := getPath(any.val, keys...)
+	any.LastAccessed = ret
 	if err != nil {
+		any.Error = err
 		return 0, err
 	}
 	switch ret := ret.(type) {
@@ -338,6 +362,12 @@ func getPathAsFloat64(val interface{}, keys ...interface{}) (float64, error) {
 		return float64(ret), nil;
 	case float64:
 		return float64(ret), nil;
+	case string:
+		floatVal, err := strconv.ParseFloat(ret, 64)
+		if err != nil {
+			return 0, err
+		}
+		return floatVal, nil;
 	default:
 		return 0, fmt.Errorf("%v is not number", ret)
 	}

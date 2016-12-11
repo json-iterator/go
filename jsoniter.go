@@ -670,34 +670,6 @@ func (iter *Iterator) ReadFloat32() (ret float32) {
 	return float32(val)
 }
 
-func (iter *Iterator) ReadNumber() (ret string) {
-	strBuf := [8]byte{}
-	str := strBuf[0:0]
-	hasMore := true
-	for(hasMore) {
-		for i := iter.head; i < iter.tail; i++ {
-			c := iter.buf[i]
-			switch c {
-			case '-', '+', '.', 'e', 'E', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
-				str = append(str, c)
-				continue
-			default:
-				hasMore = false
-				break
-			}
-		}
-		if hasMore {
-			if !iter.loadMore() {
-				break
-			}
-		}
-	}
-	if iter.Error != nil && iter.Error != io.EOF {
-		return
-	}
-	return string(str)
-}
-
 func (iter *Iterator) ReadFloat64() (ret float64) {
 	strBuf := [8]byte{}
 	str := strBuf[0:0]

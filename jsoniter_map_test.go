@@ -28,9 +28,9 @@ func Test_read_map_of_interface(t *testing.T) {
 
 func Test_read_map_of_any(t *testing.T) {
 	iter := ParseString(`{"hello": "world"}`)
-	m := map[string]Any{"1": any("2")}
+	m := map[string]Any{"1": *MakeAny("2")}
 	iter.Read(&m)
-	if !reflect.DeepEqual(map[string]Any{"1": any("2"), "hello": any("world")}, m) {
+	if !reflect.DeepEqual(map[string]Any{"1": *MakeAny("2"), "hello": *MakeAny("world")}, m) {
 		fmt.Println(iter.Error)
 		t.Fatal(m)
 	}
