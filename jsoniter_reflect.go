@@ -113,6 +113,21 @@ func (decoder *boolDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 	*((*bool)(ptr)) = iter.ReadBool()
 }
 
+type interfaceDecoder struct {
+}
+
+func (decoder *interfaceDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+	*((*interface{})(ptr)) = iter.ReadAny().Get()
+}
+
+
+type anyDecoder struct {
+}
+
+func (decoder *anyDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+	*((*Any)(ptr)) = *iter.ReadAny()
+}
+
 type stringNumberDecoder struct {
 	elemDecoder Decoder
 }
@@ -413,12 +428,12 @@ func reuseSlice(slice *sliceHeader, sliceType reflect.Type, expectedCap int) {
 
 var DECODERS unsafe.Pointer
 
-func addDecoderToCache(cacheKey string, decoder Decoder) {
+func addDecoderToCache(cacheKey reflect.Type, decoder Decoder) {
 	retry := true
 	for retry {
 		ptr := atomic.LoadPointer(&DECODERS)
-		cache := *(*map[string]Decoder)(ptr)
-		copy := map[string]Decoder{}
+		cache := *(*map[reflect.Type]Decoder)(ptr)
+		copy := map[reflect.Type]Decoder{}
 		for k, v := range cache {
 			copy[k] = v
 		}
@@ -427,9 +442,9 @@ func addDecoderToCache(cacheKey string, decoder Decoder) {
 	}
 }
 
-func getDecoderFromCache(cacheKey string) Decoder {
+func getDecoderFromCache(cacheKey reflect.Type) Decoder {
 	ptr := atomic.LoadPointer(&DECODERS)
-	cache := *(*map[string]Decoder)(ptr)
+	cache := *(*map[reflect.Type]Decoder)(ptr)
 	return cache[cacheKey]
 }
 
@@ -502,7 +517,7 @@ func (iter *Iterator) ReadAny() (ret *Any) {
 		return &Any{val, nil}
 	case Null:
 		return &Any{nil, nil}
-	case Boolean:
+	case Bool:
 		return &Any{iter.ReadBool(), nil}
 	case Array:
 		val := []interface{}{}
@@ -511,7 +526,7 @@ func (iter *Iterator) ReadAny() (ret *Any) {
 			if iter.Error != nil {
 				return
 			}
-			val = append(val, element.Val)
+			val = append(val, element.val)
 		}
 		return &Any{val, nil}
 	case Object:
@@ -521,7 +536,7 @@ func (iter *Iterator) ReadAny() (ret *Any) {
 			if iter.Error != nil {
 				return
 			}
-			val[field] = element.Val
+			val[field] = element.val
 		}
 		return &Any{val, nil}
 	default:
@@ -532,7 +547,7 @@ func (iter *Iterator) ReadAny() (ret *Any) {
 
 func (iter *Iterator) Read(obj interface{}) {
 	type_ := reflect.TypeOf(obj)
-	cacheKey := type_.String()
+	cacheKey := type_.Elem()
 	cachedDecoder := getDecoderFromCache(cacheKey)
 	if cachedDecoder == nil {
 		decoder, err := decoderOfType(type_)
@@ -566,7 +581,11 @@ func decoderOfType(type_ reflect.Type) (Decoder, error) {
 }
 
 func decoderOfPtr(type_ reflect.Type) (Decoder, error) {
-	typeDecoder := typeDecoders[type_.String()]
+	typeName := type_.String()
+	if typeName == "jsoniter.Any" {
+		return &anyDecoder{}, nil
+	}
+	typeDecoder := typeDecoders[typeName]
 	if typeDecoder != nil {
 		return typeDecoder, nil
 	}
@@ -599,6 +618,8 @@ func decoderOfPtr(type_ reflect.Type) (Decoder, error) {
 		return &float64Decoder{}, nil
 	case reflect.Bool:
 		return &boolDecoder{}, nil
+	case reflect.Interface:
+		return &interfaceDecoder{}, nil
 	case reflect.Struct:
 		return decoderOfStruct(type_)
 	case reflect.Slice:

@@ -16,7 +16,7 @@ const (
 	String
 	Number
 	Null
-	Boolean
+	Bool
 	Array
 	Object
 )
@@ -54,8 +54,8 @@ func init() {
 	valueTypes['7'] = Number;
 	valueTypes['8'] = Number;
 	valueTypes['9'] = Number;
-	valueTypes['t'] = Boolean;
-	valueTypes['f'] = Boolean;
+	valueTypes['t'] = Bool;
+	valueTypes['f'] = Bool;
 	valueTypes['n'] = Null;
 	valueTypes['['] = Array;
 	valueTypes['{'] = Object;
