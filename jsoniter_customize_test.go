@@ -5,6 +5,7 @@ import (
 	"time"
 	"unsafe"
 	"strconv"
+	"reflect"
 )
 
 func Test_customize_type_decoder(t *testing.T) {
@@ -41,5 +42,24 @@ func Test_customize_field_decoder(t *testing.T) {
 	err := Unmarshal([]byte(`{"field1": 100}`), &tom)
 	if err != nil {
 		t.Fatal(err)
+	}
+}
+
+func Test_customize_field_decoder_factory(t *testing.T) {
+	RegisterFieldCustomizer(func(type_ reflect.Type, field *reflect.StructField) ([]string, DecoderFunc) {
+		if (type_.String() == "jsoniter.Tom" && field.Name == "field1") {
+			return []string{"field-1"}, func(ptr unsafe.Pointer, iter *Iterator) {
+				*((*string)(ptr)) = strconv.Itoa(iter.ReadInt())
+			}
+		}
+		return nil, nil
+	})
+	tom := Tom{}
+	err := Unmarshal([]byte(`{"field-1": 100}`), &tom)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if tom.field1 != "100" {
+		t.Fatal(tom.field1)
 	}
 }

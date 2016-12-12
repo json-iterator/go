@@ -450,14 +450,17 @@ func getDecoderFromCache(cacheKey reflect.Type) Decoder {
 
 var typeDecoders map[string]Decoder
 var fieldDecoders map[string]Decoder
+var fieldCustomizers []FieldCustomizerFunc
 
 func init() {
 	typeDecoders = map[string]Decoder{}
 	fieldDecoders = map[string]Decoder{}
+	fieldCustomizers = []FieldCustomizerFunc{}
 	atomic.StorePointer(&DECODERS, unsafe.Pointer(&map[string]Decoder{}))
 }
 
 type DecoderFunc func(ptr unsafe.Pointer, iter *Iterator)
+type FieldCustomizerFunc func(type_ reflect.Type, field *reflect.StructField) ([]string, DecoderFunc)
 
 type funcDecoder struct {
 	func_ DecoderFunc
@@ -473,6 +476,10 @@ func RegisterTypeDecoder(type_ string, func_ DecoderFunc) {
 
 func RegisterFieldDecoder(type_ string, field string, func_ DecoderFunc) {
 	fieldDecoders[fmt.Sprintf("%s/%s", type_, field)] = &funcDecoder{func_}
+}
+
+func RegisterFieldCustomizer(func_ FieldCustomizerFunc) {
+	fieldCustomizers = append(fieldCustomizers, func_)
 }
 
 func ClearDecoders() {
@@ -686,11 +693,25 @@ func decoderOfStruct(type_ reflect.Type) (Decoder, error) {
 	for i := 0; i < type_.NumField(); i++ {
 		field := type_.Field(i)
 		fieldDecoderKey := fmt.Sprintf("%s/%s", type_.String(), field.Name)
+		var fieldNames []string
+		for _, customizer := range fieldCustomizers {
+			alternativeFieldNames, func_ := customizer(type_, &field)
+			if alternativeFieldNames != nil {
+				fieldNames = alternativeFieldNames
+			}
+			if func_ != nil {
+				fieldDecoders[fieldDecoderKey] = &funcDecoder{func_}
+			}
+		}
 		decoder := fieldDecoders[fieldDecoderKey]
 		tagParts := strings.Split(field.Tag.Get("json"), ",")
-		jsonFieldName := tagParts[0]
-		if jsonFieldName == "" {
-			jsonFieldName = field.Name
+		if fieldNames == nil {
+			switch tagParts[0] {
+			case "":
+				fieldNames = []string{field.Name}
+			case "-":
+				fieldNames = []string{}
+			}
 		}
 		if decoder == nil {
 			var err error
@@ -702,8 +723,8 @@ func decoderOfStruct(type_ reflect.Type) (Decoder, error) {
 		if len(tagParts) > 1 && tagParts[1] == "string" {
 			decoder = &stringNumberDecoder{decoder}
 		}
-		if jsonFieldName != "-" {
-			fields[jsonFieldName] = &structFieldDecoder{&field, decoder}
+		for _, fieldName := range fieldNames {
+			fields[fieldName] = &structFieldDecoder{&field, decoder}
 		}
 	}
 	switch len(fields) {
