@@ -2,9 +2,9 @@ jsoniter (json-iterator) is fast and flexible JSON parser available in [Java](ht
 
 # Why jsoniter?
 
-* Jsoniter is the fastest JSON parser, it could be up to 10x faster than normal parser, data binding included (shameless self [benchmark](/benchmark.html))
-* Having a developer friendly api is our #1 prioprity, you can choose from bind-api, any-api or iterator-api or all of them (checkout your [api choices](/api.html))
-* Unique iterator api can iterate through JSON directly, zero memory allocation! (see how [iterator](/api.html#iterator-api) works)
+* Jsoniter is the fastest JSON parser. It could be up to 10x faster than normal parser, data binding included. Shameless self [benchmark](/benchmark.html)
+* Extremely flexible api. You can mix and match three different styles: bind-api, any-api or iterator-api. Checkout your [api choices](/api.html)
+* Unique iterator api can iterate through JSON directly, zero memory allocation! See how [iterator](/api.html#iterator-api) works
 
 # 1 Minute Tutorial
 
