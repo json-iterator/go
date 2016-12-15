@@ -12,9 +12,9 @@ Here is a quick show off, for more complete report you can checkout the full [be
 
 ![go-medium](http://jsoniter.com/benchmarks/go-medium.png)
 
-# 1 Minute Tutorial
+# Bind-API is the best
 
-Given this JSON document `[0,1,2,3]`
+Bind-api should always be the first choice. Given this JSON document `[0,1,2,3]`
 
 Parse with Go bind-api
 
@@ -26,26 +26,35 @@ iter.Read(&val)
 fmt.Println(val[3])
 ```
 
-Parse with Go any-api
+# Iterator-API for quick extraction
 
-```go
-import "github.com/json-iterator/go"
-iter := jsoniter.ParseString(`[0,1,2,3]`)
-val := iter.ReadAny()
-fmt.Println(val.Get(3))
-```
+When you do not need to get all the data back, just extract some.
 
 Parse with Go iterator-api
 
 ```go
 import "github.com/json-iterator/go"
-iter := ParseString(`[0,1,2,3]`)
-total := 0
+iter := ParseString(`[0, [1, 2], [3, 4], 5]`)
+count := 0
 for iter.ReadArray() {
-    total += iter.ReadInt()
+    iter.skip()
+    count++
 }
-fmt.Println(total)
+fmt.Println(count) // 4
 ```
+
+# Any-API for maximum flexibility
+
+Parse with Go any-api
+
+```go
+import "github.com/json-iterator/go"
+iter := jsoniter.ParseString(`[{"field1":"11","field2":"12"},{"field1":"21","field2":"22"}]`)
+val := iter.ReadAny()
+fmt.Println(val.ToInt(1, "field2")) // 22
+```
+
+Notice you can extract from nested data structure, and convert any type to the type to you want. 
 
 # How to get
 
