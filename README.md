@@ -54,7 +54,7 @@ val := iter.ReadAny()
 fmt.Println(val.ToInt(1, "field2")) // 22
 ```
 
-Notice you can extract from nested data structure, and convert any type to the type to you want. 
+Notice you can extract from nested data structure, and convert any type to the type to you want.
 
 # How to get
 

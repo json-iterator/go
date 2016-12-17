@@ -450,17 +450,17 @@ func getDecoderFromCache(cacheKey reflect.Type) Decoder {
 
 var typeDecoders map[string]Decoder
 var fieldDecoders map[string]Decoder
-var fieldCustomizers []FieldCustomizerFunc
+var extensions []ExtensionFunc
 
 func init() {
 	typeDecoders = map[string]Decoder{}
 	fieldDecoders = map[string]Decoder{}
-	fieldCustomizers = []FieldCustomizerFunc{}
+	extensions = []ExtensionFunc{}
 	atomic.StorePointer(&DECODERS, unsafe.Pointer(&map[string]Decoder{}))
 }
 
 type DecoderFunc func(ptr unsafe.Pointer, iter *Iterator)
-type FieldCustomizerFunc func(type_ reflect.Type, field *reflect.StructField) ([]string, DecoderFunc)
+type ExtensionFunc func(type_ reflect.Type, field *reflect.StructField) ([]string, DecoderFunc)
 
 type funcDecoder struct {
 	func_ DecoderFunc
@@ -478,8 +478,8 @@ func RegisterFieldDecoder(type_ string, field string, func_ DecoderFunc) {
 	fieldDecoders[fmt.Sprintf("%s/%s", type_, field)] = &funcDecoder{func_}
 }
 
-func RegisterFieldCustomizer(func_ FieldCustomizerFunc) {
-	fieldCustomizers = append(fieldCustomizers, func_)
+func RegisterExtension(extension ExtensionFunc) {
+	extensions = append(extensions, extension)
 }
 
 func ClearDecoders() {
@@ -632,6 +632,14 @@ func decoderOfPtr(type_ reflect.Type) (Decoder, error) {
 	if typeName == "jsoniter.Any" {
 		return &anyDecoder{}, nil
 	}
+
+	for _, extension := range extensions {
+		alternativeFieldNames, func_ := extension(type_, nil)
+		if alternativeFieldNames != nil {
+			return nil, fmt.Errorf("%v should not return alternative field names when only type is being passed", extension)
+		}
+		typeDecoders[typeName] = &funcDecoder{func_}
+	}
 	typeDecoder := typeDecoders[typeName]
 	if typeDecoder != nil {
 		return typeDecoder, nil
@@ -694,8 +702,8 @@ func decoderOfStruct(type_ reflect.Type) (Decoder, error) {
 		field := type_.Field(i)
 		fieldDecoderKey := fmt.Sprintf("%s/%s", type_.String(), field.Name)
 		var fieldNames []string
-		for _, customizer := range fieldCustomizers {
-			alternativeFieldNames, func_ := customizer(type_, &field)
+		for _, extension := range extensions {
+			alternativeFieldNames, func_ := extension(type_, &field)
 			if alternativeFieldNames != nil {
 				fieldNames = alternativeFieldNames
 			}
