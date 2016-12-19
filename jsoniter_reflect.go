@@ -713,12 +713,16 @@ func decoderOfStruct(type_ reflect.Type) (Decoder, error) {
 		}
 		decoder := fieldDecoders[fieldDecoderKey]
 		tagParts := strings.Split(field.Tag.Get("json"), ",")
+		// if fieldNames set by extension, use theirs, otherwise try tags
 		if fieldNames == nil {
+			/// tagParts[0] always present, even if no tags
 			switch tagParts[0] {
 			case "":
 				fieldNames = []string{field.Name}
 			case "-":
 				fieldNames = []string{}
+			default:
+				fieldNames = []string{tagParts[0]}
 			}
 		}
 		if decoder == nil {
