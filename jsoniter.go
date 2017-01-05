@@ -76,7 +76,6 @@ func Parse(reader io.Reader, bufSize int) *Iterator {
 		head: 0,
 		tail: 0,
 	}
-	iter.skipWhitespaces()
 	return iter
 }
 
@@ -87,7 +86,6 @@ func ParseBytes(input []byte) *Iterator {
 		head: 0,
 		tail: len(input),
 	}
-	iter.skipWhitespaces()
 	return iter
 }
 
@@ -99,7 +97,6 @@ func (iter *Iterator) Reset(reader io.Reader) *Iterator {
 	iter.reader = reader
 	iter.head = 0
 	iter.tail = 0
-	iter.skipWhitespaces()
 	return iter
 }
 
@@ -110,7 +107,6 @@ func (iter *Iterator) ResetBytes(input []byte) *Iterator {
 	iter.buf = input
 	iter.head = 0
 	iter.tail = len(input)
-	iter.skipWhitespaces()
 	return iter
 }
 
@@ -118,23 +114,6 @@ func (iter *Iterator) WhatIsNext() ValueType {
 	valueType := valueTypes[iter.readByte()];
 	iter.unreadByte();
 	return valueType;
-}
-
-func (iter *Iterator) skipWhitespaces() {
-	for {
-		for i := iter.head; i < iter.tail; i++ {
-			c := iter.buf[i]
-			switch c {
-			case ' ', '\n', '\t', '\r':
-				continue
-			}
-			iter.head = i
-			return
-		}
-		if !iter.loadMore() {
-			return
-		}
-	}
 }
 
 func (iter *Iterator) skipWhitespacesWithoutLoadMore() bool {
@@ -370,7 +349,7 @@ func (iter *Iterator) ReadString() (ret string) {
 
 
 func (iter *Iterator) readStringAsBytes() (ret []byte) {
-	c := iter.readByte()
+	c := iter.nextToken()
 	if c == 'n' {
 		iter.skipUntilBreak()
 		return
@@ -560,7 +539,6 @@ func (iter *Iterator) ReadArray() (ret bool) {
 	}
 	case ']': return false
 	case ',':
-		iter.skipWhitespaces()
 		return true
 	default:
 		iter.ReportError("ReadArray", "expect [ or , or ] or n")
@@ -598,7 +576,6 @@ func (iter *Iterator) ReadObject() (ret string) {
 		}
 	}
 	case ',':
-		iter.skipWhitespaces()
 		return iter.readObjectField()
 	case '}':
 		return "" // end of object
