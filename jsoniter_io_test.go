@@ -1,9 +1,9 @@
 package jsoniter
 
 import (
-	"testing"
 	"bytes"
 	"io"
+	"testing"
 )
 
 func Test_read_by_one(t *testing.T) {

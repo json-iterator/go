@@ -1,8 +1,8 @@
 package jsoniter
 
 import (
-	"testing"
 	"io"
+	"testing"
 )
 
 func Test_string_end(t *testing.T) {

@@ -2,8 +2,7 @@ package jsoniter
 
 import "io"
 
-// adapt to json/encoding api
-
+// Unmarshal adapts to json/encoding APIs
 func Unmarshal(data []byte, v interface{}) error {
 	iter := ParseBytes(data)
 	iter.Read(v)

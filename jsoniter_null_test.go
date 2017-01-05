@@ -6,7 +6,7 @@ import (
 
 func Test_null(t *testing.T) {
 	iter := ParseString(`null`)
-	if iter.ReadNull() != true {
+	if iter.ReadNil() != true {
 		t.FailNow()
 	}
 }

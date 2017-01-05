@@ -1,11 +1,11 @@
 package jsoniter
 
 import (
+	"reflect"
+	"strconv"
 	"testing"
 	"time"
 	"unsafe"
-	"strconv"
-	"reflect"
 )
 
 func Test_customize_type_decoder(t *testing.T) {
@@ -17,7 +17,7 @@ func Test_customize_type_decoder(t *testing.T) {
 		}
 		*((*time.Time)(ptr)) = t
 	})
-	defer ClearDecoders()
+	defer CleanDecoders()
 	val := time.Time{}
 	err := Unmarshal([]byte(`"2016-12-05 08:43:28"`), &val)
 	if err != nil {
@@ -37,7 +37,7 @@ func Test_customize_field_decoder(t *testing.T) {
 	RegisterFieldDecoder("jsoniter.Tom", "field1", func(ptr unsafe.Pointer, iter *Iterator) {
 		*((*string)(ptr)) = strconv.Itoa(iter.ReadInt())
 	})
-	defer ClearDecoders()
+	defer CleanDecoders()
 	tom := Tom{}
 	err := Unmarshal([]byte(`{"field1": 100}`), &tom)
 	if err != nil {
@@ -51,7 +51,7 @@ type TestObject1 struct {
 
 func Test_customize_field_by_extension(t *testing.T) {
 	RegisterExtension(func(type_ reflect.Type, field *reflect.StructField) ([]string, DecoderFunc) {
-		if (type_.String() == "jsoniter.TestObject1" && field.Name == "field1") {
+		if type_.String() == "jsoniter.TestObject1" && field.Name == "field1" {
 			return []string{"field-1"}, func(ptr unsafe.Pointer, iter *Iterator) {
 				*((*string)(ptr)) = strconv.Itoa(iter.ReadInt())
 			}

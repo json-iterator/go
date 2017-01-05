@@ -1,8 +1,8 @@
 package jsoniter
 
 import (
-	"testing"
 	"fmt"
+	"testing"
 )
 
 func Test_get_from_map(t *testing.T) {
@@ -36,7 +36,7 @@ func Test_is_null(t *testing.T) {
 	any := Any{val: []interface{}{
 		1, 2, 3,
 	}}
-	if any.IsNull() != false {
+	if any.IsNil() != false {
 		t.FailNow()
 	}
 }

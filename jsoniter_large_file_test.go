@@ -1,10 +1,10 @@
 package jsoniter
 
 import (
-	"testing"
-	"os"
 	"encoding/json"
 	"io/ioutil"
+	"os"
+	"testing"
 )
 
 //func Test_large_file(t *testing.T) {
@@ -22,7 +22,6 @@ import (
 //		t.Fatal(count)
 //	}
 //}
-
 
 func Benchmark_jsoniter_large_file(b *testing.B) {
 	b.ReportAllocs()

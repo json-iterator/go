@@ -1,8 +1,8 @@
 package jsoniter
 
 import (
-	"testing"
 	"fmt"
+	"testing"
 )
 
 func Test_bind_api_demo(t *testing.T) {
@@ -39,16 +39,16 @@ func Test_deep_nested_any_api(t *testing.T) {
 }
 
 type User struct {
-	userId int
-	name string
-	tags []string
+	userID int
+	name   string
+	tags   []string
 }
 
 func Test_iterator_and_bind_api(t *testing.T) {
 	iter := ParseString(`[123, {"name": "taowen", "tags": ["crazy", "hacker"]}]`)
 	user := User{}
 	iter.ReadArray()
-	user.userId = iter.ReadInt()
+	user.userID = iter.ReadInt()
 	iter.ReadArray()
 	iter.Read(&user)
 	iter.ReadArray() // array end

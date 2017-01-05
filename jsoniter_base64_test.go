@@ -1,8 +1,8 @@
 package jsoniter
 
 import (
-	"testing"
 	"bytes"
+	"testing"
 )
 
 func Test_read_base64(t *testing.T) {
@@ -11,7 +11,6 @@ func Test_read_base64(t *testing.T) {
 		t.FailNow()
 	}
 }
-
 
 func Test_bad_case(t *testing.T) {
 	// field := *(*string)(unsafe.Pointer(&str))

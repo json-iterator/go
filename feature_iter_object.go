@@ -2,20 +2,20 @@ package jsoniter
 
 import "unsafe"
 
+// ReadObject is a implemented iterator for json
 func (iter *Iterator) ReadObject() (ret string) {
 	c := iter.nextToken()
 	if iter.Error != nil {
 		return
 	}
 	switch c {
-	case 'n': {
+	case 'n':
 		iter.skipUntilBreak()
 		if iter.Error != nil {
 			return
 		}
 		return "" // null
-	}
-	case '{': {
+	case '{':
 		c = iter.nextToken()
 		if iter.Error != nil {
 			return
@@ -27,16 +27,15 @@ func (iter *Iterator) ReadObject() (ret string) {
 			iter.unreadByte()
 			return iter.readObjectField()
 		default:
-			iter.ReportError("ReadObject", `expect " after {`)
+			iter.reportError("ReadObject", `expect " after {`)
 			return
 		}
-	}
 	case ',':
 		return iter.readObjectField()
 	case '}':
 		return "" // end of object
 	default:
-		iter.ReportError("ReadObject", `expect { or , or } or n`)
+		iter.reportError("ReadObject", `expect { or , or } or n`)
 		return
 	}
 }
@@ -51,7 +50,7 @@ func (iter *Iterator) readObjectStart() bool {
 		iter.unreadByte()
 		return true
 	}
-	iter.ReportError("readObjectStart", "expect { ")
+	iter.reportError("readObjectStart", "expect { ")
 	return false
 }
 
@@ -59,20 +58,20 @@ func (iter *Iterator) readObjectField() (ret string) {
 	str := iter.readStringAsBytes()
 	if iter.skipWhitespacesWithoutLoadMore() {
 		if ret == "" {
-			ret = string(str);
+			ret = string(str)
 		}
 		if !iter.loadMore() {
 			return
 		}
 	}
 	if iter.buf[iter.head] != ':' {
-		iter.ReportError("ReadObject", "expect : after object field")
+		iter.reportError("ReadObject", "expect : after object field")
 		return
 	}
 	iter.head++
 	if iter.skipWhitespacesWithoutLoadMore() {
 		if ret == "" {
-			ret = string(str);
+			ret = string(str)
 		}
 		if !iter.loadMore() {
 			return
