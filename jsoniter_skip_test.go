@@ -1,10 +1,9 @@
 package jsoniter
 
 import (
-	"testing"
 	"encoding/json"
+	"testing"
 )
-
 
 func Test_skip_number(t *testing.T) {
 	iter := ParseString(`[-0.12, "b"]`)

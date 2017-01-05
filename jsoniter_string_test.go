@@ -1,9 +1,9 @@
 package jsoniter
 
 import (
-	"testing"
 	"bytes"
 	"encoding/json"
+	"testing"
 )
 
 func Test_string_empty(t *testing.T) {

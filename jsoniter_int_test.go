@@ -1,9 +1,9 @@
 package jsoniter
 
 import (
-	"testing"
 	"bytes"
 	"encoding/json"
+	"testing"
 )
 
 func Test_uint64_0(t *testing.T) {

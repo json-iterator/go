@@ -1,8 +1,8 @@
 package jsoniter
 
 import (
-	"testing"
 	"fmt"
+	"testing"
 )
 
 func Test_read_string_as_any(t *testing.T) {

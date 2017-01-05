@@ -1,12 +1,12 @@
 package jsoniter
 
 import (
-	"io"
-	"fmt"
-	"unicode/utf16"
-	"strconv"
-	"unsafe"
 	"encoding/base64"
+	"fmt"
+	"io"
+	"strconv"
+	"unicode/utf16"
+	"unsafe"
 )
 
 type ValueType int
@@ -30,37 +30,38 @@ func init() {
 		digits[i] = 255
 	}
 	for i := '0'; i <= '9'; i++ {
-		digits[i] = byte(i - '0');
+		digits[i] = byte(i - '0')
 	}
 	for i := 'a'; i <= 'f'; i++ {
-		digits[i] = byte((i - 'a') + 10);
+		digits[i] = byte((i - 'a') + 10)
 	}
 	for i := 'A'; i <= 'F'; i++ {
-		digits[i] = byte((i - 'A') + 10);
+		digits[i] = byte((i - 'A') + 10)
 	}
 	valueTypes = make([]ValueType, 256)
 	for i := 0; i < len(valueTypes); i++ {
 		valueTypes[i] = Invalid
 	}
-	valueTypes['"'] = String;
-	valueTypes['-'] = Number;
-	valueTypes['0'] = Number;
-	valueTypes['1'] = Number;
-	valueTypes['2'] = Number;
-	valueTypes['3'] = Number;
-	valueTypes['4'] = Number;
-	valueTypes['5'] = Number;
-	valueTypes['6'] = Number;
-	valueTypes['7'] = Number;
-	valueTypes['8'] = Number;
-	valueTypes['9'] = Number;
-	valueTypes['t'] = Bool;
-	valueTypes['f'] = Bool;
-	valueTypes['n'] = Null;
-	valueTypes['['] = Array;
-	valueTypes['{'] = Object;
+	valueTypes['"'] = String
+	valueTypes['-'] = Number
+	valueTypes['0'] = Number
+	valueTypes['1'] = Number
+	valueTypes['2'] = Number
+	valueTypes['3'] = Number
+	valueTypes['4'] = Number
+	valueTypes['5'] = Number
+	valueTypes['6'] = Number
+	valueTypes['7'] = Number
+	valueTypes['8'] = Number
+	valueTypes['9'] = Number
+	valueTypes['t'] = Bool
+	valueTypes['f'] = Bool
+	valueTypes['n'] = Null
+	valueTypes['['] = Array
+	valueTypes['{'] = Object
 }
 
+// Iterator is a fast and flexible JSON parser
 type Iterator struct {
 	reader io.Reader
 	buf    []byte
@@ -69,37 +70,42 @@ type Iterator struct {
 	Error  error
 }
 
+// Create creates an empty Iterator instance
 func Create() *Iterator {
 	return &Iterator{
 		reader: nil,
-		buf: nil,
-		head: 0,
-		tail: 0,
+		buf:    nil,
+		head:   0,
+		tail:   0,
 	}
 }
 
+// Parse parses a json buffer in io.Reader into an Iterator instance
 func Parse(reader io.Reader, bufSize int) *Iterator {
 	return &Iterator{
 		reader: reader,
-		buf: make([]byte, bufSize),
-		head: 0,
-		tail: 0,
+		buf:    make([]byte, bufSize),
+		head:   0,
+		tail:   0,
 	}
 }
 
+// ParseBytes parses a json byte slice into an Iterator instance
 func ParseBytes(input []byte) *Iterator {
 	return &Iterator{
 		reader: nil,
-		buf: input,
-		head: 0,
-		tail: len(input),
+		buf:    input,
+		head:   0,
+		tail:   len(input),
 	}
 }
 
+// ParseString parses a json string into an Iterator instance
 func ParseString(input string) *Iterator {
 	return ParseBytes([]byte(input))
 }
 
+// Reset can reset an Iterator instance for another json buffer in io.Reader
 func (iter *Iterator) Reset(reader io.Reader) *Iterator {
 	iter.reader = reader
 	iter.head = 0
@@ -107,6 +113,7 @@ func (iter *Iterator) Reset(reader io.Reader) *Iterator {
 	return iter
 }
 
+// ResetBytes can reset an Iterator instance for another json byte slice
 func (iter *Iterator) ResetBytes(input []byte) *Iterator {
 	iter.reader = nil
 	iter.Error = nil
@@ -116,10 +123,11 @@ func (iter *Iterator) ResetBytes(input []byte) *Iterator {
 	return iter
 }
 
+// WhatIsNext gets ValueType of relatively next json object
 func (iter *Iterator) WhatIsNext() ValueType {
-	valueType := valueTypes[iter.nextToken()];
-	iter.unreadByte();
-	return valueType;
+	valueType := valueTypes[iter.nextToken()]
+	iter.unreadByte()
+	return valueType
 }
 
 func (iter *Iterator) skipWhitespacesWithoutLoadMore() bool {
@@ -144,7 +152,7 @@ func (iter *Iterator) nextToken() byte {
 			case ' ', '\n', '\t', '\r':
 				continue
 			}
-			iter.head = i+1
+			iter.head = i + 1
 			return c
 		}
 		if !iter.loadMore() {
@@ -153,7 +161,7 @@ func (iter *Iterator) nextToken() byte {
 	}
 }
 
-func (iter *Iterator) ReportError(operation string, msg string) {
+func (iter *Iterator) reportError(operation string, msg string) {
 	if iter.Error != nil {
 		return
 	}
@@ -162,16 +170,17 @@ func (iter *Iterator) ReportError(operation string, msg string) {
 		peekStart = 0
 	}
 	iter.Error = fmt.Errorf("%s: %s, parsing %v ...%s... at %s", operation, msg, iter.head,
-		string(iter.buf[peekStart: iter.head]), string(iter.buf[0:iter.tail]))
+		string(iter.buf[peekStart:iter.head]), string(iter.buf[0:iter.tail]))
 }
 
+// CurrentBuffer gets current buffer as string
 func (iter *Iterator) CurrentBuffer() string {
 	peekStart := iter.head - 10
 	if peekStart < 0 {
 		peekStart = 0
 	}
 	return fmt.Sprintf("parsing %v ...|%s|... at %s", iter.head,
-		string(iter.buf[peekStart: iter.head]), string(iter.buf[0:iter.tail]))
+		string(iter.buf[peekStart:iter.head]), string(iter.buf[0:iter.tail]))
 }
 
 func (iter *Iterator) readByte() (ret byte) {
@@ -180,9 +189,8 @@ func (iter *Iterator) readByte() (ret byte) {
 			ret = iter.buf[iter.head]
 			iter.head++
 			return ret
-		} else {
-			return 0
 		}
+		return 0
 	}
 	ret = iter.buf[iter.head]
 	iter.head++
@@ -200,9 +208,6 @@ func (iter *Iterator) loadMore() bool {
 			if err != nil {
 				iter.Error = err
 				return false
-			} else {
-				// n == 0, err == nil is not EOF
-				continue
 			}
 		} else {
 			iter.head = 0
@@ -214,58 +219,63 @@ func (iter *Iterator) loadMore() bool {
 
 func (iter *Iterator) unreadByte() {
 	if iter.head == 0 {
-		iter.ReportError("unreadByte", "unread too many bytes")
+		iter.reportError("unreadByte", "unread too many bytes")
 		return
 	}
-	iter.head -= 1
+	iter.head--
 	return
 }
 
-const maxUint64 = (1 << 64 - 1)
-const cutoffUint64 = maxUint64 / 10 + 1
-const maxUint32 = (1 << 32 - 1)
-const cutoffUint32 = maxUint32 / 10 + 1
+const maxUint64 = (1<<64 - 1)
+const cutoffUint64 = maxUint64/10 + 1
+const maxUint32 = (1<<32 - 1)
+const cutoffUint32 = maxUint32/10 + 1
 
+// ReadUint reads a json object as Uint
 func (iter *Iterator) ReadUint() (ret uint) {
 	val := iter.ReadUint64()
 	converted := uint(val)
 	if uint64(converted) != val {
-		iter.ReportError("ReadUint", "int overflow")
+		iter.reportError("ReadUint", "int overflow")
 		return
 	}
 	return converted
 }
 
+// ReadUint8 reads a json object as Uint8
 func (iter *Iterator) ReadUint8() (ret uint8) {
 	val := iter.ReadUint64()
 	converted := uint8(val)
 	if uint64(converted) != val {
-		iter.ReportError("ReadUint8", "int overflow")
+		iter.reportError("ReadUint8", "int overflow")
 		return
 	}
 	return converted
 }
 
+// ReadUint16 reads a json object as Uint16
 func (iter *Iterator) ReadUint16() (ret uint16) {
 	val := iter.ReadUint64()
 	converted := uint16(val)
 	if uint64(converted) != val {
-		iter.ReportError("ReadUint16", "int overflow")
+		iter.reportError("ReadUint16", "int overflow")
 		return
 	}
 	return converted
 }
 
+// ReadUint32 reads a json object as Uint32
 func (iter *Iterator) ReadUint32() (ret uint32) {
 	val := iter.ReadUint64()
 	converted := uint32(val)
 	if uint64(converted) != val {
-		iter.ReportError("ReadUint32", "int overflow")
+		iter.reportError("ReadUint32", "int overflow")
 		return
 	}
 	return converted
 }
 
+// ReadUint64 reads a json object as Uint64
 func (iter *Iterator) ReadUint64() (ret uint64) {
 	c := iter.nextToken()
 	v := digits[c]
@@ -273,15 +283,15 @@ func (iter *Iterator) ReadUint64() (ret uint64) {
 		return 0 // single zero
 	}
 	if v == 255 {
-		iter.ReportError("ReadUint64", "unexpected character")
+		iter.reportError("ReadUint64", "unexpected character")
 		return
 	}
 	for {
 		if ret >= cutoffUint64 {
-			iter.ReportError("ReadUint64", "overflow")
+			iter.reportError("ReadUint64", "overflow")
 			return
 		}
-		ret = ret * 10 + uint64(v)
+		ret = ret*10 + uint64(v)
 		c = iter.readByte()
 		v = digits[c]
 		if v == 255 {
@@ -292,46 +302,51 @@ func (iter *Iterator) ReadUint64() (ret uint64) {
 	return ret
 }
 
+// ReadInt reads a json object as Int
 func (iter *Iterator) ReadInt() (ret int) {
 	val := iter.ReadInt64()
 	converted := int(val)
 	if int64(converted) != val {
-		iter.ReportError("ReadInt", "int overflow")
+		iter.reportError("ReadInt", "int overflow")
 		return
 	}
 	return converted
 }
 
+// ReadInt8 reads a json object as Int8
 func (iter *Iterator) ReadInt8() (ret int8) {
 	val := iter.ReadInt64()
 	converted := int8(val)
 	if int64(converted) != val {
-		iter.ReportError("ReadInt8", "int overflow")
+		iter.reportError("ReadInt8", "int overflow")
 		return
 	}
 	return converted
 }
 
+// ReadInt16 reads a json object as Int16
 func (iter *Iterator) ReadInt16() (ret int16) {
 	val := iter.ReadInt64()
 	converted := int16(val)
 	if int64(converted) != val {
-		iter.ReportError("ReadInt16", "int overflow")
+		iter.reportError("ReadInt16", "int overflow")
 		return
 	}
 	return converted
 }
 
+// ReadInt32 reads a json object as Int32
 func (iter *Iterator) ReadInt32() (ret int32) {
 	val := iter.ReadInt64()
 	converted := int32(val)
 	if int64(converted) != val {
-		iter.ReportError("ReadInt32", "int overflow")
+		iter.reportError("ReadInt32", "int overflow")
 		return
 	}
 	return converted
 }
 
+// ReadInt64 reads a json object as Int64
 func (iter *Iterator) ReadInt64() (ret int64) {
 	c := iter.nextToken()
 	if iter.Error != nil {
@@ -342,17 +357,16 @@ func (iter *Iterator) ReadInt64() (ret int64) {
 	if c == '-' {
 		n := iter.ReadUint64()
 		return -int64(n)
-	} else {
-		iter.unreadByte()
-		n := iter.ReadUint64()
-		return int64(n)
 	}
+	iter.unreadByte()
+	n := iter.ReadUint64()
+	return int64(n)
 }
 
+// ReadString reads a json object as String
 func (iter *Iterator) ReadString() (ret string) {
 	return string(iter.readStringAsBytes())
 }
-
 
 func (iter *Iterator) readStringAsBytes() (ret []byte) {
 	c := iter.nextToken()
@@ -360,7 +374,7 @@ func (iter *Iterator) readStringAsBytes() (ret []byte) {
 		end := iter.findStringEndWithoutEscape()
 		if end != -1 {
 			// fast path: reuse the underlying buffer
-			ret = iter.buf[iter.head:end-1]
+			ret = iter.buf[iter.head : end-1]
 			iter.head = end
 			return ret
 		}
@@ -370,7 +384,7 @@ func (iter *Iterator) readStringAsBytes() (ret []byte) {
 		iter.skipUntilBreak()
 		return
 	}
-	iter.ReportError("ReadString", `expects " or n`)
+	iter.reportError("ReadString", `expects " or n`)
 	return
 }
 
@@ -399,7 +413,7 @@ func (iter *Iterator) readStringAsBytesSlowPath() (ret []byte) {
 						return
 					}
 					if c != '\\' {
-						iter.ReportError("ReadString",
+						iter.reportError("ReadString",
 							`expects \u after utf16 surrogate, but \ not found`)
 						return
 					}
@@ -408,7 +422,7 @@ func (iter *Iterator) readStringAsBytesSlowPath() (ret []byte) {
 						return
 					}
 					if c != 'u' {
-						iter.ReportError("ReadString",
+						iter.reportError("ReadString",
 							`expects \u after utf16 surrogate, but \u not found`)
 						return
 					}
@@ -438,7 +452,7 @@ func (iter *Iterator) readStringAsBytesSlowPath() (ret []byte) {
 			case 't':
 				str = append(str, '\t')
 			default:
-				iter.ReportError("ReadString",
+				iter.reportError("ReadString",
 					`invalid escape char after \`)
 				return
 			}
@@ -455,20 +469,20 @@ func (iter *Iterator) readU4() (ret rune) {
 		if iter.Error != nil {
 			return
 		}
-		if (c >= '0' && c <= '9') {
+		if c >= '0' && c <= '9' {
 			if ret >= cutoffUint32 {
-				iter.ReportError("readU4", "overflow")
+				iter.reportError("readU4", "overflow")
 				return
 			}
-			ret = ret * 16 + rune(c - '0')
-		} else if ((c >= 'a' && c <= 'f') ) {
+			ret = ret*16 + rune(c-'0')
+		} else if c >= 'a' && c <= 'f' {
 			if ret >= cutoffUint32 {
-				iter.ReportError("readU4", "overflow")
+				iter.reportError("readU4", "overflow")
 				return
 			}
-			ret = ret * 16 + rune(c - 'a' + 10)
+			ret = ret*16 + rune(c-'a'+10)
 		} else {
-			iter.ReportError("readU4", "expects 0~9 or a~f")
+			iter.reportError("readU4", "expects 0~9 or a~f")
 			return
 		}
 	}
@@ -488,14 +502,14 @@ const (
 	mask3 = 0x0F // 0000 1111
 	mask4 = 0x07 // 0000 0111
 
-	rune1Max = 1 << 7 - 1
-	rune2Max = 1 << 11 - 1
-	rune3Max = 1 << 16 - 1
+	rune1Max = 1<<7 - 1
+	rune2Max = 1<<11 - 1
+	rune3Max = 1<<16 - 1
 
 	surrogateMin = 0xD800
 	surrogateMax = 0xDFFF
 
-	MaxRune = '\U0010FFFF' // Maximum valid Unicode code point.
+	MaxRune   = '\U0010FFFF' // Maximum valid Unicode code point.
 	RuneError = '\uFFFD'     // the "error" Rune or "Unicode replacement character"
 )
 
@@ -506,62 +520,62 @@ func appendRune(p []byte, r rune) []byte {
 		p = append(p, byte(r))
 		return p
 	case i <= rune2Max:
-		p = append(p, t2 | byte(r >> 6))
-		p = append(p, tx | byte(r) & maskx)
+		p = append(p, t2|byte(r>>6))
+		p = append(p, tx|byte(r)&maskx)
 		return p
 	case i > MaxRune, surrogateMin <= i && i <= surrogateMax:
 		r = RuneError
 		fallthrough
 	case i <= rune3Max:
-		p = append(p, t3 | byte(r >> 12))
-		p = append(p, tx | byte(r >> 6) & maskx)
-		p = append(p, tx | byte(r) & maskx)
+		p = append(p, t3|byte(r>>12))
+		p = append(p, tx|byte(r>>6)&maskx)
+		p = append(p, tx|byte(r)&maskx)
 		return p
 	default:
-		p = append(p, t4 | byte(r >> 18))
-		p = append(p, tx | byte(r >> 12) & maskx)
-		p = append(p, tx | byte(r >> 6) & maskx)
-		p = append(p, tx | byte(r) & maskx)
+		p = append(p, t4|byte(r>>18))
+		p = append(p, tx|byte(r>>12)&maskx)
+		p = append(p, tx|byte(r>>6)&maskx)
+		p = append(p, tx|byte(r)&maskx)
 		return p
 	}
 }
 
+// ReadArray reads a json object as Array
 func (iter *Iterator) ReadArray() (ret bool) {
 	c := iter.nextToken()
 	if iter.Error != nil {
 		return
 	}
 	switch c {
-	case 'n': {
+	case 'n':
 		iter.skipUntilBreak()
 		return false // null
-	}
-	case '[': {
+	case '[':
 		c = iter.nextToken()
 		if iter.Error != nil {
 			return
 		}
 		if c == ']' {
 			return false
-		} else {
-			iter.unreadByte()
-			return true
 		}
-	}
-	case ']': return false
+		iter.unreadByte()
+		return true
+	case ']':
+		return false
 	case ',':
 		return true
 	default:
-		iter.ReportError("ReadArray", "expect [ or , or ] or n, but found: " + string([]byte{c}))
+		iter.reportError("ReadArray", "expect [ or , or ] or n, but found: "+string([]byte{c}))
 		return
 	}
 }
 
+// ReadFloat32 reads a json object as Float32
 func (iter *Iterator) ReadFloat32() (ret float32) {
 	strBuf := [8]byte{}
 	str := strBuf[0:0]
 	hasMore := true
-	for(hasMore) {
+	for hasMore {
 		for i := iter.head; i < iter.tail; i++ {
 			c := iter.buf[i]
 			switch c {
@@ -590,11 +604,12 @@ func (iter *Iterator) ReadFloat32() (ret float32) {
 	return float32(val)
 }
 
+// ReadFloat64 reads a json object as Float64
 func (iter *Iterator) ReadFloat64() (ret float64) {
 	strBuf := [8]byte{}
 	str := strBuf[0:0]
 	hasMore := true
-	for(hasMore) {
+	for hasMore {
 		for i := iter.head; i < iter.tail; i++ {
 			c := iter.buf[i]
 			switch c {
@@ -623,6 +638,7 @@ func (iter *Iterator) ReadFloat64() (ret float64) {
 	return val
 }
 
+// ReadBool reads a json object as Bool
 func (iter *Iterator) ReadBool() (ret bool) {
 	c := iter.nextToken()
 	if iter.Error != nil {
@@ -636,11 +652,12 @@ func (iter *Iterator) ReadBool() (ret bool) {
 		iter.skipUntilBreak()
 		return false
 	default:
-		iter.ReportError("ReadBool", "expect t or f")
+		iter.reportError("ReadBool", "expect t or f")
 		return
 	}
 }
 
+// ReadBase64 reads a json object as Base64 in byte slice
 func (iter *Iterator) ReadBase64() (ret []byte) {
 	src := iter.readStringAsBytes()
 	if iter.Error != nil {
@@ -656,7 +673,9 @@ func (iter *Iterator) ReadBase64() (ret []byte) {
 	return ret[:n]
 }
 
-func (iter *Iterator) ReadNull() (ret bool) {
+// ReadNil reads a json object as nil and
+// returns whether it's a nil or not
+func (iter *Iterator) ReadNil() (ret bool) {
 	c := iter.nextToken()
 	if c == 'n' {
 		iter.skipUntilBreak()
@@ -666,6 +685,7 @@ func (iter *Iterator) ReadNull() (ret bool) {
 	return false
 }
 
+// Skip skips a json object and positions to relatively the next json object
 func (iter *Iterator) Skip() {
 	c := iter.nextToken()
 	switch c {
@@ -678,7 +698,7 @@ func (iter *Iterator) Skip() {
 	case '{':
 		iter.skipObject()
 	default:
-		iter.ReportError("Skip", fmt.Sprintf("do not know how to skip: %v", c))
+		iter.reportError("Skip", fmt.Sprintf("do not know how to skip: %v", c))
 		return
 	}
 }
@@ -700,7 +720,6 @@ func (iter *Iterator) skipString() {
 	}
 }
 
-
 // adapted from: https://github.com/buger/jsonparser/blob/master/parser.go
 // Tries to find the end of string
 // Support if string contains escaped quote symbols.
@@ -711,22 +730,21 @@ func (iter *Iterator) findStringEnd() (int, bool) {
 		if c == '"' {
 			if !escaped {
 				return i + 1, false
-			} else {
-				j := i - 1
-				for {
-					if j < iter.head || iter.buf[j] != '\\' {
-						// even number of backslashes
-						// either end of buffer, or " found
-						return i + 1, true
-					}
-					j--
-					if j < iter.head || iter.buf[j] != '\\' {
-						// odd number of backslashes
-						// it is \" or \\\"
-						break
-					}
-					j--
+			}
+			j := i - 1
+			for {
+				if j < iter.head || iter.buf[j] != '\\' {
+					// even number of backslashes
+					// either end of buffer, or " found
+					return i + 1, true
 				}
+				j--
+				if j < iter.head || iter.buf[j] != '\\' {
+					// odd number of backslashes
+					// it is \" or \\\"
+					break
+				}
+				j--
 			}
 		} else if c == '\\' {
 			escaped = true
@@ -750,7 +768,6 @@ func (iter *Iterator) findStringEnd() (int, bool) {
 	}
 	return -1, true // end with \
 }
-
 
 func (iter *Iterator) findStringEndWithoutEscape() int {
 	for i := iter.head; i < iter.tail; i++ {
@@ -785,7 +802,7 @@ func (iter *Iterator) skipArray() {
 				}
 			}
 		}
-		if (!iter.loadMore()) {
+		if !iter.loadMore() {
 			return
 		}
 	}
@@ -812,7 +829,7 @@ func (iter *Iterator) skipObject() {
 				}
 			}
 		}
-		if (!iter.loadMore()) {
+		if !iter.loadMore() {
 			return
 		}
 	}
@@ -829,7 +846,7 @@ func (iter *Iterator) skipUntilBreak() {
 				return
 			}
 		}
-		if (!iter.loadMore()) {
+		if !iter.loadMore() {
 			return
 		}
 	}

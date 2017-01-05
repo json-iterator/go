@@ -1,9 +1,9 @@
 package jsoniter
 
 import (
-	"testing"
-	"fmt"
 	"encoding/json"
+	"fmt"
+	"testing"
 	"unsafe"
 )
 
@@ -162,15 +162,15 @@ type StructOfString struct {
 
 func Test_reflect_struct_string(t *testing.T) {
 	iter := ParseString(`{"field1": "hello", "field2": "world"}`)
-	struct_ := StructOfString{}
-	iter.Read(&struct_)
-	if struct_.field1 != "hello" {
+	Struct := StructOfString{}
+	iter.Read(&Struct)
+	if Struct.field1 != "hello" {
 		fmt.Println(iter.Error)
-		t.Fatal(struct_.field1)
+		t.Fatal(Struct.field1)
 	}
-	if struct_.field2 != "world" {
+	if Struct.field2 != "world" {
 		fmt.Println(iter.Error)
-		t.Fatal(struct_.field1)
+		t.Fatal(Struct.field2)
 	}
 }
 
@@ -181,39 +181,39 @@ type StructOfStringPtr struct {
 
 func Test_reflect_struct_string_ptr(t *testing.T) {
 	iter := ParseString(`{"field1": null, "field2": "world"}`)
-	struct_ := StructOfStringPtr{}
-	iter.Read(&struct_)
-	if struct_.field1 != nil {
+	Struct := StructOfStringPtr{}
+	iter.Read(&Struct)
+	if Struct.field1 != nil {
 		fmt.Println(iter.Error)
-		t.Fatal(struct_.field1)
+		t.Fatal(Struct.field1)
 	}
-	if *struct_.field2 != "world" {
+	if *Struct.field2 != "world" {
 		fmt.Println(iter.Error)
-		t.Fatal(struct_.field2)
+		t.Fatal(Struct.field2)
 	}
 }
 
 type StructOfTag struct {
-	field1 string `json:"field-1"`
-	field2 string `json:"-"`
-	field3 int `json:",string"`
+	Field1 string `json:"field-1"`
+	Field2 string `json:"-"`
+	Field3 int    `json:",string"`
 }
 
 func Test_reflect_struct_tag_field(t *testing.T) {
-	iter := ParseString(`{"field-1": "hello", "field2": "", "field3": "100"}`)
-	struct_ := StructOfTag{field2: "world"}
-	iter.Read(&struct_)
-	if struct_.field1 != "hello" {
+	iter := ParseString(`{"field-1": "hello", "field2": "", "Field3": "100"}`)
+	Struct := StructOfTag{Field2: "world"}
+	iter.Read(&Struct)
+	if Struct.Field1 != "hello" {
 		fmt.Println(iter.Error)
-		t.Fatal(struct_.field1)
+		t.Fatal(Struct.Field1)
 	}
-	if struct_.field2 != "world" {
+	if Struct.Field2 != "world" {
 		fmt.Println(iter.Error)
-		t.Fatal(struct_.field2)
+		t.Fatal(Struct.Field2)
 	}
-	if struct_.field3 != 100 {
+	if Struct.Field3 != 100 {
 		fmt.Println(iter.Error)
-		t.Fatal(struct_.field3)
+		t.Fatal(Struct.Field3)
 	}
 }
 
@@ -249,7 +249,7 @@ func Test_reflect_large_slice(t *testing.T) {
 	}
 	if slice[8] != 9 {
 		fmt.Println(iter.Error)
-		t.Fatal(slice[1])
+		t.Fatal(slice[8])
 	}
 }
 
@@ -271,7 +271,7 @@ func Test_reflect_nested(t *testing.T) {
 	}
 	if slice[2].field2 != "world" {
 		fmt.Println(iter.Error)
-		t.Fatal(slice[1])
+		t.Fatal(slice[2])
 	}
 }
 
@@ -281,7 +281,7 @@ func Test_reflect_base64(t *testing.T) {
 	RegisterTypeDecoder("[]uint8", func(ptr unsafe.Pointer, iter *Iterator) {
 		*((*[]byte)(ptr)) = iter.ReadBase64()
 	})
-	defer ClearDecoders()
+	defer CleanDecoders()
 	iter.Read(&val)
 	if "abc" != string(val) {
 		t.Fatal(string(val))
@@ -289,22 +289,22 @@ func Test_reflect_base64(t *testing.T) {
 }
 
 type StructOfTagOne struct {
-	field1 string `json:"field1"`
-	field2 string `json:"field2"`
-	field3 int `json:"field3,string"`
-	field4 int `json:"field4,string"`
+	Field1 string `json:"field1"`
+	Field2 string `json:"field2"`
+	Field3 int    `json:"field3,string"`
+	Field4 int    `json:"field4,string"`
 }
 
 func Benchmark_jsoniter_reflect(b *testing.B) {
 	b.ReportAllocs()
 	iter := Create()
-	struct_ := &StructOfTagOne{}
-	//var struct_ *StructOfTagOne
+	Struct := &StructOfTagOne{}
+	//var Struct *StructOfTagOne
 	input := []byte(`{"field3": "100", "field4": "100"}`)
 	//input := []byte(`null`)
 	for n := 0; n < b.N; n++ {
 		iter.ResetBytes(input)
-		iter.Read(&struct_)
+		iter.Read(&Struct)
 	}
 }
 
@@ -316,9 +316,9 @@ func Benchmark_jsoniter_direct(b *testing.B) {
 		//for field := iter.ReadObject(); field != ""; field = iter.ReadObject() {
 		//	switch field {
 		//	case "field1":
-		//		struct_.field1 = iter.ReadString()
+		//		struct_.Field1 = iter.ReadString()
 		//	case "field2":
-		//		struct_.field2 = iter.ReadString()
+		//		struct_.Field2 = iter.ReadString()
 		//	default:
 		//		iter.Skip()
 		//	}
@@ -334,8 +334,8 @@ func Benchmark_jsoniter_direct(b *testing.B) {
 func Benchmark_json_reflect(b *testing.B) {
 	b.ReportAllocs()
 	for n := 0; n < b.N; n++ {
-		struct_ := StructOfTagOne{}
-		json.Unmarshal([]byte(`{"field3": "100"}`), &struct_)
+		Struct := StructOfTagOne{}
+		json.Unmarshal([]byte(`{"field3": "100"}`), &Struct)
 		//array := make([]string, 0, 2)
 		//json.Unmarshal([]byte(`["hello", "world"]`), &array)
 	}

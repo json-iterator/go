@@ -1,9 +1,9 @@
 package jsoniter
 
 import (
-	"testing"
 	"encoding/json"
 	"fmt"
+	"testing"
 )
 
 func Test_float64_0(t *testing.T) {

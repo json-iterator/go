@@ -1,9 +1,9 @@
 package jsoniter
 
 import (
-	"testing"
 	"encoding/json"
 	"fmt"
+	"testing"
 )
 
 func Test_empty_object(t *testing.T) {
@@ -61,7 +61,7 @@ func Test_two_field(t *testing.T) {
 		case "field2":
 			iter.ReadInt64()
 		default:
-			iter.ReportError("bind object", "unexpected field")
+			iter.reportError("bind object", "unexpected field")
 		}
 	}
 }
@@ -82,7 +82,7 @@ func Benchmark_jsoniter_object(b *testing.B) {
 			case "field2":
 				obj.Field2 = iter.ReadUint64()
 			default:
-				iter.ReportError("bind object", "unexpected field")
+				iter.reportError("bind object", "unexpected field")
 			}
 		}
 	}

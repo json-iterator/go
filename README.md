@@ -1,3 +1,5 @@
+[![rcard](https://goreportcard.com/badge/github.com/json-iterator/go)](https://goreportcard.com/report/github.com/json-iterator/go)
+
 jsoniter (json-iterator) is fast and flexible JSON parser available in [Java](https://github.com/json-iterator/java) and [Go](https://github.com/json-iterator/go)
 
 # Why jsoniter?
@@ -37,7 +39,7 @@ import "github.com/json-iterator/go"
 iter := ParseString(`[0, [1, 2], [3, 4], 5]`)
 count := 0
 for iter.ReadArray() {
-    iter.skip()
+    iter.Skip()
     count++
 }
 fmt.Println(count) // 4
