@@ -45,45 +45,25 @@ func Test_customize_field_decoder(t *testing.T) {
 	}
 }
 
+type TestObject1 struct {
+	field1 string
+}
+
 func Test_customize_field_by_extension(t *testing.T) {
 	RegisterExtension(func(type_ reflect.Type, field *reflect.StructField) ([]string, DecoderFunc) {
-		if (type_.String() == "jsoniter.Tom" && field.Name == "field1") {
+		if (type_.String() == "jsoniter.TestObject1" && field.Name == "field1") {
 			return []string{"field-1"}, func(ptr unsafe.Pointer, iter *Iterator) {
 				*((*string)(ptr)) = strconv.Itoa(iter.ReadInt())
 			}
 		}
 		return nil, nil
 	})
-	tom := Tom{}
-	err := Unmarshal([]byte(`{"field-1": 100}`), &tom)
+	obj := TestObject1{}
+	err := Unmarshal([]byte(`{"field-1": 100}`), &obj)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if tom.field1 != "100" {
-		t.Fatal(tom.field1)
-	}
-}
-
-type Jerry struct {
-	field1 string
-}
-
-func Test_customize_type_by_extension(t *testing.T) {
-	RegisterExtension(func(type_ reflect.Type, field *reflect.StructField) ([]string, DecoderFunc) {
-		if (type_.String() == "jsoniter.Jerry" && field == nil) {
-			return nil, func(ptr unsafe.Pointer, iter *Iterator) {
-				obj := (*Jerry)(ptr)
-				obj.field1 = iter.ReadString()
-			}
-		}
-		return nil, nil
-	})
-	jerry := Jerry{}
-	err := Unmarshal([]byte(`"100"`), &jerry)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if jerry.field1 != "100" {
-		t.Fatal(jerry.field1)
+	if obj.field1 != "100" {
+		t.Fatal(obj.field1)
 	}
 }

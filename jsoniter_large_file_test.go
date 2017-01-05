@@ -7,21 +7,21 @@ import (
 	"io/ioutil"
 )
 
-func Test_large_file(t *testing.T) {
-	file, err := os.Open("/tmp/large-file.json")
-	if err != nil {
-		t.Fatal(err)
-	}
-	iter := Parse(file, 4096)
-	count := 0
-	for iter.ReadArray() {
-		iter.Skip()
-		count++
-	}
-	if count != 11351 {
-		t.Fatal(count)
-	}
-}
+//func Test_large_file(t *testing.T) {
+//	file, err := os.Open("/tmp/large-file.json")
+//	if err != nil {
+//		t.Fatal(err)
+//	}
+//	iter := Parse(file, 4096)
+//	count := 0
+//	for iter.ReadArray() {
+//		iter.Skip()
+//		count++
+//	}
+//	if count != 11351 {
+//		t.Fatal(count)
+//	}
+//}
 
 
 func Benchmark_jsoniter_large_file(b *testing.B) {

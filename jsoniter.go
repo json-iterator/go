@@ -69,24 +69,31 @@ type Iterator struct {
 	Error  error
 }
 
+func Create() *Iterator {
+	return &Iterator{
+		reader: nil,
+		buf: nil,
+		head: 0,
+		tail: 0,
+	}
+}
+
 func Parse(reader io.Reader, bufSize int) *Iterator {
-	iter := &Iterator{
+	return &Iterator{
 		reader: reader,
 		buf: make([]byte, bufSize),
 		head: 0,
 		tail: 0,
 	}
-	return iter
 }
 
 func ParseBytes(input []byte) *Iterator {
-	iter := &Iterator{
+	return &Iterator{
 		reader: nil,
 		buf: input,
 		head: 0,
 		tail: len(input),
 	}
-	return iter
 }
 
 func ParseString(input string) *Iterator {
@@ -101,7 +108,6 @@ func (iter *Iterator) Reset(reader io.Reader) *Iterator {
 }
 
 func (iter *Iterator) ResetBytes(input []byte) *Iterator {
-	// only for benchmarking
 	iter.reader = nil
 	iter.Error = nil
 	iter.buf = input
@@ -111,7 +117,7 @@ func (iter *Iterator) ResetBytes(input []byte) *Iterator {
 }
 
 func (iter *Iterator) WhatIsNext() ValueType {
-	valueType := valueTypes[iter.readByte()];
+	valueType := valueTypes[iter.nextToken()];
 	iter.unreadByte();
 	return valueType;
 }
@@ -261,7 +267,7 @@ func (iter *Iterator) ReadUint32() (ret uint32) {
 }
 
 func (iter *Iterator) ReadUint64() (ret uint64) {
-	c := iter.readByte()
+	c := iter.nextToken()
 	v := digits[c]
 	if v == 0 {
 		return 0 // single zero
@@ -327,7 +333,7 @@ func (iter *Iterator) ReadInt32() (ret int32) {
 }
 
 func (iter *Iterator) ReadInt64() (ret int64) {
-	c := iter.readByte()
+	c := iter.nextToken()
 	if iter.Error != nil {
 		return
 	}
@@ -350,22 +356,27 @@ func (iter *Iterator) ReadString() (ret string) {
 
 func (iter *Iterator) readStringAsBytes() (ret []byte) {
 	c := iter.nextToken()
+	if c == '"' {
+		end := iter.findStringEndWithoutEscape()
+		if end != -1 {
+			// fast path: reuse the underlying buffer
+			ret = iter.buf[iter.head:end-1]
+			iter.head = end
+			return ret
+		}
+		return iter.readStringAsBytesSlowPath()
+	}
 	if c == 'n' {
 		iter.skipUntilBreak()
 		return
 	}
-	if c != '"' {
-		iter.ReportError("ReadString", `expects " or n`)
-		return
-	}
-	end := iter.findStringEndWithoutEscape()
-	if end != -1 {
-		// fast path: reuse the underlying buffer
-		ret = iter.buf[iter.head:end-1]
-		iter.head = end
-		return ret
-	}
+	iter.ReportError("ReadString", `expects " or n`)
+	return
+}
+
+func (iter *Iterator) readStringAsBytesSlowPath() (ret []byte) {
 	str := make([]byte, 0, 8)
+	var c byte
 	for iter.Error == nil {
 		c = iter.readByte()
 		if c == '"' {
@@ -541,77 +552,9 @@ func (iter *Iterator) ReadArray() (ret bool) {
 	case ',':
 		return true
 	default:
-		iter.ReportError("ReadArray", "expect [ or , or ] or n")
+		iter.ReportError("ReadArray", "expect [ or , or ] or n, but found: " + string([]byte{c}))
 		return
 	}
-}
-
-func (iter *Iterator) ReadObject() (ret string) {
-	c := iter.nextToken()
-	if iter.Error != nil {
-		return
-	}
-	switch c {
-	case 'n': {
-		iter.skipUntilBreak()
-		if iter.Error != nil {
-			return
-		}
-		return "" // null
-	}
-	case '{': {
-		c = iter.nextToken()
-		if iter.Error != nil {
-			return
-		}
-		switch c {
-		case '}':
-			return "" // end of object
-		case '"':
-			iter.unreadByte()
-			return iter.readObjectField()
-		default:
-			iter.ReportError("ReadObject", `expect " after {`)
-			return
-		}
-	}
-	case ',':
-		return iter.readObjectField()
-	case '}':
-		return "" // end of object
-	default:
-		iter.ReportError("ReadObject", `expect { or , or } or n`)
-		return
-	}
-}
-
-func (iter *Iterator) readObjectField() (ret string) {
-	str := iter.readStringAsBytes()
-	if iter.skipWhitespacesWithoutLoadMore() {
-		if ret == "" {
-			ret = string(str);
-		}
-		if !iter.loadMore() {
-			return
-		}
-	}
-	if iter.buf[iter.head] != ':' {
-		iter.ReportError("ReadObject", "expect : after object field")
-		return
-	}
-	iter.head++
-	if iter.skipWhitespacesWithoutLoadMore() {
-		if ret == "" {
-			ret = string(str);
-		}
-		if !iter.loadMore() {
-			return
-		}
-	}
-	if ret == "" {
-		return *(*string)(unsafe.Pointer(&str))
-	}
-	return ret
 }
 
 func (iter *Iterator) ReadFloat32() (ret float32) {
@@ -681,7 +624,7 @@ func (iter *Iterator) ReadFloat64() (ret float64) {
 }
 
 func (iter *Iterator) ReadBool() (ret bool) {
-	c := iter.readByte()
+	c := iter.nextToken()
 	if iter.Error != nil {
 		return
 	}
@@ -714,7 +657,7 @@ func (iter *Iterator) ReadBase64() (ret []byte) {
 }
 
 func (iter *Iterator) ReadNull() (ret bool) {
-	c := iter.readByte()
+	c := iter.nextToken()
 	if c == 'n' {
 		iter.skipUntilBreak()
 		return true
@@ -724,7 +667,7 @@ func (iter *Iterator) ReadNull() (ret bool) {
 }
 
 func (iter *Iterator) Skip() {
-	c := iter.readByte()
+	c := iter.nextToken()
 	switch c {
 	case '"':
 		iter.skipString()

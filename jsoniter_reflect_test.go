@@ -297,13 +297,14 @@ type StructOfTagOne struct {
 
 func Benchmark_jsoniter_reflect(b *testing.B) {
 	b.ReportAllocs()
+	iter := Create()
+	struct_ := &StructOfTagOne{}
+	//var struct_ *StructOfTagOne
+	input := []byte(`{"field3": "100", "field4": "100"}`)
+	//input := []byte(`null`)
 	for n := 0; n < b.N; n++ {
-		iter := ParseString(`{"field3": "100"}`)
-		struct_ := StructOfTagOne{}
+		iter.ResetBytes(input)
 		iter.Read(&struct_)
-		//iter := ParseString(`[1,2,3]`)
-		//var array []int
-		//iter.Read(&array)
 	}
 }
 

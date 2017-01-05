@@ -11,6 +11,15 @@ import (
 	"strconv"
 )
 
+/*
+Reflection on type to create decoders, which is then cached
+Reflection on value is avoided as we can, as the reflect.Value itself will allocate, with following exceptions
+1. create instance of new value, for example *int will need a int to be allocated
+2. append to slice, if the existing cap is not enough, allocate will be done using Reflect.New
+3. assignment to map, both key and value will be reflect.Value
+For a simple struct binding, it will be reflect.Value free and allocation free
+ */
+
 type Decoder interface {
 	decode(ptr unsafe.Pointer, iter *Iterator)
 }
@@ -133,7 +142,7 @@ type stringNumberDecoder struct {
 }
 
 func (decoder *stringNumberDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
-	c := iter.readByte()
+	c := iter.nextToken()
 	if c != '"' {
 		iter.ReportError("stringNumberDecoder", `expect "`)
 		return
@@ -158,9 +167,15 @@ func (decoder *optionalDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 	if iter.ReadNull() {
 		*((*unsafe.Pointer)(ptr)) = nil
 	} else {
-		value := reflect.New(decoder.valueType)
-		decoder.valueDecoder.decode(unsafe.Pointer(value.Pointer()), iter)
-		*((*uintptr)(ptr)) = value.Pointer()
+		if *((*unsafe.Pointer)(ptr)) == nil {
+			// pointer to null, we have to allocate memory to hold the value
+			value := reflect.New(decoder.valueType)
+			decoder.valueDecoder.decode(unsafe.Pointer(value.Pointer()), iter)
+			*((*uintptr)(ptr)) = value.Pointer()
+		} else {
+			// reuse existing instance
+			decoder.valueDecoder.decode(*((*unsafe.Pointer)(ptr)), iter)
+		}
 	}
 }
 
@@ -278,7 +293,24 @@ type fourFieldsStructDecoder struct {
 }
 
 func (decoder *fourFieldsStructDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
-	for field := iter.ReadObject(); field != ""; field = iter.ReadObject() {
+	if !iter.readObjectStart() {
+		return
+	}
+	field := iter.readObjectField()
+	switch field {
+	case decoder.fieldName1:
+		decoder.fieldDecoder1.decode(ptr, iter)
+	case decoder.fieldName2:
+		decoder.fieldDecoder2.decode(ptr, iter)
+	case decoder.fieldName3:
+		decoder.fieldDecoder3.decode(ptr, iter)
+	case decoder.fieldName4:
+		decoder.fieldDecoder4.decode(ptr, iter)
+	default:
+		iter.Skip()
+	}
+	for iter.nextToken() != ',' {
+		field := iter.readObjectField()
 		switch field {
 		case decoder.fieldName1:
 			decoder.fieldDecoder1.decode(ptr, iter)
@@ -327,6 +359,7 @@ func (decoder *mapDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 	for field := iter.ReadObject(); field != ""; field = iter.ReadObject() {
 		elem := reflect.New(decoder.elemType)
 		decoder.elemDecoder.decode(unsafe.Pointer(elem.Pointer()), iter)
+		// to put into map, we have to use reflection
 		realVal.SetMapIndex(reflect.ValueOf(string([]byte(field))), elem.Elem())
 	}
 }
@@ -406,6 +439,7 @@ func growOne(slice *sliceHeader, sliceType reflect.Type, elementType reflect.Typ
 		}
 	}
 	dst := unsafe.Pointer(reflect.MakeSlice(sliceType, newLen, newCap).Pointer())
+	// copy old array into new array
 	originalBytesCount := uintptr(slice.Len) * elementType.Size()
 	srcPtr := (*[1 << 30]byte)(slice.Data)
 	dstPtr := (*[1 << 30]byte)(dst)
@@ -554,7 +588,11 @@ func (iter *Iterator) readNumber() (ret *Any) {
 				str = append(str, c)
 				continue
 			default:
+				iter.head = i
 				hasMore = false
+				break
+			}
+			if !hasMore {
 				break
 			}
 		}
@@ -631,14 +669,6 @@ func decoderOfPtr(type_ reflect.Type) (Decoder, error) {
 	typeName := type_.String()
 	if typeName == "jsoniter.Any" {
 		return &anyDecoder{}, nil
-	}
-
-	for _, extension := range extensions {
-		alternativeFieldNames, func_ := extension(type_, nil)
-		if alternativeFieldNames != nil {
-			return nil, fmt.Errorf("%v should not return alternative field names when only type is being passed", extension)
-		}
-		typeDecoders[typeName] = &funcDecoder{func_}
 	}
 	typeDecoder := typeDecoders[typeName]
 	if typeDecoder != nil {
