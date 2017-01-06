@@ -68,41 +68,36 @@ func Test_reflect_four_fields_struct(t *testing.T) {
 	should.Equal("d", obj.field4)
 }
 
-func Test_reflect_struct_string(t *testing.T) {
-	type StructOfString struct {
+func Test_reflect_five_fields_struct(t *testing.T) {
+	should := require.New(t)
+	type TestObject struct {
 		field1 string
 		field2 string
+		field3 string
+		field4 string
+		field5 string
 	}
-	iter := ParseString(`{"field1": "hello", "field2": "world"}`)
-	Struct := StructOfString{}
-	iter.Read(&Struct)
-	if Struct.field1 != "hello" {
-		fmt.Println(iter.Error)
-		t.Fatal(Struct.field1)
-	}
-	if Struct.field2 != "world" {
-		fmt.Println(iter.Error)
-		t.Fatal(Struct.field2)
-	}
+	obj := TestObject{}
+	should.Nil(UnmarshalString(`{}`, &obj))
+	should.Equal("", obj.field1)
+	should.Nil(UnmarshalString(`{"field1": "a", "field2": "b", "field3": "c", "field4": "d", "field5": "e"}`, &obj))
+	should.Equal("a", obj.field1)
+	should.Equal("b", obj.field2)
+	should.Equal("c", obj.field3)
+	should.Equal("d", obj.field4)
+	should.Equal("e", obj.field5)
 }
 
-type StructOfStringPtr struct {
-	field1 *string
-	field2 *string
-}
-
-func Test_reflect_struct_string_ptr(t *testing.T) {
-	iter := ParseString(`{"field1": null, "field2": "world"}`)
-	Struct := StructOfStringPtr{}
-	iter.Read(&Struct)
-	if Struct.field1 != nil {
-		fmt.Println(iter.Error)
-		t.Fatal(Struct.field1)
+func Test_struct_with_optional_field(t *testing.T) {
+	should := require.New(t)
+	type TestObject struct {
+		field1 *string
+		field2 *string
 	}
-	if *Struct.field2 != "world" {
-		fmt.Println(iter.Error)
-		t.Fatal(Struct.field2)
-	}
+	obj := TestObject{}
+	UnmarshalString(`{"field1": null, "field2": "world"}`, &obj)
+	should.Nil(obj.field1)
+	should.Equal("world", *obj.field2)
 }
 
 type StructOfTag struct {

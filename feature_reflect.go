@@ -52,8 +52,19 @@ type generalStructDecoder struct {
 }
 
 func (decoder *generalStructDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
-	for field := iter.ReadObject(); field != ""; field = iter.ReadObject() {
-		fieldDecoder := decoder.fields[field]
+	if !iter.readObjectStart() {
+		return
+	}
+	field := iter.readObjectField()
+	fieldDecoder := decoder.fields[field]
+	if fieldDecoder == nil {
+		iter.Skip()
+	} else {
+		fieldDecoder.decode(ptr, iter)
+	}
+	for iter.nextToken() == ',' {
+		field = iter.readObjectField()
+		fieldDecoder = decoder.fields[field]
 		if fieldDecoder == nil {
 			iter.Skip()
 		} else {
