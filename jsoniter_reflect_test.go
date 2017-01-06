@@ -5,162 +5,74 @@ import (
 	"fmt"
 	"testing"
 	"unsafe"
+	"github.com/json-iterator/go/require"
 )
 
-func Test_reflect_str(t *testing.T) {
-	iter := ParseString(`"hello"`)
-	str := ""
-	iter.Read(&str)
-	if str != "hello" {
-		fmt.Println(iter.Error)
-		t.Fatal(str)
+func Test_reflect_one_field_struct(t *testing.T) {
+	should := require.New(t)
+	type TestObject struct {
+		field1 string
 	}
+	obj := TestObject{}
+	should.Nil(UnmarshalString(`{}`, &obj))
+	should.Equal("", obj.field1)
+	should.Nil(UnmarshalString(`{"field1": "hello"}`, &obj))
+	should.Equal("hello", obj.field1)
 }
 
-func Test_reflect_ptr_str(t *testing.T) {
-	iter := ParseString(`"hello"`)
-	var str *string
-	iter.Read(&str)
-	if *str != "hello" {
-		t.Fatal(str)
+func Test_reflect_two_fields_struct(t *testing.T) {
+	should := require.New(t)
+	type TestObject struct {
+		field1 string
+		field2 string
 	}
+	obj := TestObject{}
+	should.Nil(UnmarshalString(`{}`, &obj))
+	should.Equal("", obj.field1)
+	should.Nil(UnmarshalString(`{"field1": "a", "field2": "b"}`, &obj))
+	should.Equal("a", obj.field1)
+	should.Equal("b", obj.field2)
 }
 
-func Test_reflect_int(t *testing.T) {
-	iter := ParseString(`123`)
-	val := int(0)
-	iter.Read(&val)
-	if val != 123 {
-		t.Fatal(val)
+func Test_reflect_three_fields_struct(t *testing.T) {
+	should := require.New(t)
+	type TestObject struct {
+		field1 string
+		field2 string
+		field3 string
 	}
+	obj := TestObject{}
+	should.Nil(UnmarshalString(`{}`, &obj))
+	should.Equal("", obj.field1)
+	should.Nil(UnmarshalString(`{"field1": "a", "field2": "b", "field3": "c"}`, &obj))
+	should.Equal("a", obj.field1)
+	should.Equal("b", obj.field2)
+	should.Equal("c", obj.field3)
 }
 
-func Test_reflect_int8(t *testing.T) {
-	iter := ParseString(`123`)
-	val := int8(0)
-	iter.Read(&val)
-	if val != 123 {
-		t.Fatal(val)
+func Test_reflect_four_fields_struct(t *testing.T) {
+	should := require.New(t)
+	type TestObject struct {
+		field1 string
+		field2 string
+		field3 string
+		field4 string
 	}
-}
-
-func Test_reflect_int16(t *testing.T) {
-	iter := ParseString(`123`)
-	val := int16(0)
-	iter.Read(&val)
-	if val != 123 {
-		t.Fatal(val)
-	}
-}
-
-func Test_reflect_int32(t *testing.T) {
-	iter := ParseString(`123`)
-	val := int32(0)
-	iter.Read(&val)
-	if val != 123 {
-		t.Fatal(val)
-	}
-}
-
-func Test_reflect_int64(t *testing.T) {
-	iter := ParseString(`123`)
-	val := int64(0)
-	iter.Read(&val)
-	if val != 123 {
-		t.Fatal(val)
-	}
-}
-
-func Test_reflect_uint(t *testing.T) {
-	iter := ParseString(`123`)
-	val := uint(0)
-	iter.Read(&val)
-	if val != 123 {
-		t.Fatal(val)
-	}
-}
-
-func Test_reflect_uint8(t *testing.T) {
-	iter := ParseString(`123`)
-	val := uint8(0)
-	iter.Read(&val)
-	if val != 123 {
-		t.Fatal(val)
-	}
-}
-
-func Test_reflect_uint16(t *testing.T) {
-	iter := ParseString(`123`)
-	val := uint16(0)
-	iter.Read(&val)
-	if val != 123 {
-		t.Fatal(val)
-	}
-}
-
-func Test_reflect_uint32(t *testing.T) {
-	iter := ParseString(`123`)
-	val := uint32(0)
-	iter.Read(&val)
-	if val != 123 {
-		t.Fatal(val)
-	}
-}
-
-func Test_reflect_uint64(t *testing.T) {
-	iter := ParseString(`123`)
-	val := uint64(0)
-	iter.Read(&val)
-	if val != 123 {
-		t.Fatal(val)
-	}
-}
-
-func Test_reflect_byte(t *testing.T) {
-	iter := ParseString(`123`)
-	val := byte(0)
-	iter.Read(&val)
-	if val != 123 {
-		t.Fatal(val)
-	}
-}
-
-func Test_reflect_float32(t *testing.T) {
-	iter := ParseString(`1.23`)
-	val := float32(0)
-	iter.Read(&val)
-	if val != 1.23 {
-		fmt.Println(iter.Error)
-		t.Fatal(val)
-	}
-}
-
-func Test_reflect_float64(t *testing.T) {
-	iter := ParseString(`1.23`)
-	val := float64(0)
-	iter.Read(&val)
-	if val != 1.23 {
-		fmt.Println(iter.Error)
-		t.Fatal(val)
-	}
-}
-
-func Test_reflect_bool(t *testing.T) {
-	iter := ParseString(`true`)
-	val := false
-	iter.Read(&val)
-	if val != true {
-		fmt.Println(iter.Error)
-		t.Fatal(val)
-	}
-}
-
-type StructOfString struct {
-	field1 string
-	field2 string
+	obj := TestObject{}
+	should.Nil(UnmarshalString(`{}`, &obj))
+	should.Equal("", obj.field1)
+	should.Nil(UnmarshalString(`{"field1": "a", "field2": "b", "field3": "c", "field4": "d"}`, &obj))
+	should.Equal("a", obj.field1)
+	should.Equal("b", obj.field2)
+	should.Equal("c", obj.field3)
+	should.Equal("d", obj.field4)
 }
 
 func Test_reflect_struct_string(t *testing.T) {
+	type StructOfString struct {
+		field1 string
+		field2 string
+	}
 	iter := ParseString(`{"field1": "hello", "field2": "world"}`)
 	Struct := StructOfString{}
 	iter.Read(&Struct)
@@ -254,6 +166,10 @@ func Test_reflect_large_slice(t *testing.T) {
 }
 
 func Test_reflect_nested(t *testing.T) {
+	type StructOfString struct {
+		field1 string
+		field2 string
+	}
 	iter := ParseString(`[{"field1": "hello"}, null, {"field2": "world"}]`)
 	slice := []*StructOfString{}
 	iter.Read(&slice)
