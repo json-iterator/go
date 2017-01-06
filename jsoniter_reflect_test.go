@@ -8,159 +8,21 @@ import (
 	"github.com/json-iterator/go/require"
 )
 
-func Test_reflect_one_field_struct(t *testing.T) {
+func Test_decode_slice(t *testing.T) {
 	should := require.New(t)
-	type TestObject struct {
-		field1 string
-	}
-	obj := TestObject{}
-	should.Nil(UnmarshalString(`{}`, &obj))
-	should.Equal("", obj.field1)
-	should.Nil(UnmarshalString(`{"field1": "hello"}`, &obj))
-	should.Equal("hello", obj.field1)
-}
-
-func Test_reflect_two_fields_struct(t *testing.T) {
-	should := require.New(t)
-	type TestObject struct {
-		field1 string
-		field2 string
-	}
-	obj := TestObject{}
-	should.Nil(UnmarshalString(`{}`, &obj))
-	should.Equal("", obj.field1)
-	should.Nil(UnmarshalString(`{"field1": "a", "field2": "b"}`, &obj))
-	should.Equal("a", obj.field1)
-	should.Equal("b", obj.field2)
-}
-
-func Test_reflect_three_fields_struct(t *testing.T) {
-	should := require.New(t)
-	type TestObject struct {
-		field1 string
-		field2 string
-		field3 string
-	}
-	obj := TestObject{}
-	should.Nil(UnmarshalString(`{}`, &obj))
-	should.Equal("", obj.field1)
-	should.Nil(UnmarshalString(`{"field1": "a", "field2": "b", "field3": "c"}`, &obj))
-	should.Equal("a", obj.field1)
-	should.Equal("b", obj.field2)
-	should.Equal("c", obj.field3)
-}
-
-func Test_reflect_four_fields_struct(t *testing.T) {
-	should := require.New(t)
-	type TestObject struct {
-		field1 string
-		field2 string
-		field3 string
-		field4 string
-	}
-	obj := TestObject{}
-	should.Nil(UnmarshalString(`{}`, &obj))
-	should.Equal("", obj.field1)
-	should.Nil(UnmarshalString(`{"field1": "a", "field2": "b", "field3": "c", "field4": "d"}`, &obj))
-	should.Equal("a", obj.field1)
-	should.Equal("b", obj.field2)
-	should.Equal("c", obj.field3)
-	should.Equal("d", obj.field4)
-}
-
-func Test_reflect_five_fields_struct(t *testing.T) {
-	should := require.New(t)
-	type TestObject struct {
-		field1 string
-		field2 string
-		field3 string
-		field4 string
-		field5 string
-	}
-	obj := TestObject{}
-	should.Nil(UnmarshalString(`{}`, &obj))
-	should.Equal("", obj.field1)
-	should.Nil(UnmarshalString(`{"field1": "a", "field2": "b", "field3": "c", "field4": "d", "field5": "e"}`, &obj))
-	should.Equal("a", obj.field1)
-	should.Equal("b", obj.field2)
-	should.Equal("c", obj.field3)
-	should.Equal("d", obj.field4)
-	should.Equal("e", obj.field5)
-}
-
-func Test_struct_with_optional_field(t *testing.T) {
-	should := require.New(t)
-	type TestObject struct {
-		field1 *string
-		field2 *string
-	}
-	obj := TestObject{}
-	UnmarshalString(`{"field1": null, "field2": "world"}`, &obj)
-	should.Nil(obj.field1)
-	should.Equal("world", *obj.field2)
-}
-
-type StructOfTag struct {
-	Field1 string `json:"field-1"`
-	Field2 string `json:"-"`
-	Field3 int    `json:",string"`
-}
-
-func Test_reflect_struct_tag_field(t *testing.T) {
-	iter := ParseString(`{"field-1": "hello", "field2": "", "Field3": "100"}`)
-	Struct := StructOfTag{Field2: "world"}
-	iter.Read(&Struct)
-	if Struct.Field1 != "hello" {
-		fmt.Println(iter.Error)
-		t.Fatal(Struct.Field1)
-	}
-	if Struct.Field2 != "world" {
-		fmt.Println(iter.Error)
-		t.Fatal(Struct.Field2)
-	}
-	if Struct.Field3 != 100 {
-		fmt.Println(iter.Error)
-		t.Fatal(Struct.Field3)
-	}
-}
-
-func Test_reflect_slice(t *testing.T) {
-	iter := ParseString(`["hello", "world"]`)
 	slice := make([]string, 0, 5)
-	iter.Read(&slice)
-	if len(slice) != 2 {
-		fmt.Println(iter.Error)
-		t.Fatal(len(slice))
-	}
-	if slice[0] != "hello" {
-		fmt.Println(iter.Error)
-		t.Fatal(slice[0])
-	}
-	if slice[1] != "world" {
-		fmt.Println(iter.Error)
-		t.Fatal(slice[1])
-	}
+	UnmarshalString(`["hello", "world"]`, &slice)
+	should.Equal([]string{"hello", "world"}, slice)
 }
 
-func Test_reflect_large_slice(t *testing.T) {
-	iter := ParseString(`[1,2,3,4,5,6,7,8,9]`)
+func Test_decode_large_slice(t *testing.T) {
+	should := require.New(t)
 	slice := make([]int, 0, 1)
-	iter.Read(&slice)
-	if len(slice) != 9 {
-		fmt.Println(iter.Error)
-		t.Fatal(len(slice))
-	}
-	if slice[0] != 1 {
-		fmt.Println(iter.Error)
-		t.Fatal(slice[0])
-	}
-	if slice[8] != 9 {
-		fmt.Println(iter.Error)
-		t.Fatal(slice[8])
-	}
+	UnmarshalString(`[1,2,3,4,5,6,7,8,9]`, &slice)
+	should.Equal([]int{1, 2, 3, 4, 5, 6, 7, 8, 9}, slice)
 }
 
-func Test_reflect_nested(t *testing.T) {
+func Test_decode_nested(t *testing.T) {
 	type StructOfString struct {
 		field1 string
 		field2 string
@@ -186,7 +48,7 @@ func Test_reflect_nested(t *testing.T) {
 	}
 }
 
-func Test_reflect_base64(t *testing.T) {
+func Test_decode_base64(t *testing.T) {
 	iter := ParseString(`"YWJj"`)
 	val := []byte{}
 	RegisterTypeDecoder("[]uint8", func(ptr unsafe.Pointer, iter *Iterator) {
