@@ -3,6 +3,8 @@ package jsoniter
 import (
 	"encoding/json"
 	"testing"
+	"github.com/json-iterator/go/require"
+	"bytes"
 )
 
 func Test_empty_array(t *testing.T) {
@@ -115,6 +117,21 @@ func Test_whitespace_before_comma(t *testing.T) {
 	if cont != false {
 		t.FailNow()
 	}
+}
+
+func Test_write_array(t *testing.T) {
+	should := require.New(t)
+	buf := &bytes.Buffer{}
+	stream := NewStream(buf, 4096)
+	stream.IndentionStep = 2
+	stream.WriteArrayStart()
+	stream.WriteInt(1)
+	stream.WriteMore()
+	stream.WriteInt(2)
+	stream.WriteArrayEnd()
+	stream.Flush()
+	should.Nil(stream.Error)
+	should.Equal("[\n  1,\n  2\n]", buf.String())
 }
 
 func Benchmark_jsoniter_array(b *testing.B) {

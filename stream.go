@@ -160,6 +160,18 @@ func (stream *Stream) WriteMore() {
 	stream.writeIndention(0)
 }
 
+func (stream *Stream) WriteArrayStart() {
+	stream.indention += stream.IndentionStep
+	stream.writeByte('[')
+	stream.writeIndention(0)
+}
+
+func (stream *Stream) WriteArrayEnd() {
+	stream.writeIndention(stream.IndentionStep)
+	stream.indention -= stream.IndentionStep
+	stream.writeByte(']')
+}
+
 func (stream *Stream) writeIndention(delta int) {
 	if (stream.indention == 0) {
 		return
