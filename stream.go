@@ -5,18 +5,9 @@ import (
 )
 
 var bytesNull []byte
-var digits []uint8;
 
 func init() {
 	bytesNull = []byte("null")
-	digits = []uint8{
-		'0', '1', '2', '3', '4', '5',
-		'6', '7', '8', '9', 'a', 'b',
-		'c', 'd', 'e', 'f', 'g', 'h',
-		'i', 'j', 'k', 'l', 'm', 'n',
-		'o', 'p', 'q', 'r', 's', 't',
-		'u', 'v', 'w', 'x', 'y', 'z',
-	}
 }
 
 type Stream struct {
@@ -71,7 +62,7 @@ func (b *Stream) Write(p []byte) (nn int, err error) {
 
 
 // WriteByte writes a single byte.
-func (b *Stream) WriteByte(c byte) error {
+func (b *Stream) writeByte(c byte) error {
 	if b.Error != nil {
 		return b.Error
 	}
@@ -123,106 +114,6 @@ func (b *Stream) WriteString(s string) {
 
 func (stream *Stream) WriteNull() {
 	stream.Write(bytesNull)
-}
-
-func (stream *Stream) WriteUint8(val uint8) {
-	if stream.Available() < 3 {
-		stream.Flush()
-	}
-	charPos := stream.n
-	if val <= 9 {
-		charPos += 1;
-	} else {
-		if val <= 99 {
-			charPos += 2;
-		} else {
-			charPos += 3;
-		}
-	}
-	stream.n = charPos
-	var q uint8
-	var r uint8
-	for {
-		q = val / 10
-		r = val - ((q << 3) + (q << 1))  // r = i-(q*10) ...
-		charPos--
-		stream.buf[charPos] = digits[r]
-		val = q;
-		if val == 0 {
-			break
-		}
-	}
-}
-
-func (stream *Stream) WriteInt8(val int8) {
-	if stream.Available() < 4 {
-		stream.Flush()
-	}
-	charPos := stream.n
-	if (val < 0) {
-		charPos += 1
-		val = -val
-		stream.buf[stream.n] = '-'
-	}
-	if val <= 9 {
-		charPos += 1;
-	} else {
-		if val <= 99 {
-			charPos += 2;
-		} else {
-			charPos += 3;
-		}
-	}
-	stream.n = charPos
-	var q int8
-	var r int8
-	for {
-		q = val / 10
-		r = val - ((q << 3) + (q << 1))  // r = i-(q*10) ...
-		charPos--
-		stream.buf[charPos] = digits[r]
-		val = q;
-		if val == 0 {
-			break
-		}
-	}
-}
-
-func (stream *Stream) WriteUint16(val uint16) {
-	if stream.Available() < 5 {
-		stream.Flush()
-	}
-	charPos := stream.n
-	if val <= 99 {
-		if val <= 9 {
-			charPos += 1;
-		} else {
-			charPos += 2;
-		}
-	} else {
-		if val <= 999 {
-			charPos += 3;
-		} else {
-			if val <= 9999 {
-				charPos += 4;
-			} else {
-				charPos += 5;
-			}
-		}
-	}
-	stream.n = charPos
-	var q uint16
-	var r uint16
-	for {
-		q = val / 10
-		r = val - ((q << 3) + (q << 1))  // r = i-(q*10) ...
-		charPos--
-		stream.buf[charPos] = digits[r]
-		val = q;
-		if val == 0 {
-			break
-		}
-	}
 }
 
 func (stream *Stream) WriteVal(val interface{}) {
