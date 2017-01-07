@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"testing"
+	"github.com/json-iterator/go/require"
+	"bytes"
 )
 
 func Test_empty_object(t *testing.T) {
@@ -64,6 +66,23 @@ func Test_two_field(t *testing.T) {
 			iter.reportError("bind object", "unexpected field")
 		}
 	}
+}
+
+func Test_write_object(t *testing.T) {
+	should := require.New(t)
+	buf := &bytes.Buffer{}
+	stream := NewStream(buf, 4096)
+	stream.IndentionStep = 2
+	stream.WriteObjectStart()
+	stream.WriteObjectField("hello")
+	stream.WriteInt(1)
+	stream.WriteMore()
+	stream.WriteObjectField("world")
+	stream.WriteInt(2)
+	stream.WriteObjectEnd()
+	stream.Flush()
+	should.Nil(stream.Error)
+	should.Equal("{\n  hello:1,\n  world:2\n}", buf.String())
 }
 
 type TestObj struct {

@@ -422,3 +422,11 @@ func (stream *Stream) writeUint64SlowPath(val uint64) {
 	}
 	stream.Write(temp[charPos:])
 }
+
+func (stream *Stream) WriteInt(val int) {
+	stream.WriteInt64(int64(val))
+}
+
+func (stream *Stream) WriteUint(val uint) {
+	stream.WriteUint64(uint64(val))
+}

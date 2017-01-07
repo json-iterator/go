@@ -5,20 +5,26 @@ import (
 )
 
 var bytesNull []byte
+var bytesTrue []byte
+var bytesFalse []byte
 
 func init() {
 	bytesNull = []byte("null")
+	bytesTrue = []byte("true")
+	bytesFalse = []byte("false")
 }
 
 type Stream struct {
-	out   io.Writer
-	buf   []byte
-	n     int
-	Error error
+	out           io.Writer
+	buf           []byte
+	n             int
+	Error         error
+	indention     int
+	IndentionStep int
 }
 
 func NewStream(out io.Writer, bufSize int) *Stream {
-	return &Stream{out, make([]byte, bufSize), 0, nil}
+	return &Stream{out, make([]byte, bufSize), 0, nil, 0, 0}
 }
 
 
@@ -114,6 +120,64 @@ func (b *Stream) WriteString(s string) {
 
 func (stream *Stream) WriteNull() {
 	stream.Write(bytesNull)
+}
+
+func (stream *Stream) WriteTrue() {
+	stream.Write(bytesTrue)
+}
+
+func (stream *Stream) WriteFalse() {
+	stream.Write(bytesFalse)
+}
+
+func (stream *Stream) WriteBool(val bool) {
+	if val {
+		stream.Write(bytesTrue)
+	} else {
+		stream.Write(bytesFalse)
+	}
+}
+
+func (stream *Stream) WriteObjectStart() {
+	stream.indention += stream.IndentionStep
+	stream.writeByte('{')
+	stream.writeIndention(0)
+}
+
+func (stream *Stream) WriteObjectField(field string) {
+	stream.WriteString(field)
+	stream.writeByte(':')
+}
+
+func (stream *Stream) WriteObjectEnd() {
+	stream.writeIndention(stream.IndentionStep)
+	stream.indention -= stream.IndentionStep
+	stream.writeByte('}')
+}
+
+func (stream *Stream) WriteMore() {
+	stream.writeByte(',')
+	stream.writeIndention(0)
+}
+
+func (stream *Stream) writeIndention(delta int) {
+	if (stream.indention == 0) {
+		return
+	}
+	stream.writeByte('\n')
+	toWrite := stream.indention - delta
+	i := 0
+	for {
+		for ; i < toWrite && stream.n < len(stream.buf); i++ {
+			stream.buf[stream.n] = ' '
+			stream.n ++
+		}
+		if i == toWrite {
+			break;
+		} else {
+			stream.Flush()
+		}
+	}
 }
 
 func (stream *Stream) WriteVal(val interface{}) {

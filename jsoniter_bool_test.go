@@ -1,6 +1,10 @@
 package jsoniter
 
-import "testing"
+import (
+	"testing"
+	"bytes"
+	"github.com/json-iterator/go/require"
+)
 
 func Test_true(t *testing.T) {
 	iter := ParseString(`true`)
@@ -14,4 +18,16 @@ func Test_false(t *testing.T) {
 	if iter.ReadBool() != false {
 		t.FailNow()
 	}
+}
+
+
+func Test_write_true_false(t *testing.T) {
+	should := require.New(t)
+	buf := &bytes.Buffer{}
+	stream := NewStream(buf, 4096)
+	stream.WriteTrue()
+	stream.WriteFalse()
+	stream.Flush()
+	should.Nil(stream.Error)
+	should.Equal("truefalse", buf.String())
 }
