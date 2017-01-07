@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"testing"
+	"github.com/json-iterator/go/require"
 )
 
-func Test_string_empty(t *testing.T) {
+func Test_decode_string_empty(t *testing.T) {
 	iter := Parse(bytes.NewBufferString(`""`), 4096)
 	val := iter.ReadString()
 	if iter.Error != nil {
@@ -17,7 +18,7 @@ func Test_string_empty(t *testing.T) {
 	}
 }
 
-func Test_string_hello(t *testing.T) {
+func Test_decode_string_hello(t *testing.T) {
 	iter := Parse(bytes.NewBufferString(`"hello"`), 4096)
 	val := iter.ReadString()
 	if iter.Error != nil {
@@ -28,7 +29,7 @@ func Test_string_hello(t *testing.T) {
 	}
 }
 
-func Test_string_escape_quote(t *testing.T) {
+func Test_decode_string_escape_quote(t *testing.T) {
 	iter := Parse(bytes.NewBufferString(`"hel\"lo"`), 4096)
 	val := iter.ReadString()
 	if iter.Error != nil {
@@ -39,7 +40,7 @@ func Test_string_escape_quote(t *testing.T) {
 	}
 }
 
-func Test_string_escape_newline(t *testing.T) {
+func Test_decode_string_escape_newline(t *testing.T) {
 	iter := Parse(bytes.NewBufferString(`"hel\nlo"`), 4096)
 	val := iter.ReadString()
 	if iter.Error != nil {
@@ -50,7 +51,7 @@ func Test_string_escape_newline(t *testing.T) {
 	}
 }
 
-func Test_string_escape_unicode(t *testing.T) {
+func Test_decode_string_escape_unicode(t *testing.T) {
 	iter := Parse(bytes.NewBufferString(`"\u4e2d\u6587"`), 4096)
 	val := iter.ReadString()
 	if iter.Error != nil {
@@ -61,7 +62,7 @@ func Test_string_escape_unicode(t *testing.T) {
 	}
 }
 
-func Test_string_escape_unicode_with_surrogate(t *testing.T) {
+func Test_decode_string_escape_unicode_with_surrogate(t *testing.T) {
 	iter := Parse(bytes.NewBufferString(`"\ud83d\udc4a"`), 4096)
 	val := iter.ReadString()
 	if iter.Error != nil {
@@ -72,7 +73,7 @@ func Test_string_escape_unicode_with_surrogate(t *testing.T) {
 	}
 }
 
-func Test_string_as_bytes(t *testing.T) {
+func Test_decode_string_as_bytes(t *testing.T) {
 	iter := Parse(bytes.NewBufferString(`"hello""world"`), 4096)
 	val := string(iter.readStringAsBytes())
 	if val != "hello" {
@@ -82,6 +83,16 @@ func Test_string_as_bytes(t *testing.T) {
 	if val != "world" {
 		t.Fatal(val)
 	}
+}
+
+func Test_write_string(t *testing.T) {
+	should := require.New(t)
+	buf := &bytes.Buffer{}
+	stream := NewStream(buf, 4096)
+	stream.WriteString("hello")
+	stream.Flush()
+	should.Nil(stream.Error)
+	should.Equal("hello", buf.String())
 }
 
 func Benchmark_jsoniter_unicode(b *testing.B) {

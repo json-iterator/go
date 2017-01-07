@@ -21,22 +21,22 @@ const (
 	Object
 )
 
-var digits []byte
+var atoiDigits []byte
 var valueTypes []ValueType
 
 func init() {
-	digits = make([]byte, 256)
-	for i := 0; i < len(digits); i++ {
-		digits[i] = 255
+	atoiDigits = make([]byte, 256)
+	for i := 0; i < len(atoiDigits); i++ {
+		atoiDigits[i] = 255
 	}
 	for i := '0'; i <= '9'; i++ {
-		digits[i] = byte(i - '0')
+		atoiDigits[i] = byte(i - '0')
 	}
 	for i := 'a'; i <= 'f'; i++ {
-		digits[i] = byte((i - 'a') + 10)
+		atoiDigits[i] = byte((i - 'a') + 10)
 	}
 	for i := 'A'; i <= 'F'; i++ {
-		digits[i] = byte((i - 'A') + 10)
+		atoiDigits[i] = byte((i - 'A') + 10)
 	}
 	valueTypes = make([]ValueType, 256)
 	for i := 0; i < len(valueTypes); i++ {
@@ -278,7 +278,7 @@ func (iter *Iterator) ReadUint32() (ret uint32) {
 // ReadUint64 reads a json object as Uint64
 func (iter *Iterator) ReadUint64() (ret uint64) {
 	c := iter.nextToken()
-	v := digits[c]
+	v := atoiDigits[c]
 	if v == 0 {
 		return 0 // single zero
 	}
@@ -293,7 +293,7 @@ func (iter *Iterator) ReadUint64() (ret uint64) {
 		}
 		ret = ret*10 + uint64(v)
 		c = iter.readByte()
-		v = digits[c]
+		v = atoiDigits[c]
 		if v == 255 {
 			iter.unreadByte()
 			break

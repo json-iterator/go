@@ -11,14 +11,14 @@ import (
 func Test_decode_slice(t *testing.T) {
 	should := require.New(t)
 	slice := make([]string, 0, 5)
-	UnmarshalString(`["hello", "world"]`, &slice)
+	UnmarshalFromString(`["hello", "world"]`, &slice)
 	should.Equal([]string{"hello", "world"}, slice)
 }
 
 func Test_decode_large_slice(t *testing.T) {
 	should := require.New(t)
 	slice := make([]int, 0, 1)
-	UnmarshalString(`[1,2,3,4,5,6,7,8,9]`, &slice)
+	UnmarshalFromString(`[1,2,3,4,5,6,7,8,9]`, &slice)
 	should.Equal([]int{1, 2, 3, 4, 5, 6, 7, 8, 9}, slice)
 }
 

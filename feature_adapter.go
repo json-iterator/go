@@ -3,6 +3,7 @@ package jsoniter
 import (
 	"io"
 	"unsafe"
+	"bytes"
 )
 
 // Unmarshal adapts to json/encoding APIs
@@ -15,7 +16,8 @@ func Unmarshal(data []byte, v interface{}) error {
 	return iter.Error
 }
 
-func UnmarshalString(str string, v interface{}) error {
+func UnmarshalFromString(str string, v interface{}) error {
+	// safe to do the unsafe cast here, as str is always referenced in this scope
 	data := *(*[]byte)(unsafe.Pointer(&str))
 	iter := ParseBytes(data)
 	iter.Read(v)
@@ -23,4 +25,22 @@ func UnmarshalString(str string, v interface{}) error {
 		return nil
 	}
 	return iter.Error
+}
+
+func Marshal(v interface{}) ([]byte, error) {
+	buf := &bytes.Buffer{}
+	stream := NewStream(buf, 4096)
+	stream.WriteVal(v)
+	if stream.Error != nil {
+		return nil, stream.Error
+	}
+	return buf.Bytes(), nil
+}
+
+func MarshalToString(v interface{}) (string, error) {
+	buf, err := Marshal(v)
+	if err != nil {
+		return "", err
+	}
+	return string(buf), nil
 }
