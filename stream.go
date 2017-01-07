@@ -104,7 +104,7 @@ func (b *Stream) Flush() error {
 	return nil
 }
 
-func (b *Stream) WriteString(s string) {
+func (b *Stream) WriteRaw(s string) {
 	for len(s) > b.Available() && b.Error == nil {
 		n := copy(b.buf[b.n:], s)
 		b.n += n
@@ -116,6 +116,22 @@ func (b *Stream) WriteString(s string) {
 	}
 	n := copy(b.buf[b.n:], s)
 	b.n += n
+}
+
+func (b *Stream) WriteString(s string) {
+	b.writeByte('"')
+	for len(s) > b.Available() && b.Error == nil {
+		n := copy(b.buf[b.n:], s)
+		b.n += n
+		s = s[n:]
+		b.Flush()
+	}
+	if b.Error != nil {
+		return
+	}
+	n := copy(b.buf[b.n:], s)
+	b.n += n
+	b.writeByte('"')
 }
 
 func (stream *Stream) WriteNull() {
