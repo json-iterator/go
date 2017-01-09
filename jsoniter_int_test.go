@@ -260,6 +260,27 @@ func Test_write_int64(t *testing.T) {
 	should.Equal("a4294967295", buf.String())
 }
 
+func Test_write_val_int(t *testing.T) {
+	should := require.New(t)
+	buf := &bytes.Buffer{}
+	stream := NewStream(buf, 4096)
+	stream.WriteVal(1001)
+	stream.Flush()
+	should.Nil(stream.Error)
+	should.Equal("1001", buf.String())
+}
+
+func Test_write_val_int_ptr(t *testing.T) {
+	should := require.New(t)
+	buf := &bytes.Buffer{}
+	stream := NewStream(buf, 4096)
+	val := 1001
+	stream.WriteVal(&val)
+	stream.Flush()
+	should.Nil(stream.Error)
+	should.Equal("1001", buf.String())
+}
+
 func Benchmark_jsoniter_encode_int(b *testing.B) {
 	stream := NewStream(ioutil.Discard, 64)
 	for n := 0; n < b.N; n++ {

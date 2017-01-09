@@ -39,7 +39,7 @@ func decoderOfStruct(typ reflect.Type) (Decoder, error) {
 		}
 		if decoder == nil {
 			var err error
-			decoder, err = decoderOfPtr(field.Type)
+			decoder, err = decoderOfType(field.Type)
 			if err != nil {
 				return prefix(fmt.Sprintf("{%s}", field.Name)).addTo(decoder, err)
 			}

@@ -207,6 +207,3 @@ func (stream *Stream) writeIndention(delta int) {
 		}
 	}
 }
-
-func (stream *Stream) WriteVal(val interface{}) {
-}

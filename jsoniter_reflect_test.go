@@ -29,7 +29,7 @@ func Test_decode_nested(t *testing.T) {
 	}
 	iter := ParseString(`[{"field1": "hello"}, null, {"field2": "world"}]`)
 	slice := []*StructOfString{}
-	iter.Read(&slice)
+	iter.ReadVal(&slice)
 	if len(slice) != 3 {
 		fmt.Println(iter.Error)
 		t.Fatal(len(slice))
@@ -55,7 +55,7 @@ func Test_decode_base64(t *testing.T) {
 		*((*[]byte)(ptr)) = iter.ReadBase64()
 	})
 	defer CleanDecoders()
-	iter.Read(&val)
+	iter.ReadVal(&val)
 	if "abc" != string(val) {
 		t.Fatal(string(val))
 	}
@@ -77,7 +77,7 @@ func Benchmark_jsoniter_reflect(b *testing.B) {
 	//input := []byte(`null`)
 	for n := 0; n < b.N; n++ {
 		iter.ResetBytes(input)
-		iter.Read(&Struct)
+		iter.ReadVal(&Struct)
 	}
 }
 

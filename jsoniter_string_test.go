@@ -92,7 +92,17 @@ func Test_write_string(t *testing.T) {
 	stream.WriteString("hello")
 	stream.Flush()
 	should.Nil(stream.Error)
-	should.Equal("hello", buf.String())
+	should.Equal(`"hello"`, buf.String())
+}
+
+func Test_write_val_string(t *testing.T) {
+	should := require.New(t)
+	buf := &bytes.Buffer{}
+	stream := NewStream(buf, 4096)
+	stream.WriteVal("hello")
+	stream.Flush()
+	should.Nil(stream.Error)
+	should.Equal(`"hello"`, buf.String())
 }
 
 func Benchmark_jsoniter_unicode(b *testing.B) {

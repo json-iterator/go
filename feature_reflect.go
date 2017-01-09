@@ -1,7 +1,6 @@
 package jsoniter
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"reflect"
@@ -19,9 +18,11 @@ Reflection on value is avoided as we can, as the reflect.Value itself will alloc
 For a simple struct binding, it will be reflect.Value free and allocation free
 */
 
-// Decoder works like a father class for sub-type decoders
 type Decoder interface {
 	decode(ptr unsafe.Pointer, iter *Iterator)
+}
+type Encoder interface {
+	encode(ptr unsafe.Pointer, stream *Stream)
 }
 
 type DecoderFunc func(ptr unsafe.Pointer, iter *Iterator)
@@ -36,6 +37,7 @@ func (decoder *funcDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 }
 
 var DECODERS unsafe.Pointer
+var ENCODERS unsafe.Pointer
 
 var typeDecoders map[string]Decoder
 var fieldDecoders map[string]Decoder
@@ -46,25 +48,46 @@ func init() {
 	fieldDecoders = map[string]Decoder{}
 	extensions = []ExtensionFunc{}
 	atomic.StorePointer(&DECODERS, unsafe.Pointer(&map[string]Decoder{}))
+	atomic.StorePointer(&ENCODERS, unsafe.Pointer(&map[string]Encoder{}))
 }
 
 func addDecoderToCache(cacheKey reflect.Type, decoder Decoder) {
-	retry := true
-	for retry {
+	done := false
+	for !done {
 		ptr := atomic.LoadPointer(&DECODERS)
 		cache := *(*map[reflect.Type]Decoder)(ptr)
-		copy := map[reflect.Type]Decoder{}
+		copied := map[reflect.Type]Decoder{}
 		for k, v := range cache {
-			copy[k] = v
+			copied[k] = v
 		}
-		copy[cacheKey] = decoder
-		retry = !atomic.CompareAndSwapPointer(&DECODERS, ptr, unsafe.Pointer(&copy))
+		copied[cacheKey] = decoder
+		done = atomic.CompareAndSwapPointer(&DECODERS, ptr, unsafe.Pointer(&copied))
+	}
+}
+
+func addEncoderToCache(cacheKey reflect.Type, encoder Encoder) {
+	done := false
+	for !done {
+		ptr := atomic.LoadPointer(&ENCODERS)
+		cache := *(*map[reflect.Type]Encoder)(ptr)
+		copied := map[reflect.Type]Encoder{}
+		for k, v := range cache {
+			copied[k] = v
+		}
+		copied[cacheKey] = encoder
+		done = atomic.CompareAndSwapPointer(&ENCODERS, ptr, unsafe.Pointer(&copied))
 	}
 }
 
 func getDecoderFromCache(cacheKey reflect.Type) Decoder {
 	ptr := atomic.LoadPointer(&DECODERS)
 	cache := *(*map[reflect.Type]Decoder)(ptr)
+	return cache[cacheKey]
+}
+
+func getEncoderFromCache(cacheKey reflect.Type) Encoder {
+	ptr := atomic.LoadPointer(&ENCODERS)
+	cache := *(*map[reflect.Type]Encoder)(ptr)
 	return cache[cacheKey]
 }
 
@@ -241,12 +264,12 @@ func (iter *Iterator) readNumber() (ret *Any) {
 }
 
 // Read converts an Iterator instance into go interface, same as json.Unmarshal
-func (iter *Iterator) Read(obj interface{}) {
+func (iter *Iterator) ReadVal(obj interface{}) {
 	typ := reflect.TypeOf(obj)
 	cacheKey := typ.Elem()
 	cachedDecoder := getDecoderFromCache(cacheKey)
 	if cachedDecoder == nil {
-		decoder, err := decoderOfType(typ)
+		decoder, err := decoderOfType(cacheKey)
 		if err != nil {
 			iter.Error = err
 			return
@@ -256,6 +279,27 @@ func (iter *Iterator) Read(obj interface{}) {
 	}
 	e := (*emptyInterface)(unsafe.Pointer(&obj))
 	cachedDecoder.decode(e.word, iter)
+}
+
+
+func (stream *Stream) WriteVal(val interface{}) {
+	typ := reflect.TypeOf(val)
+	cacheKey := typ
+	if typ.Kind() == reflect.Ptr {
+		cacheKey = typ.Elem()
+	}
+	cachedEncoder := getEncoderFromCache(cacheKey)
+	if cachedEncoder == nil {
+		encoder, err := encoderOfType(cacheKey)
+		if err != nil {
+			stream.Error = err
+			return
+		}
+		cachedEncoder = encoder
+		addEncoderToCache(cacheKey, encoder)
+	}
+	e := (*emptyInterface)(unsafe.Pointer(&val))
+	cachedEncoder.encode(e.word, stream)
 }
 
 type prefix string
@@ -268,15 +312,6 @@ func (p prefix) addTo(decoder Decoder, err error) (Decoder, error) {
 }
 
 func decoderOfType(typ reflect.Type) (Decoder, error) {
-	switch typ.Kind() {
-	case reflect.Ptr:
-		return prefix("ptr").addTo(decoderOfPtr(typ.Elem()))
-	default:
-		return nil, errors.New("expect ptr")
-	}
-}
-
-func decoderOfPtr(typ reflect.Type) (Decoder, error) {
 	typeName := typ.String()
 	if typeName == "jsoniter.Any" {
 		return &anyDecoder{}, nil
@@ -287,9 +322,9 @@ func decoderOfPtr(typ reflect.Type) (Decoder, error) {
 	}
 	switch typ.Kind() {
 	case reflect.String:
-		return &stringDecoder{}, nil
+		return &stringCodec{}, nil
 	case reflect.Int:
-		return &intDecoder{}, nil
+		return &intCodec{}, nil
 	case reflect.Int8:
 		return &int8Decoder{}, nil
 	case reflect.Int16:
@@ -329,8 +364,21 @@ func decoderOfPtr(typ reflect.Type) (Decoder, error) {
 	}
 }
 
+
+
+func encoderOfType(typ reflect.Type) (Encoder, error) {
+	switch typ.Kind() {
+	case reflect.String:
+		return &stringCodec{}, nil
+	case reflect.Int:
+		return &intCodec{}, nil
+	default:
+		return nil, fmt.Errorf("unsupported type: %v", typ)
+	}
+}
+
 func decoderOfOptional(typ reflect.Type) (Decoder, error) {
-	decoder, err := decoderOfPtr(typ)
+	decoder, err := decoderOfType(typ)
 	if err != nil {
 		return nil, err
 	}
@@ -338,7 +386,7 @@ func decoderOfOptional(typ reflect.Type) (Decoder, error) {
 }
 
 func decoderOfSlice(typ reflect.Type) (Decoder, error) {
-	decoder, err := decoderOfPtr(typ.Elem())
+	decoder, err := decoderOfType(typ.Elem())
 	if err != nil {
 		return nil, err
 	}
@@ -346,7 +394,7 @@ func decoderOfSlice(typ reflect.Type) (Decoder, error) {
 }
 
 func decoderOfMap(typ reflect.Type) (Decoder, error) {
-	decoder, err := decoderOfPtr(typ.Elem())
+	decoder, err := decoderOfType(typ.Elem())
 	if err != nil {
 		return nil, err
 	}

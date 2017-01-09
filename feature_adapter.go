@@ -9,7 +9,7 @@ import (
 // Unmarshal adapts to json/encoding APIs
 func Unmarshal(data []byte, v interface{}) error {
 	iter := ParseBytes(data)
-	iter.Read(v)
+	iter.ReadVal(v)
 	if iter.Error == io.EOF {
 		return nil
 	}
@@ -20,7 +20,7 @@ func UnmarshalFromString(str string, v interface{}) error {
 	// safe to do the unsafe cast here, as str is always referenced in this scope
 	data := *(*[]byte)(unsafe.Pointer(&str))
 	iter := ParseBytes(data)
-	iter.Read(v)
+	iter.ReadVal(v)
 	if iter.Error == io.EOF {
 		return nil
 	}

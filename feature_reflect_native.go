@@ -2,18 +2,26 @@ package jsoniter
 
 import "unsafe"
 
-type stringDecoder struct {
+type stringCodec struct {
 }
 
-func (decoder *stringDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (codec *stringCodec) decode(ptr unsafe.Pointer, iter *Iterator) {
 	*((*string)(ptr)) = iter.ReadString()
 }
 
-type intDecoder struct {
+func (codec *stringCodec) encode(ptr unsafe.Pointer, stream *Stream) {
+	stream.WriteString(*((*string)(ptr)))
 }
 
-func (decoder *intDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+type intCodec struct {
+}
+
+func (codec *intCodec) decode(ptr unsafe.Pointer, iter *Iterator) {
 	*((*int)(ptr)) = iter.ReadInt()
+}
+
+func (codec *intCodec) encode(ptr unsafe.Pointer, stream *Stream) {
+	stream.WriteInt(*((*int)(ptr)))
 }
 
 type int8Decoder struct {

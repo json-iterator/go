@@ -8,7 +8,7 @@ import (
 func Test_bind_api_demo(t *testing.T) {
 	iter := ParseString(`[0,1,2,3]`)
 	val := []int{}
-	iter.Read(&val)
+	iter.ReadVal(&val)
 	fmt.Println(val[3])
 }
 
@@ -34,7 +34,7 @@ type ABC struct {
 func Test_deep_nested_any_api(t *testing.T) {
 	iter := ParseString(`{"a": {"b": {"c": "d"}}}`)
 	abc := &ABC{}
-	iter.Read(&abc)
+	iter.ReadVal(&abc)
 	fmt.Println(abc.a.Get("b", "c"))
 }
 
@@ -50,7 +50,7 @@ func Test_iterator_and_bind_api(t *testing.T) {
 	iter.ReadArray()
 	user.userID = iter.ReadInt()
 	iter.ReadArray()
-	iter.Read(&user)
+	iter.ReadVal(&user)
 	iter.ReadArray() // array end
 	fmt.Println(user)
 }
