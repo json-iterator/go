@@ -133,6 +133,19 @@ func (decoder *optionalDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 	}
 }
 
+type optionalEncoder struct {
+	valueType    reflect.Type
+	valueEncoder Encoder
+}
+
+func (encoder *optionalEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
+	if *((*unsafe.Pointer)(ptr)) == nil {
+		stream.WriteNull()
+	} else {
+		encoder.valueEncoder.encode(*((*unsafe.Pointer)(ptr)), stream)
+	}
+}
+
 type mapDecoder struct {
 	mapType      reflect.Type
 	elemType     reflect.Type
@@ -153,6 +166,32 @@ func (decoder *mapDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 		// to put into map, we have to use reflection
 		realVal.SetMapIndex(reflect.ValueOf(string([]byte(field))), elem.Elem())
 	}
+}
+
+type mapEncoder struct {
+	mapType      reflect.Type
+	elemType     reflect.Type
+	elemEncoder  Encoder
+	mapInterface emptyInterface
+}
+
+func (encoder *mapEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
+	mapInterface := encoder.mapInterface
+	mapInterface.word = ptr
+	realInterface := (*interface{})(unsafe.Pointer(&mapInterface))
+	realVal := reflect.ValueOf(*realInterface)
+
+	stream.WriteObjectStart()
+	for i, key := range realVal.MapKeys() {
+		if i != 0 {
+			stream.WriteMore()
+		}
+		stream.WriteObjectField(key.String())
+		val := realVal.MapIndex(key).Interface()
+		e := (*emptyInterface)(unsafe.Pointer(&val))
+		encoder.elemEncoder.encode(e.word, stream)
+	}
+	stream.WriteObjectEnd()
 }
 
 // emptyInterface is the header for an interface{} value.
@@ -285,9 +324,6 @@ func (iter *Iterator) ReadVal(obj interface{}) {
 func (stream *Stream) WriteVal(val interface{}) {
 	typ := reflect.TypeOf(val)
 	cacheKey := typ
-	if typ.Kind() == reflect.Ptr {
-		cacheKey = typ.Elem()
-	}
 	cachedEncoder := getEncoderFromCache(cacheKey)
 	if cachedEncoder == nil {
 		encoder, err := encoderOfType(cacheKey)
@@ -298,8 +334,13 @@ func (stream *Stream) WriteVal(val interface{}) {
 		cachedEncoder = encoder
 		addEncoderToCache(cacheKey, encoder)
 	}
+
 	e := (*emptyInterface)(unsafe.Pointer(&val))
-	cachedEncoder.encode(e.word, stream)
+	if typ.Kind() == reflect.Ptr {
+		cachedEncoder.encode(unsafe.Pointer(&e.word), stream)
+	} else {
+		cachedEncoder.encode(e.word, stream)
+	}
 }
 
 type prefix string
@@ -365,13 +406,11 @@ func decoderOfType(typ reflect.Type) (Decoder, error) {
 	case reflect.Map:
 		return prefix("[map]").addToDecoder(decoderOfMap(typ))
 	case reflect.Ptr:
-		return prefix("[optional]").addToDecoder(decoderOfOptional(typ.Elem()))
+		return prefix("[optional]").addToDecoder(decoderOfOptional(typ))
 	default:
 		return nil, fmt.Errorf("unsupported type: %v", typ)
 	}
 }
-
-
 
 func encoderOfType(typ reflect.Type) (Encoder, error) {
 	typeName := typ.String()
@@ -408,17 +447,31 @@ func encoderOfType(typ reflect.Type) (Encoder, error) {
 		return prefix(fmt.Sprintf("[%s]", typeName)).addToEncoder(encoderOfStruct(typ))
 	case reflect.Slice:
 		return prefix("[slice]").addToEncoder(encoderOfSlice(typ))
+	case reflect.Map:
+		return prefix("[map]").addToEncoder(encoderOfMap(typ))
+	case reflect.Ptr:
+		return prefix("[optional]").addToEncoder(encoderOfOptional(typ))
 	default:
 		return nil, fmt.Errorf("unsupported type: %v", typ)
 	}
 }
 
 func decoderOfOptional(typ reflect.Type) (Decoder, error) {
-	decoder, err := decoderOfType(typ)
+	elemType := typ.Elem()
+	decoder, err := decoderOfType(elemType)
 	if err != nil {
 		return nil, err
 	}
-	return &optionalDecoder{typ, decoder}, nil
+	return &optionalDecoder{elemType, decoder}, nil
+}
+
+func encoderOfOptional(typ reflect.Type) (Encoder, error) {
+	elemType := typ.Elem()
+	decoder, err := encoderOfType(elemType)
+	if err != nil {
+		return nil, err
+	}
+	return &optionalEncoder{elemType, decoder}, nil
 }
 
 func decoderOfMap(typ reflect.Type) (Decoder, error) {
@@ -428,4 +481,13 @@ func decoderOfMap(typ reflect.Type) (Decoder, error) {
 	}
 	mapInterface := reflect.New(typ).Interface()
 	return &mapDecoder{typ, typ.Elem(), decoder, *((*emptyInterface)(unsafe.Pointer(&mapInterface)))}, nil
+}
+
+func encoderOfMap(typ reflect.Type) (Encoder, error) {
+	encoder, err := encoderOfType(typ.Elem())
+	if err != nil {
+		return nil, err
+	}
+	mapInterface := reflect.New(typ).Elem().Interface()
+	return &mapEncoder{typ, typ.Elem(), encoder, *((*emptyInterface)(unsafe.Pointer(&mapInterface)))}, nil
 }

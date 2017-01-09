@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
+	"github.com/json-iterator/go/require"
 )
 
 func Test_read_map(t *testing.T) {
@@ -35,4 +36,12 @@ func Test_read_map_of_any(t *testing.T) {
 		fmt.Println(iter.Error)
 		t.Fatal(m)
 	}
+}
+
+func Test_write_val_map(t *testing.T) {
+	should := require.New(t)
+	val := map[string]string{"1": "2"}
+	str, err := MarshalToString(val)
+	should.Nil(err)
+	should.Equal(`{"1":"2"}`, str)
 }

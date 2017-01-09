@@ -85,18 +85,6 @@ func Test_decode_five_fields_struct(t *testing.T) {
 	should.Equal("e", obj.field5)
 }
 
-func Test_decode_struct_with_optional_field(t *testing.T) {
-	should := require.New(t)
-	type TestObject struct {
-		field1 *string
-		field2 *string
-	}
-	obj := TestObject{}
-	UnmarshalFromString(`{"field1": null, "field2": "world"}`, &obj)
-	should.Nil(obj.field1)
-	should.Equal("world", *obj.field2)
-}
-
 func Test_decode_struct_field_with_tag(t *testing.T) {
 	should := require.New(t)
 	type TestObject struct {
