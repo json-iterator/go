@@ -110,3 +110,24 @@ func Test_decode_struct_field_with_tag(t *testing.T) {
 	should.Equal("world", obj.Field2)
 	should.Equal(100, obj.Field3)
 }
+
+func Test_write_val_zero_field_struct(t *testing.T) {
+	should := require.New(t)
+	type TestObject struct {
+	}
+	obj := TestObject{}
+	str, err := MarshalToString(obj)
+	should.Nil(err)
+	should.Equal(`{}`, str)
+}
+
+func Test_write_val_one_field_struct(t *testing.T) {
+	should := require.New(t)
+	type TestObject struct {
+		Field1 string `json:"field-1"`
+	}
+	obj := TestObject{"hello"}
+	str, err := MarshalToString(obj)
+	should.Nil(err)
+	should.Equal(`{"field-1":"hello"}`, str)
+}

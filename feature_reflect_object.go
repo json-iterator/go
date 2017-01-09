@@ -8,6 +8,49 @@ import (
 	"strings"
 )
 
+
+func encoderOfStruct(typ reflect.Type) (Encoder, error) {
+	structEncoder_ := &structEncoder{}
+	for i := 0; i < typ.NumField(); i++ {
+		field := typ.Field(i)
+		var fieldNames []string
+		for _, extension := range extensions {
+			alternativeFieldNames, _ := extension(typ, &field)
+			if alternativeFieldNames != nil {
+				fieldNames = alternativeFieldNames
+			}
+		}
+		tagParts := strings.Split(field.Tag.Get("json"), ",")
+		// if fieldNames set by extension, use theirs, otherwise try tags
+		if fieldNames == nil {
+			/// tagParts[0] always present, even if no tags
+			switch tagParts[0] {
+			case "":
+				fieldNames = []string{field.Name}
+			case "-":
+				fieldNames = []string{}
+			default:
+				fieldNames = []string{tagParts[0]}
+			}
+		}
+		encoder, err := encoderOfType(field.Type)
+		if err != nil {
+			return prefix(fmt.Sprintf("{%s}", field.Name)).addToEncoder(encoder, err)
+		}
+		for _, fieldName := range fieldNames {
+			if structEncoder_.firstField == nil {
+				structEncoder_.firstField = &structFieldEncoder{&field, fieldName, encoder}
+			} else {
+				structEncoder_.fields = append(structEncoder_.fields, &structFieldEncoder{&field, fieldName, encoder})
+			}
+		}
+	}
+	if structEncoder_.firstField == nil {
+		return &emptyStructEncoder{}, nil
+	}
+	return structEncoder_, nil
+}
+
 func decoderOfStruct(typ reflect.Type) (Decoder, error) {
 	fields := map[string]*structFieldDecoder{}
 	for i := 0; i < typ.NumField(); i++ {
@@ -41,7 +84,7 @@ func decoderOfStruct(typ reflect.Type) (Decoder, error) {
 			var err error
 			decoder, err = decoderOfType(field.Type)
 			if err != nil {
-				return prefix(fmt.Sprintf("{%s}", field.Name)).addTo(decoder, err)
+				return prefix(fmt.Sprintf("{%s}", field.Name)).addToDecoder(decoder, err)
 			}
 		}
 		if len(tagParts) > 1 && tagParts[1] == "string" {
@@ -335,4 +378,43 @@ func (decoder *structFieldDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 	if iter.Error != nil && iter.Error != io.EOF {
 		iter.Error = fmt.Errorf("%s: %s", decoder.field.Name, iter.Error.Error())
 	}
+}
+
+type structFieldEncoder struct {
+	field        *reflect.StructField
+	fieldName    string
+	fieldEncoder Encoder
+}
+
+func (encoder *structFieldEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
+	fieldPtr := uintptr(ptr) + encoder.field.Offset
+	stream.WriteObjectField(encoder.fieldName)
+	encoder.fieldEncoder.encode(unsafe.Pointer(fieldPtr), stream)
+	if stream.Error != nil && stream.Error != io.EOF {
+		stream.Error = fmt.Errorf("%s: %s", encoder.field.Name, stream.Error.Error())
+	}
+}
+
+
+type structEncoder struct {
+	firstField *structFieldEncoder
+	fields []*structFieldEncoder
+}
+
+func (encoder *structEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
+	stream.WriteObjectStart()
+	encoder.firstField.encode(ptr, stream)
+	for _, field := range encoder.fields {
+		stream.WriteMore()
+		field.encode(ptr, stream)
+	}
+	stream.WriteObjectEnd()
+}
+
+type emptyStructEncoder struct {
+}
+
+func (encoder *emptyStructEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
+	stream.WriteObjectStart()
+	stream.WriteObjectEnd()
 }

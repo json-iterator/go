@@ -31,3 +31,14 @@ func Test_write_true_false(t *testing.T) {
 	should.Nil(stream.Error)
 	should.Equal("truefalse", buf.String())
 }
+
+
+func Test_write_val_bool(t *testing.T) {
+	should := require.New(t)
+	buf := &bytes.Buffer{}
+	stream := NewStream(buf, 4096)
+	stream.WriteVal(true)
+	stream.Flush()
+	should.Nil(stream.Error)
+	should.Equal("true", buf.String())
+}

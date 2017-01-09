@@ -304,11 +304,18 @@ func (stream *Stream) WriteVal(val interface{}) {
 
 type prefix string
 
-func (p prefix) addTo(decoder Decoder, err error) (Decoder, error) {
+func (p prefix) addToDecoder(decoder Decoder, err error) (Decoder, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%s: %s", p, err.Error())
 	}
 	return decoder, err
+}
+
+func (p prefix) addToEncoder(encoder Encoder, err error) (Encoder, error) {
+	if err != nil {
+		return nil, fmt.Errorf("%s: %s", p, err.Error())
+	}
+	return encoder, err
 }
 
 func decoderOfType(typ reflect.Type) (Decoder, error) {
@@ -326,39 +333,39 @@ func decoderOfType(typ reflect.Type) (Decoder, error) {
 	case reflect.Int:
 		return &intCodec{}, nil
 	case reflect.Int8:
-		return &int8Decoder{}, nil
+		return &int8Codec{}, nil
 	case reflect.Int16:
-		return &int16Decoder{}, nil
+		return &int16Codec{}, nil
 	case reflect.Int32:
-		return &int32Decoder{}, nil
+		return &int32Codec{}, nil
 	case reflect.Int64:
-		return &int64Decoder{}, nil
+		return &int64Codec{}, nil
 	case reflect.Uint:
-		return &uintDecoder{}, nil
+		return &uintCodec{}, nil
 	case reflect.Uint8:
-		return &uint8Decoder{}, nil
+		return &uint8Codec{}, nil
 	case reflect.Uint16:
-		return &uint16Decoder{}, nil
+		return &uint16Codec{}, nil
 	case reflect.Uint32:
-		return &uint32Decoder{}, nil
+		return &uint32Codec{}, nil
 	case reflect.Uint64:
-		return &uint64Decoder{}, nil
+		return &uint64Codec{}, nil
 	case reflect.Float32:
-		return &float32Decoder{}, nil
+		return &float32Codec{}, nil
 	case reflect.Float64:
-		return &float64Decoder{}, nil
+		return &float64Codec{}, nil
 	case reflect.Bool:
-		return &boolDecoder{}, nil
+		return &boolCodec{}, nil
 	case reflect.Interface:
 		return &interfaceDecoder{}, nil
 	case reflect.Struct:
 		return decoderOfStruct(typ)
 	case reflect.Slice:
-		return prefix("[slice]").addTo(decoderOfSlice(typ))
+		return prefix("[slice]").addToDecoder(decoderOfSlice(typ))
 	case reflect.Map:
-		return prefix("[map]").addTo(decoderOfMap(typ))
+		return prefix("[map]").addToDecoder(decoderOfMap(typ))
 	case reflect.Ptr:
-		return prefix("[optional]").addTo(decoderOfOptional(typ.Elem()))
+		return prefix("[optional]").addToDecoder(decoderOfOptional(typ.Elem()))
 	default:
 		return nil, fmt.Errorf("unsupported type: %v", typ)
 	}
@@ -372,6 +379,32 @@ func encoderOfType(typ reflect.Type) (Encoder, error) {
 		return &stringCodec{}, nil
 	case reflect.Int:
 		return &intCodec{}, nil
+	case reflect.Int8:
+		return &int8Codec{}, nil
+	case reflect.Int16:
+		return &int16Codec{}, nil
+	case reflect.Int32:
+		return &int32Codec{}, nil
+	case reflect.Int64:
+		return &int64Codec{}, nil
+	case reflect.Uint:
+		return &uintCodec{}, nil
+	case reflect.Uint8:
+		return &uint8Codec{}, nil
+	case reflect.Uint16:
+		return &uint16Codec{}, nil
+	case reflect.Uint32:
+		return &uint32Codec{}, nil
+	case reflect.Uint64:
+		return &uint64Codec{}, nil
+	case reflect.Float32:
+		return &float32Codec{}, nil
+	case reflect.Float64:
+		return &float64Codec{}, nil
+	case reflect.Bool:
+		return &boolCodec{}, nil
+	case reflect.Struct:
+		return encoderOfStruct(typ)
 	default:
 		return nil, fmt.Errorf("unsupported type: %v", typ)
 	}

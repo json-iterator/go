@@ -47,6 +47,15 @@ func Test_write_float32(t *testing.T) {
 			should.Nil(stream.Error)
 			should.Equal(strconv.FormatFloat(float64(val), 'f', -1, 32), buf.String())
 		})
+		t.Run(fmt.Sprintf("%v", val), func(t *testing.T) {
+			should := require.New(t)
+			buf := &bytes.Buffer{}
+			stream := NewStream(buf, 4096)
+			stream.WriteVal(val)
+			stream.Flush()
+			should.Nil(stream.Error)
+			should.Equal(strconv.FormatFloat(float64(val), 'f', -1, 32), buf.String())
+		})
 	}
 	should := require.New(t)
 	buf := &bytes.Buffer{}
@@ -67,6 +76,15 @@ func Test_write_float64(t *testing.T) {
 			buf := &bytes.Buffer{}
 			stream := NewStream(buf, 4096)
 			stream.WriteFloat64(val)
+			stream.Flush()
+			should.Nil(stream.Error)
+			should.Equal(strconv.FormatFloat(val, 'f', -1, 64), buf.String())
+		})
+		t.Run(fmt.Sprintf("%v", val), func(t *testing.T) {
+			should := require.New(t)
+			buf := &bytes.Buffer{}
+			stream := NewStream(buf, 4096)
+			stream.WriteVal(val)
 			stream.Flush()
 			should.Nil(stream.Error)
 			should.Equal(strconv.FormatFloat(val, 'f', -1, 64), buf.String())

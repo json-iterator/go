@@ -84,11 +84,20 @@ func Test_write_uint8(t *testing.T) {
 			should.Nil(stream.Error)
 			should.Equal(strconv.FormatUint(uint64(val), 10), buf.String())
 		})
+		t.Run(fmt.Sprintf("%v", val), func(t *testing.T) {
+			should := require.New(t)
+			buf := &bytes.Buffer{}
+			stream := NewStream(buf, 4096)
+			stream.WriteVal(val)
+			stream.Flush()
+			should.Nil(stream.Error)
+			should.Equal(strconv.FormatUint(uint64(val), 10), buf.String())
+		})
 	}
 	should := require.New(t)
 	buf := &bytes.Buffer{}
 	stream := NewStream(buf, 3)
-	stream.WriteString("a")
+	stream.WriteRaw("a")
 	stream.WriteUint8(100) // should clear buffer
 	stream.Flush()
 	should.Nil(stream.Error)
@@ -107,11 +116,20 @@ func Test_write_int8(t *testing.T) {
 			should.Nil(stream.Error)
 			should.Equal(strconv.FormatInt(int64(val), 10), buf.String())
 		})
+		t.Run(fmt.Sprintf("%v", val), func(t *testing.T) {
+			should := require.New(t)
+			buf := &bytes.Buffer{}
+			stream := NewStream(buf, 4096)
+			stream.WriteVal(val)
+			stream.Flush()
+			should.Nil(stream.Error)
+			should.Equal(strconv.FormatInt(int64(val), 10), buf.String())
+		})
 	}
 	should := require.New(t)
 	buf := &bytes.Buffer{}
 	stream := NewStream(buf, 4)
-	stream.WriteString("a")
+	stream.WriteRaw("a")
 	stream.WriteInt8(-100) // should clear buffer
 	stream.Flush()
 	should.Nil(stream.Error)
@@ -130,11 +148,20 @@ func Test_write_uint16(t *testing.T) {
 			should.Nil(stream.Error)
 			should.Equal(strconv.FormatUint(uint64(val), 10), buf.String())
 		})
+		t.Run(fmt.Sprintf("%v", val), func(t *testing.T) {
+			should := require.New(t)
+			buf := &bytes.Buffer{}
+			stream := NewStream(buf, 4096)
+			stream.WriteVal(val)
+			stream.Flush()
+			should.Nil(stream.Error)
+			should.Equal(strconv.FormatUint(uint64(val), 10), buf.String())
+		})
 	}
 	should := require.New(t)
 	buf := &bytes.Buffer{}
 	stream := NewStream(buf, 5)
-	stream.WriteString("a")
+	stream.WriteRaw("a")
 	stream.WriteUint16(10000) // should clear buffer
 	stream.Flush()
 	should.Nil(stream.Error)
@@ -153,11 +180,20 @@ func Test_write_int16(t *testing.T) {
 			should.Nil(stream.Error)
 			should.Equal(strconv.FormatInt(int64(val), 10), buf.String())
 		})
+		t.Run(fmt.Sprintf("%v", val), func(t *testing.T) {
+			should := require.New(t)
+			buf := &bytes.Buffer{}
+			stream := NewStream(buf, 4096)
+			stream.WriteVal(val)
+			stream.Flush()
+			should.Nil(stream.Error)
+			should.Equal(strconv.FormatInt(int64(val), 10), buf.String())
+		})
 	}
 	should := require.New(t)
 	buf := &bytes.Buffer{}
 	stream := NewStream(buf, 6)
-	stream.WriteString("a")
+	stream.WriteRaw("a")
 	stream.WriteInt16(-10000) // should clear buffer
 	stream.Flush()
 	should.Nil(stream.Error)
@@ -176,11 +212,20 @@ func Test_write_uint32(t *testing.T) {
 			should.Nil(stream.Error)
 			should.Equal(strconv.FormatUint(uint64(val), 10), buf.String())
 		})
+		t.Run(fmt.Sprintf("%v", val), func(t *testing.T) {
+			should := require.New(t)
+			buf := &bytes.Buffer{}
+			stream := NewStream(buf, 4096)
+			stream.WriteVal(val)
+			stream.Flush()
+			should.Nil(stream.Error)
+			should.Equal(strconv.FormatUint(uint64(val), 10), buf.String())
+		})
 	}
 	should := require.New(t)
 	buf := &bytes.Buffer{}
 	stream := NewStream(buf, 10)
-	stream.WriteString("a")
+	stream.WriteRaw("a")
 	stream.WriteUint32(0xffffffff) // should clear buffer
 	stream.Flush()
 	should.Nil(stream.Error)
@@ -199,11 +244,20 @@ func Test_write_int32(t *testing.T) {
 			should.Nil(stream.Error)
 			should.Equal(strconv.FormatInt(int64(val), 10), buf.String())
 		})
+		t.Run(fmt.Sprintf("%v", val), func(t *testing.T) {
+			should := require.New(t)
+			buf := &bytes.Buffer{}
+			stream := NewStream(buf, 4096)
+			stream.WriteVal(val)
+			stream.Flush()
+			should.Nil(stream.Error)
+			should.Equal(strconv.FormatInt(int64(val), 10), buf.String())
+		})
 	}
 	should := require.New(t)
 	buf := &bytes.Buffer{}
 	stream := NewStream(buf, 11)
-	stream.WriteString("a")
+	stream.WriteRaw("a")
 	stream.WriteInt32(-0x7fffffff) // should clear buffer
 	stream.Flush()
 	should.Nil(stream.Error)
@@ -224,11 +278,20 @@ func Test_write_uint64(t *testing.T) {
 			should.Nil(stream.Error)
 			should.Equal(strconv.FormatUint(uint64(val), 10), buf.String())
 		})
+		t.Run(fmt.Sprintf("%v", val), func(t *testing.T) {
+			should := require.New(t)
+			buf := &bytes.Buffer{}
+			stream := NewStream(buf, 4096)
+			stream.WriteVal(val)
+			stream.Flush()
+			should.Nil(stream.Error)
+			should.Equal(strconv.FormatUint(uint64(val), 10), buf.String())
+		})
 	}
 	should := require.New(t)
 	buf := &bytes.Buffer{}
 	stream := NewStream(buf, 10)
-	stream.WriteString("a")
+	stream.WriteRaw("a")
 	stream.WriteUint64(0xffffffff) // should clear buffer
 	stream.Flush()
 	should.Nil(stream.Error)
@@ -249,11 +312,20 @@ func Test_write_int64(t *testing.T) {
 			should.Nil(stream.Error)
 			should.Equal(strconv.FormatInt(val, 10), buf.String())
 		})
+		t.Run(fmt.Sprintf("%v", val), func(t *testing.T) {
+			should := require.New(t)
+			buf := &bytes.Buffer{}
+			stream := NewStream(buf, 4096)
+			stream.WriteVal(val)
+			stream.Flush()
+			should.Nil(stream.Error)
+			should.Equal(strconv.FormatInt(val, 10), buf.String())
+		})
 	}
 	should := require.New(t)
 	buf := &bytes.Buffer{}
 	stream := NewStream(buf, 10)
-	stream.WriteString("a")
+	stream.WriteRaw("a")
 	stream.WriteInt64(0xffffffff) // should clear buffer
 	stream.Flush()
 	should.Nil(stream.Error)
