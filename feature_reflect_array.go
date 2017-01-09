@@ -7,6 +7,48 @@ import (
 	"fmt"
 )
 
+func decoderOfSlice(typ reflect.Type) (Decoder, error) {
+	decoder, err := decoderOfType(typ.Elem())
+	if err != nil {
+		return nil, err
+	}
+	return &sliceDecoder{typ, typ.Elem(), decoder}, nil
+}
+
+func encoderOfSlice(typ reflect.Type) (Encoder, error) {
+	encoder, err := encoderOfType(typ.Elem())
+	if err != nil {
+		return nil, err
+	}
+	return &sliceEncoder{typ, typ.Elem(), encoder}, nil
+}
+
+type sliceEncoder struct {
+	sliceType   reflect.Type
+	elemType    reflect.Type
+	elemEncoder Encoder
+}
+
+func (encoder *sliceEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
+	slice := (*sliceHeader)(ptr)
+	if slice.Len == 0 {
+		stream.WriteEmptyArray()
+		return
+	}
+	stream.WriteArrayStart()
+	elemPtr := uintptr(slice.Data)
+	encoder.elemEncoder.encode(unsafe.Pointer(elemPtr), stream)
+	for i := 1; i < slice.Len; i++ {
+		stream.WriteMore()
+		elemPtr += encoder.elemType.Size()
+		encoder.elemEncoder.encode(unsafe.Pointer(elemPtr), stream)
+	}
+	stream.WriteArrayEnd()
+	if stream.Error != nil && stream.Error != io.EOF {
+		stream.Error = fmt.Errorf("%v: %s", encoder.sliceType, stream.Error.Error())
+	}
+}
+
 type sliceDecoder struct {
 	sliceType   reflect.Type
 	elemType    reflect.Type

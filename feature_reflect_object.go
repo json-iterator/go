@@ -415,6 +415,5 @@ type emptyStructEncoder struct {
 }
 
 func (encoder *emptyStructEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
-	stream.WriteObjectStart()
-	stream.WriteObjectEnd()
+	stream.WriteEmptyObject()
 }

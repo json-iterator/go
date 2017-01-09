@@ -359,7 +359,7 @@ func decoderOfType(typ reflect.Type) (Decoder, error) {
 	case reflect.Interface:
 		return &interfaceDecoder{}, nil
 	case reflect.Struct:
-		return decoderOfStruct(typ)
+		return prefix(fmt.Sprintf("[%s]", typeName)).addToDecoder(decoderOfStruct(typ))
 	case reflect.Slice:
 		return prefix("[slice]").addToDecoder(decoderOfSlice(typ))
 	case reflect.Map:
@@ -374,6 +374,7 @@ func decoderOfType(typ reflect.Type) (Decoder, error) {
 
 
 func encoderOfType(typ reflect.Type) (Encoder, error) {
+	typeName := typ.String()
 	switch typ.Kind() {
 	case reflect.String:
 		return &stringCodec{}, nil
@@ -404,7 +405,9 @@ func encoderOfType(typ reflect.Type) (Encoder, error) {
 	case reflect.Bool:
 		return &boolCodec{}, nil
 	case reflect.Struct:
-		return encoderOfStruct(typ)
+		return prefix(fmt.Sprintf("[%s]", typeName)).addToEncoder(encoderOfStruct(typ))
+	case reflect.Slice:
+		return prefix("[slice]").addToEncoder(encoderOfSlice(typ))
 	default:
 		return nil, fmt.Errorf("unsupported type: %v", typ)
 	}
@@ -416,14 +419,6 @@ func decoderOfOptional(typ reflect.Type) (Decoder, error) {
 		return nil, err
 	}
 	return &optionalDecoder{typ, decoder}, nil
-}
-
-func decoderOfSlice(typ reflect.Type) (Decoder, error) {
-	decoder, err := decoderOfType(typ.Elem())
-	if err != nil {
-		return nil, err
-	}
-	return &sliceDecoder{typ, typ.Elem(), decoder}, nil
 }
 
 func decoderOfMap(typ reflect.Type) (Decoder, error) {

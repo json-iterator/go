@@ -171,6 +171,11 @@ func (stream *Stream) WriteObjectEnd() {
 	stream.writeByte('}')
 }
 
+func (stream *Stream) WriteEmptyObject() {
+	stream.writeByte('{')
+	stream.writeByte('}')
+}
+
 func (stream *Stream) WriteMore() {
 	stream.writeByte(',')
 	stream.writeIndention(0)
@@ -180,6 +185,11 @@ func (stream *Stream) WriteArrayStart() {
 	stream.indention += stream.IndentionStep
 	stream.writeByte('[')
 	stream.writeIndention(0)
+}
+
+func (stream *Stream) WriteEmptyArray() {
+	stream.writeByte('[')
+	stream.writeByte(']')
 }
 
 func (stream *Stream) WriteArrayEnd() {

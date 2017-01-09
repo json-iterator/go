@@ -134,6 +134,22 @@ func Test_write_array(t *testing.T) {
 	should.Equal("[\n  1,\n  2\n]", buf.String())
 }
 
+func Test_write_val_array(t *testing.T) {
+	should := require.New(t)
+	val := []int{1,2,3}
+	str, err := MarshalToString(val)
+	should.Nil(err)
+	should.Equal("[1,2,3]", str)
+}
+
+func Test_write_val_empty_array(t *testing.T) {
+	should := require.New(t)
+	val := []int{}
+	str, err := MarshalToString(val)
+	should.Nil(err)
+	should.Equal("[]", str)
+}
+
 func Benchmark_jsoniter_array(b *testing.B) {
 	b.ReportAllocs()
 	input := []byte(`[1,2,3,4,5,6,7,8,9]`)
