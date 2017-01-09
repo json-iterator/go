@@ -156,11 +156,15 @@ func (codec *boolCodec) encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteBool(*((*bool)(ptr)))
 }
 
-type interfaceDecoder struct {
+type interfaceCodec struct {
 }
 
-func (decoder *interfaceDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (codec *interfaceCodec) decode(ptr unsafe.Pointer, iter *Iterator) {
 	*((*interface{})(ptr)) = iter.ReadAny().Get()
+}
+
+func (codec *interfaceCodec) encode(ptr unsafe.Pointer, stream *Stream) {
+	stream.WriteVal(*((*interface{})(ptr)))
 }
 
 type anyDecoder struct {

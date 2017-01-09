@@ -398,7 +398,7 @@ func decoderOfType(typ reflect.Type) (Decoder, error) {
 	case reflect.Bool:
 		return &boolCodec{}, nil
 	case reflect.Interface:
-		return &interfaceDecoder{}, nil
+		return &interfaceCodec{}, nil
 	case reflect.Struct:
 		return prefix(fmt.Sprintf("[%s]", typeName)).addToDecoder(decoderOfStruct(typ))
 	case reflect.Slice:
@@ -443,6 +443,8 @@ func encoderOfType(typ reflect.Type) (Encoder, error) {
 		return &float64Codec{}, nil
 	case reflect.Bool:
 		return &boolCodec{}, nil
+	case reflect.Interface:
+		return &interfaceCodec{}, nil
 	case reflect.Struct:
 		return prefix(fmt.Sprintf("[%s]", typeName)).addToEncoder(encoderOfStruct(typ))
 	case reflect.Slice:
