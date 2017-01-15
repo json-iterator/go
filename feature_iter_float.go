@@ -6,25 +6,25 @@ import (
 	"unsafe"
 )
 
-var zeroToNineDigits []int8
+var floatDigits []int8
 const invalidCharForNumber = int8(-1)
 const endOfNumber = int8(-2)
 const dotInNumber = int8(-3)
-const safeToMultiple10 = uint64(0xffffffffffffffff) / 10 - 10
+const uint64SafeToMultiple10 = uint64(0xffffffffffffffff) / 10 - 10
 
 func init() {
-	zeroToNineDigits = make([]int8, 256)
-	for i := 0; i < len(zeroToNineDigits); i++ {
-		zeroToNineDigits[i] = invalidCharForNumber
+	floatDigits = make([]int8, 256)
+	for i := 0; i < len(floatDigits); i++ {
+		floatDigits[i] = invalidCharForNumber
 	}
-	for i := int8('0'); i < int8('9'); i++ {
-		zeroToNineDigits[i] = i - int8('0')
+	for i := int8('0'); i <= int8('9'); i++ {
+		floatDigits[i] = i - int8('0')
 	}
-	zeroToNineDigits[','] = endOfNumber;
-	zeroToNineDigits[']'] = endOfNumber;
-	zeroToNineDigits['}'] = endOfNumber;
-	zeroToNineDigits[' '] = endOfNumber;
-	zeroToNineDigits['.'] = dotInNumber;
+	floatDigits[','] = endOfNumber;
+	floatDigits[']'] = endOfNumber;
+	floatDigits['}'] = endOfNumber;
+	floatDigits[' '] = endOfNumber;
+	floatDigits['.'] = dotInNumber;
 }
 
 func (iter *Iterator) ReadFloat32() (ret float32) {
@@ -44,7 +44,7 @@ func (iter *Iterator) readPositiveFloat32() (ret float32) {
 	non_decimal_loop:
 	for ; i < iter.tail; i++ {
 		c = iter.buf[i]
-		ind := zeroToNineDigits[c]
+		ind := floatDigits[c]
 		switch ind {
 		case invalidCharForNumber:
 			return iter.readFloat32SlowPath()
@@ -54,7 +54,7 @@ func (iter *Iterator) readPositiveFloat32() (ret float32) {
 		case dotInNumber:
 			break non_decimal_loop
 		}
-		if value > safeToMultiple10 {
+		if value > uint64SafeToMultiple10 {
 			return iter.readFloat32SlowPath()
 		}
 		value = (value << 3) + (value << 1) + uint64(ind); // value = value * 10 + ind;
@@ -64,7 +64,7 @@ func (iter *Iterator) readPositiveFloat32() (ret float32) {
 		decimalPlaces := 0;
 		for ; i < iter.tail; i++ {
 			c = iter.buf[i]
-			ind := zeroToNineDigits[c];
+			ind := floatDigits[c];
 			switch ind {
 			case endOfNumber:
 				if decimalPlaces > 0 && decimalPlaces < len(POW10) {
@@ -79,7 +79,7 @@ func (iter *Iterator) readPositiveFloat32() (ret float32) {
 				return iter.readFloat32SlowPath()
 			}
 			decimalPlaces++
-			if value > safeToMultiple10 {
+			if value > uint64SafeToMultiple10 {
 				return iter.readFloat32SlowPath()
 			}
 			value = (value << 3) + (value << 1) + uint64(ind)
@@ -135,7 +135,7 @@ func (iter *Iterator) readPositiveFloat64() (ret float64) {
 	non_decimal_loop:
 	for ; i < iter.tail; i++ {
 		c = iter.buf[i]
-		ind := zeroToNineDigits[c]
+		ind := floatDigits[c]
 		switch ind {
 		case invalidCharForNumber:
 			return iter.readFloat64SlowPath()
@@ -145,7 +145,7 @@ func (iter *Iterator) readPositiveFloat64() (ret float64) {
 		case dotInNumber:
 			break non_decimal_loop
 		}
-		if value > safeToMultiple10 {
+		if value > uint64SafeToMultiple10 {
 			return iter.readFloat64SlowPath()
 		}
 		value = (value << 3) + (value << 1) + uint64(ind); // value = value * 10 + ind;
@@ -155,7 +155,7 @@ func (iter *Iterator) readPositiveFloat64() (ret float64) {
 		decimalPlaces := 0;
 		for ; i < iter.tail; i++ {
 			c = iter.buf[i]
-			ind := zeroToNineDigits[c];
+			ind := floatDigits[c];
 			switch ind {
 			case endOfNumber:
 				if decimalPlaces > 0 && decimalPlaces < len(POW10) {
@@ -170,7 +170,7 @@ func (iter *Iterator) readPositiveFloat64() (ret float64) {
 				return iter.readFloat64SlowPath()
 			}
 			decimalPlaces++
-			if value > safeToMultiple10 {
+			if value > uint64SafeToMultiple10 {
 				return iter.readFloat64SlowPath()
 			}
 			value = (value << 3) + (value << 1) + uint64(ind)

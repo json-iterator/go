@@ -19,22 +19,22 @@ const (
 	Object
 )
 
-var atoiDigits []byte
+var hexDigits []byte
 var valueTypes []ValueType
 
 func init() {
-	atoiDigits = make([]byte, 256)
-	for i := 0; i < len(atoiDigits); i++ {
-		atoiDigits[i] = 255
+	hexDigits = make([]byte, 256)
+	for i := 0; i < len(hexDigits); i++ {
+		hexDigits[i] = 255
 	}
 	for i := '0'; i <= '9'; i++ {
-		atoiDigits[i] = byte(i - '0')
+		hexDigits[i] = byte(i - '0')
 	}
 	for i := 'a'; i <= 'f'; i++ {
-		atoiDigits[i] = byte((i - 'a') + 10)
+		hexDigits[i] = byte((i - 'a') + 10)
 	}
 	for i := 'A'; i <= 'F'; i++ {
-		atoiDigits[i] = byte((i - 'A') + 10)
+		hexDigits[i] = byte((i - 'A') + 10)
 	}
 	valueTypes = make([]ValueType, 256)
 	for i := 0; i < len(valueTypes); i++ {
@@ -222,143 +222,6 @@ func (iter *Iterator) unreadByte() {
 	}
 	iter.head--
 	return
-}
-
-const maxUint64 = (1<<64 - 1)
-const cutoffUint64 = maxUint64/10 + 1
-const maxUint32 = (1<<32 - 1)
-const cutoffUint32 = maxUint32/10 + 1
-
-// ReadUint reads a json object as Uint
-func (iter *Iterator) ReadUint() (ret uint) {
-	val := iter.ReadUint64()
-	converted := uint(val)
-	if uint64(converted) != val {
-		iter.reportError("ReadUint", "int overflow")
-		return
-	}
-	return converted
-}
-
-// ReadUint8 reads a json object as Uint8
-func (iter *Iterator) ReadUint8() (ret uint8) {
-	val := iter.ReadUint64()
-	converted := uint8(val)
-	if uint64(converted) != val {
-		iter.reportError("ReadUint8", "int overflow")
-		return
-	}
-	return converted
-}
-
-// ReadUint16 reads a json object as Uint16
-func (iter *Iterator) ReadUint16() (ret uint16) {
-	val := iter.ReadUint64()
-	converted := uint16(val)
-	if uint64(converted) != val {
-		iter.reportError("ReadUint16", "int overflow")
-		return
-	}
-	return converted
-}
-
-// ReadUint32 reads a json object as Uint32
-func (iter *Iterator) ReadUint32() (ret uint32) {
-	val := iter.ReadUint64()
-	converted := uint32(val)
-	if uint64(converted) != val {
-		iter.reportError("ReadUint32", "int overflow")
-		return
-	}
-	return converted
-}
-
-// ReadUint64 reads a json object as Uint64
-func (iter *Iterator) ReadUint64() (ret uint64) {
-	c := iter.nextToken()
-	v := atoiDigits[c]
-	if v == 0 {
-		return 0 // single zero
-	}
-	if v == 255 {
-		iter.reportError("ReadUint64", "unexpected character")
-		return
-	}
-	for {
-		if ret >= cutoffUint64 {
-			iter.reportError("ReadUint64", "overflow")
-			return
-		}
-		ret = ret*10 + uint64(v)
-		c = iter.readByte()
-		v = atoiDigits[c]
-		if v == 255 {
-			iter.unreadByte()
-			break
-		}
-	}
-	return ret
-}
-
-// ReadInt reads a json object as Int
-func (iter *Iterator) ReadInt() (ret int) {
-	val := iter.ReadInt64()
-	converted := int(val)
-	if int64(converted) != val {
-		iter.reportError("ReadInt", "int overflow")
-		return
-	}
-	return converted
-}
-
-// ReadInt8 reads a json object as Int8
-func (iter *Iterator) ReadInt8() (ret int8) {
-	val := iter.ReadInt64()
-	converted := int8(val)
-	if int64(converted) != val {
-		iter.reportError("ReadInt8", "int overflow")
-		return
-	}
-	return converted
-}
-
-// ReadInt16 reads a json object as Int16
-func (iter *Iterator) ReadInt16() (ret int16) {
-	val := iter.ReadInt64()
-	converted := int16(val)
-	if int64(converted) != val {
-		iter.reportError("ReadInt16", "int overflow")
-		return
-	}
-	return converted
-}
-
-// ReadInt32 reads a json object as Int32
-func (iter *Iterator) ReadInt32() (ret int32) {
-	val := iter.ReadInt64()
-	converted := int32(val)
-	if int64(converted) != val {
-		iter.reportError("ReadInt32", "int overflow")
-		return
-	}
-	return converted
-}
-
-// ReadInt64 reads a json object as Int64
-func (iter *Iterator) ReadInt64() (ret int64) {
-	c := iter.nextToken()
-	if iter.Error != nil {
-		return
-	}
-
-	/* optional leading minus */
-	if c == '-' {
-		n := iter.ReadUint64()
-		return -int64(n)
-	}
-	iter.unreadByte()
-	n := iter.ReadUint64()
-	return int64(n)
 }
 
 // ReadString reads a json object as String

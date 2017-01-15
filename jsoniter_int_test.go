@@ -72,6 +72,27 @@ func Test_decode_int64_minus_100(t *testing.T) {
 	}
 }
 
+func Test_read_int32(t *testing.T) {
+	inputs := []string{`1`, `12`, `123`}
+	for _, input := range inputs {
+		t.Run(fmt.Sprintf("%v", input), func(t *testing.T) {
+			should := require.New(t)
+			iter := ParseString(input)
+			expected, err := strconv.ParseInt(input, 10, 32)
+			should.Nil(err)
+			should.Equal(int32(expected), iter.ReadInt32())
+		})
+	}
+}
+
+func Test_read_int32_overflow(t *testing.T) {
+	should := require.New(t)
+	input := "123456789123456789"
+	iter := ParseString(input)
+	iter.ReadInt32()
+	should.NotNil(iter.Error)
+}
+
 func Test_write_uint8(t *testing.T) {
 	vals := []uint8{0, 1, 11, 111, 255}
 	for _, val := range vals {
@@ -368,8 +389,10 @@ func Benchmark_itoa(b *testing.B) {
 }
 
 func Benchmark_jsoniter_int(b *testing.B) {
+	iter := NewIterator()
+	input := []byte(`100`)
 	for n := 0; n < b.N; n++ {
-		iter := ParseString(`-100`)
+		iter.ResetBytes(input)
 		iter.ReadInt64()
 	}
 }
