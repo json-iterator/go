@@ -4,9 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
-	"strconv"
 	"unicode/utf16"
-	"unsafe"
 )
 
 type ValueType int
@@ -71,7 +69,7 @@ type Iterator struct {
 }
 
 // Create creates an empty Iterator instance
-func Create() *Iterator {
+func NewIterator() *Iterator {
 	return &Iterator{
 		reader: nil,
 		buf:    nil,
@@ -570,73 +568,6 @@ func (iter *Iterator) ReadArray() (ret bool) {
 	}
 }
 
-// ReadFloat32 reads a json object as Float32
-func (iter *Iterator) ReadFloat32() (ret float32) {
-	strBuf := [8]byte{}
-	str := strBuf[0:0]
-	hasMore := true
-	for hasMore {
-		for i := iter.head; i < iter.tail; i++ {
-			c := iter.buf[i]
-			switch c {
-			case '-', '+', '.', 'e', 'E', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
-				str = append(str, c)
-				continue
-			default:
-				hasMore = false
-				break
-			}
-		}
-		if hasMore {
-			if !iter.loadMore() {
-				break
-			}
-		}
-	}
-	if iter.Error != nil && iter.Error != io.EOF {
-		return
-	}
-	val, err := strconv.ParseFloat(*(*string)(unsafe.Pointer(&str)), 32)
-	if err != nil {
-		iter.Error = err
-		return
-	}
-	return float32(val)
-}
-
-// ReadFloat64 reads a json object as Float64
-func (iter *Iterator) ReadFloat64() (ret float64) {
-	strBuf := [8]byte{}
-	str := strBuf[0:0]
-	hasMore := true
-	for hasMore {
-		for i := iter.head; i < iter.tail; i++ {
-			c := iter.buf[i]
-			switch c {
-			case '-', '+', '.', 'e', 'E', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
-				str = append(str, c)
-				continue
-			default:
-				hasMore = false
-				break
-			}
-		}
-		if hasMore {
-			if !iter.loadMore() {
-				break
-			}
-		}
-	}
-	if iter.Error != nil && iter.Error != io.EOF {
-		return
-	}
-	val, err := strconv.ParseFloat(*(*string)(unsafe.Pointer(&str)), 64)
-	if err != nil {
-		iter.Error = err
-		return
-	}
-	return val
-}
 
 // ReadBool reads a json object as Bool
 func (iter *Iterator) ReadBool() (ret bool) {

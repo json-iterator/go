@@ -70,7 +70,7 @@ type StructOfTagOne struct {
 
 func Benchmark_jsoniter_reflect(b *testing.B) {
 	b.ReportAllocs()
-	iter := Create()
+	iter := NewIterator()
 	Struct := &StructOfTagOne{}
 	//var Struct *StructOfTagOne
 	input := []byte(`{"field3": "100", "field4": "100"}`)
