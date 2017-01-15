@@ -91,23 +91,20 @@ func (iter *Iterator) readPositiveFloat32() (ret float32) {
 func (iter *Iterator) readFloat32SlowPath() (ret float32) {
 	strBuf := [16]byte{}
 	str := strBuf[0:0]
-	hasMore := true
-	for hasMore {
+	load_loop:
+	for {
 		for i := iter.head; i < iter.tail; i++ {
 			c := iter.buf[i]
 			switch c {
-			case '-', '+', '.', 'e', 'E', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+			case '-', '.', 'e', 'E', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
 				str = append(str, c)
 				continue
 			default:
-				hasMore = false
-				break
+				break load_loop
 			}
 		}
-		if hasMore {
-			if !iter.loadMore() {
-				break
-			}
+		if !iter.loadMore() {
+			break
 		}
 	}
 	if iter.Error != nil && iter.Error != io.EOF {
@@ -121,27 +118,84 @@ func (iter *Iterator) readFloat32SlowPath() (ret float32) {
 	return float32(val)
 }
 
-// ReadFloat64 reads a json object as Float64
 func (iter *Iterator) ReadFloat64() (ret float64) {
-	strBuf := [8]byte{}
+	c := iter.nextToken()
+	if c == '-' {
+		return -iter.readPositiveFloat64()
+	} else {
+		iter.unreadByte()
+		return iter.readPositiveFloat64()
+	}
+}
+
+func (iter *Iterator) readPositiveFloat64() (ret float64) {
+	value := uint64(0)
+	c := byte(' ')
+	i := iter.head
+	non_decimal_loop:
+	for ; i < iter.tail; i++ {
+		c = iter.buf[i]
+		ind := zeroToNineDigits[c]
+		switch ind {
+		case invalidCharForNumber:
+			return iter.readFloat64SlowPath()
+		case endOfNumber:
+			iter.head = i
+			return float64(value)
+		case dotInNumber:
+			break non_decimal_loop
+		}
+		if value > safeToMultiple10 {
+			return iter.readFloat64SlowPath()
+		}
+		value = (value << 3) + (value << 1) + uint64(ind); // value = value * 10 + ind;
+	}
+	if c == '.' {
+		i++
+		decimalPlaces := 0;
+		for ; i < iter.tail; i++ {
+			c = iter.buf[i]
+			ind := zeroToNineDigits[c];
+			switch ind {
+			case endOfNumber:
+				if decimalPlaces > 0 && decimalPlaces < len(POW10) {
+					iter.head = i
+					return float64(value) / float64(POW10[decimalPlaces])
+				}
+				// too many decimal places
+				return iter.readFloat64SlowPath()
+			case invalidCharForNumber:
+				fallthrough
+			case dotInNumber:
+				return iter.readFloat64SlowPath()
+			}
+			decimalPlaces++
+			if value > safeToMultiple10 {
+				return iter.readFloat64SlowPath()
+			}
+			value = (value << 3) + (value << 1) + uint64(ind)
+		}
+	}
+	return iter.readFloat64SlowPath()
+}
+
+func (iter *Iterator) readFloat64SlowPath() (ret float64) {
+	strBuf := [16]byte{}
 	str := strBuf[0:0]
-	hasMore := true
-	for hasMore {
+	load_loop:
+	for {
 		for i := iter.head; i < iter.tail; i++ {
 			c := iter.buf[i]
 			switch c {
-			case '-', '+', '.', 'e', 'E', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+			case '-', '.', 'e', 'E', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
 				str = append(str, c)
 				continue
 			default:
-				hasMore = false
-				break
+				break load_loop
 			}
 		}
-		if hasMore {
-			if !iter.loadMore() {
-				break
-			}
+		if !iter.loadMore() {
+			break
 		}
 	}
 	if iter.Error != nil && iter.Error != io.EOF {

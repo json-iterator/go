@@ -9,23 +9,7 @@ import (
 	"strconv"
 )
 
-func Test_float64_0(t *testing.T) {
-	iter := ParseString(`0`)
-	val := iter.ReadFloat64()
-	if val != 0 {
-		t.Fatal(val)
-	}
-}
-
-func Test_float64_1_dot_1(t *testing.T) {
-	iter := ParseString(`1.1`)
-	val := iter.ReadFloat64()
-	if val != 1.1 {
-		t.Fatal(val)
-	}
-}
-
-func Test_read_float32(t *testing.T) {
+func Test_read_float(t *testing.T) {
 	inputs := []string{`1.1`, `1000`, `9223372036854775807`, `12.3`, `-12.3`, `720368.54775807`, `720368.547758075`}
 	for _, input := range inputs {
 		// non-streaming
@@ -36,6 +20,13 @@ func Test_read_float32(t *testing.T) {
 			should.Nil(err)
 			should.Equal(float32(expected), iter.ReadFloat32())
 		})
+		t.Run(fmt.Sprintf("%v", input), func(t *testing.T) {
+			should := require.New(t)
+			iter := ParseString(input + ",")
+			expected, err := strconv.ParseFloat(input, 64)
+			should.Nil(err)
+			should.Equal(expected, iter.ReadFloat64())
+		})
 		// streaming
 		t.Run(fmt.Sprintf("%v", input), func(t *testing.T) {
 			should := require.New(t)
@@ -43,6 +34,13 @@ func Test_read_float32(t *testing.T) {
 			expected, err := strconv.ParseFloat(input, 32)
 			should.Nil(err)
 			should.Equal(float32(expected), iter.ReadFloat32())
+		})
+		t.Run(fmt.Sprintf("%v", input), func(t *testing.T) {
+			should := require.New(t)
+			iter := Parse(bytes.NewBufferString(input + ","), 2)
+			expected, err := strconv.ParseFloat(input, 64)
+			should.Nil(err)
+			should.Equal(expected, iter.ReadFloat64())
 		})
 	}
 }
@@ -119,7 +117,7 @@ func Benchmark_jsoniter_float(b *testing.B) {
 	iter := NewIterator()
 	for n := 0; n < b.N; n++ {
 		iter.ResetBytes(input)
-		iter.ReadFloat32()
+		iter.ReadFloat64()
 	}
 }
 
