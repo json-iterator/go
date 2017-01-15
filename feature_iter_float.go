@@ -10,7 +10,6 @@ var floatDigits []int8
 const invalidCharForNumber = int8(-1)
 const endOfNumber = int8(-2)
 const dotInNumber = int8(-3)
-const uint64SafeToMultiple10 = uint64(0xffffffffffffffff) / 10 - 10
 
 func init() {
 	floatDigits = make([]int8, 256)

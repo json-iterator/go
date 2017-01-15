@@ -10,74 +10,27 @@ import (
 	"io/ioutil"
 )
 
-func Test_decode_decode_uint64_0(t *testing.T) {
-	iter := Parse(bytes.NewBufferString("0"), 4096)
-	val := iter.ReadUint64()
-	if iter.Error != nil {
-		t.Fatal(iter.Error)
-	}
-	if val != 0 {
-		t.Fatal(val)
-	}
-}
 
-func Test_decode_uint64_1(t *testing.T) {
-	iter := Parse(bytes.NewBufferString("1"), 4096)
-	val := iter.ReadUint64()
-	if val != 1 {
-		t.Fatal(val)
-	}
-}
-
-func Test_decode_uint64_100(t *testing.T) {
-	iter := Parse(bytes.NewBufferString("100"), 4096)
-	val := iter.ReadUint64()
-	if val != 100 {
-		t.Fatal(val)
-	}
-}
-
-func Test_decode_uint64_100_comma(t *testing.T) {
-	iter := Parse(bytes.NewBufferString("100,"), 4096)
-	val := iter.ReadUint64()
-	if iter.Error != nil {
-		t.Fatal(iter.Error)
-	}
-	if val != 100 {
-		t.Fatal(val)
-	}
-}
-
-func Test_decode_uint64_invalid(t *testing.T) {
-	iter := Parse(bytes.NewBufferString(","), 4096)
+func Test_read_uint64_invalid(t *testing.T) {
+	should := require.New(t)
+	iter := ParseString(",")
 	iter.ReadUint64()
-	if iter.Error == nil {
-		t.FailNow()
-	}
-}
-
-func Test_decode_int64_100(t *testing.T) {
-	iter := Parse(bytes.NewBufferString("100"), 4096)
-	val := iter.ReadInt64()
-	if val != 100 {
-		t.Fatal(val)
-	}
-}
-
-func Test_decode_int64_minus_100(t *testing.T) {
-	iter := Parse(bytes.NewBufferString("-100"), 4096)
-	val := iter.ReadInt64()
-	if val != -100 {
-		t.Fatal(val)
-	}
+	should.NotNil(iter.Error)
 }
 
 func Test_read_int32(t *testing.T) {
-	inputs := []string{`1`, `12`, `123`}
+	inputs := []string{`1`, `12`, `123`, `1234`, `12345`, `123456`, `2147483647`}
 	for _, input := range inputs {
 		t.Run(fmt.Sprintf("%v", input), func(t *testing.T) {
 			should := require.New(t)
 			iter := ParseString(input)
+			expected, err := strconv.ParseInt(input, 10, 32)
+			should.Nil(err)
+			should.Equal(int32(expected), iter.ReadInt32())
+		})
+		t.Run(fmt.Sprintf("%v", input), func(t *testing.T) {
+			should := require.New(t)
+			iter := Parse(bytes.NewBufferString(input), 2)
 			expected, err := strconv.ParseInt(input, 10, 32)
 			should.Nil(err)
 			should.Equal(int32(expected), iter.ReadInt32())
@@ -90,6 +43,34 @@ func Test_read_int32_overflow(t *testing.T) {
 	input := "123456789123456789"
 	iter := ParseString(input)
 	iter.ReadInt32()
+	should.NotNil(iter.Error)
+}
+
+func Test_read_int64(t *testing.T) {
+	inputs := []string{`1`, `12`, `123`, `1234`, `12345`, `123456`, `9223372036854775807`}
+	for _, input := range inputs {
+		t.Run(fmt.Sprintf("%v", input), func(t *testing.T) {
+			should := require.New(t)
+			iter := ParseString(input)
+			expected, err := strconv.ParseInt(input, 10, 64)
+			should.Nil(err)
+			should.Equal(expected, iter.ReadInt64())
+		})
+		t.Run(fmt.Sprintf("%v", input), func(t *testing.T) {
+			should := require.New(t)
+			iter := Parse(bytes.NewBufferString(input), 2)
+			expected, err := strconv.ParseInt(input, 10, 64)
+			should.Nil(err)
+			should.Equal(expected, iter.ReadInt64())
+		})
+	}
+}
+
+func Test_read_int64_overflow(t *testing.T) {
+	should := require.New(t)
+	input := "123456789123456789"
+	iter := ParseString(input)
+	iter.ReadInt64()
 	should.NotNil(iter.Error)
 }
 

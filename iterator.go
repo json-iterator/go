@@ -331,16 +331,8 @@ func (iter *Iterator) readU4() (ret rune) {
 			return
 		}
 		if c >= '0' && c <= '9' {
-			if ret >= cutoffUint32 {
-				iter.reportError("readU4", "overflow")
-				return
-			}
 			ret = ret*16 + rune(c-'0')
 		} else if c >= 'a' && c <= 'f' {
-			if ret >= cutoffUint32 {
-				iter.reportError("readU4", "overflow")
-				return
-			}
 			ret = ret*16 + rune(c-'a'+10)
 		} else {
 			iter.reportError("readU4", "expects 0~9 or a~f")
