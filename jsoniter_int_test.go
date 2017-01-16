@@ -10,7 +10,6 @@ import (
 	"io/ioutil"
 )
 
-
 func Test_read_uint64_invalid(t *testing.T) {
 	should := require.New(t)
 	iter := ParseString(",")
@@ -18,8 +17,34 @@ func Test_read_uint64_invalid(t *testing.T) {
 	should.NotNil(iter.Error)
 }
 
+func Test_read_int8(t *testing.T) {
+	inputs := []string{`127`, `-128`}
+	for _, input := range inputs {
+		t.Run(fmt.Sprintf("%v", input), func(t *testing.T) {
+			should := require.New(t)
+			iter := ParseString(input)
+			expected, err := strconv.ParseInt(input, 10, 8)
+			should.Nil(err)
+			should.Equal(int8(expected), iter.ReadInt8())
+		})
+	}
+}
+
+func Test_read_int16(t *testing.T) {
+	inputs := []string{`32767`, `-32768`}
+	for _, input := range inputs {
+		t.Run(fmt.Sprintf("%v", input), func(t *testing.T) {
+			should := require.New(t)
+			iter := ParseString(input)
+			expected, err := strconv.ParseInt(input, 10, 16)
+			should.Nil(err)
+			should.Equal(int16(expected), iter.ReadInt16())
+		})
+	}
+}
+
 func Test_read_int32(t *testing.T) {
-	inputs := []string{`1`, `12`, `123`, `1234`, `12345`, `123456`, `2147483647`}
+	inputs := []string{`1`, `12`, `123`, `1234`, `12345`, `123456`, `2147483647`, `-2147483648`}
 	for _, input := range inputs {
 		t.Run(fmt.Sprintf("%v", input), func(t *testing.T) {
 			should := require.New(t)
@@ -40,14 +65,14 @@ func Test_read_int32(t *testing.T) {
 
 func Test_read_int32_overflow(t *testing.T) {
 	should := require.New(t)
-	input := "123456789123456789"
+	input := "123456789123456789,"
 	iter := ParseString(input)
 	iter.ReadInt32()
 	should.NotNil(iter.Error)
 }
 
 func Test_read_int64(t *testing.T) {
-	inputs := []string{`1`, `12`, `123`, `1234`, `12345`, `123456`, `9223372036854775807`}
+	inputs := []string{`1`, `12`, `123`, `1234`, `12345`, `123456`, `9223372036854775807`, `-9223372036854775808`}
 	for _, input := range inputs {
 		t.Run(fmt.Sprintf("%v", input), func(t *testing.T) {
 			should := require.New(t)
@@ -68,7 +93,7 @@ func Test_read_int64(t *testing.T) {
 
 func Test_read_int64_overflow(t *testing.T) {
 	should := require.New(t)
-	input := "123456789123456789"
+	input := "123456789123456789123456789123456789,"
 	iter := ParseString(input)
 	iter.ReadInt64()
 	should.NotNil(iter.Error)
@@ -268,8 +293,8 @@ func Test_write_int32(t *testing.T) {
 
 func Test_write_uint64(t *testing.T) {
 	vals := []uint64{0, 1, 11, 111, 255, 999999, 0xfff, 0xffff, 0xfffff, 0xffffff, 0xfffffff, 0xffffffff,
-		0xfffffffff,0xffffffffff,0xfffffffffff,0xffffffffffff,0xfffffffffffff,0xffffffffffffff,
-		0xfffffffffffffff,0xffffffffffffffff}
+		0xfffffffff, 0xffffffffff, 0xfffffffffff, 0xffffffffffff, 0xfffffffffffff, 0xffffffffffffff,
+		0xfffffffffffffff, 0xffffffffffffffff}
 	for _, val := range vals {
 		t.Run(fmt.Sprintf("%v", val), func(t *testing.T) {
 			should := require.New(t)
@@ -302,8 +327,8 @@ func Test_write_uint64(t *testing.T) {
 
 func Test_write_int64(t *testing.T) {
 	vals := []int64{0, 1, 11, 111, 255, 999999, 0xfff, 0xffff, 0xfffff, 0xffffff, 0xfffffff, 0xffffffff,
-		0xfffffffff,0xffffffffff,0xfffffffffff,0xffffffffffff,0xfffffffffffff,0xffffffffffffff,
-		0xfffffffffffffff,0x7fffffffffffffff,-0x7fffffffffffffff}
+		0xfffffffff, 0xffffffffff, 0xfffffffffff, 0xffffffffffff, 0xfffffffffffff, 0xffffffffffffff,
+		0xfffffffffffffff, 0x7fffffffffffffff, -0x7fffffffffffffff}
 	for _, val := range vals {
 		t.Run(fmt.Sprintf("%v", val), func(t *testing.T) {
 			should := require.New(t)

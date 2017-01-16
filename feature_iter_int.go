@@ -1,15 +1,17 @@
 package jsoniter
 
+import "strconv"
+
 var intDigits []int8
 
-const int8SafeToMultiply10 = uint32(int8(0x7f) / 10 - 10)
-const uint8SafeToMultiply10 = uint32(0xff) / 10 - 10
-const int16SafeToMultiply10 = uint32(int16(0x7fff) / 10 - 10)
-const uint16SafeToMultiply10 = uint32(0xffff) / 10 - 10
-const int32SafeToMultiply10 = uint32(int32(0x7fffffff) / 10 - 10)
-const uint32SafeToMultiply10 = uint32(0xffffffff) / 10 - 10
-const uint64SafeToMultiple10 = uint64(0xffffffffffffffff) / 10 - 10
-const int64SafeToMultiple10 = uint64(int64(0x7fffffffffffffff) / 10 - 10)
+const uint32SafeToMultiply10 = uint32(0xffffffff) / 10 - 1
+const uint64SafeToMultiple10 = uint64(0xffffffffffffffff) / 10 - 1
+const int64Max = uint64(0x7fffffffffffffff)
+const int32Max = uint32(0x7fffffff)
+const int16Max = uint32(0x7fff)
+const uint16Max = uint32(0xffff)
+const int8Max = uint32(0x7fff)
+const uint8Max = uint32(0xffff)
 
 func init() {
 	intDigits = make([]int8, 256)
@@ -29,46 +31,86 @@ func (iter *Iterator) ReadInt() int {
 	return int(iter.ReadInt64())
 }
 
-func (iter *Iterator) ReadInt8() int8 {
+func (iter *Iterator) ReadInt8() (ret int8) {
 	c := iter.nextToken()
 	if c == '-' {
-		return -int8(iter.readUint32(int8SafeToMultiply10, iter.readByte()))
+		val := iter.readUint32(iter.readByte())
+		if val > int8Max + 1 {
+			iter.reportError("ReadInt8", "overflow: " + strconv.FormatInt(int64(val), 10))
+			return
+		}
+		return -int8(val)
 	} else {
-		return int8(iter.readUint32(int8SafeToMultiply10, c))
+		val := iter.readUint32(c)
+		if val > int8Max {
+			iter.reportError("ReadInt8", "overflow: " + strconv.FormatInt(int64(val), 10))
+			return
+		}
+		return int8(val)
 	}
 }
 
 func (iter *Iterator) ReadUint8() (ret uint8) {
-	return uint8(iter.readUint32(uint8SafeToMultiply10, iter.nextToken()))
+	val := iter.readUint32(iter.nextToken())
+	if val > uint8Max {
+		iter.reportError("ReadUint8", "overflow: " + strconv.FormatInt(int64(val), 10))
+		return
+	}
+	return uint8(val)
 }
 
-func (iter *Iterator) ReadInt16() int16 {
+func (iter *Iterator) ReadInt16() (ret int16) {
 	c := iter.nextToken()
 	if c == '-' {
-		return -int16(iter.readUint32(int16SafeToMultiply10, iter.readByte()))
+		val := iter.readUint32(iter.readByte())
+		if val > int16Max + 1 {
+			iter.reportError("ReadInt16", "overflow: " + strconv.FormatInt(int64(val), 10))
+			return
+		}
+		return -int16(val)
 	} else {
-		return int16(iter.readUint32(int16SafeToMultiply10, c))
+		val := iter.readUint32(c)
+		if val > int16Max {
+			iter.reportError("ReadInt16", "overflow: " + strconv.FormatInt(int64(val), 10))
+			return
+		}
+		return int16(val)
 	}
 }
 
-func (iter *Iterator) ReadUint16() uint16 {
-	return uint16(iter.readUint32(uint16SafeToMultiply10, iter.nextToken()))
+func (iter *Iterator) ReadUint16() (ret uint16) {
+	val := iter.readUint32(iter.nextToken())
+	if val > uint16Max {
+		iter.reportError("ReadUint16", "overflow: " + strconv.FormatInt(int64(val), 10))
+		return
+	}
+	return uint16(val)
 }
 
-func (iter *Iterator) ReadInt32() int32 {
+func (iter *Iterator) ReadInt32() (ret int32) {
 	c := iter.nextToken()
 	if c == '-' {
-		return -int32(iter.readUint32(int32SafeToMultiply10, iter.readByte()))
+		val := iter.readUint32(iter.readByte())
+		if val > int32Max + 1 {
+			iter.reportError("ReadInt32", "overflow: " + strconv.FormatInt(int64(val), 10))
+			return
+		}
+		return -int32(val)
 	} else {
-		return int32(iter.readUint32(int32SafeToMultiply10, c))
+		val := iter.readUint32(c)
+		if val > int32Max {
+			iter.reportError("ReadInt32", "overflow: " + strconv.FormatInt(int64(val), 10))
+			return
+		}
+		return int32(val)
 	}
 }
 
-func (iter *Iterator) ReadUint32() uint32 {
-	return iter.readUint32(uint32SafeToMultiply10, iter.nextToken())
+func (iter *Iterator) ReadUint32() (ret uint32) {
+	return iter.readUint32(iter.nextToken())
 }
 
-func (iter *Iterator) readUint32(safeToMultiply10 uint32, c byte) (ret uint32) {
+func (iter *Iterator) readUint32(c byte) (ret uint32) {
 	ind := intDigits[c]
 	if ind == 0 {
 		return 0 // single zero
@@ -84,9 +126,9 @@ func (iter *Iterator) readUint32(safeToMultiply10 uint32, c byte) (ret uint32) {
 			if ind == invalidCharForNumber {
 				return value
 			}
-			if value > safeToMultiply10 {
+			if value > uint32SafeToMultiply10 {
 				value2 := (value << 3) + (value << 1) + uint32(ind)
-				if value2 < safeToMultiply10 * 10 {
+				if value2 < value {
 					iter.reportError("readUint32", "overflow")
 					return
 				} else {
@@ -102,20 +144,30 @@ func (iter *Iterator) readUint32(safeToMultiply10 uint32, c byte) (ret uint32) {
 	}
 }
 
-func (iter *Iterator) ReadInt64() int64 {
+func (iter *Iterator) ReadInt64() (ret int64) {
 	c := iter.nextToken()
 	if c == '-' {
-		return -int64(iter.readUint64(int64SafeToMultiple10, iter.readByte()))
+		val := iter.readUint64(iter.readByte())
+		if val > int64Max + 1 {
+			iter.reportError("ReadInt64", "overflow: " + strconv.FormatUint(uint64(val), 10))
+			return
+		}
+		return -int64(val)
 	} else {
-		return int64(iter.readUint64(int64SafeToMultiple10, c))
+		val := iter.readUint64(c)
+		if val > int64Max {
+			iter.reportError("ReadInt64", "overflow: " + strconv.FormatUint(uint64(val), 10))
+			return
+		}
+		return int64(val)
 	}
 }
 
 func (iter *Iterator) ReadUint64() uint64 {
-	return iter.readUint64(uint64SafeToMultiple10, iter.nextToken())
+	return iter.readUint64(iter.nextToken())
 }
 
-func (iter *Iterator) readUint64(safeToMultiply10 uint64, c byte) (ret uint64) {
+func (iter *Iterator) readUint64(c byte) (ret uint64) {
 	ind := intDigits[c]
 	if ind == 0 {
 		return 0 // single zero
@@ -131,9 +183,9 @@ func (iter *Iterator) readUint64(safeToMultiply10 uint64, c byte) (ret uint64) {
 			if ind == invalidCharForNumber {
 				return value
 			}
-			if value > safeToMultiply10 {
+			if value > uint64SafeToMultiple10 {
 				value2 := (value << 3) + (value << 1) + uint64(ind)
-				if value2 < safeToMultiply10 * 10 {
+				if value2 < value {
 					iter.reportError("readUint64", "overflow")
 					return
 				} else {
