@@ -7,6 +7,12 @@ import (
 	"github.com/json-iterator/go/require"
 )
 
+func Test_read_large_string(t *testing.T) {
+	should := require.New(t)
+	iter := ParseString(`"0123456789012345678901234567890123456789"`)
+	should.Equal("0123456789012345678901234567890123456789", iter.ReadString())
+}
+
 func Test_decode_string_empty(t *testing.T) {
 	iter := Parse(bytes.NewBufferString(`""`), 4096)
 	val := iter.ReadString()
@@ -113,10 +119,11 @@ func Benchmark_jsoniter_unicode(b *testing.B) {
 }
 
 func Benchmark_jsoniter_ascii(b *testing.B) {
-	iter := ParseString(`"hello, world!"`)
+	iter := NewIterator()
+	input := []byte(`"hello, world! hello, world!"`)
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
-		iter.ResetBytes(iter.buf)
+		iter.ResetBytes(input)
 		iter.ReadString()
 	}
 }
