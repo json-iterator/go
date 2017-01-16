@@ -275,7 +275,7 @@ func (iter *Iterator) ReadBool() (ret bool) {
 
 // ReadBase64 reads a json object as Base64 in byte slice
 func (iter *Iterator) ReadBase64() (ret []byte) {
-	src := iter.readStringAsBytes()
+	src := iter.ReadStringAsSlice()
 	if iter.Error != nil {
 		return
 	}

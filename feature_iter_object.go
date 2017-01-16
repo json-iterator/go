@@ -55,7 +55,7 @@ func (iter *Iterator) readObjectStart() bool {
 }
 
 func (iter *Iterator) readObjectField() (ret string) {
-	str := iter.readStringAsBytes()
+	str := iter.ReadStringAsSlice()
 	if iter.skipWhitespacesWithoutLoadMore() {
 		if ret == "" {
 			ret = string(str)

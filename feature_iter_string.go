@@ -27,6 +27,15 @@ func (iter *Iterator) ReadString() (ret string) {
 				copied[j] = c
 				j++
 			}
+			if i == iter.tail {
+				if iter.loadMore() {
+					i = iter.head
+					continue
+				} else {
+					iter.reportError("ReadString", "incomplete string")
+					return
+				}
+			}
 			iter.head = i
 			if j == len(copied) {
 				newBuf := make([]byte, len(copied) * 2)
@@ -108,22 +117,23 @@ func (iter *Iterator) readStringSlowPath(str []byte) (ret string) {
 	return
 }
 
-func (iter *Iterator) readStringAsBytes() (ret []byte) {
+func (iter *Iterator) ReadStringAsSlice() (ret []byte) {
 	c := iter.nextToken()
 	if c == '"' {
 		for i := iter.head; i < iter.tail; i++ {
-			c := iter.buf[i]
-			if c == '"' {
+			// require ascii string and no escape
+			// for: field name, base64, number
+			if iter.buf[i] == '"' {
 				// fast path: reuse the underlying buffer
 				ret = iter.buf[iter.head : i]
 				iter.head = i + 1
 				return ret
 			}
 		}
-		iter.head = iter.tail
 		readLen := iter.tail - iter.head
 		copied := make([]byte, readLen, readLen * 2)
 		copy(copied, iter.buf[iter.head:iter.tail])
+		iter.head = iter.tail
 		for iter.Error == nil {
 			c := iter.readByte()
 			if c == '"' {
@@ -131,7 +141,7 @@ func (iter *Iterator) readStringAsBytes() (ret []byte) {
 			}
 			copied = append(copied, c)
 		}
-		return
+		return copied
 	}
 	if c == 'n' {
 		iter.skipUntilBreak()
