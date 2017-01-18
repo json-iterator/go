@@ -134,7 +134,7 @@ func (b *Stream) WriteString(s string) {
 	b.writeByte('"')
 }
 
-func (stream *Stream) WriteNull() {
+func (stream *Stream) WriteNil() {
 	stream.Write(bytesNull)
 }
 

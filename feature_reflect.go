@@ -140,7 +140,7 @@ type optionalEncoder struct {
 
 func (encoder *optionalEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
 	if *((*unsafe.Pointer)(ptr)) == nil {
-		stream.WriteNull()
+		stream.WriteNil()
 	} else {
 		encoder.valueEncoder.encode(*((*unsafe.Pointer)(ptr)), stream)
 	}
@@ -322,6 +322,10 @@ func (iter *Iterator) ReadVal(obj interface{}) {
 
 
 func (stream *Stream) WriteVal(val interface{}) {
+	if nil == val {
+		stream.WriteNil()
+		return
+	}
 	typ := reflect.TypeOf(val)
 	cacheKey := typ
 	cachedEncoder := getEncoderFromCache(cacheKey)

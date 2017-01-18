@@ -20,7 +20,6 @@ func Test_false(t *testing.T) {
 	}
 }
 
-
 func Test_write_true_false(t *testing.T) {
 	should := require.New(t)
 	buf := &bytes.Buffer{}

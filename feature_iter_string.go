@@ -143,10 +143,6 @@ func (iter *Iterator) ReadStringAsSlice() (ret []byte) {
 		}
 		return copied
 	}
-	if c == 'n' {
-		iter.skipUntilBreak()
-		return
-	}
 	iter.reportError("ReadString", `expects " or n`)
 	return
 }

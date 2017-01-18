@@ -17,7 +17,7 @@ func Test_write_null(t *testing.T) {
 	should := require.New(t)
 	buf := &bytes.Buffer{}
 	stream := NewStream(buf, 4096)
-	stream.WriteNull()
+	stream.WriteNil()
 	stream.Flush()
 	should.Nil(stream.Error)
 	should.Equal("null", buf.String())
@@ -55,15 +55,12 @@ func Test_decode_null_array(t *testing.T) {
 }
 
 func Test_decode_null_string(t *testing.T) {
+	should := require.New(t)
 	iter := ParseString(`[null,"a"]`)
-	iter.ReadArray()
-	if iter.ReadString() != "" {
-		t.FailNow()
-	}
-	iter.ReadArray()
-	if iter.ReadString() != "a" {
-		t.FailNow()
-	}
+	should.True(iter.ReadArray())
+	should.True(iter.ReadNil())
+	should.True(iter.ReadArray())
+	should.Equal("a", iter.ReadString())
 }
 
 func Test_decode_null_skip(t *testing.T) {

@@ -10,7 +10,7 @@ func (iter *Iterator) ReadObject() (ret string) {
 	}
 	switch c {
 	case 'n':
-		iter.skipUntilBreak()
+		iter.skipFixedBytes(3)
 		if iter.Error != nil {
 			return
 		}
