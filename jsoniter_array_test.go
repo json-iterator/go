@@ -8,26 +8,28 @@ import (
 )
 
 func Test_empty_array(t *testing.T) {
+	should := require.New(t)
 	iter := ParseString(`[]`)
 	cont := iter.ReadArray()
-	if cont != false {
-		t.FailNow()
-	}
+	should.False(cont)
+	iter = ParseString(`[]`)
+	iter.ReadArrayCB(func(iter *Iterator) bool {
+		should.FailNow("should not call")
+		return true
+	})
 }
 
 func Test_one_element(t *testing.T) {
+	should := require.New(t)
 	iter := ParseString(`[1]`)
-	cont := iter.ReadArray()
-	if cont != true {
-		t.FailNow()
-	}
-	if iter.ReadInt64() != 1 {
-		t.FailNow()
-	}
-	cont = iter.ReadArray()
-	if cont != false {
-		t.FailNow()
-	}
+	should.True(iter.ReadArray())
+	should.Equal(1, iter.ReadInt())
+	should.False(iter.ReadArray())
+	iter = ParseString(`[1]`)
+	iter.ReadArrayCB(func(iter *Iterator) bool {
+		should.Equal(1, iter.ReadInt())
+		return true
+	})
 }
 
 func Test_two_elements(t *testing.T) {
@@ -136,7 +138,7 @@ func Test_write_array(t *testing.T) {
 
 func Test_write_val_array(t *testing.T) {
 	should := require.New(t)
-	val := []int{1,2,3}
+	val := []int{1, 2, 3}
 	str, err := MarshalToString(val)
 	should.Nil(err)
 	should.Equal("[1,2,3]", str)

@@ -37,8 +37,7 @@ func (iter *Iterator) ReadObjectCB(callback func(*Iterator, string) bool) bool {
 			if !callback(iter, field) {
 				return false
 			}
-			c = iter.nextToken()
-			for c == ',' {
+			for iter.nextToken() == ',' {
 				field := string(iter.readObjectFieldAsBytes())
 				if !callback(iter, field) {
 					return false

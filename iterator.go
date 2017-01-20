@@ -223,36 +223,6 @@ func (iter *Iterator) unreadByte() {
 	return
 }
 
-// ReadArray reads a json object as Array
-func (iter *Iterator) ReadArray() (ret bool) {
-	c := iter.nextToken()
-	if iter.Error != nil {
-		return
-	}
-	switch c {
-	case 'n':
-		iter.skipFixedBytes(3)
-		return false // null
-	case '[':
-		c = iter.nextToken()
-		if iter.Error != nil {
-			return
-		}
-		if c == ']' {
-			return false
-		}
-		iter.unreadByte()
-		return true
-	case ']':
-		return false
-	case ',':
-		return true
-	default:
-		iter.reportError("ReadArray", "expect [ or , or ] or n, but found: " + string([]byte{c}))
-		return
-	}
-}
-
 
 
 // ReadBase64 reads a json object as Base64 in byte slice
