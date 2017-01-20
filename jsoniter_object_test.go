@@ -2,35 +2,37 @@ package jsoniter
 
 import (
 	"encoding/json"
-	"fmt"
 	"testing"
 	"github.com/json-iterator/go/require"
 	"bytes"
 )
 
 func Test_empty_object(t *testing.T) {
+	should := require.New(t)
 	iter := ParseString(`{}`)
 	field := iter.ReadObject()
-	if field != "" {
-		t.Fatal(field)
-	}
+	should.Equal("", field)
+	iter = ParseString(`{}`)
+	iter.ReadObjectCB(func(iter *Iterator, field string) bool {
+		should.FailNow("should not call")
+		return true
+	})
 }
 
 func Test_one_field(t *testing.T) {
+	should := require.New(t)
 	iter := ParseString(`{"a": "b"}`)
 	field := iter.ReadObject()
-	if field != "a" {
-		fmt.Println(iter.Error)
-		t.Fatal(field)
-	}
+	should.Equal("a", field)
 	value := iter.ReadString()
-	if value != "b" {
-		t.Fatal(field)
-	}
+	should.Equal("b", value)
 	field = iter.ReadObject()
-	if field != "" {
-		t.Fatal(field)
-	}
+	should.Equal("", field)
+	iter = ParseString(`{"a": "b"}`)
+	should.True(iter.ReadObjectCB(func(iter *Iterator, field string) bool {
+		should.Equal("a", field)
+		return true
+	}))
 }
 
 func Test_two_field(t *testing.T) {

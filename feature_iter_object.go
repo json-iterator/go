@@ -1,33 +1,22 @@
 package jsoniter
 
-// ReadObject is a implemented iterator for json
 func (iter *Iterator) ReadObject() (ret string) {
 	c := iter.nextToken()
-	if iter.Error != nil {
-		return
-	}
 	switch c {
 	case 'n':
 		iter.skipFixedBytes(3)
-		if iter.Error != nil {
-			return
-		}
 		return "" // null
 	case '{':
 		c = iter.nextToken()
-		if iter.Error != nil {
-			return
-		}
-		switch c {
-		case '}':
-			return "" // end of object
-		case '"':
+		if c == '"' {
 			iter.unreadByte()
 			return string(iter.readObjectFieldAsBytes())
-		default:
-			iter.reportError("ReadObject", `expect " after {`)
-			return
 		}
+		if c == '}' {
+			return "" // end of object
+		}
+		iter.reportError("ReadObject", `expect " after {`)
+		return
 	case ',':
 		return string(iter.readObjectFieldAsBytes())
 	case '}':
@@ -36,6 +25,39 @@ func (iter *Iterator) ReadObject() (ret string) {
 		iter.reportError("ReadObject", `expect { or , or } or n`)
 		return
 	}
+}
+
+func (iter *Iterator) ReadObjectCB(callback func(*Iterator, string) bool) bool {
+	c := iter.nextToken()
+	if c == '{' {
+		c = iter.nextToken()
+		if c == '"' {
+			iter.unreadByte()
+			field := string(iter.readObjectFieldAsBytes())
+			if !callback(iter, field) {
+				return false
+			}
+			c = iter.nextToken()
+			for c == ',' {
+				field := string(iter.readObjectFieldAsBytes())
+				if !callback(iter, field) {
+					return false
+				}
+			}
+			return true
+		}
+		if c == '}' {
+			return true
+		}
+		iter.reportError("ReadObjectCB", `expect " after }`)
+		return false
+	}
+	if c == 'n' {
+		iter.skipFixedBytes(3)
+		return true // null
+	}
+	iter.reportError("ReadObjectCB", `expect { or n`)
+	return false
 }
 
 func (iter *Iterator) readObjectStart() bool {
