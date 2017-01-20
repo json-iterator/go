@@ -82,7 +82,7 @@ func Test_write_object(t *testing.T) {
 	stream.WriteObjectEnd()
 	stream.Flush()
 	should.Nil(stream.Error)
-	should.Equal("{\n  hello:1,\n  world:2\n}", buf.String())
+	should.Equal("{\n  \"hello\":1,\n  \"world\":2\n}", buf.String())
 }
 
 type TestObj struct {

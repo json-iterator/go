@@ -177,7 +177,8 @@ func (decoder *generalStructDecoder) decode(ptr unsafe.Pointer, iter *Iterator) 
 	if !iter.readObjectStart() {
 		return
 	}
-	field := iter.readObjectField()
+	fieldBytes := iter.readObjectFieldAsBytes()
+	field := *(*string)(unsafe.Pointer(&fieldBytes))
 	fieldDecoder := decoder.fields[field]
 	if fieldDecoder == nil {
 		iter.Skip()
@@ -185,7 +186,8 @@ func (decoder *generalStructDecoder) decode(ptr unsafe.Pointer, iter *Iterator) 
 		fieldDecoder.decode(ptr, iter)
 	}
 	for iter.nextToken() == ',' {
-		field = iter.readObjectField()
+		fieldBytes = iter.readObjectFieldAsBytes()
+		field = *(*string)(unsafe.Pointer(&fieldBytes))
 		fieldDecoder = decoder.fields[field]
 		if fieldDecoder == nil {
 			iter.Skip()
@@ -219,14 +221,16 @@ func (decoder *oneFieldStructDecoder) decode(ptr unsafe.Pointer, iter *Iterator)
 	if !iter.readObjectStart() {
 		return
 	}
-	field := iter.readObjectField()
+	fieldBytes := iter.readObjectFieldAsBytes()
+	field := *(*string)(unsafe.Pointer(&fieldBytes))
 	if field == decoder.fieldName {
 		decoder.fieldDecoder.decode(ptr, iter)
 	} else {
 		iter.Skip()
 	}
 	for iter.nextToken() == ',' {
-		field = iter.readObjectField()
+		fieldBytes = iter.readObjectFieldAsBytes()
+		field = *(*string)(unsafe.Pointer(&fieldBytes))
 		if field == decoder.fieldName {
 			decoder.fieldDecoder.decode(ptr, iter)
 		} else {
@@ -250,7 +254,8 @@ func (decoder *twoFieldsStructDecoder) decode(ptr unsafe.Pointer, iter *Iterator
 	if !iter.readObjectStart() {
 		return
 	}
-	field := iter.readObjectField()
+	fieldBytes := iter.readObjectFieldAsBytes()
+	field := *(*string)(unsafe.Pointer(&fieldBytes))
 	switch field {
 	case decoder.fieldName1:
 		decoder.fieldDecoder1.decode(ptr, iter)
@@ -260,7 +265,8 @@ func (decoder *twoFieldsStructDecoder) decode(ptr unsafe.Pointer, iter *Iterator
 		iter.Skip()
 	}
 	for iter.nextToken() == ',' {
-		field = iter.readObjectField()
+		fieldBytes = iter.readObjectFieldAsBytes()
+		field = *(*string)(unsafe.Pointer(&fieldBytes))
 		switch field {
 		case decoder.fieldName1:
 			decoder.fieldDecoder1.decode(ptr, iter)
@@ -289,7 +295,8 @@ func (decoder *threeFieldsStructDecoder) decode(ptr unsafe.Pointer, iter *Iterat
 	if !iter.readObjectStart() {
 		return
 	}
-	field := iter.readObjectField()
+	fieldBytes := iter.readObjectFieldAsBytes()
+	field := *(*string)(unsafe.Pointer(&fieldBytes))
 	switch field {
 	case decoder.fieldName1:
 		decoder.fieldDecoder1.decode(ptr, iter)
@@ -301,7 +308,8 @@ func (decoder *threeFieldsStructDecoder) decode(ptr unsafe.Pointer, iter *Iterat
 		iter.Skip()
 	}
 	for iter.nextToken() == ',' {
-		field = iter.readObjectField()
+		fieldBytes = iter.readObjectFieldAsBytes()
+		field = *(*string)(unsafe.Pointer(&fieldBytes))
 		switch field {
 		case decoder.fieldName1:
 			decoder.fieldDecoder1.decode(ptr, iter)
@@ -334,7 +342,8 @@ func (decoder *fourFieldsStructDecoder) decode(ptr unsafe.Pointer, iter *Iterato
 	if !iter.readObjectStart() {
 		return
 	}
-	field := iter.readObjectField()
+	fieldBytes := iter.readObjectFieldAsBytes()
+	field := *(*string)(unsafe.Pointer(&fieldBytes))
 	switch field {
 	case decoder.fieldName1:
 		decoder.fieldDecoder1.decode(ptr, iter)
@@ -348,7 +357,8 @@ func (decoder *fourFieldsStructDecoder) decode(ptr unsafe.Pointer, iter *Iterato
 		iter.Skip()
 	}
 	for iter.nextToken() == ',' {
-		field = iter.readObjectField()
+		fieldBytes = iter.readObjectFieldAsBytes()
+		field = *(*string)(unsafe.Pointer(&fieldBytes))
 		switch field {
 		case decoder.fieldName1:
 			decoder.fieldDecoder1.decode(ptr, iter)
