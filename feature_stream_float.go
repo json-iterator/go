@@ -1,6 +1,8 @@
 package jsoniter
 
-import "strconv"
+import (
+	"strconv"
+)
 
 var POW10 []uint64
 
