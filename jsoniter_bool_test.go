@@ -7,17 +7,17 @@ import (
 )
 
 func Test_true(t *testing.T) {
+	should := require.New(t)
 	iter := ParseString(`true`)
-	if iter.ReadBool() != true {
-		t.FailNow()
-	}
+	should.True(iter.ReadBool())
+	iter = ParseString(`true`)
+	should.Equal(true, iter.Read())
 }
 
 func Test_false(t *testing.T) {
+	should := require.New(t)
 	iter := ParseString(`false`)
-	if iter.ReadBool() != false {
-		t.FailNow()
-	}
+	should.False(iter.ReadBool())
 }
 
 func Test_write_true_false(t *testing.T) {

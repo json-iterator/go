@@ -6,11 +6,12 @@ import (
 	"bytes"
 )
 
-func Test_decode_null(t *testing.T) {
+func Test_read_null(t *testing.T) {
+	should := require.New(t)
 	iter := ParseString(`null`)
-	if iter.ReadNil() != true {
-		t.FailNow()
-	}
+	should.True(iter.ReadNil())
+	iter = ParseString(`null`)
+	should.Nil(iter.Read())
 }
 
 func Test_write_null(t *testing.T) {

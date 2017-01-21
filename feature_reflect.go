@@ -208,7 +208,7 @@ func (iter *Iterator) ReadAny() (ret *Any) {
 		return MakeAny(iter.ReadString())
 	case Number:
 		return iter.readNumber()
-	case Null:
+	case Nil:
 		return MakeAny(nil)
 	case Bool:
 		return MakeAny(iter.ReadBool())

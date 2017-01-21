@@ -12,7 +12,7 @@ const (
 	Invalid ValueType = iota
 	String
 	Number
-	Null
+	Nil
 	Bool
 	Array
 	Object
@@ -53,7 +53,7 @@ func init() {
 	valueTypes['9'] = Number
 	valueTypes['t'] = Bool
 	valueTypes['f'] = Bool
-	valueTypes['n'] = Null
+	valueTypes['n'] = Nil
 	valueTypes['['] = Array
 	valueTypes['{'] = Object
 }
@@ -223,7 +223,37 @@ func (iter *Iterator) unreadByte() {
 	return
 }
 
-
+func (iter *Iterator) Read() interface{} {
+	valueType := iter.WhatIsNext()
+	switch valueType {
+	case String:
+		return iter.ReadString()
+	case Number:
+		return iter.ReadFloat64()
+	case Nil:
+		iter.skipFixedBytes(4) // null
+		return nil
+	case Bool:
+		return iter.ReadBool()
+	case Array:
+		arr := []interface{}{}
+		iter.ReadArrayCB(func(iter *Iterator) bool {
+			arr = append(arr, iter.Read())
+			return true
+		})
+		return arr
+	case Object:
+		obj := map[string]interface{}{}
+		iter.ReadObjectCB(func(Iter *Iterator, field string) bool {
+			obj[field] = iter.Read()
+			return true
+		})
+		return obj
+	default:
+		iter.reportError("Read", fmt.Sprintf("unexpected value type: %v", valueType))
+		return nil
+	}
+}
 
 // ReadBase64 reads a json object as Base64 in byte slice
 func (iter *Iterator) ReadBase64() (ret []byte) {

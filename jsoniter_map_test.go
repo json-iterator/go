@@ -8,24 +8,22 @@ import (
 )
 
 func Test_read_map(t *testing.T) {
+	should := require.New(t)
 	iter := ParseString(`{"hello": "world"}`)
 	m := map[string]string{"1": "2"}
 	iter.ReadVal(&m)
 	copy(iter.buf, []byte{0, 0, 0, 0, 0, 0})
-	if !reflect.DeepEqual(map[string]string{"1": "2", "hello": "world"}, m) {
-		fmt.Println(iter.Error)
-		t.Fatal(m)
-	}
+	should.Equal(map[string]string{"1": "2", "hello": "world"}, m)
 }
 
 func Test_read_map_of_interface(t *testing.T) {
+	should := require.New(t)
 	iter := ParseString(`{"hello": "world"}`)
 	m := map[string]interface{}{"1": "2"}
 	iter.ReadVal(&m)
-	if !reflect.DeepEqual(map[string]interface{}{"1": "2", "hello": "world"}, m) {
-		fmt.Println(iter.Error)
-		t.Fatal(m)
-	}
+	should.Equal(map[string]interface{}{"1": "2", "hello": "world"}, m)
+	iter = ParseString(`{"hello": "world"}`)
+	should.Equal(map[string]interface{}{"hello": "world"}, iter.Read())
 }
 
 func Test_read_map_of_any(t *testing.T) {

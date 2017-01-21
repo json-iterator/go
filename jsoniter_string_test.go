@@ -59,6 +59,12 @@ func Test_read_exotic_string(t *testing.T) {
 	}
 }
 
+func Test_read_string_via_read(t *testing.T) {
+	should := require.New(t)
+	iter := ParseString(`"hello"`)
+	should.Equal("hello", iter.Read())
+}
+
 func Test_write_string(t *testing.T) {
 	should := require.New(t)
 	buf := &bytes.Buffer{}

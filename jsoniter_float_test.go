@@ -45,6 +45,12 @@ func Test_read_float(t *testing.T) {
 	}
 }
 
+func Test_read_float_via_read(t *testing.T) {
+	should := require.New(t)
+	iter := ParseString(`12.3`)
+	should.Equal(float64(12.3), iter.Read())
+}
+
 func Test_write_float32(t *testing.T) {
 	vals := []float32{0, 1, -1, 99, 0xff, 0xfff, 0xffff, 0xfffff, 0xffffff, 0x4ffffff, 0xfffffff,
 	-0x4ffffff, -0xfffffff, 1.2345, 1.23456, 1.234567, 1.001}

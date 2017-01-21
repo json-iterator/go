@@ -33,25 +33,15 @@ func Test_one_element(t *testing.T) {
 }
 
 func Test_two_elements(t *testing.T) {
+	should := require.New(t)
 	iter := ParseString(`[1,2]`)
-	cont := iter.ReadArray()
-	if cont != true {
-		t.FailNow()
-	}
-	if iter.ReadInt64() != 1 {
-		t.FailNow()
-	}
-	cont = iter.ReadArray()
-	if cont != true {
-		t.FailNow()
-	}
-	if iter.ReadInt64() != 2 {
-		t.FailNow()
-	}
-	cont = iter.ReadArray()
-	if cont != false {
-		t.FailNow()
-	}
+	should.True(iter.ReadArray())
+	should.Equal(int64(1), iter.ReadInt64())
+	should.True(iter.ReadArray())
+	should.Equal(int64(2), iter.ReadInt64())
+	should.False(iter.ReadArray())
+	iter = ParseString(`[1,2]`)
+	should.Equal([]interface{}{float64(1), float64(2)}, iter.Read())
 }
 
 func Test_invalid_array(t *testing.T) {
