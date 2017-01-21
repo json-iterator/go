@@ -67,12 +67,12 @@ func Test_read_string_via_read(t *testing.T) {
 
 func Test_write_string(t *testing.T) {
 	should := require.New(t)
-	buf := &bytes.Buffer{}
-	stream := NewStream(buf, 4096)
-	stream.WriteString("hello")
-	stream.Flush()
-	should.Nil(stream.Error)
-	should.Equal(`"hello"`, buf.String())
+	str, err := MarshalToString("hello")
+	should.Equal(`"hello"`, str)
+	should.Nil(err)
+	str, err = MarshalToString(`hel"lo`)
+	should.Equal(`"hel\"lo"`, str)
+	should.Nil(err)
 }
 
 func Test_write_val_string(t *testing.T) {
