@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strconv"
 	"io/ioutil"
+	"io"
 )
 
 func Test_read_uint64_invalid(t *testing.T) {
@@ -97,6 +98,16 @@ func Test_read_int64_overflow(t *testing.T) {
 	iter := ParseString(input)
 	iter.ReadInt64()
 	should.NotNil(iter.Error)
+}
+
+func Test_read_int64_as_any(t *testing.T) {
+	should := require.New(t)
+	any, err := UnmarshalAnyFromString("1234")
+	should.Nil(err)
+	should.Equal(1234, any.ToInt())
+	should.Equal(io.EOF, any.LastError())
+	should.Equal("1234", any.ToString())
+	should.True(any.ToBool())
 }
 
 func Test_write_uint8(t *testing.T) {

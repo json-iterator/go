@@ -12,6 +12,13 @@ func Test_read_null(t *testing.T) {
 	should.True(iter.ReadNil())
 	iter = ParseString(`null`)
 	should.Nil(iter.Read())
+	iter = ParseString(`null`)
+	any, err := UnmarshalAnyFromString(`null`)
+	should.Nil(err)
+	should.Equal(0, any.ToInt())
+	should.Equal(float64(0), any.ToFloat64())
+	should.Equal("", any.ToString())
+	should.False(any.ToBool())
 }
 
 func Test_write_null(t *testing.T) {

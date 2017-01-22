@@ -13,7 +13,22 @@ func Unmarshal(data []byte, v interface{}) error {
 	if iter.Error == io.EOF {
 		return nil
 	}
+	if iter.Error == nil {
+		iter.reportError("UnmarshalAny", "there are bytes left after unmarshal")
+	}
 	return iter.Error
+}
+
+func UnmarshalAny(data []byte) (Any, error) {
+	iter := ParseBytes(data)
+	any := iter.ReadAny()
+	if iter.Error == io.EOF {
+		return any, nil
+	}
+	if iter.Error == nil {
+		iter.reportError("UnmarshalAny", "there are bytes left after unmarshal")
+	}
+	return any, iter.Error
 }
 
 func UnmarshalFromString(str string, v interface{}) error {
@@ -24,7 +39,24 @@ func UnmarshalFromString(str string, v interface{}) error {
 	if iter.Error == io.EOF {
 		return nil
 	}
+	if iter.Error == nil {
+		iter.reportError("UnmarshalFromString", "there are bytes left after unmarshal")
+	}
 	return iter.Error
+}
+
+func UnmarshalAnyFromString(str string) (Any, error) {
+	// safe to do the unsafe cast here, as str is always referenced in this scope
+	data := *(*[]byte)(unsafe.Pointer(&str))
+	iter := ParseBytes(data)
+	any := iter.ReadAny()
+	if iter.Error == io.EOF {
+		return any, nil
+	}
+	if iter.Error == nil {
+		iter.reportError("UnmarshalAnyFromString", "there are bytes left after unmarshal")
+	}
+	return nil, iter.Error
 }
 
 func Marshal(v interface{}) ([]byte, error) {
