@@ -22,7 +22,7 @@ func (iter *Iterator) ReadAny() Any {
 	case Number:
 		dotFound, lazyBuf := iter.skipNumber()
 		if dotFound {
-			return &floatLazyAny{lazyBuf, nil, nil}
+			return &floatLazyAny{lazyBuf, nil, nil, 0}
 		} else {
 			return &intLazyAny{lazyBuf, nil, nil, 0}
 		}

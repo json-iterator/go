@@ -1,9 +1,31 @@
 package jsoniter
 
+import (
+	"io"
+	"unsafe"
+)
+
 type floatLazyAny struct {
 	buf []byte
 	iter *Iterator
 	err error
+	cache float64
+}
+
+func (any *floatLazyAny) fillCache() {
+	if any.err != nil {
+		return
+	}
+	iter := any.iter
+	if iter == nil {
+		iter = NewIterator()
+	}
+	iter.ResetBytes(any.buf)
+	any.cache = iter.ReadFloat64()
+	if iter.Error != io.EOF {
+		iter.reportError("floatLazyAny", "there are bytes left")
+	}
+	any.err = iter.Error
 }
 
 func (any *floatLazyAny) LastError() error {
@@ -11,29 +33,34 @@ func (any *floatLazyAny) LastError() error {
 }
 
 func (any *floatLazyAny) ToBool() bool {
-	return false
+	return any.ToFloat64() != 0
 }
 
 func (any *floatLazyAny) ToInt() int {
-	return 0
+	any.fillCache()
+	return int(any.cache)
 }
 
 func (any *floatLazyAny) ToInt32() int32 {
-	return 0
+	any.fillCache()
+	return int32(any.cache)
 }
 
 func (any *floatLazyAny) ToInt64() int64 {
-	return 0
+	any.fillCache()
+	return int64(any.cache)
 }
 
 func (any *floatLazyAny) ToFloat32() float32 {
-	return 0
+	any.fillCache()
+	return float32(any.cache)
 }
 
 func (any *floatLazyAny) ToFloat64() float64 {
-	return 0
+	any.fillCache()
+	return any.cache
 }
 
 func (any *floatLazyAny) ToString() string {
-	return ""
+	return *(*string)(unsafe.Pointer(&any.buf))
 }

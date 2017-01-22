@@ -45,10 +45,19 @@ func Test_read_float(t *testing.T) {
 	}
 }
 
-func Test_read_float_via_read(t *testing.T) {
+func Test_read_float_as_interface(t *testing.T) {
 	should := require.New(t)
 	iter := ParseString(`12.3`)
 	should.Equal(float64(12.3), iter.Read())
+}
+
+func Test_read_float_as_any(t *testing.T) {
+	should := require.New(t)
+	any, err := UnmarshalAnyFromString("12.3")
+	should.Nil(err)
+	should.Equal(float64(12.3), any.ToFloat64())
+	should.Equal("12.3", any.ToString())
+	should.True(any.ToBool())
 }
 
 func Test_write_float32(t *testing.T) {
