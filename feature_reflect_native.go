@@ -160,18 +160,11 @@ type interfaceCodec struct {
 }
 
 func (codec *interfaceCodec) decode(ptr unsafe.Pointer, iter *Iterator) {
-	*((*interface{})(ptr)) = iter.ReadAny().Get()
+	*((*interface{})(ptr)) = iter.Read()
 }
 
 func (codec *interfaceCodec) encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteVal(*((*interface{})(ptr)))
-}
-
-type anyDecoder struct {
-}
-
-func (decoder *anyDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
-	*((*Any)(ptr)) = *iter.ReadAny()
 }
 
 type stringNumberDecoder struct {

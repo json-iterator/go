@@ -12,12 +12,6 @@ func Test_bind_api_demo(t *testing.T) {
 	fmt.Println(val[3])
 }
 
-func Test_any_api_demo(t *testing.T) {
-	iter := ParseString(`[0,1,2,3]`)
-	val := iter.ReadAny()
-	fmt.Println(val.Get(3))
-}
-
 func Test_iterator_api_demo(t *testing.T) {
 	iter := ParseString(`[0,1,2,3]`)
 	total := 0
@@ -25,17 +19,6 @@ func Test_iterator_api_demo(t *testing.T) {
 		total += iter.ReadInt()
 	}
 	fmt.Println(total)
-}
-
-type ABC struct {
-	a Any
-}
-
-func Test_deep_nested_any_api(t *testing.T) {
-	iter := ParseString(`{"a": {"b": {"c": "d"}}}`)
-	abc := &ABC{}
-	iter.ReadVal(&abc)
-	fmt.Println(abc.a.Get("b", "c"))
 }
 
 type User struct {
