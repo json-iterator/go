@@ -4,16 +4,6 @@ import (
 	"io"
 )
 
-var bytesNull []byte
-var bytesTrue []byte
-var bytesFalse []byte
-
-func init() {
-	bytesNull = []byte("null")
-	bytesTrue = []byte("true")
-	bytesFalse = []byte("false")
-}
-
 type Stream struct {
 	out           io.Writer
 	buf           []byte
@@ -68,29 +58,69 @@ func (b *Stream) Write(p []byte) (nn int, err error) {
 
 
 // WriteByte writes a single byte.
-func (b *Stream) writeByte(c byte) error {
+func (b *Stream) writeByte(c byte) {
 	if b.Error != nil {
-		return b.Error
+		return
 	}
 	if b.Available() <= 0 && b.Flush() != nil {
-		return b.Error
+		return
 	}
 	b.buf[b.n] = c
 	b.n++
-	return nil
 }
 
-func (b *Stream) writeTwoBytes(c1 byte, c2 byte) error {
+func (b *Stream) writeTwoBytes(c1 byte, c2 byte) {
 	if b.Error != nil {
-		return b.Error
+		return
 	}
 	if b.Available() <= 1 && b.Flush() != nil {
-		return b.Error
+		return
 	}
 	b.buf[b.n] = c1
 	b.buf[b.n + 1] = c2
 	b.n += 2
-	return nil
+}
+
+func (b *Stream) writeThreeBytes(c1 byte, c2 byte, c3 byte) {
+	if b.Error != nil {
+		return
+	}
+	if b.Available() <= 2 && b.Flush() != nil {
+		return
+	}
+	b.buf[b.n] = c1
+	b.buf[b.n + 1] = c2
+	b.buf[b.n + 2] = c3
+	b.n += 3
+}
+
+func (b *Stream) writeFourBytes(c1 byte, c2 byte, c3 byte, c4 byte) {
+	if b.Error != nil {
+		return
+	}
+	if b.Available() <= 3 && b.Flush() != nil {
+		return
+	}
+	b.buf[b.n] = c1
+	b.buf[b.n + 1] = c2
+	b.buf[b.n + 2] = c3
+	b.buf[b.n + 3] = c4
+	b.n += 4
+}
+
+func (b *Stream) writeFiveBytes(c1 byte, c2 byte, c3 byte, c4 byte, c5 byte) {
+	if b.Error != nil {
+		return
+	}
+	if b.Available() <= 3 && b.Flush() != nil {
+		return
+	}
+	b.buf[b.n] = c1
+	b.buf[b.n + 1] = c2
+	b.buf[b.n + 2] = c3
+	b.buf[b.n + 3] = c4
+	b.buf[b.n + 4] = c5
+	b.n += 5
 }
 
 // Flush writes any buffered data to the underlying io.Writer.
@@ -195,22 +225,22 @@ func (stream *Stream) writeStringSlowPath(s string, i int, valLen int) {
 }
 
 func (stream *Stream) WriteNil() {
-	stream.Write(bytesNull)
+	stream.writeFourBytes('n', 'u', 'l', 'l')
 }
 
 func (stream *Stream) WriteTrue() {
-	stream.Write(bytesTrue)
+	stream.writeFourBytes('t', 'r', 'u', 'e')
 }
 
 func (stream *Stream) WriteFalse() {
-	stream.Write(bytesFalse)
+	stream.writeFiveBytes('f', 'a', 'l', 's', 'e')
 }
 
 func (stream *Stream) WriteBool(val bool) {
 	if val {
-		stream.Write(bytesTrue)
+		stream.WriteTrue()
 	} else {
-		stream.Write(bytesFalse)
+		stream.WriteFalse()
 	}
 }
 
