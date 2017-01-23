@@ -14,17 +14,24 @@ type Any interface {
 }
 
 func (iter *Iterator) ReadAny() Any {
-	valueType := iter.WhatIsNext()
-	switch valueType {
-	case Nil:
-		iter.skipFixedBytes(4)
-		return &nilAny{}
-	case Number:
-		return iter.readNumberAny()
-	case String:
+	c := iter.nextToken()
+	switch c {
+	case '"':
 		return iter.readStringAny()
+	case 'n':
+		iter.skipFixedBytes(3) // null
+		return &nilAny{}
+	case '-', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+		iter.unreadByte()
+		return iter.readNumberAny()
+	case 't':
+		iter.skipFixedBytes(3) // true
+		return &trueAny{}
+	case 'f':
+		iter.skipFixedBytes(4) // false
+		return &falseAny{}
 	}
-	iter.reportError("ReadAny", fmt.Sprintf("unexpected value type: %v", valueType))
+	iter.reportError("ReadAny", fmt.Sprintf("unexpected character: %v", c))
 	return &invalidAny{}
 }
 
@@ -62,7 +69,6 @@ func (iter *Iterator) readNumberAny() Any {
 }
 
 func (iter *Iterator) readStringAny() Any {
-	iter.head++
 	lazyBuf := make([]byte, 1, 8)
 	lazyBuf[0] = '"'
 	for {
