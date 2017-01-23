@@ -1,6 +1,7 @@
 package jsoniter
 
 type nilAny struct {
+	baseAny
 }
 
 func (any *nilAny) LastError() error {
@@ -33,4 +34,8 @@ func (any *nilAny) ToFloat64() float64 {
 
 func (any *nilAny) ToString() string {
 	return ""
+}
+
+func (any *nilAny) Get(path ...interface{}) Any {
+	return &invalidAny{}
 }

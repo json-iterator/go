@@ -141,6 +141,7 @@ func (iter *Iterator) skipArray() {
 			}
 		}
 		if !iter.loadMore() {
+			iter.reportError("skipObject", "incomplete array")
 			return
 		}
 	}
@@ -168,6 +169,7 @@ func (iter *Iterator) skipObject() {
 			}
 		}
 		if !iter.loadMore() {
+			iter.reportError("skipObject", "incomplete object")
 			return
 		}
 	}

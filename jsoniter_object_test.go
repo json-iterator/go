@@ -36,27 +36,18 @@ func Test_one_field(t *testing.T) {
 }
 
 func Test_two_field(t *testing.T) {
+	should := require.New(t)
 	iter := ParseString(`{ "a": "b" , "c": "d" }`)
 	field := iter.ReadObject()
-	if field != "a" {
-		t.Fatal(field)
-	}
+	should.Equal("a", field)
 	value := iter.ReadString()
-	if value != "b" {
-		t.Fatal(field)
-	}
+	should.Equal("b", value)
 	field = iter.ReadObject()
-	if field != "c" {
-		t.Fatal(field)
-	}
+	should.Equal("c", field)
 	value = iter.ReadString()
-	if value != "d" {
-		t.Fatal(field)
-	}
+	should.Equal("d", value)
 	field = iter.ReadObject()
-	if field != "" {
-		t.Fatal(field)
-	}
+	should.Equal("", field)
 	iter = ParseString(`{"field1": "1", "field2": 2}`)
 	for field := iter.ReadObject(); field != ""; field = iter.ReadObject() {
 		switch field {
@@ -68,6 +59,82 @@ func Test_two_field(t *testing.T) {
 			iter.reportError("bind object", "unexpected field")
 		}
 	}
+}
+
+func Test_read_object_as_any(t *testing.T) {
+	should := require.New(t)
+	any, err := UnmarshalAnyFromString(`{"a":"b","c":"d"}`)
+	should.Nil(err)
+	should.Equal(`{"a":"b","c":"d"}`, any.ToString())
+	// partial parse
+	should.Equal("b", any.Get("a").ToString())
+	should.Equal("d", any.Get("c").ToString())
+	should.Equal(2, len(any.Keys()))
+	any, err = UnmarshalAnyFromString(`{"a":"b","c":"d"}`)
+	// full parse
+	should.Equal(2, len(any.Keys()))
+}
+
+func Test_object_any_lazy_iterator(t *testing.T) {
+	should := require.New(t)
+	any, err := UnmarshalAnyFromString(`{"a":"b","c":"d"}`)
+	should.Nil(err)
+	// iterator parse
+	vals := map[string]string{}
+	var k string
+	var v Any
+	next, hasNext := any.IterateObject()
+	should.True(hasNext)
+
+	k, v, hasNext = next()
+	should.True(hasNext)
+	vals[k] = v.ToString()
+
+	// trigger full parse
+	should.Equal(2, len(any.Keys()))
+
+	k, v, hasNext = next()
+	should.False(hasNext)
+	vals[k] = v.ToString()
+
+	should.Equal(map[string]string{"a":"b", "c":"d"}, vals)
+	vals = map[string]string{}
+	for next, hasNext := any.IterateObject(); hasNext; k, v, hasNext = next() {
+		vals[k] = v.ToString()
+	}
+	should.Equal(map[string]string{"a":"b", "c":"d"}, vals)
+}
+
+
+func Test_object_any_with_two_lazy_iterators(t *testing.T) {
+	should := require.New(t)
+	any, err := UnmarshalAnyFromString(`{"a":"b","c":"d","e":"f"}`)
+	should.Nil(err)
+	var k string
+	var v Any
+	next1, hasNext1 := any.IterateObject()
+	next2, hasNext2 := any.IterateObject()
+	should.True(hasNext1)
+	k, v, hasNext1 = next1()
+	should.True(hasNext1)
+	should.Equal("a", k)
+	should.Equal("b", v.ToString())
+
+	should.True(hasNext2)
+	k, v, hasNext2 = next2()
+	should.True(hasNext2)
+	should.Equal("a", k)
+	should.Equal("b", v.ToString())
+
+	k, v, hasNext1 = next1()
+	should.True(hasNext1)
+	should.Equal("c", k)
+	should.Equal("d", v.ToString())
+
+	k, v, hasNext2 = next2()
+	should.True(hasNext2)
+	should.Equal("c", k)
+	should.Equal("d", v.ToString())
 }
 
 func Test_write_object(t *testing.T) {

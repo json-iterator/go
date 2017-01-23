@@ -5,6 +5,7 @@ import (
 )
 
 type stringLazyAny struct{
+	baseAny
 	buf   []byte
 	iter  *Iterator
 	err   error
@@ -95,4 +96,8 @@ func (any *stringLazyAny) ToFloat64() float64 {
 func (any *stringLazyAny) ToString() string {
 	any.fillCache()
 	return any.cache
+}
+
+func (any *stringLazyAny) Get(path ...interface{}) Any {
+	return &invalidAny{}
 }

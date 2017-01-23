@@ -6,6 +6,7 @@ import (
 )
 
 type floatLazyAny struct {
+	baseAny
 	buf []byte
 	iter *Iterator
 	err error
@@ -63,4 +64,8 @@ func (any *floatLazyAny) ToFloat64() float64 {
 
 func (any *floatLazyAny) ToString() string {
 	return *(*string)(unsafe.Pointer(&any.buf))
+}
+
+func (any *floatLazyAny) Get(path ...interface{}) Any {
+	return &invalidAny{}
 }
