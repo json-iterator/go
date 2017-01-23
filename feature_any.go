@@ -20,18 +20,15 @@ func (iter *Iterator) ReadAny() Any {
 		iter.skipFixedBytes(4)
 		return &nilAny{}
 	case Number:
-		dotFound, lazyBuf := iter.skipNumber()
-		if dotFound {
-			return &floatLazyAny{lazyBuf, nil, nil, 0}
-		} else {
-			return &intLazyAny{lazyBuf, nil, nil, 0}
-		}
+		return iter.readNumberAny()
+	case String:
+		return iter.readStringAny()
 	}
 	iter.reportError("ReadAny", fmt.Sprintf("unexpected value type: %v", valueType))
-	return nil
+	return &invalidAny{}
 }
 
-func (iter *Iterator) skipNumber() (bool, []byte) {
+func (iter *Iterator) readNumberAny() Any {
 	dotFound := false
 	var lazyBuf []byte
 	for {
@@ -45,13 +42,44 @@ func (iter *Iterator) skipNumber() (bool, []byte) {
 			case ' ', '\n', '\r', '\t', ',', '}', ']':
 				lazyBuf = append(lazyBuf, iter.buf[iter.head:i]...)
 				iter.head = i
-				return dotFound, lazyBuf
+				if dotFound {
+					return &floatLazyAny{lazyBuf, nil, nil, 0}
+				} else {
+					return &intLazyAny{lazyBuf, nil, nil, 0}
+				}
 			}
 		}
 		lazyBuf = append(lazyBuf, iter.buf[iter.head:iter.tail]...)
 		if !iter.loadMore() {
-			iter.head = iter.tail;
-			return dotFound, lazyBuf
+			iter.head = iter.tail
+			if dotFound {
+				return &floatLazyAny{lazyBuf, nil, nil, 0}
+			} else {
+				return &intLazyAny{lazyBuf, nil, nil, 0}
+			}
+		}
+	}
+}
+
+func (iter *Iterator) readStringAny() Any {
+	iter.head++
+	lazyBuf := make([]byte, 1, 8)
+	lazyBuf[0] = '"'
+	for {
+		end, escaped := iter.findStringEnd()
+		if end == -1 {
+			lazyBuf = append(lazyBuf, iter.buf[iter.head:iter.tail]...)
+			if !iter.loadMore() {
+				iter.reportError("readStringAny", "incomplete string")
+				return &invalidAny{}
+			}
+			if escaped {
+				iter.head = 1 // skip the first char as last char read is \
+			}
+		} else {
+			lazyBuf = append(lazyBuf, iter.buf[iter.head:end]...)
+			iter.head = end
+			return &stringLazyAny{lazyBuf, nil, nil, ""}
 		}
 	}
 }

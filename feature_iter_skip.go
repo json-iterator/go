@@ -57,6 +57,7 @@ func (iter *Iterator) skipString() {
 		end, escaped := iter.findStringEnd()
 		if end == -1 {
 			if !iter.loadMore() {
+				iter.reportError("skipString", "incomplete string")
 				return
 			}
 			if escaped {

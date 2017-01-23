@@ -2,7 +2,6 @@ package jsoniter
 
 import (
 	"io"
-	"unsafe"
 	"bytes"
 )
 
@@ -10,6 +9,9 @@ import (
 func Unmarshal(data []byte, v interface{}) error {
 	iter := ParseBytes(data)
 	iter.ReadVal(v)
+	if iter.head == iter.tail {
+		iter.loadMore()
+	}
 	if iter.Error == io.EOF {
 		return nil
 	}
@@ -22,6 +24,9 @@ func Unmarshal(data []byte, v interface{}) error {
 func UnmarshalAny(data []byte) (Any, error) {
 	iter := ParseBytes(data)
 	any := iter.ReadAny()
+	if iter.head == iter.tail {
+		iter.loadMore()
+	}
 	if iter.Error == io.EOF {
 		return any, nil
 	}
@@ -32,10 +37,12 @@ func UnmarshalAny(data []byte) (Any, error) {
 }
 
 func UnmarshalFromString(str string, v interface{}) error {
-	// safe to do the unsafe cast here, as str is always referenced in this scope
-	data := *(*[]byte)(unsafe.Pointer(&str))
+	data := []byte(str)
 	iter := ParseBytes(data)
 	iter.ReadVal(v)
+	if iter.head == iter.tail {
+		iter.loadMore()
+	}
 	if iter.Error == io.EOF {
 		return nil
 	}
@@ -46,10 +53,12 @@ func UnmarshalFromString(str string, v interface{}) error {
 }
 
 func UnmarshalAnyFromString(str string) (Any, error) {
-	// safe to do the unsafe cast here, as str is always referenced in this scope
-	data := *(*[]byte)(unsafe.Pointer(&str))
+	data := []byte(str)
 	iter := ParseBytes(data)
 	any := iter.ReadAny()
+	if iter.head == iter.tail {
+		iter.loadMore()
+	}
 	if iter.Error == io.EOF {
 		return any, nil
 	}

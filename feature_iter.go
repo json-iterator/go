@@ -160,7 +160,9 @@ func (iter *Iterator) nextToken() byte {
 
 func (iter *Iterator) reportError(operation string, msg string) {
 	if iter.Error != nil {
-		return
+		if iter.Error != io.EOF {
+			return
+		}
 	}
 	peekStart := iter.head - 10
 	if peekStart < 0 {

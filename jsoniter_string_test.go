@@ -59,10 +59,24 @@ func Test_read_exotic_string(t *testing.T) {
 	}
 }
 
-func Test_read_string_via_read(t *testing.T) {
+func Test_read_string_as_interface(t *testing.T) {
 	should := require.New(t)
 	iter := ParseString(`"hello"`)
 	should.Equal("hello", iter.Read())
+}
+
+func Test_read_string_as_any(t *testing.T) {
+	should := require.New(t)
+	any, err := UnmarshalAnyFromString(`"hello"`)
+	should.Nil(err)
+	should.Equal("hello", any.ToString())
+	should.True(any.ToBool())
+	any, err = UnmarshalAnyFromString(`" "`)
+	should.False(any.ToBool())
+	any, err = UnmarshalAnyFromString(`"false"`)
+	should.False(any.ToBool())
+	any, err = UnmarshalAnyFromString(`"123"`)
+	should.Equal(123, any.ToInt())
 }
 
 func Test_write_string(t *testing.T) {
