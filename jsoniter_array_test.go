@@ -5,6 +5,7 @@ import (
 	"testing"
 	"github.com/json-iterator/go/require"
 	"bytes"
+	"io"
 )
 
 func Test_empty_array(t *testing.T) {
@@ -44,10 +45,31 @@ func Test_two_elements(t *testing.T) {
 	should.Equal([]interface{}{float64(1), float64(2)}, iter.Read())
 }
 
+func Test_read_empty_array_as_any(t *testing.T) {
+	should := require.New(t)
+	any, err := UnmarshalAnyFromString("[]")
+	should.Nil(err)
+	should.Equal(0, any.Size())
+}
+
+func Test_read_one_element_array_as_any(t *testing.T) {
+	should := require.New(t)
+	any, err := UnmarshalAnyFromString("[1]")
+	should.Nil(err)
+	should.Equal(1, any.Size())
+}
+
+func Test_read_two_element_array_as_any(t *testing.T) {
+	should := require.New(t)
+	any, err := UnmarshalAnyFromString("[1,2]")
+	should.Nil(err)
+	should.Equal(1, any.Get(0).ToInt())
+	should.Equal(2, any.Size())
+}
+
 func Test_invalid_array(t *testing.T) {
-	iter := ParseString(`[`)
-	iter.ReadArray()
-	if iter.Error == nil {
+	_, err := UnmarshalAnyFromString("[")
+	if err == nil || err == io.EOF {
 		t.FailNow()
 	}
 }

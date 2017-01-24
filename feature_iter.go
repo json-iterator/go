@@ -198,14 +198,18 @@ func (iter *Iterator) readByte() (ret byte) {
 
 func (iter *Iterator) loadMore() bool {
 	if iter.reader == nil {
-		iter.Error = io.EOF
+		if iter.Error == nil {
+			iter.Error = io.EOF
+		}
 		return false
 	}
 	for {
 		n, err := iter.reader.Read(iter.buf)
 		if n == 0 {
 			if err != nil {
-				iter.Error = err
+				if iter.Error == nil {
+					iter.Error = err
+				}
 				return false
 			}
 		} else {

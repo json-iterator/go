@@ -5,6 +5,7 @@ import (
 )
 
 type objectLazyAny struct {
+	baseAny
 	buf       []byte
 	iter      *Iterator
 	err       error
@@ -189,9 +190,6 @@ func (any *objectLazyAny) IterateObject() (func() (string, Any, bool), bool) {
 			i++
 			return key, value, true
 		} else {
-			if remaining == nil {
-				return "", nil, false
-			}
 			// read from buffer
 			iter := any.iter
 			if iter == nil {

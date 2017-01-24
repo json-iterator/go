@@ -1,7 +1,5 @@
 package jsoniter
 
-import "fmt"
-
 type Any interface {
 	LastError() error
 	ToBool() bool
@@ -12,11 +10,16 @@ type Any interface {
 	ToFloat64() float64
 	ToString() string
 	Get(path ...interface{}) Any
+	Size() int
 	Keys() []string
 	IterateObject() (func() (string, Any, bool), bool)
 }
 
 type baseAny struct {}
+
+func (any *baseAny) Size() int {
+	return 0
+}
 
 func (any *baseAny) Keys() []string {
 	return []string{}
@@ -38,9 +41,6 @@ func (iter *Iterator) readAny(reusableIter *Iterator) Any {
 	case 'n':
 		iter.skipFixedBytes(3) // null
 		return &nilAny{}
-	case '-', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
-		iter.unreadByte()
-		return iter.readNumberAny(reusableIter)
 	case 't':
 		iter.skipFixedBytes(3) // true
 		return &trueAny{}
@@ -49,9 +49,12 @@ func (iter *Iterator) readAny(reusableIter *Iterator) Any {
 		return &falseAny{}
 	case '{':
 		return iter.readObjectAny(reusableIter)
+	case '[':
+		return iter.readArrayAny(reusableIter)
+	default:
+		iter.unreadByte()
+		return iter.readNumberAny(reusableIter)
 	}
-	iter.reportError("ReadAny", fmt.Sprintf("unexpected character: %v", c))
-	return &invalidAny{}
 }
 
 func (iter *Iterator) readNumberAny(reusableIter *Iterator) Any {
@@ -130,13 +133,46 @@ func (iter *Iterator) readObjectAny(reusableIter *Iterator) Any {
 				if level == 0 {
 					iter.head = i + 1
 					lazyBuf = append(lazyBuf, iter.buf[start:iter.head]...)
-					return &objectLazyAny{lazyBuf, reusableIter, nil, nil, lazyBuf}
+					return &objectLazyAny{baseAny{}, lazyBuf, reusableIter, nil, nil, lazyBuf}
 				}
 			}
 		}
 		lazyBuf = append(lazyBuf, iter.buf[iter.head:iter.tail]...)
 		if !iter.loadMore() {
 			iter.reportError("skipObject", "incomplete object")
+			return &invalidAny{}
+		}
+	}
+}
+
+func (iter *Iterator) readArrayAny(reusableIter *Iterator) Any {
+	level := 1
+	lazyBuf := make([]byte, 1, 32)
+	lazyBuf[0] = '{'
+	for {
+		start := iter.head
+		for i := iter.head; i < iter.tail; i++ {
+			switch iter.buf[i] {
+			case '"': // If inside string, skip it
+				iter.head = i + 1
+				iter.skipString()
+				i = iter.head - 1 // it will be i++ soon
+			case '[': // If open symbol, increase level
+				level++
+			case ']': // If close symbol, increase level
+				level--
+
+				// If we have returned to the original level, we're done
+				if level == 0 {
+					iter.head = i + 1
+					lazyBuf = append(lazyBuf, iter.buf[start:iter.head]...)
+					return &arrayLazyAny{baseAny{},lazyBuf, reusableIter, nil, nil, lazyBuf}
+				}
+			}
+		}
+		lazyBuf = append(lazyBuf, iter.buf[iter.head:iter.tail]...)
+		if !iter.loadMore() {
+			iter.reportError("skipArray", "incomplete array")
 			return &invalidAny{}
 		}
 	}
