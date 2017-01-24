@@ -97,7 +97,3 @@ func (any *stringLazyAny) ToString() string {
 	any.fillCache()
 	return any.cache
 }
-
-func (any *stringLazyAny) Get(path ...interface{}) Any {
-	return &invalidAny{}
-}

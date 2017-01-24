@@ -80,6 +80,13 @@ func Test_read_array_with_any_iterator(t *testing.T) {
 	should.Equal([]int{1, 2}, elements)
 }
 
+func Test_array_any_get(t *testing.T) {
+	should := require.New(t)
+	any, err := UnmarshalAnyFromString("[1,[2,3],4]")
+	should.Nil(err)
+	should.Equal(3, any.Get(1,1).ToInt())
+}
+
 func Test_invalid_array(t *testing.T) {
 	_, err := UnmarshalAnyFromString("[")
 	if err == nil || err == io.EOF {

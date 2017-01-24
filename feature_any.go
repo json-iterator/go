@@ -18,6 +18,10 @@ type Any interface {
 
 type baseAny struct {}
 
+func (any *baseAny) Get(path ...interface{}) Any {
+	return &invalidAny{}
+}
+
 func (any *baseAny) Size() int {
 	return 0
 }

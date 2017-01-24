@@ -36,10 +36,6 @@ func (any *trueAny) ToString() string {
 	return "true"
 }
 
-func (any *trueAny) Get(path ...interface{}) Any {
-	return &invalidAny{}
-}
-
 type falseAny struct {
 	baseAny
 }
@@ -74,8 +70,4 @@ func (any *falseAny) ToFloat64() float64 {
 
 func (any *falseAny) ToString() string {
 	return "false"
-}
-
-func (any *falseAny) Get(path ...interface{}) Any {
-	return &invalidAny{}
 }

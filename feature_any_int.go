@@ -65,7 +65,3 @@ func (any *intLazyAny) ToFloat64() float64 {
 func (any *intLazyAny) ToString() string {
 	return *(*string)(unsafe.Pointer(&any.buf))
 }
-
-func (any *intLazyAny) Get(path ...interface{}) Any {
-	return &invalidAny{}
-}

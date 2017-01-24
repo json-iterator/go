@@ -117,8 +117,16 @@ func (any *arrayLazyAny) ToString() string {
 }
 
 func (any *arrayLazyAny) Get(path ...interface{}) Any {
-	idx := path[0].(int)
-	return any.fillCacheUntil(idx)
+	if len(path) == 0 {
+		return any
+	}
+	if len(path) == 1 {
+		idx := path[0].(int)
+		return any.fillCacheUntil(idx)
+	} else {
+		idx := path[0].(int)
+		return any.fillCacheUntil(idx).Get(path[1:]...)
+	}
 }
 
 func (any *arrayLazyAny) Size() int {
