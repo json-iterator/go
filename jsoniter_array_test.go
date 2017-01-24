@@ -65,6 +65,8 @@ func Test_read_two_element_array_as_any(t *testing.T) {
 	should.Nil(err)
 	should.Equal(1, any.Get(0).ToInt())
 	should.Equal(2, any.Size())
+	should.True(any.ToBool())
+	should.Equal(1, any.ToInt())
 }
 
 func Test_read_array_with_any_iterator(t *testing.T) {

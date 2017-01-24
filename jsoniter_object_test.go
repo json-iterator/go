@@ -73,6 +73,9 @@ func Test_read_object_as_any(t *testing.T) {
 	any, err = UnmarshalAnyFromString(`{"a":"b","c":"d"}`)
 	// full parse
 	should.Equal(2, len(any.Keys()))
+	should.Equal(2, any.Size())
+	should.True(any.ToBool())
+	should.Equal(1, any.ToInt())
 }
 
 func Test_object_any_lazy_iterator(t *testing.T) {
@@ -135,6 +138,13 @@ func Test_object_any_with_two_lazy_iterators(t *testing.T) {
 	should.True(hasNext2)
 	should.Equal("c", k)
 	should.Equal("d", v.ToString())
+}
+
+func Test_object_lazy_any_get(t *testing.T) {
+	should := require.New(t)
+	any, err := UnmarshalAnyFromString(`{"a":{"b":{"c":"d"}}}`)
+	should.Nil(err)
+	should.Equal("d", any.Get("a", "b", "c").ToString())
 }
 
 func Test_write_object(t *testing.T) {

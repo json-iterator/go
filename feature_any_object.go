@@ -100,27 +100,60 @@ func (any *objectLazyAny) LastError() error {
 }
 
 func (any *objectLazyAny) ToBool() bool {
-	return false
+	if any.cache == nil {
+		any.IterateObject() // trigger first value read
+	}
+	return len(any.cache) != 0
 }
 
 func (any *objectLazyAny) ToInt() int {
-	return 0
+	if any.cache == nil {
+		any.IterateObject() // trigger first value read
+	}
+	if len(any.cache) == 0 {
+		return 0
+	}
+	return 1
 }
 
 func (any *objectLazyAny) ToInt32() int32 {
-	return 0
+	if any.cache == nil {
+		any.IterateObject() // trigger first value read
+	}
+	if len(any.cache) == 0 {
+		return 0
+	}
+	return 1
 }
 
 func (any *objectLazyAny) ToInt64() int64 {
-	return 0
+	if any.cache == nil {
+		any.IterateObject() // trigger first value read
+	}
+	if len(any.cache) == 0 {
+		return 0
+	}
+	return 1
 }
 
 func (any *objectLazyAny) ToFloat32() float32 {
-	return 0
+	if any.cache == nil {
+		any.IterateObject() // trigger first value read
+	}
+	if len(any.cache) == 0 {
+		return 0
+	}
+	return 1
 }
 
 func (any *objectLazyAny) ToFloat64() float64 {
-	return 0
+	if any.cache == nil {
+		any.IterateObject() // trigger first value read
+	}
+	if len(any.cache) == 0 {
+		return 0
+	}
+	return 1
 }
 
 func (any *objectLazyAny) ToString() string {
@@ -134,8 +167,16 @@ func (any *objectLazyAny) ToString() string {
 }
 
 func (any *objectLazyAny) Get(path ...interface{}) Any {
-	key := path[0].(string)
-	return any.fillCacheUntil(key)
+	if len(path) == 0 {
+		return any
+	}
+	if len(path) == 1 {
+		key := path[0].(string)
+		return any.fillCacheUntil(key)
+	} else {
+		key := path[0].(string)
+		return any.fillCacheUntil(key).Get(path[1:]...)
+	}
 }
 
 func (any *objectLazyAny) Keys() []string {
@@ -145,6 +186,11 @@ func (any *objectLazyAny) Keys() []string {
 		keys = append(keys, key)
 	}
 	return keys
+}
+
+func (any *objectLazyAny) Size() int {
+	any.fillCache()
+	return len(any.cache)
 }
 
 func (any *objectLazyAny) IterateObject() (func() (string, Any, bool), bool) {

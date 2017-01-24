@@ -26,6 +26,9 @@ func (any *arrayLazyAny) fillCacheUntil(target int) Any {
 		}
 		return any.cache[target]
 	}
+	if any.cache == nil {
+		any.cache = make([]Any, 0, 8)
+	}
 	i := len(any.cache)
 	if target < i {
 		return any.cache[target]
@@ -65,6 +68,9 @@ func (any *arrayLazyAny) fillCache() {
 	if any.remaining == nil {
 		return
 	}
+	if any.cache == nil {
+		any.cache = make([]Any, 0, 8)
+	}
 	iter := any.parse()
 	if len(any.remaining) == len(any.buf) {
 		iter.head++
@@ -89,27 +95,60 @@ func (any *arrayLazyAny) LastError() error {
 }
 
 func (any *arrayLazyAny) ToBool() bool {
-	return false
+	if any.cache == nil {
+		any.IterateArray() // trigger first element read
+	}
+	return len(any.cache) != 0
 }
 
 func (any *arrayLazyAny) ToInt() int {
-	return 0
+	if any.cache == nil {
+		any.IterateArray() // trigger first element read
+	}
+	if len(any.cache) == 0 {
+		return 0
+	}
+	return 1
 }
 
 func (any *arrayLazyAny) ToInt32() int32 {
-	return 0
+	if any.cache == nil {
+		any.IterateArray() // trigger first element read
+	}
+	if len(any.cache) == 0 {
+		return 0
+	}
+	return 1
 }
 
 func (any *arrayLazyAny) ToInt64() int64 {
-	return 0
+	if any.cache == nil {
+		any.IterateArray() // trigger first element read
+	}
+	if len(any.cache) == 0 {
+		return 0
+	}
+	return 1
 }
 
 func (any *arrayLazyAny) ToFloat32() float32 {
-	return 0
+	if any.cache == nil {
+		any.IterateArray() // trigger first element read
+	}
+	if len(any.cache) == 0 {
+		return 0
+	}
+	return 1
 }
 
 func (any *arrayLazyAny) ToFloat64() float64 {
-	return 0
+	if any.cache == nil {
+		any.IterateArray() // trigger first element read
+	}
+	if len(any.cache) == 0 {
+		return 0
+	}
+	return 1
 }
 
 func (any *arrayLazyAny) ToString() string {
@@ -136,6 +175,9 @@ func (any *arrayLazyAny) Size() int {
 
 
 func (any *arrayLazyAny) IterateArray() (func() (Any, bool), bool) {
+	if any.cache == nil {
+		any.cache = make([]Any, 0, 8)
+	}
 	remaining := any.remaining
 	if len(remaining) == len(any.buf) {
 		iter := any.parse()
