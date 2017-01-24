@@ -67,6 +67,19 @@ func Test_read_two_element_array_as_any(t *testing.T) {
 	should.Equal(2, any.Size())
 }
 
+func Test_read_array_with_any_iterator(t *testing.T) {
+	should := require.New(t)
+	any, err := UnmarshalAnyFromString("[1,2]")
+	should.Nil(err)
+	var element Any
+	var elements []int
+	for next, hasNext := any.IterateArray(); hasNext; {
+		element, hasNext = next()
+		elements = append(elements, element.ToInt())
+	}
+	should.Equal([]int{1, 2}, elements)
+}
+
 func Test_invalid_array(t *testing.T) {
 	_, err := UnmarshalAnyFromString("[")
 	if err == nil || err == io.EOF {

@@ -13,6 +13,7 @@ type Any interface {
 	Size() int
 	Keys() []string
 	IterateObject() (func() (string, Any, bool), bool)
+	IterateArray() (func() (Any, bool), bool)
 }
 
 type baseAny struct {}
@@ -26,6 +27,10 @@ func (any *baseAny) Keys() []string {
 }
 
 func (any *baseAny) IterateObject() (func() (string, Any, bool), bool) {
+	return nil, false
+}
+
+func (any *baseAny) IterateArray() (func() (Any, bool), bool) {
 	return nil, false
 }
 

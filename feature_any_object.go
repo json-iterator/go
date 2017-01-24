@@ -146,6 +146,7 @@ func (any *objectLazyAny) Keys() []string {
 	}
 	return keys
 }
+
 func (any *objectLazyAny) IterateObject() (func() (string, Any, bool), bool) {
 	if any.cache == nil {
 		any.cache = map[string]Any{}

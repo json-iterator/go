@@ -125,3 +125,59 @@ func (any *arrayLazyAny) Size() int {
 	any.fillCache()
 	return len(any.cache)
 }
+
+
+func (any *arrayLazyAny) IterateArray() (func() (Any, bool), bool) {
+	remaining := any.remaining
+	if len(remaining) == len(any.buf) {
+		iter := any.parse()
+		iter.head++
+		c := iter.nextToken()
+		if c != ']' {
+			iter.unreadByte()
+			v := iter.readAny(iter)
+			any.cache = append(any.cache, v)
+			remaining = iter.buf[iter.head:]
+			any.remaining = remaining
+		} else {
+			remaining = nil
+			any.remaining = nil
+			return nil, false
+		}
+	}
+	if len(any.cache) == 0 {
+		return nil, false
+	}
+	arr := any.cache
+	nextValue := arr[0]
+	i := 1
+	return func() (Any, bool) {
+		value := nextValue
+		if i < len(arr) {
+			// read from cache
+			nextValue = arr[i]
+			i++
+			return value, true
+		} else {
+			// read from buffer
+			iter := any.iter
+			if iter == nil {
+				iter = NewIterator()
+				any.iter = iter
+			}
+			iter.ResetBytes(remaining)
+			c := iter.nextToken()
+			if c == ',' {
+				nextValue = iter.readAny(iter)
+				any.cache = append(any.cache, nextValue)
+				remaining = iter.buf[iter.head:]
+				any.remaining = remaining
+				return value, true
+			} else {
+				remaining = nil
+				any.remaining = nil
+				return value, false
+			}
+		}
+	}, true
+}
