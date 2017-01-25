@@ -405,6 +405,10 @@ func (encoder *structFieldEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
 	}
 }
 
+func (encoder *structFieldEncoder) encodeInterface(val interface{}, stream *Stream) {
+	WriteToStream(val, stream, encoder)
+}
+
 
 type structEncoder struct {
 	firstField *structFieldEncoder
@@ -421,9 +425,18 @@ func (encoder *structEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteObjectEnd()
 }
 
+func (encoder *structEncoder) encodeInterface(val interface{}, stream *Stream) {
+	WriteToStream(val, stream, encoder)
+}
+
+
 type emptyStructEncoder struct {
 }
 
 func (encoder *emptyStructEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteEmptyObject()
+}
+
+func (encoder *emptyStructEncoder) encodeInterface(val interface{}, stream *Stream) {
+	WriteToStream(val, stream, encoder)
 }

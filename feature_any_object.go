@@ -273,3 +273,13 @@ func (any *objectLazyAny) SetObject(val map[string]Any) bool {
 	any.cache = val
 	return true
 }
+
+func (any *objectLazyAny) WriteTo(stream *Stream) {
+	if len(any.remaining) == len(any.buf) {
+		// nothing has been parsed yet
+		stream.WriteRaw(*(*string)(unsafe.Pointer(&any.buf)))
+	} else {
+		any.fillCache()
+		stream.WriteVal(any.cache)
+	}
+}

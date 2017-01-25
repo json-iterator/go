@@ -152,7 +152,9 @@ func Test_object_lazy_any_set(t *testing.T) {
 	any, err := UnmarshalAnyFromString(`{"a":{"b":{"c":"d"}}}`)
 	should.Nil(err)
 	any.GetObject()["a"] = WrapInt64(1)
-	should.Equal(`{"a":1}`, any.ToString())
+	str, err := MarshalToString(any)
+	should.Nil(err)
+	should.Equal(`{"a":1}`, str)
 }
 
 func Test_write_object(t *testing.T) {

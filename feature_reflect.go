@@ -20,8 +20,19 @@ For a simple struct binding, it will be reflect.Value free and allocation free
 type Decoder interface {
 	decode(ptr unsafe.Pointer, iter *Iterator)
 }
+
 type Encoder interface {
 	encode(ptr unsafe.Pointer, stream *Stream)
+	encodeInterface(val interface{}, stream *Stream)
+}
+
+func WriteToStream(val interface{}, stream *Stream, encoder Encoder) {
+	e := (*emptyInterface)(unsafe.Pointer(&val))
+	if reflect.TypeOf(val).Kind() == reflect.Ptr {
+		encoder.encode(unsafe.Pointer(&e.word), stream)
+	} else {
+		encoder.encode(e.word, stream)
+	}
 }
 
 type DecoderFunc func(ptr unsafe.Pointer, iter *Iterator)
@@ -44,6 +55,10 @@ func (encoder *funcEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
 	encoder.fun(ptr, stream)
 }
 
+func (encoder *funcEncoder) encodeInterface(val interface{}, stream *Stream) {
+	WriteToStream(val, stream, encoder)
+}
+
 var DECODERS unsafe.Pointer
 var ENCODERS unsafe.Pointer
 
@@ -52,6 +67,7 @@ var fieldDecoders map[string]Decoder
 var typeEncoders map[string]Encoder
 var fieldEncoders map[string]Encoder
 var extensions []ExtensionFunc
+var anyType reflect.Type
 
 func init() {
 	typeDecoders = map[string]Decoder{}
@@ -61,10 +77,7 @@ func init() {
 	extensions = []ExtensionFunc{}
 	atomic.StorePointer(&DECODERS, unsafe.Pointer(&map[string]Decoder{}))
 	atomic.StorePointer(&ENCODERS, unsafe.Pointer(&map[string]Encoder{}))
-	RegisterTypeEncoder("*jsoniter.intAny", func(ptr unsafe.Pointer, stream *Stream) {
-		val := *(**intAny)(ptr)
-		val.WriteTo(stream)
-	})
+	anyType = reflect.TypeOf((*Any)(nil)).Elem()
 }
 
 func addDecoderToCache(cacheKey reflect.Type, decoder Decoder) {
@@ -170,6 +183,10 @@ func (encoder *optionalEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
 	}
 }
 
+func (encoder *optionalEncoder) encodeInterface(val interface{}, stream *Stream) {
+	WriteToStream(val, stream, encoder)
+}
+
 type mapDecoder struct {
 	mapType      reflect.Type
 	elemType     reflect.Type
@@ -212,10 +229,13 @@ func (encoder *mapEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
 		}
 		stream.WriteObjectField(key.String())
 		val := realVal.MapIndex(key).Interface()
-		e := (*emptyInterface)(unsafe.Pointer(&val))
-		encoder.elemEncoder.encode(e.word, stream)
+		encoder.elemEncoder.encodeInterface(val, stream)
 	}
 	stream.WriteObjectEnd()
+}
+
+func (encoder *mapEncoder) encodeInterface(val interface{}, stream *Stream) {
+	WriteToStream(val, stream, encoder)
 }
 
 type mapInterfaceEncoder struct {
@@ -241,6 +261,10 @@ func (encoder *mapInterfaceEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
 		encoder.elemEncoder.encode(unsafe.Pointer(&val), stream)
 	}
 	stream.WriteObjectEnd()
+}
+
+func (encoder *mapInterfaceEncoder) encodeInterface(val interface{}, stream *Stream) {
+	WriteToStream(val, stream, encoder)
 }
 
 // emptyInterface is the header for an interface{} value.
@@ -285,13 +309,7 @@ func (stream *Stream) WriteVal(val interface{}) {
 		cachedEncoder = encoder
 		addEncoderToCache(cacheKey, encoder)
 	}
-
-	e := (*emptyInterface)(unsafe.Pointer(&val))
-	if typ.Kind() == reflect.Ptr {
-		cachedEncoder.encode(unsafe.Pointer(&e.word), stream)
-	} else {
-		cachedEncoder.encode(e.word, stream)
-	}
+	cachedEncoder.encodeInterface(val, stream)
 }
 
 type prefix string
@@ -365,6 +383,9 @@ func decoderOfType(typ reflect.Type) (Decoder, error) {
 }
 
 func encoderOfType(typ reflect.Type) (Encoder, error) {
+	if typ.ConvertibleTo(anyType) {
+		return &anyCodec{}, nil
+	}
 	typeName := typ.String()
 	typeEncoder := typeEncoders[typeName]
 	if typeEncoder != nil {
@@ -442,14 +463,15 @@ func decoderOfMap(typ reflect.Type) (Decoder, error) {
 }
 
 func encoderOfMap(typ reflect.Type) (Encoder, error) {
-	encoder, err := encoderOfType(typ.Elem())
+	elemType := typ.Elem()
+	encoder, err := encoderOfType(elemType)
 	if err != nil {
 		return nil, err
 	}
 	mapInterface := reflect.New(typ).Elem().Interface()
-	if typ.Elem().Kind() == reflect.Interface {
-		return &mapInterfaceEncoder{typ, typ.Elem(), encoder, *((*emptyInterface)(unsafe.Pointer(&mapInterface)))}, nil
+	if elemType.Kind() == reflect.Interface && elemType.NumMethod() == 0 {
+		return &mapInterfaceEncoder{typ, elemType, encoder, *((*emptyInterface)(unsafe.Pointer(&mapInterface)))}, nil
 	} else {
-		return &mapEncoder{typ, typ.Elem(), encoder, *((*emptyInterface)(unsafe.Pointer(&mapInterface)))}, nil
+		return &mapEncoder{typ, elemType, encoder, *((*emptyInterface)(unsafe.Pointer(&mapInterface)))}, nil
 	}
 }

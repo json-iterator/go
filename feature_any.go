@@ -185,7 +185,7 @@ func (iter *Iterator) readObjectAny(reusableIter *Iterator) Any {
 func (iter *Iterator) readArrayAny(reusableIter *Iterator) Any {
 	level := 1
 	lazyBuf := make([]byte, 1, 32)
-	lazyBuf[0] = '{'
+	lazyBuf[0] = '['
 	for {
 		start := iter.head
 		for i := iter.head; i < iter.tail; i++ {

@@ -49,6 +49,10 @@ func (encoder *sliceEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
 	}
 }
 
+func (encoder *sliceEncoder) encodeInterface(val interface{}, stream *Stream) {
+	WriteToStream(val, stream, encoder)
+}
+
 type sliceDecoder struct {
 	sliceType   reflect.Type
 	elemType    reflect.Type

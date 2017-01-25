@@ -67,6 +67,10 @@ func (any *intLazyAny) ToString() string {
 	return *(*string)(unsafe.Pointer(&any.buf))
 }
 
+func (any *intLazyAny) WriteTo(stream *Stream) {
+	stream.WriteRaw(*(*string)(unsafe.Pointer(&any.buf)))
+}
+
 type intAny struct {
 	baseAny
 	err   error

@@ -1,5 +1,9 @@
 package jsoniter
 
+import (
+	"unsafe"
+)
+
 type arrayLazyAny struct {
 	baseAny
 	buf       []byte
@@ -230,4 +234,27 @@ func (any *arrayLazyAny) IterateArray() (func() (Any, bool), bool) {
 			}
 		}
 	}, true
+}
+
+
+
+func (any *arrayLazyAny) GetArray() []Any {
+	any.fillCache()
+	return any.cache
+}
+
+func (any *arrayLazyAny) SetArray(newList []Any) bool {
+	any.fillCache()
+	any.cache = newList
+	return true
+}
+
+func (any *arrayLazyAny) WriteTo(stream *Stream) {
+	if len(any.remaining) == len(any.buf) {
+		// nothing has been parsed yet
+		stream.WriteRaw(*(*string)(unsafe.Pointer(&any.buf)))
+	} else {
+		any.fillCache()
+		stream.WriteVal(any.cache)
+	}
 }
