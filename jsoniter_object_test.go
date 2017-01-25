@@ -147,6 +147,14 @@ func Test_object_lazy_any_get(t *testing.T) {
 	should.Equal("d", any.Get("a", "b", "c").ToString())
 }
 
+func Test_object_lazy_any_set(t *testing.T) {
+	should := require.New(t)
+	any, err := UnmarshalAnyFromString(`{"a":{"b":{"c":"d"}}}`)
+	should.Nil(err)
+	any.GetObject()["a"] = WrapInt64(1)
+	should.Equal(`{"a":1}`, any.ToString())
+}
+
 func Test_write_object(t *testing.T) {
 	should := require.New(t)
 	buf := &bytes.Buffer{}

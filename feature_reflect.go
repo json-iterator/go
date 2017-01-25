@@ -24,6 +24,7 @@ type Encoder interface {
 }
 
 type DecoderFunc func(ptr unsafe.Pointer, iter *Iterator)
+type EncoderFunc func(ptr unsafe.Pointer, stream *Stream)
 type ExtensionFunc func(typ reflect.Type, field *reflect.StructField) ([]string, DecoderFunc)
 
 type funcDecoder struct {
@@ -34,19 +35,35 @@ func (decoder *funcDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 	decoder.fun(ptr, iter)
 }
 
+type funcEncoder struct {
+	fun EncoderFunc
+}
+
+func (encoder *funcEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
+	encoder.fun(ptr, stream)
+}
+
 var DECODERS unsafe.Pointer
 var ENCODERS unsafe.Pointer
 
 var typeDecoders map[string]Decoder
 var fieldDecoders map[string]Decoder
+var typeEncoders map[string]Encoder
+var fieldEncoders map[string]Encoder
 var extensions []ExtensionFunc
 
 func init() {
 	typeDecoders = map[string]Decoder{}
 	fieldDecoders = map[string]Decoder{}
+	typeEncoders = map[string]Encoder{}
+	fieldEncoders = map[string]Encoder{}
 	extensions = []ExtensionFunc{}
 	atomic.StorePointer(&DECODERS, unsafe.Pointer(&map[string]Decoder{}))
 	atomic.StorePointer(&ENCODERS, unsafe.Pointer(&map[string]Encoder{}))
+	RegisterTypeEncoder("*jsoniter.intAny", func(ptr unsafe.Pointer, stream *Stream) {
+		val := *(**intAny)(ptr)
+		val.WriteTo(stream)
+	})
 }
 
 func addDecoderToCache(cacheKey reflect.Type, decoder Decoder) {
@@ -97,6 +114,14 @@ func RegisterTypeDecoder(typ string, fun DecoderFunc) {
 // RegisterFieldDecoder can register a type for json field
 func RegisterFieldDecoder(typ string, field string, fun DecoderFunc) {
 	fieldDecoders[fmt.Sprintf("%s/%s", typ, field)] = &funcDecoder{fun}
+}
+
+func RegisterTypeEncoder(typ string, fun EncoderFunc) {
+	typeEncoders[typ] = &funcEncoder{fun}
+}
+
+func RegisterFieldEncoder(typ string, field string, fun EncoderFunc) {
+	fieldEncoders[fmt.Sprintf("%s/%s", typ, field)] = &funcEncoder{fun}
 }
 
 // RegisterExtension can register a custom extension
@@ -188,6 +213,31 @@ func (encoder *mapEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
 		val := realVal.MapIndex(key).Interface()
 		e := (*emptyInterface)(unsafe.Pointer(&val))
 		encoder.elemEncoder.encode(e.word, stream)
+	}
+	stream.WriteObjectEnd()
+}
+
+type mapInterfaceEncoder struct {
+	mapType      reflect.Type
+	elemType     reflect.Type
+	elemEncoder  Encoder
+	mapInterface emptyInterface
+}
+
+func (encoder *mapInterfaceEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
+	mapInterface := encoder.mapInterface
+	mapInterface.word = ptr
+	realInterface := (*interface{})(unsafe.Pointer(&mapInterface))
+	realVal := reflect.ValueOf(*realInterface)
+
+	stream.WriteObjectStart()
+	for i, key := range realVal.MapKeys() {
+		if i != 0 {
+			stream.WriteMore()
+		}
+		stream.WriteObjectField(key.String())
+		val := realVal.MapIndex(key).Interface()
+		encoder.elemEncoder.encode(unsafe.Pointer(&val), stream)
 	}
 	stream.WriteObjectEnd()
 }
@@ -311,6 +361,10 @@ func decoderOfType(typ reflect.Type) (Decoder, error) {
 
 func encoderOfType(typ reflect.Type) (Encoder, error) {
 	typeName := typ.String()
+	typeEncoder := typeEncoders[typeName]
+	if typeEncoder != nil {
+		return typeEncoder, nil
+	}
 	switch typ.Kind() {
 	case reflect.String:
 		return &stringCodec{}, nil
@@ -388,5 +442,9 @@ func encoderOfMap(typ reflect.Type) (Encoder, error) {
 		return nil, err
 	}
 	mapInterface := reflect.New(typ).Elem().Interface()
-	return &mapEncoder{typ, typ.Elem(), encoder, *((*emptyInterface)(unsafe.Pointer(&mapInterface)))}, nil
+	if typ.Elem().Kind() == reflect.Interface {
+		return &mapInterfaceEncoder{typ, typ.Elem(), encoder, *((*emptyInterface)(unsafe.Pointer(&mapInterface)))}, nil
+	} else {
+		return &mapEncoder{typ, typ.Elem(), encoder, *((*emptyInterface)(unsafe.Pointer(&mapInterface)))}, nil
+	}
 }

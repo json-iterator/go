@@ -1,6 +1,8 @@
 package jsoniter
 
-import "unsafe"
+import (
+	"unsafe"
+)
 
 type stringCodec struct {
 }

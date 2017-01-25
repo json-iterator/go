@@ -161,8 +161,10 @@ func (any *objectLazyAny) ToString() string {
 		// nothing has been parsed yet
 		return *(*string)(unsafe.Pointer(&any.buf))
 	} else {
-		// TODO: serialize the cache
-		return ""
+		any.fillCache()
+		str, err := MarshalToString(any.cache)
+		any.err = err
+		return str
 	}
 }
 
@@ -261,3 +263,13 @@ func (any *objectLazyAny) IterateObject() (func() (string, Any, bool), bool) {
 	}, true
 }
 
+func (any *objectLazyAny) GetObject() map[string]Any {
+	any.fillCache()
+	return any.cache
+}
+
+func (any *objectLazyAny) SetObject(val map[string]Any) bool {
+	any.fillCache()
+	any.cache = val
+	return true
+}

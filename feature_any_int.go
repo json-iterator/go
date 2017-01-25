@@ -3,6 +3,7 @@ package jsoniter
 import (
 	"io"
 	"unsafe"
+	"strconv"
 )
 
 type intLazyAny struct {
@@ -64,4 +65,46 @@ func (any *intLazyAny) ToFloat64() float64 {
 
 func (any *intLazyAny) ToString() string {
 	return *(*string)(unsafe.Pointer(&any.buf))
+}
+
+type intAny struct {
+	baseAny
+	err   error
+	val int64
+}
+
+func (any *intAny) LastError() error {
+	return any.err
+}
+
+func (any *intAny) ToBool() bool {
+	return any.ToInt64() != 0
+}
+
+func (any *intAny) ToInt() int {
+	return int(any.val)
+}
+
+func (any *intAny) ToInt32() int32 {
+	return int32(any.val)
+}
+
+func (any *intAny) ToInt64() int64 {
+	return any.val
+}
+
+func (any *intAny) ToFloat32() float32 {
+	return float32(any.val)
+}
+
+func (any *intAny) ToFloat64() float64 {
+	return float64(any.val)
+}
+
+func (any *intAny) ToString() string {
+	return strconv.FormatInt(any.val, 10)
+}
+
+func (any *intAny) WriteTo(stream *Stream) {
+	stream.WriteInt64(any.val)
 }

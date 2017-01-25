@@ -14,9 +14,14 @@ type Any interface {
 	Keys() []string
 	IterateObject() (func() (string, Any, bool), bool)
 	IterateArray() (func() (Any, bool), bool)
+	GetArray() []Any
+	SetArray(newList []Any) bool
+	GetObject() map[string]Any
+	SetObject(map[string]Any) bool
+	WriteTo(stream *Stream)
 }
 
-type baseAny struct {}
+type baseAny struct{}
 
 func (any *baseAny) Get(path ...interface{}) Any {
 	return &invalidAny{}
@@ -36,6 +41,29 @@ func (any *baseAny) IterateObject() (func() (string, Any, bool), bool) {
 
 func (any *baseAny) IterateArray() (func() (Any, bool), bool) {
 	return nil, false
+}
+
+func (any *baseAny) GetArray() []Any {
+	return []Any{}
+}
+
+func (any *baseAny) SetArray(newList []Any) bool {
+	return false
+}
+
+func (any *baseAny) GetObject() map[string]Any {
+	return map[string]Any{}
+}
+
+func (any *baseAny) SetObject(map[string]Any) bool {
+	return false
+}
+
+func (any *baseAny) WriteTo(stream *Stream) {
+}
+
+func WrapInt64(val int64) Any {
+	return &intAny{baseAny{}, nil, val}
 }
 
 func (iter *Iterator) ReadAny() Any {
@@ -81,7 +109,7 @@ func (iter *Iterator) readNumberAny(reusableIter *Iterator) Any {
 				lazyBuf = append(lazyBuf, iter.buf[iter.head:i]...)
 				iter.head = i
 				if dotFound {
-					return &floatLazyAny{baseAny{},lazyBuf, reusableIter, nil, 0}
+					return &floatLazyAny{baseAny{}, lazyBuf, reusableIter, nil, 0}
 				} else {
 					return &intLazyAny{baseAny{}, lazyBuf, reusableIter, nil, 0}
 				}
@@ -175,7 +203,7 @@ func (iter *Iterator) readArrayAny(reusableIter *Iterator) Any {
 				if level == 0 {
 					iter.head = i + 1
 					lazyBuf = append(lazyBuf, iter.buf[start:iter.head]...)
-					return &arrayLazyAny{baseAny{},lazyBuf, reusableIter, nil, nil, lazyBuf}
+					return &arrayLazyAny{baseAny{}, lazyBuf, reusableIter, nil, nil, lazyBuf}
 				}
 			}
 		}

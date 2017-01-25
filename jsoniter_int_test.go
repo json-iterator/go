@@ -110,6 +110,13 @@ func Test_read_int64_as_any(t *testing.T) {
 	should.True(any.ToBool())
 }
 
+func Test_wrap_int(t *testing.T) {
+	should := require.New(t)
+	str, err := MarshalToString(WrapInt64(100))
+	should.Nil(err)
+	should.Equal("100", str)
+}
+
 func Test_write_uint8(t *testing.T) {
 	vals := []uint8{0, 1, 11, 111, 255}
 	for _, val := range vals {
