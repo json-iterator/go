@@ -3,6 +3,7 @@ package jsoniter
 import (
 	"testing"
 	"github.com/json-iterator/go/require"
+	"unsafe"
 )
 
 func Test_write_array_of_interface(t *testing.T) {
@@ -22,11 +23,20 @@ func Test_write_map_of_interface(t *testing.T) {
 }
 
 type MyInterface interface {
+	Hello() string
+}
+
+type MyString string
+
+func (ms MyString) Hello() string {
+	return string(ms)
 }
 
 func Test_write_map_of_custom_interface(t *testing.T) {
 	should := require.New(t)
-	val := map[string]MyInterface{"hello":"world"}
+	myStr := MyString("world")
+	should.Equal("world", myStr.Hello())
+	val := map[string]MyInterface{"hello":myStr}
 	str, err := MarshalToString(val)
 	should.Nil(err)
 	should.Equal(`{"hello":"world"}`, str)
@@ -39,4 +49,23 @@ func Test_write_interface(t *testing.T) {
 	str, err := MarshalToString(val)
 	should.Nil(err)
 	should.Equal(`"hello"`, str)
+}
+
+func Test_read_interface(t *testing.T) {
+	should := require.New(t)
+	var val interface{}
+	err := UnmarshalFromString(`"hello"`, &val)
+	should.Nil(err)
+	should.Equal("hello", val)
+}
+
+func Test_read_custom_interface(t *testing.T) {
+	should := require.New(t)
+	var val MyInterface
+	RegisterTypeDecoder("jsoniter.MyInterface", func(ptr unsafe.Pointer, iter *Iterator) {
+		*((*MyInterface)(ptr)) = MyString(iter.ReadString())
+	})
+	err := UnmarshalFromString(`"hello"`, &val)
+	should.Nil(err)
+	should.Equal("hello", val.Hello())
 }

@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"sync/atomic"
 	"unsafe"
+	"errors"
 )
 
 /*
@@ -345,7 +346,11 @@ func decoderOfType(typ reflect.Type) (Decoder, error) {
 	case reflect.Bool:
 		return &boolCodec{}, nil
 	case reflect.Interface:
-		return &interfaceCodec{}, nil
+		if typ.NumMethod() == 0 {
+			return &interfaceCodec{}, nil
+		} else {
+			return nil, errors.New("unsupportd type: " + typ.String())
+		}
 	case reflect.Struct:
 		return prefix(fmt.Sprintf("[%s]", typeName)).addToDecoder(decoderOfStruct(typ))
 	case reflect.Slice:
