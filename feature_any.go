@@ -72,6 +72,10 @@ func WrapFloat64(val float64) Any {
 	return &floatAny{baseAny{}, val}
 }
 
+func WrapString(val string) Any {
+	return &stringAny{baseAny{}, nil, val}
+}
+
 func (iter *Iterator) ReadAny() Any {
 	return iter.readAny(nil)
 }
