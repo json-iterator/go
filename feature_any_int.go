@@ -14,6 +14,10 @@ type intLazyAny struct {
 	cache int64
 }
 
+func (any *intLazyAny) ValueType() ValueType {
+	return Number
+}
+
 func (any *intLazyAny) Parse() *Iterator {
 	iter := any.iter
 	if iter == nil {
@@ -89,6 +93,10 @@ type intAny struct {
 
 func (any *intAny) LastError() error {
 	return any.err
+}
+
+func (any *intAny) ValueType() ValueType {
+	return Number
 }
 
 func (any *intAny) ToBool() bool {

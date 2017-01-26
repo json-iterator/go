@@ -22,6 +22,10 @@ func (any *floatLazyAny) Parse() *Iterator {
 	return iter
 }
 
+func (any *floatLazyAny) ValueType() ValueType {
+	return Number
+}
+
 func (any *floatLazyAny) fillCache() {
 	if any.err != nil {
 		return

@@ -1,7 +1,10 @@
 package jsoniter
 
+import "fmt"
+
 type Any interface {
 	LastError() error
+	ValueType() ValueType
 	ToBool() bool
 	ToInt() int
 	ToInt32() int32
@@ -26,7 +29,7 @@ type Any interface {
 type baseAny struct{}
 
 func (any *baseAny) Get(path ...interface{}) Any {
-	return &invalidAny{}
+	return &invalidAny{baseAny{}, fmt.Errorf("Get %v from simple value", path)}
 }
 
 func (any *baseAny) Size() int {

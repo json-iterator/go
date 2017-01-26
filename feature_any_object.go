@@ -2,6 +2,7 @@ package jsoniter
 
 import (
 	"unsafe"
+	"fmt"
 )
 
 type objectLazyAny struct {
@@ -11,6 +12,10 @@ type objectLazyAny struct {
 	err       error
 	cache     map[string]Any
 	remaining []byte
+}
+
+func (any *objectLazyAny) ValueType() ValueType {
+	return Object
 }
 
 func (any *objectLazyAny) Parse() *Iterator {
@@ -178,12 +183,20 @@ func (any *objectLazyAny) Get(path ...interface{}) Any {
 	if len(path) == 0 {
 		return any
 	}
-	if len(path) == 1 {
-		key := path[0].(string)
-		return any.fillCacheUntil(key)
+	var element Any
+	key, ok := path[0].(string)
+	if ok {
+		element = any.fillCacheUntil(key)
+		if element == nil {
+			element = &invalidAny{baseAny{}, fmt.Errorf("%v not found in %v", key, any.cache)}
+		}
 	} else {
-		key := path[0].(string)
-		return any.fillCacheUntil(key).Get(path[1:]...)
+		element = &invalidAny{baseAny{}, fmt.Errorf("%v not found in %v", key, any.cache)}
+	}
+	if len(path) == 1 {
+		return element
+	} else {
+		return element.Get(path[1:]...)
 	}
 }
 

@@ -1,11 +1,18 @@
 package jsoniter
 
+import "fmt"
+
 type invalidAny struct {
 	baseAny
+	err error
 }
 
 func (any *invalidAny) LastError() error {
-	return nil
+	return any.err
+}
+
+func (any *invalidAny) ValueType() ValueType {
+	return Invalid
 }
 
 func (any *invalidAny) ToBool() bool {
@@ -40,7 +47,11 @@ func (any *invalidAny) WriteTo(stream *Stream) {
 }
 
 func (any *invalidAny) Get(path ...interface{}) Any {
-	return any
+	if any.err == nil {
+		return &invalidAny{baseAny{}, fmt.Errorf("get %v from invalid", path)}
+	} else {
+		return &invalidAny{baseAny{}, fmt.Errorf("%v, get %v from invalid", any.err, path)}
+	}
 }
 
 func (any *invalidAny) Parse() *Iterator {

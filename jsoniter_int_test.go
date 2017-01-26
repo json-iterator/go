@@ -110,6 +110,13 @@ func Test_read_int64_as_any(t *testing.T) {
 	should.True(any.ToBool())
 }
 
+func Test_int_lazy_any_get(t *testing.T) {
+	should := require.New(t)
+	any, err := UnmarshalAnyFromString("1234")
+	should.Nil(err)
+	should.Equal(Invalid, any.Get(1, "2").ValueType())
+}
+
 func Test_wrap_int(t *testing.T) {
 	should := require.New(t)
 	str, err := MarshalToString(WrapInt64(100))

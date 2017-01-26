@@ -48,6 +48,10 @@ func (any *trueAny) GetInterface() interface{} {
 	return true
 }
 
+func (any *trueAny) ValueType() ValueType {
+	return Bool
+}
+
 type falseAny struct {
 	baseAny
 }
@@ -94,4 +98,8 @@ func (any *falseAny) Parse() *Iterator {
 
 func (any *falseAny) GetInterface() interface{} {
 	return false
+}
+
+func (any *falseAny) ValueType() ValueType {
+	return Bool
 }

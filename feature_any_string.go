@@ -12,6 +12,10 @@ type stringLazyAny struct{
 	cache string
 }
 
+func (any *stringLazyAny) ValueType() ValueType {
+	return String
+}
+
 func (any *stringLazyAny) Parse() *Iterator {
 	iter := any.iter
 	if iter == nil {

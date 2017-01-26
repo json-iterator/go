@@ -8,6 +8,10 @@ func (any *nilAny) LastError() error {
 	return nil
 }
 
+func (any *nilAny) ValueType() ValueType {
+	return Nil
+}
+
 func (any *nilAny) ToBool() bool {
 	return false
 }
