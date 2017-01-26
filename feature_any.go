@@ -19,6 +19,7 @@ type Any interface {
 	GetObject() map[string]Any
 	SetObject(map[string]Any) bool
 	WriteTo(stream *Stream)
+	Parse() *Iterator
 }
 
 type baseAny struct{}

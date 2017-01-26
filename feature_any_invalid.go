@@ -42,3 +42,7 @@ func (any *invalidAny) WriteTo(stream *Stream) {
 func (any *invalidAny) Get(path ...interface{}) Any {
 	return any
 }
+
+func (any *invalidAny) Parse() *Iterator {
+	return nil
+}

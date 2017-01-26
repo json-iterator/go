@@ -12,19 +12,7 @@ type stringLazyAny struct{
 	cache string
 }
 
-func (any *stringLazyAny) fillCache() {
-	if any.err != nil {
-		return
-	}
-	iter := any.parse()
-	any.cache = iter.ReadString()
-	if iter.Error != io.EOF {
-		iter.reportError("stringLazyAny", "there are bytes left")
-	}
-	any.err = iter.Error
-}
-
-func (any *stringLazyAny) parse() *Iterator {
+func (any *stringLazyAny) Parse() *Iterator {
 	iter := any.iter
 	if iter == nil {
 		iter = NewIterator()
@@ -32,6 +20,18 @@ func (any *stringLazyAny) parse() *Iterator {
 	}
 	iter.ResetBytes(any.buf)
 	return iter
+}
+
+func (any *stringLazyAny) fillCache() {
+	if any.err != nil {
+		return
+	}
+	iter := any.Parse()
+	any.cache = iter.ReadString()
+	if iter.Error != io.EOF {
+		iter.reportError("stringLazyAny", "there are bytes left")
+	}
+	any.err = iter.Error
 }
 
 func (any *stringLazyAny) LastError() error {
@@ -54,7 +54,7 @@ func (any *stringLazyAny) ToBool() bool {
 }
 
 func (any *stringLazyAny) ToInt() int {
-	iter := any.parse()
+	iter := any.Parse()
 	iter.head++
 	val := iter.ReadInt()
 	any.err = iter.Error
@@ -62,7 +62,7 @@ func (any *stringLazyAny) ToInt() int {
 }
 
 func (any *stringLazyAny) ToInt32() int32 {
-	iter := any.parse()
+	iter := any.Parse()
 	iter.head++
 	val := iter.ReadInt32()
 	any.err = iter.Error
@@ -70,7 +70,7 @@ func (any *stringLazyAny) ToInt32() int32 {
 }
 
 func (any *stringLazyAny) ToInt64() int64 {
-	iter := any.parse()
+	iter := any.Parse()
 	iter.head++
 	val := iter.ReadInt64()
 	any.err = iter.Error
@@ -78,7 +78,7 @@ func (any *stringLazyAny) ToInt64() int64 {
 }
 
 func (any *stringLazyAny) ToFloat32() float32 {
-	iter := any.parse()
+	iter := any.Parse()
 	iter.head++
 	val := iter.ReadFloat32()
 	any.err = iter.Error
@@ -86,7 +86,7 @@ func (any *stringLazyAny) ToFloat32() float32 {
 }
 
 func (any *stringLazyAny) ToFloat64() float64 {
-	iter := any.parse()
+	iter := any.Parse()
 	iter.head++
 	val := iter.ReadFloat64()
 	any.err = iter.Error

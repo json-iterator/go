@@ -14,15 +14,20 @@ type intLazyAny struct {
 	cache int64
 }
 
-func (any *intLazyAny) fillCache() {
-	if any.err != nil {
-		return
-	}
+func (any *intLazyAny) Parse() *Iterator {
 	iter := any.iter
 	if iter == nil {
 		iter = NewIterator()
 	}
 	iter.ResetBytes(any.buf)
+	return iter
+}
+
+func (any *intLazyAny) fillCache() {
+	if any.err != nil {
+		return
+	}
+	iter := any.Parse()
 	any.cache = iter.ReadInt64()
 	if iter.Error != io.EOF {
 		iter.reportError("intLazyAny", "there are bytes left")
@@ -111,4 +116,8 @@ func (any *intAny) ToString() string {
 
 func (any *intAny) WriteTo(stream *Stream) {
 	stream.WriteInt64(any.val)
+}
+
+func (any *intAny) Parse() *Iterator {
+	return nil
 }

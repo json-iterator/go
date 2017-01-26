@@ -13,7 +13,7 @@ type objectLazyAny struct {
 	remaining []byte
 }
 
-func (any *objectLazyAny) parse() *Iterator {
+func (any *objectLazyAny) Parse() *Iterator {
 	iter := any.iter
 	if iter == nil {
 		iter = NewIterator()
@@ -34,7 +34,7 @@ func (any *objectLazyAny) fillCacheUntil(target string) Any {
 	if val != nil {
 		return val
 	}
-	iter := any.parse()
+	iter := any.Parse()
 	if len(any.remaining) == len(any.buf) {
 		iter.head++
 		c := iter.nextToken()
@@ -45,10 +45,12 @@ func (any *objectLazyAny) fillCacheUntil(target string) Any {
 			any.cache[k] = v
 			if target == k {
 				any.remaining = iter.buf[iter.head:]
+				any.err = iter.Error
 				return v
 			}
 		} else {
 			any.remaining = nil
+			any.err = iter.Error
 			return nil
 		}
 	}
@@ -58,10 +60,12 @@ func (any *objectLazyAny) fillCacheUntil(target string) Any {
 		any.cache[k] = v
 		if target == k {
 			any.remaining = iter.buf[iter.head:]
+			any.err = iter.Error
 			return v
 		}
 	}
 	any.remaining = nil
+	any.err = iter.Error
 	return nil
 }
 
@@ -72,7 +76,7 @@ func (any *objectLazyAny) fillCache() {
 	if any.cache == nil {
 		any.cache = map[string]Any{}
 	}
-	iter := any.parse()
+	iter := any.Parse()
 	if len(any.remaining) == len(any.buf) {
 		iter.head++
 		c := iter.nextToken()
@@ -83,6 +87,7 @@ func (any *objectLazyAny) fillCache() {
 			any.cache[k] = v
 		} else {
 			any.remaining = nil
+			any.err = iter.Error
 			return
 		}
 	}
@@ -92,6 +97,7 @@ func (any *objectLazyAny) fillCache() {
 		any.cache[k] = v
 	}
 	any.remaining = nil
+	any.err = iter.Error
 	return
 }
 
@@ -201,7 +207,7 @@ func (any *objectLazyAny) IterateObject() (func() (string, Any, bool), bool) {
 	}
 	remaining := any.remaining
 	if len(remaining) == len(any.buf) {
-		iter := any.parse()
+		iter := any.Parse()
 		iter.head++
 		c := iter.nextToken()
 		if c != '}' {
@@ -214,6 +220,7 @@ func (any *objectLazyAny) IterateObject() (func() (string, Any, bool), bool) {
 		} else {
 			remaining = nil
 			any.remaining = nil
+			any.err = iter.Error
 			return nil, false
 		}
 	}
@@ -253,10 +260,12 @@ func (any *objectLazyAny) IterateObject() (func() (string, Any, bool), bool) {
 				any.cache[nextKey] = nextValue
 				remaining = iter.buf[iter.head:]
 				any.remaining = remaining
+				any.err = iter.Error
 				return key, value, true
 			} else {
 				remaining = nil
 				any.remaining = nil
+				any.err = iter.Error
 				return key, value, false
 			}
 		}

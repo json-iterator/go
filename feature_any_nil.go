@@ -39,3 +39,7 @@ func (any *nilAny) ToString() string {
 func (any *nilAny) WriteTo(stream *Stream) {
 	stream.WriteNil()
 }
+
+func (any *nilAny) Parse() *Iterator {
+	return nil
+}

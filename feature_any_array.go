@@ -13,7 +13,7 @@ type arrayLazyAny struct {
 	remaining []byte
 }
 
-func (any *arrayLazyAny) parse() *Iterator {
+func (any *arrayLazyAny) Parse() *Iterator {
 	iter := any.iter
 	if iter == nil {
 		iter = NewIterator()
@@ -37,7 +37,7 @@ func (any *arrayLazyAny) fillCacheUntil(target int) Any {
 	if target < i {
 		return any.cache[target]
 	}
-	iter := any.parse()
+	iter := any.Parse()
 	if (len(any.remaining) == len(any.buf)) {
 		iter.head++
 		c := iter.nextToken()
@@ -47,11 +47,13 @@ func (any *arrayLazyAny) fillCacheUntil(target int) Any {
 			any.cache = append(any.cache, element)
 			if target == 0 {
 				any.remaining = iter.buf[iter.head:]
+				any.err = iter.Error
 				return element
 			}
 			i = 1
 		} else {
 			any.remaining = nil
+			any.err = iter.Error
 			return nil
 		}
 	}
@@ -60,11 +62,13 @@ func (any *arrayLazyAny) fillCacheUntil(target int) Any {
 		any.cache = append(any.cache, element)
 		if i == target {
 			any.remaining = iter.buf[iter.head:]
+			any.err = iter.Error
 			return element
 		}
 		i++
- 	}
+	}
 	any.remaining = nil
+	any.err = iter.Error
 	return nil
 }
 
@@ -75,7 +79,7 @@ func (any *arrayLazyAny) fillCache() {
 	if any.cache == nil {
 		any.cache = make([]Any, 0, 8)
 	}
-	iter := any.parse()
+	iter := any.Parse()
 	if len(any.remaining) == len(any.buf) {
 		iter.head++
 		c := iter.nextToken()
@@ -84,6 +88,7 @@ func (any *arrayLazyAny) fillCache() {
 			any.cache = append(any.cache, iter.readAny(iter))
 		} else {
 			any.remaining = nil
+			any.err = iter.Error
 			return
 		}
 	}
@@ -91,7 +96,7 @@ func (any *arrayLazyAny) fillCache() {
 		any.cache = append(any.cache, iter.readAny(iter))
 	}
 	any.remaining = nil
-	return
+	any.err = iter.Error
 }
 
 func (any *arrayLazyAny) LastError() error {
@@ -185,14 +190,13 @@ func (any *arrayLazyAny) Size() int {
 	return len(any.cache)
 }
 
-
 func (any *arrayLazyAny) IterateArray() (func() (Any, bool), bool) {
 	if any.cache == nil {
 		any.cache = make([]Any, 0, 8)
 	}
 	remaining := any.remaining
 	if len(remaining) == len(any.buf) {
-		iter := any.parse()
+		iter := any.Parse()
 		iter.head++
 		c := iter.nextToken()
 		if c != ']' {
@@ -204,6 +208,7 @@ func (any *arrayLazyAny) IterateArray() (func() (Any, bool), bool) {
 		} else {
 			remaining = nil
 			any.remaining = nil
+			any.err = iter.Error
 			return nil, false
 		}
 	}
@@ -234,17 +239,17 @@ func (any *arrayLazyAny) IterateArray() (func() (Any, bool), bool) {
 				any.cache = append(any.cache, nextValue)
 				remaining = iter.buf[iter.head:]
 				any.remaining = remaining
+				any.err = iter.Error
 				return value, true
 			} else {
 				remaining = nil
 				any.remaining = nil
+				any.err = iter.Error
 				return value, false
 			}
 		}
 	}, true
 }
-
-
 
 func (any *arrayLazyAny) GetArray() []Any {
 	any.fillCache()

@@ -40,6 +40,10 @@ func (any *trueAny) WriteTo(stream *Stream) {
 	stream.WriteTrue()
 }
 
+func (any *trueAny) Parse() *Iterator {
+	return nil
+}
+
 type falseAny struct {
 	baseAny
 }
@@ -78,4 +82,8 @@ func (any *falseAny) ToString() string {
 
 func (any *falseAny) WriteTo(stream *Stream) {
 	stream.WriteFalse()
+}
+
+func (any *falseAny) Parse() *Iterator {
+	return nil
 }
