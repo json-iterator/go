@@ -95,7 +95,7 @@ func (any *arrayLazyAny) fillCache() {
 }
 
 func (any *arrayLazyAny) LastError() error {
-	return nil
+	return any.err
 }
 
 func (any *arrayLazyAny) ToBool() bool {
@@ -156,7 +156,15 @@ func (any *arrayLazyAny) ToFloat64() float64 {
 }
 
 func (any *arrayLazyAny) ToString() string {
-	return ""
+	if len(any.remaining) == len(any.buf) {
+		// nothing has been parsed yet
+		return *(*string)(unsafe.Pointer(&any.buf))
+	} else {
+		any.fillCache()
+		str, err := MarshalToString(any.cache)
+		any.err = err
+		return str
+	}
 }
 
 func (any *arrayLazyAny) Get(path ...interface{}) Any {
@@ -252,7 +260,7 @@ func (any *arrayLazyAny) SetArray(newList []Any) bool {
 func (any *arrayLazyAny) WriteTo(stream *Stream) {
 	if len(any.remaining) == len(any.buf) {
 		// nothing has been parsed yet
-		stream.WriteRaw(*(*string)(unsafe.Pointer(&any.buf)))
+		stream.Write(any.buf)
 	} else {
 		any.fillCache()
 		stream.WriteVal(any.cache)

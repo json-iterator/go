@@ -97,3 +97,7 @@ func (any *stringLazyAny) ToString() string {
 	any.fillCache()
 	return any.cache
 }
+
+func (any *stringLazyAny) WriteTo(stream *Stream) {
+	stream.Write(any.buf)
+}

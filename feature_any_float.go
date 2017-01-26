@@ -65,3 +65,7 @@ func (any *floatLazyAny) ToFloat64() float64 {
 func (any *floatLazyAny) ToString() string {
 	return *(*string)(unsafe.Pointer(&any.buf))
 }
+
+func (any *floatLazyAny) WriteTo(stream *Stream) {
+	stream.Write(any.buf)
+}

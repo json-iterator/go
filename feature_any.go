@@ -59,9 +59,6 @@ func (any *baseAny) SetObject(map[string]Any) bool {
 	return false
 }
 
-func (any *baseAny) WriteTo(stream *Stream) {
-}
-
 func WrapInt64(val int64) Any {
 	return &intAny{baseAny{}, nil, val}
 }

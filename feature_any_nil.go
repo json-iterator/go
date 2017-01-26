@@ -33,5 +33,9 @@ func (any *nilAny) ToFloat64() float64 {
 }
 
 func (any *nilAny) ToString() string {
-	return ""
+	return "nil"
+}
+
+func (any *nilAny) WriteTo(stream *Stream) {
+	stream.WriteNil()
 }

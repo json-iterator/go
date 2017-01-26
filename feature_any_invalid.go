@@ -36,6 +36,9 @@ func (any *invalidAny) ToString() string {
 	return ""
 }
 
+func (any *invalidAny) WriteTo(stream *Stream) {
+}
+
 func (any *invalidAny) Get(path ...interface{}) Any {
 	return any
 }

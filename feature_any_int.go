@@ -68,7 +68,7 @@ func (any *intLazyAny) ToString() string {
 }
 
 func (any *intLazyAny) WriteTo(stream *Stream) {
-	stream.WriteRaw(*(*string)(unsafe.Pointer(&any.buf)))
+	stream.Write(any.buf)
 }
 
 type intAny struct {

@@ -36,6 +36,10 @@ func (any *trueAny) ToString() string {
 	return "true"
 }
 
+func (any *trueAny) WriteTo(stream *Stream) {
+	stream.WriteTrue()
+}
+
 type falseAny struct {
 	baseAny
 }
@@ -70,4 +74,8 @@ func (any *falseAny) ToFloat64() float64 {
 
 func (any *falseAny) ToString() string {
 	return "false"
+}
+
+func (any *falseAny) WriteTo(stream *Stream) {
+	stream.WriteFalse()
 }

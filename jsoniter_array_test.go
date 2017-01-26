@@ -87,6 +87,7 @@ func Test_array_lazy_any_get(t *testing.T) {
 	any, err := UnmarshalAnyFromString("[1,[2,3],4]")
 	should.Nil(err)
 	should.Equal(3, any.Get(1,1).ToInt())
+	should.Equal("[1,[2,3],4]", any.ToString())
 }
 
 func Test_array_lazy_any_set(t *testing.T) {
