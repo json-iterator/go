@@ -87,12 +87,11 @@ func (any *intLazyAny) GetInterface() interface{} {
 
 type intAny struct {
 	baseAny
-	err   error
 	val int64
 }
 
 func (any *intAny) LastError() error {
-	return any.err
+	return nil
 }
 
 func (any *intAny) ValueType() ValueType {

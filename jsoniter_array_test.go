@@ -90,6 +90,13 @@ func Test_array_lazy_any_get(t *testing.T) {
 	should.Equal("[1,[2,3],4]", any.ToString())
 }
 
+func Test_array_lazy_any_get_all(t *testing.T) {
+	should := require.New(t)
+	any, err := UnmarshalAnyFromString("[[1],[2],[3,4]]")
+	should.Nil(err)
+	should.Equal("[1,2,3]", any.Get('*',0).ToString())
+}
+
 func Test_array_lazy_any_get_invalid(t *testing.T) {
 	should := require.New(t)
 	any, err := UnmarshalAnyFromString("[]")

@@ -65,7 +65,11 @@ func (any *baseAny) SetObject(map[string]Any) bool {
 }
 
 func WrapInt64(val int64) Any {
-	return &intAny{baseAny{}, nil, val}
+	return &intAny{baseAny{}, val}
+}
+
+func WrapFloat64(val float64) Any {
+	return &floatAny{baseAny{}, val}
 }
 
 func (iter *Iterator) ReadAny() Any {

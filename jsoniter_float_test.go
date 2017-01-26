@@ -60,6 +60,13 @@ func Test_read_float_as_any(t *testing.T) {
 	should.True(any.ToBool())
 }
 
+func Test_wrap_float(t *testing.T) {
+	should := require.New(t)
+	str, err := MarshalToString(WrapFloat64(12.3))
+	should.Nil(err)
+	should.Equal("12.3", str)
+}
+
 func Test_write_float32(t *testing.T) {
 	vals := []float32{0, 1, -1, 99, 0xff, 0xfff, 0xffff, 0xfffff, 0xffffff, 0x4ffffff, 0xfffffff,
 	-0x4ffffff, -0xfffffff, 1.2345, 1.23456, 1.234567, 1.001}
