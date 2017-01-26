@@ -271,3 +271,8 @@ func (any *arrayLazyAny) WriteTo(stream *Stream) {
 		stream.WriteVal(any.cache)
 	}
 }
+
+func (any *arrayLazyAny) GetInterface() interface{} {
+	any.fillCache()
+	return any.cache
+}

@@ -292,3 +292,8 @@ func (any *objectLazyAny) WriteTo(stream *Stream) {
 		stream.WriteVal(any.cache)
 	}
 }
+
+func (any *objectLazyAny) GetInterface() interface{} {
+	any.fillCache()
+	return any.cache
+}

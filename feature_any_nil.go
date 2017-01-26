@@ -43,3 +43,7 @@ func (any *nilAny) WriteTo(stream *Stream) {
 func (any *nilAny) Parse() *Iterator {
 	return nil
 }
+
+func (any *nilAny) GetInterface() interface{} {
+	return nil
+}

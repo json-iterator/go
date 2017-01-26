@@ -44,6 +44,10 @@ func (any *trueAny) Parse() *Iterator {
 	return nil
 }
 
+func (any *trueAny) GetInterface() interface{} {
+	return true
+}
+
 type falseAny struct {
 	baseAny
 }
@@ -86,4 +90,8 @@ func (any *falseAny) WriteTo(stream *Stream) {
 
 func (any *falseAny) Parse() *Iterator {
 	return nil
+}
+
+func (any *falseAny) GetInterface() interface{} {
+	return false
 }

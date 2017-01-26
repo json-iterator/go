@@ -101,3 +101,8 @@ func (any *stringLazyAny) ToString() string {
 func (any *stringLazyAny) WriteTo(stream *Stream) {
 	stream.Write(any.buf)
 }
+
+func (any *stringLazyAny) GetInterface() interface{} {
+	any.fillCache()
+	return any.cache
+}

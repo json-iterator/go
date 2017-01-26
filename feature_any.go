@@ -18,6 +18,7 @@ type Any interface {
 	SetArray(newList []Any) bool
 	GetObject() map[string]Any
 	SetObject(map[string]Any) bool
+	GetInterface() interface{}
 	WriteTo(stream *Stream)
 	Parse() *Iterator
 }

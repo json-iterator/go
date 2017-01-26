@@ -76,6 +76,11 @@ func (any *intLazyAny) WriteTo(stream *Stream) {
 	stream.Write(any.buf)
 }
 
+func (any *intLazyAny) GetInterface() interface{} {
+	any.fillCache()
+	return any.cache
+}
+
 type intAny struct {
 	baseAny
 	err   error
@@ -120,4 +125,8 @@ func (any *intAny) WriteTo(stream *Stream) {
 
 func (any *intAny) Parse() *Iterator {
 	return nil
+}
+
+func (any *intAny) GetInterface() interface{} {
+	return any.val
 }

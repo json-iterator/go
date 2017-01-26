@@ -74,3 +74,8 @@ func (any *floatLazyAny) ToString() string {
 func (any *floatLazyAny) WriteTo(stream *Stream) {
 	stream.Write(any.buf)
 }
+
+func (any *floatLazyAny) GetInterface() interface{} {
+	any.fillCache()
+	return any.cache
+}

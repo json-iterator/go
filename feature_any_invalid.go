@@ -46,3 +46,7 @@ func (any *invalidAny) Get(path ...interface{}) Any {
 func (any *invalidAny) Parse() *Iterator {
 	return nil
 }
+
+func (any *invalidAny) GetInterface() interface{} {
+	return nil
+}
