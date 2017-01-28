@@ -84,6 +84,8 @@ func Wrap(val interface{}) Any {
 	switch type_.Kind() {
 	case reflect.Slice:
 		return wrapArray(val)
+	case reflect.Struct:
+		return wrapStruct(val)
 	case reflect.String:
 		return WrapString(val.(string))
 	case reflect.Int:

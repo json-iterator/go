@@ -165,6 +165,29 @@ func Test_object_lazy_any_set(t *testing.T) {
 	should.Equal(`{"a":1}`, str)
 }
 
+func Test_wrap_object(t *testing.T) {
+	should := require.New(t)
+	type TestObject struct {
+		Field1 string
+		field2 string
+	}
+	any := Wrap(TestObject{"hello", "world"})
+	should.Equal("hello", any.Get("Field1").ToString())
+	any = Wrap(TestObject{"hello", "world"})
+	should.Equal(2, any.Size())
+	any = Wrap(TestObject{"hello", "world"})
+	vals := map[string]string{}
+	var k string
+	var v Any
+	for next, hasNext := any.IterateObject(); hasNext; {
+		k, v, hasNext = next()
+		if v.ValueType() == String {
+			vals[k] = v.ToString()
+		}
+	}
+	should.Equal(map[string]string{"Field1":"hello"}, vals)
+}
+
 func Test_write_object(t *testing.T) {
 	should := require.New(t)
 	buf := &bytes.Buffer{}

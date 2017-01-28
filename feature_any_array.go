@@ -296,11 +296,10 @@ type arrayAny struct {
 	err      error
 	cache    []Any
 	val      reflect.Value
-	parsedTo int
 }
 
 func wrapArray(val interface{}) *arrayAny {
-	return &arrayAny{baseAny{}, nil, nil, reflect.ValueOf(val), 0}
+	return &arrayAny{baseAny{}, nil, nil, reflect.ValueOf(val)}
 }
 
 func (any *arrayAny) ValueType() ValueType {
@@ -373,7 +372,7 @@ func (any *arrayAny) ToFloat64() float64 {
 }
 
 func (any *arrayAny) ToString() string {
-	if any.parsedTo == 0 {
+	if len(any.cache) == 0 {
 		// nothing has been parsed yet
 		str, err := MarshalToString(any.val.Interface())
 		any.err = err
@@ -390,7 +389,7 @@ func (any *arrayAny) fillCacheUntil(idx int) Any {
 	if idx < len(any.cache) {
 		return any.cache[idx]
 	} else {
-		for i := any.parsedTo; i < any.val.Len(); i++ {
+		for i := len(any.cache); i < any.val.Len(); i++ {
 			element := Wrap(any.val.Index(i).Interface())
 			any.cache = append(any.cache, element)
 			if idx == i {
@@ -464,7 +463,7 @@ func (any *arrayAny) SetArray(newList []Any) bool {
 }
 
 func (any *arrayAny) WriteTo(stream *Stream) {
-	if any.parsedTo == 0 {
+	if len(any.cache) == 0 {
 		// nothing has been parsed yet
 		stream.WriteVal(any.val)
 	} else {
