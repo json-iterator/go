@@ -1,6 +1,9 @@
 package jsoniter
 
-import "fmt"
+import (
+	"fmt"
+	"reflect"
+)
 
 type Any interface {
 	LastError() error
@@ -74,6 +77,41 @@ func WrapFloat64(val float64) Any {
 
 func WrapString(val string) Any {
 	return &stringAny{baseAny{}, nil, val}
+}
+
+func Wrap(val interface{}) Any {
+	type_ := reflect.TypeOf(val)
+	switch type_.Kind() {
+	case reflect.Slice:
+		return wrapArray(val)
+	case reflect.String:
+		return WrapString(val.(string))
+	case reflect.Int:
+		return WrapInt64(int64(val.(int)))
+	case reflect.Int8:
+		return WrapInt64(int64(val.(int8)))
+	case reflect.Int16:
+		return WrapInt64(int64(val.(int16)))
+	case reflect.Int32:
+		return WrapInt64(int64(val.(int32)))
+	case reflect.Int64:
+		return WrapInt64(val.(int64))
+	case reflect.Uint:
+		return WrapInt64(int64(val.(uint)))
+	case reflect.Uint8:
+		return WrapInt64(int64(val.(uint8)))
+	case reflect.Uint16:
+		return WrapInt64(int64(val.(uint16)))
+	case reflect.Uint32:
+		return WrapInt64(int64(val.(uint32)))
+	case reflect.Uint64:
+		return WrapInt64(int64(val.(uint64)))
+	case reflect.Float32:
+		return WrapFloat64(float64(val.(float32)))
+	case reflect.Float64:
+		return WrapFloat64(val.(float64))
+	}
+	return nil
 }
 
 func (iter *Iterator) ReadAny() Any {

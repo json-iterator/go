@@ -3,6 +3,7 @@ package jsoniter
 import (
 	"unsafe"
 	"fmt"
+	"reflect"
 )
 
 type arrayLazyAny struct {
@@ -286,6 +287,193 @@ func (any *arrayLazyAny) WriteTo(stream *Stream) {
 }
 
 func (any *arrayLazyAny) GetInterface() interface{} {
+	any.fillCache()
+	return any.cache
+}
+
+type arrayAny struct {
+	baseAny
+	err      error
+	cache    []Any
+	val      reflect.Value
+	parsedTo int
+}
+
+func wrapArray(val interface{}) *arrayAny {
+	return &arrayAny{baseAny{}, nil, nil, reflect.ValueOf(val), 0}
+}
+
+func (any *arrayAny) ValueType() ValueType {
+	return Array
+}
+
+func (any *arrayAny) Parse() *Iterator {
+	return nil
+}
+
+func (any *arrayAny) LastError() error {
+	return any.err
+}
+
+func (any *arrayAny) ToBool() bool {
+	if any.cache == nil {
+		any.IterateArray() // trigger first element read
+	}
+	return len(any.cache) != 0
+}
+
+func (any *arrayAny) ToInt() int {
+	if any.cache == nil {
+		any.IterateArray() // trigger first element read
+	}
+	if len(any.cache) == 0 {
+		return 0
+	}
+	return 1
+}
+
+func (any *arrayAny) ToInt32() int32 {
+	if any.cache == nil {
+		any.IterateArray() // trigger first element read
+	}
+	if len(any.cache) == 0 {
+		return 0
+	}
+	return 1
+}
+
+func (any *arrayAny) ToInt64() int64 {
+	if any.cache == nil {
+		any.IterateArray() // trigger first element read
+	}
+	if len(any.cache) == 0 {
+		return 0
+	}
+	return 1
+}
+
+func (any *arrayAny) ToFloat32() float32 {
+	if any.cache == nil {
+		any.IterateArray() // trigger first element read
+	}
+	if len(any.cache) == 0 {
+		return 0
+	}
+	return 1
+}
+
+func (any *arrayAny) ToFloat64() float64 {
+	if any.cache == nil {
+		any.IterateArray() // trigger first element read
+	}
+	if len(any.cache) == 0 {
+		return 0
+	}
+	return 1
+}
+
+func (any *arrayAny) ToString() string {
+	if any.parsedTo == 0 {
+		// nothing has been parsed yet
+		str, err := MarshalToString(any.val.Interface())
+		any.err = err
+		return str
+	} else {
+		any.fillCache()
+		str, err := MarshalToString(any.cache)
+		any.err = err
+		return str
+	}
+}
+
+func (any *arrayAny) fillCacheUntil(idx int) Any {
+	if idx < len(any.cache) {
+		return any.cache[idx]
+	} else {
+		for i := any.parsedTo; i < any.val.Len(); i++ {
+			element := Wrap(any.val.Index(i).Interface())
+			any.cache = append(any.cache, element)
+			if idx == i {
+				return element
+			}
+		}
+		return nil
+	}
+}
+
+func (any *arrayAny) fillCache() {
+	any.cache = make([]Any, any.val.Len())
+	for i := 0; i < any.val.Len(); i++ {
+		any.cache[i] = Wrap(any.val.Index(i).Interface())
+	}
+}
+
+func (any *arrayAny) Get(path ...interface{}) Any {
+	if len(path) == 0 {
+		return any
+	}
+	var element Any
+	idx, ok := path[0].(int)
+	if ok {
+		element = any.fillCacheUntil(idx)
+		if element == nil {
+			element = &invalidAny{baseAny{}, fmt.Errorf("%v not found in %v", idx, any.cache)}
+		}
+	} else {
+		element = &invalidAny{baseAny{}, fmt.Errorf("%v not found in %v", idx, any.cache)}
+	}
+	if len(path) == 1 {
+		return element
+	} else {
+		return element.Get(path[1:]...)
+	}
+}
+
+func (any *arrayAny) Size() int {
+	any.fillCache()
+	return len(any.cache)
+}
+
+func (any *arrayAny) IterateArray() (func() (Any, bool), bool) {
+	if any.val.Len() == 0 {
+		return nil, false
+	}
+	i := 0
+	return func() (Any, bool) {
+		if i == any.val.Len() {
+			return nil, false
+		}
+		if i == len(any.cache) {
+			any.cache = append(any.cache, Wrap(any.val.Index(i).Interface()))
+		}
+		val := any.cache[i]
+		i++
+		return val, i != any.val.Len()
+	}, true
+}
+
+func (any *arrayAny) GetArray() []Any {
+	any.fillCache()
+	return any.cache
+}
+
+func (any *arrayAny) SetArray(newList []Any) bool {
+	any.fillCache()
+	any.cache = newList
+	return true
+}
+
+func (any *arrayAny) WriteTo(stream *Stream) {
+	if any.parsedTo == 0 {
+		// nothing has been parsed yet
+		stream.WriteVal(any.val)
+	} else {
+		any.fillCache()
+		stream.WriteVal(any.cache)
+	}
+}
+
+func (any *arrayAny) GetInterface() interface{} {
 	any.fillCache()
 	return any.cache
 }

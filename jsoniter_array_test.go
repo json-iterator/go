@@ -82,6 +82,23 @@ func Test_read_array_with_any_iterator(t *testing.T) {
 	should.Equal([]int{1, 2}, elements)
 }
 
+func Test_wrap_array(t *testing.T) {
+	should := require.New(t)
+	any := Wrap([]int{1,2,3})
+	should.Equal("[1,2,3]", any.ToString())
+	var element Any
+	var elements []int
+	for next, hasNext := any.IterateArray(); hasNext; {
+		element, hasNext = next()
+		elements = append(elements, element.ToInt())
+	}
+	should.Equal([]int{1, 2, 3}, elements)
+	any = Wrap([]int{1,2,3})
+	should.Equal(3, any.Size())
+	any = Wrap([]int{1,2,3})
+	should.Equal(2, any.Get(1).ToInt())
+}
+
 func Test_array_lazy_any_get(t *testing.T) {
 	should := require.New(t)
 	any, err := UnmarshalAnyFromString("[1,[2,3],4]")
