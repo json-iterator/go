@@ -360,6 +360,9 @@ func (any *objectAny) fillCache() {
 	if any.cache == nil {
 		any.cache = map[string]Any{}
 	}
+	if len(any.cache) == any.val.NumField() {
+		return
+	}
 	for i := 0; i < any.val.NumField(); i++ {
 		field := any.val.Field(i)
 		fieldName := any.val.Type().Field(i).Name
@@ -549,7 +552,6 @@ func (any *objectAny) GetInterface() interface{} {
 	return any.cache
 }
 
-
 type mapAny struct {
 	baseAny
 	err   error
@@ -593,6 +595,17 @@ func (any *mapAny) fillCacheUntil(target string) Any {
 }
 
 func (any *mapAny) fillCache() {
+	if any.cache == nil {
+		any.cache = map[string]Any{}
+	}
+	if len(any.cache) == len(any.val.MapKeys()) {
+		return
+	}
+	for _, key := range any.val.MapKeys() {
+		keyAsStr := key.String()
+		element := Wrap(any.val.MapIndex(key).Interface())
+		any.cache[keyAsStr] = element
+	}
 }
 
 func (any *mapAny) LastError() error {
@@ -705,7 +718,28 @@ func (any *mapAny) Size() int {
 }
 
 func (any *mapAny) IterateObject() (func() (string, Any, bool), bool) {
-	return nil, false
+	any.fillCache()
+	if len(any.cache) == 0 {
+		return nil, false
+	}
+	keys := make([]string, len(any.cache))
+	values := make([]Any, len(any.cache))
+	i := 0
+	for k, v := range any.cache {
+		keys[i] = k
+		values[i] = v
+		i++
+	}
+	i = 0
+	return func() (string, Any, bool) {
+		if i == len(keys) {
+			return "", nil, false
+		}
+		k := keys[i]
+		v := values[i]
+		i++
+		return k, v, i != len(keys)
+	}, true
 }
 
 func (any *mapAny) GetObject() map[string]Any {

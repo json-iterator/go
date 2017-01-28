@@ -80,12 +80,17 @@ func WrapString(val string) Any {
 }
 
 func Wrap(val interface{}) Any {
+	if val == nil {
+		return &nilAny{}
+	}
 	type_ := reflect.TypeOf(val)
 	switch type_.Kind() {
 	case reflect.Slice:
 		return wrapArray(val)
 	case reflect.Struct:
 		return wrapStruct(val)
+	case reflect.Map:
+		return wrapMap(val)
 	case reflect.String:
 		return WrapString(val.(string))
 	case reflect.Int:
@@ -112,8 +117,14 @@ func Wrap(val interface{}) Any {
 		return WrapFloat64(float64(val.(float32)))
 	case reflect.Float64:
 		return WrapFloat64(val.(float64))
+	case reflect.Bool:
+		if val.(bool) == true {
+			return &trueAny{}
+		} else {
+			return &falseAny{}
+		}
 	}
-	return nil
+	return &invalidAny{baseAny{}, fmt.Errorf("unsupported type: %v", type_)}
 }
 
 func (iter *Iterator) ReadAny() Any {
