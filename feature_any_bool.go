@@ -24,6 +24,18 @@ func (any *trueAny) ToInt64() int64 {
 	return 1
 }
 
+func (any *trueAny) ToUint() uint {
+	return 1
+}
+
+func (any *trueAny) ToUint32() uint32 {
+	return 1
+}
+
+func (any *trueAny) ToUint64() uint64 {
+	return 1
+}
+
 func (any *trueAny) ToFloat32() float32 {
 	return 1
 }
@@ -73,6 +85,18 @@ func (any *falseAny) ToInt32() int32 {
 }
 
 func (any *falseAny) ToInt64() int64 {
+	return 0
+}
+
+func (any *falseAny) ToUint() uint {
+	return 0
+}
+
+func (any *falseAny) ToUint32() uint32 {
+	return 0
+}
+
+func (any *falseAny) ToUint64() uint64 {
 	return 0
 }
 

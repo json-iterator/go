@@ -146,6 +146,36 @@ func (any *arrayLazyAny) ToInt64() int64 {
 	return 1
 }
 
+func (any *arrayLazyAny) ToUint() uint {
+	if any.cache == nil {
+		any.IterateArray() // trigger first element read
+	}
+	if len(any.cache) == 0 {
+		return 0
+	}
+	return 1
+}
+
+func (any *arrayLazyAny) ToUint32() uint32 {
+	if any.cache == nil {
+		any.IterateArray() // trigger first element read
+	}
+	if len(any.cache) == 0 {
+		return 0
+	}
+	return 1
+}
+
+func (any *arrayLazyAny) ToUint64() uint64 {
+	if any.cache == nil {
+		any.IterateArray() // trigger first element read
+	}
+	if len(any.cache) == 0 {
+		return 0
+	}
+	return 1
+}
+
 func (any *arrayLazyAny) ToFloat32() float32 {
 	if any.cache == nil {
 		any.IterateArray() // trigger first element read
@@ -315,57 +345,60 @@ func (any *arrayAny) LastError() error {
 }
 
 func (any *arrayAny) ToBool() bool {
-	if any.cache == nil {
-		any.IterateArray() // trigger first element read
-	}
-	return len(any.cache) != 0
+	return any.val.Len() != 0
 }
 
 func (any *arrayAny) ToInt() int {
-	if any.cache == nil {
-		any.IterateArray() // trigger first element read
-	}
-	if len(any.cache) == 0 {
+	if any.val.Len() == 0 {
 		return 0
 	}
 	return 1
 }
 
 func (any *arrayAny) ToInt32() int32 {
-	if any.cache == nil {
-		any.IterateArray() // trigger first element read
-	}
-	if len(any.cache) == 0 {
+	if any.val.Len() == 0 {
 		return 0
 	}
 	return 1
 }
 
 func (any *arrayAny) ToInt64() int64 {
-	if any.cache == nil {
-		any.IterateArray() // trigger first element read
+	if any.val.Len() == 0 {
+		return 0
 	}
-	if len(any.cache) == 0 {
+	return 1
+}
+
+func (any *arrayAny) ToUint() uint {
+	if any.val.Len() == 0 {
+		return 0
+	}
+	return 1
+}
+
+func (any *arrayAny) ToUint32() uint32 {
+	if any.val.Len() == 0 {
+		return 0
+	}
+	return 1
+}
+
+func (any *arrayAny) ToUint64() uint64 {
+	if any.val.Len() == 0 {
 		return 0
 	}
 	return 1
 }
 
 func (any *arrayAny) ToFloat32() float32 {
-	if any.cache == nil {
-		any.IterateArray() // trigger first element read
-	}
-	if len(any.cache) == 0 {
+	if any.val.Len() == 0 {
 		return 0
 	}
 	return 1
 }
 
 func (any *arrayAny) ToFloat64() float64 {
-	if any.cache == nil {
-		any.IterateArray() // trigger first element read
-	}
-	if len(any.cache) == 0 {
+	if any.val.Len() == 0 {
 		return 0
 	}
 	return 1

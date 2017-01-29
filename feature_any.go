@@ -12,6 +12,9 @@ type Any interface {
 	ToInt() int
 	ToInt32() int32
 	ToInt64() int64
+	ToUint() uint
+	ToUint32() uint32
+	ToUint64() uint64
 	ToFloat32() float32
 	ToFloat64() float64
 	ToString() string
@@ -67,8 +70,20 @@ func (any *baseAny) SetObject(map[string]Any) bool {
 	return false
 }
 
+func WrapInt32(val int32) Any {
+	return &int32Any{baseAny{}, val}
+}
+
 func WrapInt64(val int64) Any {
-	return &intAny{baseAny{}, val}
+	return &int64Any{baseAny{}, val}
+}
+
+func WrapUint32(val uint32) Any {
+	return &uint32Any{baseAny{}, val}
+}
+
+func WrapUint64(val uint64) Any {
+	return &uint64Any{baseAny{}, val}
 }
 
 func WrapFloat64(val float64) Any {
@@ -96,23 +111,23 @@ func Wrap(val interface{}) Any {
 	case reflect.Int:
 		return WrapInt64(int64(val.(int)))
 	case reflect.Int8:
-		return WrapInt64(int64(val.(int8)))
+		return WrapInt32(int32(val.(int8)))
 	case reflect.Int16:
-		return WrapInt64(int64(val.(int16)))
+		return WrapInt32(int32(val.(int16)))
 	case reflect.Int32:
-		return WrapInt64(int64(val.(int32)))
+		return WrapInt32(val.(int32))
 	case reflect.Int64:
 		return WrapInt64(val.(int64))
 	case reflect.Uint:
-		return WrapInt64(int64(val.(uint)))
+		return WrapUint64(uint64(val.(uint)))
 	case reflect.Uint8:
-		return WrapInt64(int64(val.(uint8)))
+		return WrapUint32(uint32(val.(uint8)))
 	case reflect.Uint16:
-		return WrapInt64(int64(val.(uint16)))
+		return WrapUint32(uint32(val.(uint16)))
 	case reflect.Uint32:
-		return WrapInt64(int64(val.(uint32)))
+		return WrapUint32(uint32(val.(uint32)))
 	case reflect.Uint64:
-		return WrapInt64(int64(val.(uint64)))
+		return WrapUint64(val.(uint64))
 	case reflect.Float32:
 		return WrapFloat64(float64(val.(float32)))
 	case reflect.Float64:
@@ -150,14 +165,14 @@ func (iter *Iterator) readAny(reusableIter *Iterator) Any {
 	case '[':
 		return iter.readArrayAny(reusableIter)
 	default:
-		iter.unreadByte()
-		return iter.readNumberAny(reusableIter)
+		return iter.readNumberAny(reusableIter, c)
 	}
 }
 
-func (iter *Iterator) readNumberAny(reusableIter *Iterator) Any {
+func (iter *Iterator) readNumberAny(reusableIter *Iterator, firstByte byte) Any {
 	dotFound := false
-	var lazyBuf []byte
+	lazyBuf := make([]byte, 1, 8)
+	lazyBuf[0] = firstByte
 	for {
 		for i := iter.head; i < iter.tail; i++ {
 			c := iter.buf[i]
@@ -170,9 +185,13 @@ func (iter *Iterator) readNumberAny(reusableIter *Iterator) Any {
 				lazyBuf = append(lazyBuf, iter.buf[iter.head:i]...)
 				iter.head = i
 				if dotFound {
-					return &floatLazyAny{baseAny{}, lazyBuf, reusableIter, nil, 0}
+					return &float64LazyAny{baseAny{}, lazyBuf, reusableIter, nil, 0}
 				} else {
-					return &intLazyAny{baseAny{}, lazyBuf, reusableIter, nil, 0}
+					if firstByte == '-' {
+						return &int64LazyAny{baseAny{}, lazyBuf, reusableIter, nil, 0}
+					} else {
+						return &uint64LazyAny{baseAny{}, lazyBuf, reusableIter, nil, 0}
+					}
 				}
 			}
 		}
@@ -180,9 +199,13 @@ func (iter *Iterator) readNumberAny(reusableIter *Iterator) Any {
 		if !iter.loadMore() {
 			iter.head = iter.tail
 			if dotFound {
-				return &floatLazyAny{baseAny{}, lazyBuf, reusableIter, nil, 0}
+				return &float64LazyAny{baseAny{}, lazyBuf, reusableIter, nil, 0}
 			} else {
-				return &intLazyAny{baseAny{}, lazyBuf, reusableIter, nil, 0}
+				if firstByte == '-' {
+					return &int64LazyAny{baseAny{}, lazyBuf, reusableIter, nil, 0}
+				} else {
+					return &uint64LazyAny{baseAny{}, lazyBuf, reusableIter, nil, 0}
+				}
 			}
 		}
 	}

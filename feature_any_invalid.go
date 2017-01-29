@@ -31,6 +31,18 @@ func (any *invalidAny) ToInt64() int64 {
 	return 0
 }
 
+func (any *invalidAny) ToUint() uint {
+	return 0
+}
+
+func (any *invalidAny) ToUint32() uint32 {
+	return 0
+}
+
+func (any *invalidAny) ToUint64() uint64 {
+	return 0
+}
+
 func (any *invalidAny) ToFloat32() float32 {
 	return 0
 }

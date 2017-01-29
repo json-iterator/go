@@ -148,6 +148,36 @@ func (any *objectLazyAny) ToInt64() int64 {
 	return 1
 }
 
+func (any *objectLazyAny) ToUint() uint {
+	if any.cache == nil {
+		any.IterateObject() // trigger first value read
+	}
+	if len(any.cache) == 0 {
+		return 0
+	}
+	return 1
+}
+
+func (any *objectLazyAny) ToUint32() uint32 {
+	if any.cache == nil {
+		any.IterateObject() // trigger first value read
+	}
+	if len(any.cache) == 0 {
+		return 0
+	}
+	return 1
+}
+
+func (any *objectLazyAny) ToUint64() uint64 {
+	if any.cache == nil {
+		any.IterateObject() // trigger first value read
+	}
+	if len(any.cache) == 0 {
+		return 0
+	}
+	return 1
+}
+
 func (any *objectLazyAny) ToFloat32() float32 {
 	if any.cache == nil {
 		any.IterateObject() // trigger first value read
@@ -381,57 +411,60 @@ func (any *objectAny) LastError() error {
 }
 
 func (any *objectAny) ToBool() bool {
-	if any.cache == nil {
-		any.IterateObject() // trigger first value read
-	}
-	return len(any.cache) != 0
+	return any.val.NumField() != 0
 }
 
 func (any *objectAny) ToInt() int {
-	if any.cache == nil {
-		any.IterateObject() // trigger first value read
-	}
-	if len(any.cache) == 0 {
+	if any.val.NumField() == 0 {
 		return 0
 	}
 	return 1
 }
 
 func (any *objectAny) ToInt32() int32 {
-	if any.cache == nil {
-		any.IterateObject() // trigger first value read
-	}
-	if len(any.cache) == 0 {
+	if any.val.NumField() == 0 {
 		return 0
 	}
 	return 1
 }
 
 func (any *objectAny) ToInt64() int64 {
-	if any.cache == nil {
-		any.IterateObject() // trigger first value read
+	if any.val.NumField() == 0 {
+		return 0
 	}
-	if len(any.cache) == 0 {
+	return 1
+}
+
+func (any *objectAny) ToUint() uint {
+	if any.val.NumField() == 0 {
+		return 0
+	}
+	return 1
+}
+
+func (any *objectAny) ToUint32() uint32 {
+	if any.val.NumField() == 0 {
+		return 0
+	}
+	return 1
+}
+
+func (any *objectAny) ToUint64() uint64 {
+	if any.val.NumField() == 0 {
 		return 0
 	}
 	return 1
 }
 
 func (any *objectAny) ToFloat32() float32 {
-	if any.cache == nil {
-		any.IterateObject() // trigger first value read
-	}
-	if len(any.cache) == 0 {
+	if any.val.NumField() == 0 {
 		return 0
 	}
 	return 1
 }
 
 func (any *objectAny) ToFloat64() float64 {
-	if any.cache == nil {
-		any.IterateObject() // trigger first value read
-	}
-	if len(any.cache) == 0 {
+	if any.val.NumField() == 0 {
 		return 0
 	}
 	return 1
@@ -598,7 +631,7 @@ func (any *mapAny) fillCache() {
 	if any.cache == nil {
 		any.cache = map[string]Any{}
 	}
-	if len(any.cache) == len(any.val.MapKeys()) {
+	if len(any.cache) == any.val.Len() {
 		return
 	}
 	for _, key := range any.val.MapKeys() {
@@ -613,57 +646,60 @@ func (any *mapAny) LastError() error {
 }
 
 func (any *mapAny) ToBool() bool {
-	if any.cache == nil {
-		any.IterateObject() // trigger first value read
-	}
-	return len(any.cache) != 0
+	return any.val.Len() != 0
 }
 
 func (any *mapAny) ToInt() int {
-	if any.cache == nil {
-		any.IterateObject() // trigger first value read
-	}
-	if len(any.cache) == 0 {
+	if any.val.Len() == 0 {
 		return 0
 	}
 	return 1
 }
 
 func (any *mapAny) ToInt32() int32 {
-	if any.cache == nil {
-		any.IterateObject() // trigger first value read
-	}
-	if len(any.cache) == 0 {
+	if any.val.Len() == 0 {
 		return 0
 	}
 	return 1
 }
 
 func (any *mapAny) ToInt64() int64 {
-	if any.cache == nil {
-		any.IterateObject() // trigger first value read
+	if any.val.Len() == 0 {
+		return 0
 	}
-	if len(any.cache) == 0 {
+	return 1
+}
+
+func (any *mapAny) ToUint() uint {
+	if any.val.Len() == 0 {
+		return 0
+	}
+	return 1
+}
+
+func (any *mapAny) ToUint32() uint32 {
+	if any.val.Len() == 0 {
+		return 0
+	}
+	return 1
+}
+
+func (any *mapAny) ToUint64() uint64 {
+	if any.val.Len() == 0 {
 		return 0
 	}
 	return 1
 }
 
 func (any *mapAny) ToFloat32() float32 {
-	if any.cache == nil {
-		any.IterateObject() // trigger first value read
-	}
-	if len(any.cache) == 0 {
+	if any.val.Len() == 0 {
 		return 0
 	}
 	return 1
 }
 
 func (any *mapAny) ToFloat64() float64 {
-	if any.cache == nil {
-		any.IterateObject() // trigger first value read
-	}
-	if len(any.cache) == 0 {
+	if any.val.Len() == 0 {
 		return 0
 	}
 	return 1

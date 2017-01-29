@@ -28,6 +28,18 @@ func (any *nilAny) ToInt64() int64 {
 	return 0
 }
 
+func (any *nilAny) ToUint() uint {
+	return 0
+}
+
+func (any *nilAny) ToUint32() uint32 {
+	return 0
+}
+
+func (any *nilAny) ToUint64() uint64 {
+	return 0
+}
+
 func (any *nilAny) ToFloat32() float32 {
 	return 0
 }

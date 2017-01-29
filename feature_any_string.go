@@ -82,6 +82,30 @@ func (any *stringLazyAny) ToInt64() int64 {
 	return val
 }
 
+func (any *stringLazyAny) ToUint() uint {
+	iter := any.Parse()
+	iter.head++
+	val := iter.ReadUint()
+	any.err = iter.Error
+	return val
+}
+
+func (any *stringLazyAny) ToUint32() uint32 {
+	iter := any.Parse()
+	iter.head++
+	val := iter.ReadUint32()
+	any.err = iter.Error
+	return val
+}
+
+func (any *stringLazyAny) ToUint64() uint64 {
+	iter := any.Parse()
+	iter.head++
+	val := iter.ReadUint64()
+	any.err = iter.Error
+	return val
+}
+
 func (any *stringLazyAny) ToFloat32() float32 {
 	iter := any.Parse()
 	iter.head++
@@ -160,6 +184,24 @@ func (any *stringAny) ToInt32() int32 {
 
 func (any *stringAny) ToInt64() int64 {
 	parsed, err := strconv.ParseInt(any.val, 10, 64)
+	any.err = err
+	return parsed
+}
+
+func (any *stringAny) ToUint() uint {
+	parsed, err := strconv.ParseUint(any.val, 10, 64)
+	any.err = err
+	return uint(parsed)
+}
+
+func (any *stringAny) ToUint32() uint32 {
+	parsed, err := strconv.ParseUint(any.val, 10, 32)
+	any.err = err
+	return uint32(parsed)
+}
+
+func (any *stringAny) ToUint64() uint64 {
+	parsed, err := strconv.ParseUint(any.val, 10, 64)
 	any.err = err
 	return parsed
 }
