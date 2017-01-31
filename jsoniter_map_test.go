@@ -43,6 +43,12 @@ func Test_wrap_map(t *testing.T) {
 	should.Equal(map[string]string{"Field1":"hello"}, vals)
 }
 
+func Test_map_wrapper_any_get_all(t *testing.T) {
+	should := require.New(t)
+	any := Wrap(map[string][]int{"Field1": []int{1, 2}})
+	should.Equal(`{"Field1":1}`, any.Get('*', 0).ToString())
+}
+
 func Test_write_val_map(t *testing.T) {
 	should := require.New(t)
 	val := map[string]string{"1": "2"}

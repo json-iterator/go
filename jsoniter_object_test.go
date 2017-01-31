@@ -108,7 +108,6 @@ func Test_object_any_lazy_iterator(t *testing.T) {
 	should.Equal(map[string]string{"a":"b", "c":"d"}, vals)
 }
 
-
 func Test_object_any_with_two_lazy_iterators(t *testing.T) {
 	should := require.New(t)
 	any, err := UnmarshalAnyFromString(`{"a":"b","c":"d","e":"f"}`)
@@ -193,6 +192,16 @@ func Test_wrap_object(t *testing.T) {
 		}
 	}
 	should.Equal(map[string]string{"Field1":"hello"}, vals)
+}
+
+func Test_object_wrapper_any_get_all(t *testing.T) {
+	should := require.New(t)
+	type TestObject struct {
+		Field1 []int
+		Field2 []int
+	}
+	any := Wrap(TestObject{[]int{1, 2}, []int{3, 4}})
+	should.Equal(`{"Field2":3,"Field1":1}`, any.Get('*', 0).ToString())
 }
 
 func Test_write_object(t *testing.T) {
