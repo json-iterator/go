@@ -468,14 +468,14 @@ func (any *arrayAny) Get(path ...interface{}) Any {
 	case int32:
 		if '*' == firstPath {
 			any.fillCache()
-			arr := make([]Any, 0, len(any.cache))
+			mappedAll := make([]Any, 0, len(any.cache))
 			for _, element := range any.cache {
-				found := element.Get(path[1:]...)
-				if found.ValueType() != Invalid {
-					arr = append(arr, found)
+				mapped := element.Get(path[1:]...)
+				if mapped.ValueType() != Invalid {
+					mappedAll = append(mappedAll, mapped)
 				}
 			}
-			return wrapArray(arr)
+			return wrapArray(mappedAll)
 		} else {
 			element = &invalidAny{baseAny{}, fmt.Errorf("%v not found in %v", path[0], any.cache)}
 		}

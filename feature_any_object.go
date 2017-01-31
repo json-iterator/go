@@ -215,14 +215,29 @@ func (any *objectLazyAny) Get(path ...interface{}) Any {
 		return any
 	}
 	var element Any
-	key, ok := path[0].(string)
-	if ok {
-		element = any.fillCacheUntil(key)
+
+	switch firstPath := path[0].(type) {
+	case string:
+		element = any.fillCacheUntil(firstPath)
 		if element == nil {
-			element = &invalidAny{baseAny{}, fmt.Errorf("%v not found in %v", key, any.cache)}
+			element = &invalidAny{baseAny{}, fmt.Errorf("%v not found in %v", firstPath, any.cache)}
 		}
-	} else {
-		element = &invalidAny{baseAny{}, fmt.Errorf("%v not found in %v", key, any.cache)}
+	case int32:
+		if '*' == firstPath {
+			any.fillCache()
+			mappedAll := map[string]Any{}
+			for key, value := range any.cache {
+				mapped := value.Get(path[1:]...)
+				if mapped.ValueType() != Invalid {
+					mappedAll[key] = mapped
+				}
+			}
+			return wrapMap(mappedAll)
+		} else {
+			element = &invalidAny{baseAny{}, fmt.Errorf("%v not found in %v", firstPath, any.cache)}
+		}
+	default:
+		element = &invalidAny{baseAny{}, fmt.Errorf("%v not found in %v", firstPath, any.cache)}
 	}
 	if len(path) == 1 {
 		return element
@@ -472,7 +487,7 @@ func (any *objectAny) ToFloat64() float64 {
 
 func (any *objectAny) ToString() string {
 	if len(any.cache) == 0 {
-		str, err := MarshalToString(any.val)
+		str, err := MarshalToString(any.val.Interface())
 		any.err = err
 		return str
 	} else {
@@ -707,7 +722,7 @@ func (any *mapAny) ToFloat64() float64 {
 
 func (any *mapAny) ToString() string {
 	if len(any.cache) == 0 {
-		str, err := MarshalToString(any.val)
+		str, err := MarshalToString(any.val.Interface())
 		any.err = err
 		return str
 	} else {

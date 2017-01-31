@@ -147,6 +147,13 @@ func Test_object_lazy_any_get(t *testing.T) {
 	should.Equal("d", any.Get("a", "b", "c").ToString())
 }
 
+func Test_object_lazy_any_get_all(t *testing.T) {
+	should := require.New(t)
+	any, err := UnmarshalAnyFromString(`{"a":[0],"b":[1]}`)
+	should.Nil(err)
+	should.Equal(`{"a":0,"b":1}`, any.Get('*', 0).ToString())
+}
+
 func Test_object_lazy_any_get_invalid(t *testing.T) {
 	should := require.New(t)
 	any, err := UnmarshalAnyFromString(`{}`)
