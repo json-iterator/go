@@ -213,14 +213,28 @@ func (any *arrayLazyAny) Get(path ...interface{}) Any {
 		return any
 	}
 	var element Any
-	idx, ok := path[0].(int)
-	if ok {
-		element = any.fillCacheUntil(idx)
+	switch firstPath := path[0].(type) {
+	case int:
+		element = any.fillCacheUntil(firstPath)
 		if element == nil {
-			element = &invalidAny{baseAny{}, fmt.Errorf("%v not found in %v", idx, any.cache)}
+			element = &invalidAny{baseAny{}, fmt.Errorf("%v not found in %v", firstPath, any.cache)}
 		}
-	} else {
-		element = &invalidAny{baseAny{}, fmt.Errorf("%v not found in %v", idx, any.cache)}
+	case int32:
+		if '*' == firstPath {
+			any.fillCache()
+			arr := make([]Any, 0, len(any.cache))
+			for _, element := range any.cache {
+				found := element.Get(path[1:]...)
+				if found.ValueType() != Invalid {
+					arr = append(arr, found)
+				}
+			}
+			return wrapArray(arr)
+		} else {
+			element = &invalidAny{baseAny{}, fmt.Errorf("%v not found in %v", path[0], any.cache)}
+		}
+	default:
+		element = &invalidAny{baseAny{}, fmt.Errorf("%v not found in %v", path[0], any.cache)}
 	}
 	if len(path) == 1 {
 		return element
@@ -445,14 +459,28 @@ func (any *arrayAny) Get(path ...interface{}) Any {
 		return any
 	}
 	var element Any
-	idx, ok := path[0].(int)
-	if ok {
-		element = any.fillCacheUntil(idx)
+	switch firstPath := path[0].(type) {
+	case int:
+		element = any.fillCacheUntil(firstPath)
 		if element == nil {
-			element = &invalidAny{baseAny{}, fmt.Errorf("%v not found in %v", idx, any.cache)}
+			element = &invalidAny{baseAny{}, fmt.Errorf("%v not found in %v", firstPath, any.cache)}
 		}
-	} else {
-		element = &invalidAny{baseAny{}, fmt.Errorf("%v not found in %v", idx, any.cache)}
+	case int32:
+		if '*' == firstPath {
+			any.fillCache()
+			arr := make([]Any, 0, len(any.cache))
+			for _, element := range any.cache {
+				found := element.Get(path[1:]...)
+				if found.ValueType() != Invalid {
+					arr = append(arr, found)
+				}
+			}
+			return wrapArray(arr)
+		} else {
+			element = &invalidAny{baseAny{}, fmt.Errorf("%v not found in %v", path[0], any.cache)}
+		}
+	default:
+		element = &invalidAny{baseAny{}, fmt.Errorf("%v not found in %v", path[0], any.cache)}
 	}
 	if len(path) == 1 {
 		return element

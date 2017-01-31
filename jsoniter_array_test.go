@@ -114,6 +114,16 @@ func Test_array_lazy_any_get_all(t *testing.T) {
 	should.Equal("[1,2,3]", any.Get('*',0).ToString())
 }
 
+func Test_array_wrapper_any_get_all(t *testing.T) {
+	should := require.New(t)
+	any := wrapArray([][]int{
+		[]int{1, 2},
+		[]int{3, 4},
+		[]int{5, 6},
+	})
+	should.Equal("[1,3,5]", any.Get('*',0).ToString())
+}
+
 func Test_array_lazy_any_get_invalid(t *testing.T) {
 	should := require.New(t)
 	any, err := UnmarshalAnyFromString("[]")
