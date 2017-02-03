@@ -37,6 +37,11 @@ func encoderOfStruct(typ reflect.Type) (Encoder, error) {
 		if err != nil {
 			return prefix(fmt.Sprintf("{%s}", field.Name)).addToEncoder(encoder, err)
 		}
+		// map is stored as pointer in the struct
+		// but if struct only has one map, it is inlined
+		if field.Type.Kind() == reflect.Map && typ.NumField() > 1 {
+			encoder = &optionalEncoder{field.Type, encoder}
+		}
 		for _, fieldName := range fieldNames {
 			if structEncoder_.firstField == nil {
 				structEncoder_.firstField = &structFieldEncoder{&field, fieldName, encoder}

@@ -22,6 +22,29 @@ func Test_write_map_of_interface(t *testing.T) {
 	should.Equal(`{"hello":"world"}`, str)
 }
 
+func Test_write_map_of_interface_in_struct(t *testing.T) {
+	type TestObject struct {
+		Field map[string]interface{}
+	}
+	should := require.New(t)
+	val := TestObject{map[string]interface{}{"hello":"world"}}
+	str, err := MarshalToString(val)
+	should.Nil(err)
+	should.Equal(`{"Field":{"hello":"world"}}`, str)
+}
+
+func Test_write_map_of_interface_in_struct_with_two_fields(t *testing.T) {
+	type TestObject struct {
+		Field map[string]interface{}
+		Field2 string
+	}
+	should := require.New(t)
+	val := TestObject{map[string]interface{}{"hello":"world"}, ""}
+	str, err := MarshalToString(val)
+	should.Nil(err)
+	should.Equal(`{"Field":{"hello":"world"},"Field2":""}`, str)
+}
+
 type MyInterface interface {
 	Hello() string
 }

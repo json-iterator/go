@@ -241,6 +241,18 @@ func Test_write_val_empty_array(t *testing.T) {
 	should.Equal("[]", str)
 }
 
+func Test_write_array_of_interface_in_struct(t *testing.T) {
+	should := require.New(t)
+	type TestObject struct {
+		Field []interface{}
+		Field2 string
+	}
+	val := TestObject{[]interface{}{1, 2}, ""}
+	str, err := MarshalToString(val)
+	should.Nil(err)
+	should.Equal(`{"Field":[1,2],"Field2":""}`, str)
+}
+
 func Benchmark_jsoniter_array(b *testing.B) {
 	b.ReportAllocs()
 	input := []byte(`[1,2,3,4,5,6,7,8,9]`)

@@ -569,7 +569,6 @@ func (any *objectAny) IterateObject() (func() (string, Any, bool), bool) {
 		var fieldValueAsAny Any
 		if i == len(cacheKeys) {
 			fieldName = any.val.Type().Field(i).Name
-			fmt.Println(fieldName)
 			cacheKeys = append(cacheKeys, fieldName)
 			fieldValue := any.val.Field(i)
 			if fieldValue.CanInterface() {

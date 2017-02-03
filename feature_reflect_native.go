@@ -226,7 +226,7 @@ func (codec *interfaceCodec) encode(ptr unsafe.Pointer, stream *Stream) {
 }
 
 func (encoder *interfaceCodec) encodeInterface(val interface{}, stream *Stream) {
-	WriteToStream(val, stream, encoder)
+	stream.WriteVal(val)
 }
 
 type anyCodec struct {
