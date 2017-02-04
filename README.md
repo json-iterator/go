@@ -23,9 +23,8 @@ Parse with Go bind-api
 ```go
 import "github.com/json-iterator/go"
 iter := jsoniter.ParseString(`[0,1,2,3]`)
-val := []int{}
-iter.Read(&val)
-fmt.Println(val[3])
+var := iter.Read()
+fmt.Println(val)
 ```
 
 # Iterator-API for quick extraction
