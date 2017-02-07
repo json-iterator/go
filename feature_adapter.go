@@ -16,7 +16,7 @@ func Unmarshal(data []byte, v interface{}) error {
 		return nil
 	}
 	if iter.Error == nil {
-		iter.reportError("UnmarshalAny", "there are bytes left after unmarshal")
+		iter.reportError("Unmarshal", "there are bytes left after unmarshal")
 	}
 	return iter.Error
 }

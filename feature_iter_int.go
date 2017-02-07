@@ -1,6 +1,8 @@
 package jsoniter
 
-import "strconv"
+import (
+	"strconv"
+)
 
 var intDigits []int8
 
@@ -124,6 +126,7 @@ func (iter *Iterator) readUint32(c byte) (ret uint32) {
 		for i := iter.head; i < iter.tail; i++ {
 			ind = intDigits[iter.buf[i]]
 			if ind == invalidCharForNumber {
+				iter.head = i
 				return value
 			}
 			if value > uint32SafeToMultiply10 {
@@ -181,6 +184,7 @@ func (iter *Iterator) readUint64(c byte) (ret uint64) {
 		for i := iter.head; i < iter.tail; i++ {
 			ind = intDigits[iter.buf[i]]
 			if ind == invalidCharForNumber {
+				iter.head = i
 				return value
 			}
 			if value > uint64SafeToMultiple10 {

@@ -17,6 +17,10 @@ func NewStream(out io.Writer, bufSize int) *Stream {
 	return &Stream{out, make([]byte, bufSize), 0, nil, 0, 0}
 }
 
+func (b *Stream) Reset(out io.Writer) {
+	b.out = out
+	b.n = 0
+}
 
 // Available returns how many bytes are unused in the buffer.
 func (b *Stream) Available() int {

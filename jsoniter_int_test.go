@@ -64,6 +64,22 @@ func Test_read_int32(t *testing.T) {
 	}
 }
 
+func Test_read_int32_array(t *testing.T) {
+	should := require.New(t)
+	input := `[123,456,789]`
+	val := make([]int32, 0)
+	UnmarshalFromString(input, &val)
+	should.Equal(3, len(val))
+}
+
+func Test_read_int64_array(t *testing.T) {
+	should := require.New(t)
+	input := `[123,456,789]`
+	val := make([]int64, 0)
+	UnmarshalFromString(input, &val)
+	should.Equal(3, len(val))
+}
+
 func Test_read_int32_overflow(t *testing.T) {
 	should := require.New(t)
 	input := "123456789123456789,"
