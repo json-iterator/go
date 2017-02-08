@@ -122,6 +122,59 @@ func (iter *Iterator) readUint32(c byte) (ret uint32) {
 		return
 	}
 	value := uint32(ind)
+	if iter.tail - iter.head > 10 {
+		i := iter.head
+		ind2 := intDigits[iter.buf[i]]
+		if ind2 == invalidCharForNumber {
+			iter.head = i
+			return value
+		}
+		i++
+		ind3 := intDigits[iter.buf[i]]
+		if ind3 == invalidCharForNumber {
+			iter.head = i
+			return value * 10 + uint32(ind2)
+		}
+		//iter.head = i + 1
+		//value = value * 100 + uint32(ind2) * 10 + uint32(ind3)
+		i++
+		ind4 := intDigits[iter.buf[i]]
+		if ind4 == invalidCharForNumber {
+			iter.head = i
+			return value * 100 + uint32(ind2) * 10 + uint32(ind3)
+		}
+		i++
+		ind5 := intDigits[iter.buf[i]]
+		if ind5 == invalidCharForNumber {
+			iter.head = i
+			return value * 1000 + uint32(ind2) * 100 + uint32(ind3) * 10 + uint32(ind4)
+		}
+		i++
+		ind6 := intDigits[iter.buf[i]]
+		if ind6 == invalidCharForNumber {
+			iter.head = i
+			return value * 10000 + uint32(ind2) * 1000 + uint32(ind3) * 100 + uint32(ind4) * 10 + uint32(ind5)
+		}
+		i++
+		ind7 := intDigits[iter.buf[i]]
+		if ind7 == invalidCharForNumber {
+			iter.head = i
+			return value * 100000 + uint32(ind2) * 10000 + uint32(ind3) * 1000 + uint32(ind4) * 100 + uint32(ind5) * 10 + uint32(ind6)
+		}
+		i++
+		ind8 := intDigits[iter.buf[i]]
+		if ind8 == invalidCharForNumber {
+			iter.head = i
+			return value * 1000000 + uint32(ind2) * 100000 + uint32(ind3) * 10000 + uint32(ind4) * 1000 + uint32(ind5) * 100 + uint32(ind6) * 10 + uint32(ind7)
+		}
+		i++
+		ind9 := intDigits[iter.buf[i]]
+		value = value * 10000000 + uint32(ind2) * 1000000 + uint32(ind3) * 100000 + uint32(ind4) * 10000 + uint32(ind5) * 1000 + uint32(ind6) * 100 + uint32(ind7) * 10 + uint32(ind8)
+		iter.head = i
+		if ind9 == invalidCharForNumber {
+			return value
+		}
+	}
 	for {
 		for i := iter.head; i < iter.tail; i++ {
 			ind = intDigits[iter.buf[i]]

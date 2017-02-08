@@ -85,6 +85,31 @@ func Test_decode_five_fields_struct(t *testing.T) {
 	should.Equal("e", obj.field5)
 }
 
+func Test_decode_ten_fields_struct(t *testing.T) {
+	should := require.New(t)
+	type TestObject struct {
+		field1 string
+		field2 string
+		field3 string
+		field4 string
+		field5 string
+		field6 string
+		field7 string
+		field8 string
+		field9 string
+		field10 string
+	}
+	obj := TestObject{}
+	should.Nil(UnmarshalFromString(`{}`, &obj))
+	should.Equal("", obj.field1)
+	should.Nil(UnmarshalFromString(`{"field1": "a", "field2": "b", "field3": "c", "field4": "d", "field5": "e"}`, &obj))
+	should.Equal("a", obj.field1)
+	should.Equal("b", obj.field2)
+	should.Equal("c", obj.field3)
+	should.Equal("d", obj.field4)
+	should.Equal("e", obj.field5)
+}
+
 func Test_decode_struct_field_with_tag(t *testing.T) {
 	should := require.New(t)
 	type TestObject struct {

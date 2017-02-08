@@ -27,6 +27,44 @@ func (iter *Iterator) ReadObject() (ret string) {
 	}
 }
 
+func (iter *Iterator) readFieldHash() int32 {
+	hash := 0x811c9dc5
+	c := iter.nextToken()
+	if c == '"' {
+		for {
+			for i := iter.head; i < iter.tail; i++ {
+				// require ascii string and no escape
+				b := iter.buf[i]
+				if b == '"' {
+					iter.head = i+1
+					c = iter.nextToken()
+					if c != ':' {
+						iter.reportError("readFieldHash", `expect :, but found ` + string([]byte{c}))
+					}
+					return int32(hash)
+				}
+				hash ^= int(b)
+				hash *= 0x1000193
+			}
+			if !iter.loadMore() {
+				iter.reportError("readFieldHash", `incomplete field name`)
+				return 0
+			}
+		}
+	}
+	iter.reportError("readFieldHash", `expect ", but found ` + string([]byte{c}))
+	return 0
+}
+
+func calcHash(str string) int32 {
+	hash := 0x811c9dc5
+	for _, b := range str {
+		hash ^= int(b)
+		hash *= 0x1000193
+	}
+	return int32(hash)
+}
+
 func (iter *Iterator) ReadObjectCB(callback func(*Iterator, string) bool) bool {
 	c := iter.nextToken()
 	if c == '{' {
