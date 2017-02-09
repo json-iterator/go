@@ -28,7 +28,7 @@ func (iter *Iterator) ReadObject() (ret string) {
 }
 
 func (iter *Iterator) readFieldHash() int32 {
-	hash := 0x811c9dc5
+	hash := int64(0x811c9dc5)
 	c := iter.nextToken()
 	if c == '"' {
 		for {
@@ -57,7 +57,7 @@ func (iter *Iterator) readFieldHash() int32 {
 }
 
 func calcHash(str string) int32 {
-	hash := 0x811c9dc5
+	hash := int64(0x811c9dc5)
 	for _, b := range str {
 		hash ^= int(b)
 		hash *= 0x1000193
