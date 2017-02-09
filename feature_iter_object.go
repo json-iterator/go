@@ -43,7 +43,7 @@ func (iter *Iterator) readFieldHash() int32 {
 					}
 					return int32(hash)
 				}
-				hash ^= int(b)
+				hash ^= int64(b)
 				hash *= 0x1000193
 			}
 			if !iter.loadMore() {
@@ -59,7 +59,7 @@ func (iter *Iterator) readFieldHash() int32 {
 func calcHash(str string) int32 {
 	hash := int64(0x811c9dc5)
 	for _, b := range str {
-		hash ^= int(b)
+		hash ^= int64(b)
 		hash *= 0x1000193
 	}
 	return int32(hash)
