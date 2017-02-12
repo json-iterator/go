@@ -49,7 +49,7 @@ func (any *nilAny) ToFloat64() float64 {
 }
 
 func (any *nilAny) ToString() string {
-	return "nil"
+	return ""
 }
 
 func (any *nilAny) WriteTo(stream *Stream) {

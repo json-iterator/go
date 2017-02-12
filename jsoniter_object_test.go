@@ -221,12 +221,11 @@ func Test_write_object(t *testing.T) {
 	should.Equal("{\n  \"hello\":1,\n  \"world\":2\n}", buf.String())
 }
 
-type TestObj struct {
-	Field1 string
-	Field2 uint64
-}
-
 func Benchmark_jsoniter_object(b *testing.B) {
+	type TestObj struct {
+		Field1 string
+		Field2 uint64
+	}
 	for n := 0; n < b.N; n++ {
 		iter := ParseString(`{"field1": "1", "field2": 2}`)
 		obj := TestObj{}
@@ -244,6 +243,10 @@ func Benchmark_jsoniter_object(b *testing.B) {
 }
 
 func Benchmark_json_object(b *testing.B) {
+	type TestObj struct {
+		Field1 string
+		Field2 uint64
+	}
 	for n := 0; n < b.N; n++ {
 		result := TestObj{}
 		json.Unmarshal([]byte(`{"field1": "1", "field2": 2}`), &result)

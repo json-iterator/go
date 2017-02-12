@@ -197,7 +197,9 @@ func (iter *Iterator) skipFixedBytes(n int) {
 	if (iter.head >= iter.tail) {
 		more := iter.head - iter.tail;
 		if !iter.loadMore() {
-			iter.reportError("skipFixedBytes", "unexpected end");
+			if more > 0 {
+				iter.reportError("skipFixedBytes", "unexpected end");
+			}
 			return
 		}
 		iter.head += more;

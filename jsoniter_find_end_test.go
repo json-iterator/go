@@ -3,6 +3,7 @@ package jsoniter
 import (
 	"io"
 	"testing"
+	"github.com/json-iterator/go/require"
 )
 
 func Test_string_end(t *testing.T) {
@@ -89,52 +90,41 @@ func (reader *StagedReader) Read(p []byte) (n int, err error) {
 }
 
 func Test_skip_string(t *testing.T) {
+	should := require.New(t)
 	iter := ParseString(`"abc`)
 	iter.skipString()
-	if iter.head != 1 {
-		t.Fatal(iter.head)
-	}
+	should.Equal(1, iter.head)
 	iter = ParseString(`\""abc`)
 	iter.skipString()
-	if iter.head != 3 {
-		t.Fatal(iter.head)
-	}
+	should.Equal(3, iter.head)
 	reader := &StagedReader{
 		r1: `abc`,
 		r2: `"`,
 	}
 	iter = Parse(reader, 4096)
 	iter.skipString()
-	if iter.head != 1 {
-		t.Fatal(iter.head)
-	}
+	should.Equal(1, iter.head)
 	reader = &StagedReader{
 		r1: `abc`,
 		r2: `1"`,
 	}
 	iter = Parse(reader, 4096)
 	iter.skipString()
-	if iter.head != 2 {
-		t.Fatal(iter.head)
-	}
+	should.Equal(2, iter.head)
 	reader = &StagedReader{
 		r1: `abc\`,
 		r2: `"`,
 	}
 	iter = Parse(reader, 4096)
 	iter.skipString()
-	if iter.Error != io.EOF {
-		t.Fatal(iter.Error)
-	}
+	should.NotNil(iter.Error)
 	reader = &StagedReader{
 		r1: `abc\`,
 		r2: `""`,
 	}
 	iter = Parse(reader, 4096)
 	iter.skipString()
-	if iter.head != 2 {
-		t.Fatal(iter.head)
-	}
+	should.Equal(2, iter.head)
 }
 
 func Test_skip_object(t *testing.T) {
