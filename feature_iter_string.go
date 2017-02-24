@@ -59,7 +59,7 @@ func (iter *Iterator) readStringSlowPath(str []byte) (ret string) {
 		if c == '\\' {
 			c = iter.readByte()
 			switch c {
-			case 'u':
+			case 'u', 'U':
 				r := iter.readU4()
 				if utf16.IsSurrogate(r) {
 					c = iter.readByte()
@@ -75,7 +75,7 @@ func (iter *Iterator) readStringSlowPath(str []byte) (ret string) {
 					if iter.Error != nil {
 						return
 					}
-					if c != 'u' {
+					if c != 'u' && c != 'U' {
 						iter.reportError("ReadString",
 							`expects \u after utf16 surrogate, but \u not found`)
 						return
@@ -157,6 +157,8 @@ func (iter *Iterator) readU4() (ret rune) {
 			ret = ret * 16 + rune(c - '0')
 		} else if c >= 'a' && c <= 'f' {
 			ret = ret * 16 + rune(c - 'a' + 10)
+		} else if c >= 'A' && c <= 'F' {
+			ret = ret * 16 + rune(c - 'A' + 10)
 		} else {
 			iter.reportError("readU4", "expects 0~9 or a~f")
 			return
