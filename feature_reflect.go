@@ -200,7 +200,9 @@ func (decoder *mapDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 	mapInterface.word = ptr
 	realInterface := (*interface{})(unsafe.Pointer(&mapInterface))
 	realVal := reflect.ValueOf(*realInterface).Elem()
-
+	if realVal.IsNil() {
+		realVal.Set(reflect.MakeMap(realVal.Type()))
+	}
 	for field := iter.ReadObject(); field != ""; field = iter.ReadObject() {
 		elem := reflect.New(decoder.elemType)
 		decoder.elemDecoder.decode(unsafe.Pointer(elem.Pointer()), iter)

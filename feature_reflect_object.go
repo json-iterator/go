@@ -33,14 +33,17 @@ func encoderOfStruct(typ reflect.Type) (Encoder, error) {
 				fieldNames = []string{tagParts[0]}
 			}
 		}
-		encoder, err := encoderOfType(field.Type)
-		if err != nil {
-			return prefix(fmt.Sprintf("{%s}", field.Name)).addToEncoder(encoder, err)
-		}
-		// map is stored as pointer in the struct
-		// but if struct only has one map, it is inlined
-		if field.Type.Kind() == reflect.Map && typ.NumField() > 1 {
-			encoder = &optionalEncoder{field.Type, encoder}
+		var encoder Encoder
+		if len(fieldNames) > 0 {
+			encoder, err := encoderOfType(field.Type)
+			if err != nil {
+				return prefix(fmt.Sprintf("{%s}", field.Name)).addToEncoder(encoder, err)
+			}
+			// map is stored as pointer in the struct
+			// but if struct only has one map, it is inlined
+			if field.Type.Kind() == reflect.Map && typ.NumField() > 1 {
+				encoder = &optionalEncoder{field.Type, encoder}
+			}
 		}
 		for _, fieldName := range fieldNames {
 			if structEncoder_.firstField == nil {
@@ -85,7 +88,7 @@ func decoderOfStruct(typ reflect.Type) (Decoder, error) {
 				fieldNames = []string{tagParts[0]}
 			}
 		}
-		if decoder == nil {
+		if decoder == nil && len(fieldNames) > 0 {
 			var err error
 			decoder, err = decoderOfType(field.Type)
 			if err != nil {

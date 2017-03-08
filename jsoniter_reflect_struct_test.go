@@ -3,6 +3,7 @@ package jsoniter
 import (
 	"testing"
 	"github.com/json-iterator/go/require"
+	"bytes"
 )
 
 func Test_decode_one_field_struct(t *testing.T) {
@@ -88,15 +89,15 @@ func Test_decode_five_fields_struct(t *testing.T) {
 func Test_decode_ten_fields_struct(t *testing.T) {
 	should := require.New(t)
 	type TestObject struct {
-		field1 string
-		field2 string
-		field3 string
-		field4 string
-		field5 string
-		field6 string
-		field7 string
-		field8 string
-		field9 string
+		field1  string
+		field2  string
+		field3  string
+		field4  string
+		field5  string
+		field6  string
+		field7  string
+		field8  string
+		field9  string
 		field10 string
 	}
 	obj := TestObject{}
@@ -143,4 +144,18 @@ func Test_write_val_one_field_struct(t *testing.T) {
 	str, err := MarshalToString(obj)
 	should.Nil(err)
 	should.Equal(`{"field-1":"hello"}`, str)
+}
+
+func Test_mixed(t *testing.T) {
+	should := require.New(t)
+	type  AA struct {
+		ID      int `json:"id"`
+		Payload map[string]interface{} `json:"payload"`
+		buf     *bytes.Buffer `json:"-"`
+	}
+	aa := AA{}
+	err := UnmarshalFromString(` {"id":1, "payload":{"account":"123","password":"456"}}`, &aa)
+	should.Nil(err)
+	should.Equal(1, aa.ID)
+	should.Equal("123", aa.Payload["account"])
 }
