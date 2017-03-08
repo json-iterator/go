@@ -33,9 +33,16 @@ func encoderOfStruct(typ reflect.Type) (Encoder, error) {
 				fieldNames = []string{tagParts[0]}
 			}
 		}
+		omitempty := false
+		for _, tagPart := range tagParts {
+			if tagPart == "omitempty" {
+				omitempty = true
+			}
+		}
 		var encoder Encoder
+		var err error
 		if len(fieldNames) > 0 {
-			encoder, err := encoderOfType(field.Type)
+			encoder, err = encoderOfType(field.Type)
 			if err != nil {
 				return prefix(fmt.Sprintf("{%s}", field.Name)).addToEncoder(encoder, err)
 			}
@@ -46,14 +53,11 @@ func encoderOfStruct(typ reflect.Type) (Encoder, error) {
 			}
 		}
 		for _, fieldName := range fieldNames {
-			if structEncoder_.firstField == nil {
-				structEncoder_.firstField = &structFieldEncoder{&field, fieldName, encoder}
-			} else {
-				structEncoder_.fields = append(structEncoder_.fields, &structFieldEncoder{&field, fieldName, encoder})
-			}
+			structEncoder_.fields = append(structEncoder_.fields,
+				&structFieldEncoder{&field, fieldName, encoder, omitempty})
 		}
 	}
-	if structEncoder_.firstField == nil {
+	if len(structEncoder_.fields) == 0 {
 		return &emptyStructEncoder{}, nil
 	}
 	return structEncoder_, nil
@@ -1024,6 +1028,7 @@ type structFieldEncoder struct {
 	field        *reflect.StructField
 	fieldName    string
 	fieldEncoder Encoder
+	omitempty    bool
 }
 
 func (encoder *structFieldEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
@@ -1039,24 +1044,43 @@ func (encoder *structFieldEncoder) encodeInterface(val interface{}, stream *Stre
 	WriteToStream(val, stream, encoder)
 }
 
+func (encoder *structFieldEncoder) isEmpty(ptr unsafe.Pointer) bool {
+	fieldPtr := uintptr(ptr) + encoder.field.Offset
+	return encoder.fieldEncoder.isEmpty(unsafe.Pointer(fieldPtr))
+}
+
 
 type structEncoder struct {
-	firstField *structFieldEncoder
 	fields []*structFieldEncoder
 }
 
 func (encoder *structEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteObjectStart()
-	encoder.firstField.encode(ptr, stream)
+	isNotFirst := false
 	for _, field := range encoder.fields {
-		stream.WriteMore()
+		if isNotFirst {
+			stream.WriteMore()
+		}
+		if field.omitempty && field.isEmpty(ptr) {
+			continue
+		}
 		field.encode(ptr, stream)
+		isNotFirst = true
 	}
 	stream.WriteObjectEnd()
 }
 
 func (encoder *structEncoder) encodeInterface(val interface{}, stream *Stream) {
 	WriteToStream(val, stream, encoder)
+}
+
+func (encoder *structEncoder) isEmpty(ptr unsafe.Pointer) bool {
+	for _, field := range encoder.fields {
+		if !field.isEmpty(ptr) {
+			return false
+		}
+	}
+	return true
 }
 
 
@@ -1069,4 +1093,8 @@ func (encoder *emptyStructEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
 
 func (encoder *emptyStructEncoder) encodeInterface(val interface{}, stream *Stream) {
 	WriteToStream(val, stream, encoder)
+}
+
+func (encoder *emptyStructEncoder) isEmpty(ptr unsafe.Pointer) bool {
+	return true
 }

@@ -22,6 +22,7 @@ type Decoder interface {
 }
 
 type Encoder interface {
+	isEmpty(ptr unsafe.Pointer) bool
 	encode(ptr unsafe.Pointer, stream *Stream)
 	encodeInterface(val interface{}, stream *Stream)
 }
@@ -57,6 +58,10 @@ func (encoder *funcEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
 
 func (encoder *funcEncoder) encodeInterface(val interface{}, stream *Stream) {
 	WriteToStream(val, stream, encoder)
+}
+
+func (encoder *funcEncoder) isEmpty(ptr unsafe.Pointer) bool {
+	return false
 }
 
 var DECODERS unsafe.Pointer
@@ -187,6 +192,14 @@ func (encoder *optionalEncoder) encodeInterface(val interface{}, stream *Stream)
 	WriteToStream(val, stream, encoder)
 }
 
+func (encoder *optionalEncoder) isEmpty(ptr unsafe.Pointer) bool {
+	if *((*unsafe.Pointer)(ptr)) == nil {
+		return true
+	} else {
+		return encoder.valueEncoder.isEmpty(*((*unsafe.Pointer)(ptr)))
+	}
+}
+
 type mapDecoder struct {
 	mapType      reflect.Type
 	elemType     reflect.Type
@@ -240,6 +253,14 @@ func (encoder *mapEncoder) encodeInterface(val interface{}, stream *Stream) {
 	WriteToStream(val, stream, encoder)
 }
 
+func (encoder *mapEncoder) isEmpty(ptr unsafe.Pointer) bool {
+	mapInterface := encoder.mapInterface
+	mapInterface.word = ptr
+	realInterface := (*interface{})(unsafe.Pointer(&mapInterface))
+	realVal := reflect.ValueOf(*realInterface)
+	return realVal.Len() == 0
+}
+
 type mapInterfaceEncoder struct {
 	mapType      reflect.Type
 	elemType     reflect.Type
@@ -267,6 +288,15 @@ func (encoder *mapInterfaceEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
 
 func (encoder *mapInterfaceEncoder) encodeInterface(val interface{}, stream *Stream) {
 	WriteToStream(val, stream, encoder)
+}
+
+func (encoder *mapInterfaceEncoder) isEmpty(ptr unsafe.Pointer) bool {
+	mapInterface := encoder.mapInterface
+	mapInterface.word = ptr
+	realInterface := (*interface{})(unsafe.Pointer(&mapInterface))
+	realVal := reflect.ValueOf(*realInterface)
+
+	return realVal.Len() == 0
 }
 
 // emptyInterface is the header for an interface{} value.

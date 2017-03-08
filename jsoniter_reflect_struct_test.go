@@ -159,3 +159,16 @@ func Test_mixed(t *testing.T) {
 	should.Equal(1, aa.ID)
 	should.Equal("123", aa.Payload["account"])
 }
+
+func Test_omit_empty(t *testing.T) {
+	should := require.New(t)
+	type TestObject struct {
+		Field1 string `json:"field-1,omitempty"`
+		Field2 string `json:"field-2,omitempty"`
+	}
+	obj := TestObject{}
+	obj.Field2 = "hello"
+	str, err := MarshalToString(&obj)
+	should.Nil(err)
+	should.Equal(`{"field-2":"hello"}`, str)
+}

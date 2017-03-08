@@ -19,6 +19,10 @@ func (encoder *stringCodec) encodeInterface(val interface{}, stream *Stream) {
 	WriteToStream(val, stream, encoder)
 }
 
+func (codec *stringCodec) isEmpty(ptr unsafe.Pointer) bool {
+	return *((*string)(ptr)) == ""
+}
+
 type intCodec struct {
 }
 
@@ -32,6 +36,10 @@ func (codec *intCodec) encode(ptr unsafe.Pointer, stream *Stream) {
 
 func (encoder *intCodec) encodeInterface(val interface{}, stream *Stream) {
 	WriteToStream(val, stream, encoder)
+}
+
+func (codec *intCodec) isEmpty(ptr unsafe.Pointer) bool {
+	return *((*int)(ptr)) == 0
 }
 
 type int8Codec struct {
@@ -49,6 +57,10 @@ func (encoder *int8Codec) encodeInterface(val interface{}, stream *Stream) {
 	WriteToStream(val, stream, encoder)
 }
 
+func (codec *int8Codec) isEmpty(ptr unsafe.Pointer) bool {
+	return *((*int8)(ptr)) == 0
+}
+
 type int16Codec struct {
 }
 
@@ -62,6 +74,10 @@ func (codec *int16Codec) encode(ptr unsafe.Pointer, stream *Stream) {
 
 func (encoder *int16Codec) encodeInterface(val interface{}, stream *Stream) {
 	WriteToStream(val, stream, encoder)
+}
+
+func (codec *int16Codec) isEmpty(ptr unsafe.Pointer) bool {
+	return *((*int16)(ptr)) == 0
 }
 
 type int32Codec struct {
@@ -79,6 +95,10 @@ func (encoder *int32Codec) encodeInterface(val interface{}, stream *Stream) {
 	WriteToStream(val, stream, encoder)
 }
 
+func (codec *int32Codec) isEmpty(ptr unsafe.Pointer) bool {
+	return *((*int32)(ptr)) == 0
+}
+
 type int64Codec struct {
 }
 
@@ -92,6 +112,10 @@ func (codec *int64Codec) encode(ptr unsafe.Pointer, stream *Stream) {
 
 func (encoder *int64Codec) encodeInterface(val interface{}, stream *Stream) {
 	WriteToStream(val, stream, encoder)
+}
+
+func (codec *int64Codec) isEmpty(ptr unsafe.Pointer) bool {
+	return *((*int64)(ptr)) == 0
 }
 
 type uintCodec struct {
@@ -109,6 +133,10 @@ func (encoder *uintCodec) encodeInterface(val interface{}, stream *Stream) {
 	WriteToStream(val, stream, encoder)
 }
 
+func (codec *uintCodec) isEmpty(ptr unsafe.Pointer) bool {
+	return *((*uint)(ptr)) == 0
+}
+
 type uint8Codec struct {
 }
 
@@ -122,6 +150,10 @@ func (codec *uint8Codec) encode(ptr unsafe.Pointer, stream *Stream) {
 
 func (encoder *uint8Codec) encodeInterface(val interface{}, stream *Stream) {
 	WriteToStream(val, stream, encoder)
+}
+
+func (codec *uint8Codec) isEmpty(ptr unsafe.Pointer) bool {
+	return *((*uint8)(ptr)) == 0
 }
 
 type uint16Codec struct {
@@ -139,6 +171,10 @@ func (encoder *uint16Codec) encodeInterface(val interface{}, stream *Stream) {
 	WriteToStream(val, stream, encoder)
 }
 
+func (codec *uint16Codec) isEmpty(ptr unsafe.Pointer) bool {
+	return *((*uint16)(ptr)) == 0
+}
+
 type uint32Codec struct {
 }
 
@@ -152,6 +188,10 @@ func (codec *uint32Codec) encode(ptr unsafe.Pointer, stream *Stream) {
 
 func (encoder *uint32Codec) encodeInterface(val interface{}, stream *Stream) {
 	WriteToStream(val, stream, encoder)
+}
+
+func (codec *uint32Codec) isEmpty(ptr unsafe.Pointer) bool {
+	return *((*uint32)(ptr)) == 0
 }
 
 type uint64Codec struct {
@@ -169,6 +209,10 @@ func (encoder *uint64Codec) encodeInterface(val interface{}, stream *Stream) {
 	WriteToStream(val, stream, encoder)
 }
 
+func (codec *uint64Codec) isEmpty(ptr unsafe.Pointer) bool {
+	return *((*uint64)(ptr)) == 0
+}
+
 type float32Codec struct {
 }
 
@@ -182,6 +226,10 @@ func (codec *float32Codec) encode(ptr unsafe.Pointer, stream *Stream) {
 
 func (encoder *float32Codec) encodeInterface(val interface{}, stream *Stream) {
 	WriteToStream(val, stream, encoder)
+}
+
+func (codec *float32Codec) isEmpty(ptr unsafe.Pointer) bool {
+	return *((*float32)(ptr)) == 0
 }
 
 type float64Codec struct {
@@ -199,6 +247,10 @@ func (encoder *float64Codec) encodeInterface(val interface{}, stream *Stream) {
 	WriteToStream(val, stream, encoder)
 }
 
+func (codec *float64Codec) isEmpty(ptr unsafe.Pointer) bool {
+	return *((*float64)(ptr)) == 0
+}
+
 type boolCodec struct {
 }
 
@@ -212,6 +264,10 @@ func (codec *boolCodec) encode(ptr unsafe.Pointer, stream *Stream) {
 
 func (encoder *boolCodec) encodeInterface(val interface{}, stream *Stream) {
 	WriteToStream(val, stream, encoder)
+}
+
+func (codec *boolCodec) isEmpty(ptr unsafe.Pointer) bool {
+	return !(*((*bool)(ptr)))
 }
 
 type interfaceCodec struct {
@@ -229,6 +285,10 @@ func (encoder *interfaceCodec) encodeInterface(val interface{}, stream *Stream) 
 	stream.WriteVal(val)
 }
 
+func (codec *interfaceCodec) isEmpty(ptr unsafe.Pointer) bool {
+	return ptr == nil
+}
+
 type anyCodec struct {
 }
 
@@ -242,6 +302,10 @@ func (codec *anyCodec) encode(ptr unsafe.Pointer, stream *Stream) {
 
 func (encoder *anyCodec) encodeInterface(val interface{}, stream *Stream) {
 	(val.(Any)).WriteTo(stream)
+}
+
+func (encoder *anyCodec) isEmpty(ptr unsafe.Pointer) bool {
+	return (*((*Any)(ptr))).Size() == 0
 }
 
 type stringNumberDecoder struct {

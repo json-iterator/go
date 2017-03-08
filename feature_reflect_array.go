@@ -53,6 +53,11 @@ func (encoder *sliceEncoder) encodeInterface(val interface{}, stream *Stream) {
 	WriteToStream(val, stream, encoder)
 }
 
+func (encoder *sliceEncoder) isEmpty(ptr unsafe.Pointer) bool {
+	slice := (*sliceHeader)(ptr)
+	return slice.Len == 0
+}
+
 type sliceDecoder struct {
 	sliceType   reflect.Type
 	elemType    reflect.Type
