@@ -1058,11 +1058,11 @@ func (encoder *structEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteObjectStart()
 	isNotFirst := false
 	for _, field := range encoder.fields {
-		if isNotFirst {
-			stream.WriteMore()
-		}
 		if field.omitempty && field.isEmpty(ptr) {
 			continue
+		}
+		if isNotFirst {
+			stream.WriteMore()
 		}
 		field.encode(ptr, stream)
 		isNotFirst = true
