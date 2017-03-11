@@ -165,6 +165,7 @@ func Test_omit_empty(t *testing.T) {
 	type TestObject struct {
 		Field1 string `json:"field-1,omitempty"`
 		Field2 string `json:"field-2,omitempty"`
+		Field3 string `json:"field-3,omitempty"`
 	}
 	obj := TestObject{}
 	obj.Field2 = "hello"
