@@ -56,3 +56,14 @@ func Test_write_val_map(t *testing.T) {
 	should.Nil(err)
 	should.Equal(`{"1":"2"}`, str)
 }
+
+func Test_slice_of_map(t *testing.T) {
+	should := require.New(t)
+	val := []map[string]string{{"1": "2"}}
+	str, err := MarshalToString(val)
+	should.Nil(err)
+	should.Equal(`[{"1":"2"}]`, str)
+	val = []map[string]string{}
+	should.Nil(UnmarshalFromString(str, &val))
+	should.Equal("2", val[0]["1"])
+}
