@@ -1,7 +1,6 @@
 package jsoniter
 
 import (
-	"errors"
 	"fmt"
 )
 
@@ -11,14 +10,6 @@ const (
 
 	// FollowThePath represent follow the path
 	FollowThePath int = 1
-)
-
-var (
-	// ErrShouldBeArray should be a array
-	ErrShouldBeArray = errors.New("Should be a Array")
-
-	// ErrShouldBeObject should be a Object
-	ErrShouldBeObject = errors.New("Should be a Object")
 )
 
 // Extract represent a Path with several KeyReader in one object followed by the path
@@ -49,7 +40,7 @@ func (e *Extract) scanArray(iter *Iterator, depth, index int) (bool, bool, int, 
 	}
 
 	if depth == e.index+1 && depth < len(e.Path) {
-		if e.Path[depth].Type() == TypeArrayIndex && e.Path[depth].Index() == index {
+		if e.Path[depth].Type() == 0 && e.Path[depth].Int() == index {
 			e.index++
 			e.status[depth] = FollowThePath
 
@@ -69,22 +60,24 @@ func (e *Extract) scanArray(iter *Iterator, depth, index int) (bool, bool, int, 
 		return false, false, 0, nil
 	}
 
-	allFollowThePath := true
-	if depth < len(e.status) {
-		for _, status := range e.status[:depth] {
-			if status != FollowThePath {
-				allFollowThePath = false
-				break
-			}
-		}
-	}
-
-	if (allFollowThePath || len(e.Path) == 0) && e.index == len(e.Path)-1 && depth == len(e.Path) {
-		read, err := e.extract(iter, INT(index))
+	if e.allFollow(depth) && e.index == len(e.Path)-1 && depth == len(e.Path) {
+		read, err := e.extract(iter, Index(index))
 		return read, false, 0, err
 	}
 
 	return false, false, 0, nil
+}
+
+func (e *Extract) allFollow(depth int) bool {
+	if depth < len(e.status) {
+		for _, status := range e.status[:depth] {
+			if status != FollowThePath {
+				return false
+			}
+		}
+	}
+
+	return true
 }
 
 // {"type":"xxx", "payload":{"a":true,"b":3,"c":{"d":"e"}},"f":"g"}
@@ -98,36 +91,34 @@ func (e *Extract) scanObject(iter *Iterator, field string, depth int) (bool, boo
 
 	// 如果depth在路径上
 	if depth == e.index+1 && depth < len(e.Path) {
-		if e.Path[depth].Type() != TypeArrayIndex && e.Path[depth].String() == field {
+		if e.Path[depth].Type() == 1 && e.Path[depth].String() == field {
 			e.index++
 			e.status[depth] = FollowThePath
 
-			return false, true, e.Path[depth].Type(), nil
+			nextValue := -1
+			switch iter.nextToken() {
+			case '{':
+				nextValue = TypeObject
+			case '[':
+				nextValue = TypeArray
+			default:
+				return false, false, 0, ErrInvalidPath
+			}
+
+			iter.unreadByte()
+			return false, true, nextValue, nil
 		}
 		return false, false, 0, nil
 	}
 
-	allFollowThePath := true
-	if depth < len(e.status) {
-		for _, status := range e.status[:depth] {
-			if status != FollowThePath {
-				allFollowThePath = false
-				break
-			}
-		}
-	}
-
 	// 最后一个路径,depth是最后一个路径的object
-	if (allFollowThePath || len(e.Path) == 0) && e.index == len(e.Path)-1 && depth == len(e.Path) {
-		var read bool
-		var err error
-
-		if field == "" {
-			read, err = e.extract(iter, nil)
-		} else {
-			read, err = e.extract(iter, STRING(field))
+	if e.allFollow(depth) && e.index == len(e.Path)-1 && depth == len(e.Path) {
+		var iKey IKey
+		if field != "" {
+			iKey = Field(field)
 		}
 
+		read, err := e.extract(iter, iKey)
 		return read, false, 0, err
 	}
 
@@ -250,7 +241,7 @@ func (em *ExtractMany) ExtractArray() error {
 func (em *ExtractMany) extractArray(depth int) error {
 	index := 0
 	for em.Iter.ReadArray() {
-		valueRead, isFollowThePath, t, err := em.scanArray(depth, index)
+		valueRead, isFollowThePath, t, err := em.scanArray(index, depth)
 		if err != nil {
 			return err
 		}
@@ -261,7 +252,6 @@ func (em *ExtractMany) extractArray(depth int) error {
 				err = em.extractArray(depth + 1)
 			case TypeObject:
 				err = em.extractObject(depth + 1)
-			case TypeArrayIndex:
 			default:
 				panic("should not happen")
 			}
@@ -279,7 +269,7 @@ func (em *ExtractMany) extractArray(depth int) error {
 	return nil
 }
 
-func (em *ExtractMany) scanArray(depth, index int) (bool, bool, int, error) {
+func (em *ExtractMany) scanArray(index, depth int) (bool, bool, int, error) {
 	valueRead := false
 	isFollowThePath := false
 	typeOfPath := -1

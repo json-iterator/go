@@ -1,8 +1,8 @@
 package jsoniter
 
 var (
-	_ IKey = INT(0)
-	_ IKey = STRING("")
+	_ IKey = Index(0)
+	_ IKey = Field("")
 )
 
 // IKey represent a Key
@@ -13,16 +13,16 @@ type IKey interface {
 	String() string
 }
 
-// INT be the key
-type INT int
+// Index be the key
+type Index int
 
 // Type implement IKey
-func (i INT) Type() int {
+func (i Index) Type() int {
 	return 0
 }
 
 // Equal implement IKey
-func (i INT) Equal(k IKey) bool {
+func (i Index) Equal(k IKey) bool {
 	if k.Type() == 0 && k.Int() == int(i) {
 		return true
 	}
@@ -30,24 +30,24 @@ func (i INT) Equal(k IKey) bool {
 }
 
 // Int implement IKey
-func (i INT) Int() int {
+func (i Index) Int() int {
 	return int(i)
 }
 
-func (i INT) String() string {
+func (i Index) String() string {
 	panic("KeyInt cannot String()")
 }
 
-// STRING represent a object field
-type STRING string
+// Field represent a object field
+type Field string
 
 // Type implement IKey
-func (k STRING) Type() int {
+func (k Field) Type() int {
 	return 1
 }
 
 // Equal implement IKey
-func (k STRING) Equal(ik IKey) bool {
+func (k Field) Equal(ik IKey) bool {
 	if ik.Type() == 1 && ik.String() == string(k) {
 		return true
 	}
@@ -55,10 +55,10 @@ func (k STRING) Equal(ik IKey) bool {
 }
 
 // Int implement IKey
-func (k STRING) Int() int {
+func (k Field) Int() int {
 	panic("STRING cannot Int()")
 }
 
-func (k STRING) String() string {
+func (k Field) String() string {
 	return string(k)
 }
