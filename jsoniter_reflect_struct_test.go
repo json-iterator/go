@@ -172,3 +172,16 @@ func Test_omit_empty(t *testing.T) {
 	should.Nil(err)
 	should.Equal(`{"field-2":"hello"}`, str)
 }
+
+func Test_any_within_struct(t *testing.T) {
+	should := require.New(t)
+	type TestObject struct {
+		Field1 Any
+		Field2 Any
+	}
+	obj := TestObject{}
+	err := UnmarshalFromString(`{"Field1": "hello", "Field2": [1,2,3]}`, &obj)
+	should.Nil(err)
+	should.Equal("hello", obj.Field1.ToString())
+	should.Equal("[1,2,3]", obj.Field2.ToString())
+}

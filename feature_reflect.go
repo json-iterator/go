@@ -361,6 +361,9 @@ func (p prefix) addToEncoder(encoder Encoder, err error) (Encoder, error) {
 }
 
 func decoderOfType(typ reflect.Type) (Decoder, error) {
+	if typ.ConvertibleTo(anyType) {
+		return &anyCodec{}, nil
+	}
 	typeName := typ.String()
 	typeDecoder := typeDecoders[typeName]
 	if typeDecoder != nil {
