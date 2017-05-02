@@ -19,11 +19,13 @@ func init() {
 	for i := int8('0'); i <= int8('9'); i++ {
 		floatDigits[i] = i - int8('0')
 	}
-	floatDigits[','] = endOfNumber;
-	floatDigits[']'] = endOfNumber;
-	floatDigits['}'] = endOfNumber;
-	floatDigits[' '] = endOfNumber;
-	floatDigits['.'] = dotInNumber;
+	floatDigits[','] = endOfNumber
+	floatDigits[']'] = endOfNumber
+	floatDigits['}'] = endOfNumber
+	floatDigits[' '] = endOfNumber
+	floatDigits['\t'] = endOfNumber
+	floatDigits['\n'] = endOfNumber
+	floatDigits['.'] = dotInNumber
 }
 
 func (iter *Iterator) ReadFloat32() (ret float32) {
@@ -99,6 +101,7 @@ func (iter *Iterator) readFloat32SlowPath() (ret float32) {
 				str = append(str, c)
 				continue
 			default:
+				iter.head = i
 				break load_loop
 			}
 		}
@@ -190,6 +193,7 @@ func (iter *Iterator) readFloat64SlowPath() (ret float64) {
 				str = append(str, c)
 				continue
 			default:
+				iter.head = i
 				break load_loop
 			}
 		}

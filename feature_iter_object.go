@@ -1,5 +1,7 @@
 package jsoniter
 
+import "fmt"
+
 func (iter *Iterator) ReadObject() (ret string) {
 	c := iter.nextToken()
 	switch c {
@@ -22,7 +24,7 @@ func (iter *Iterator) ReadObject() (ret string) {
 	case '}':
 		return "" // end of object
 	default:
-		iter.reportError("ReadObject", `expect { or , or } or n`)
+		iter.reportError("ReadObject", fmt.Sprintf(`expect { or , or } or n, but found %s`, string([]byte{c})))
 		return
 	}
 }

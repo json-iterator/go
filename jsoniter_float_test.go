@@ -133,6 +133,15 @@ func Test_write_float64(t *testing.T) {
 	should.Equal("abcdefg1.123456", buf.String())
 }
 
+func Test_read_float64_cursor(t *testing.T) {
+	should := require.New(t)
+	iter := ParseString("[1.23456789\n,2,3]")
+	should.True(iter.ReadArray())
+	should.Equal(1.23456789, iter.Read())
+	should.True(iter.ReadArray())
+	should.Equal(float64(2), iter.Read())
+}
+
 func Benchmark_jsoniter_float(b *testing.B) {
 	b.ReportAllocs()
 	input := []byte(`1.1123,`)
