@@ -200,3 +200,18 @@ func Test_recursive_struct(t *testing.T) {
 	err = UnmarshalFromString(str, &obj)
 	should.Nil(err)
 }
+
+func Test_one_field_struct(t *testing.T) {
+	should := require.New(t)
+	type AnotherObject struct {
+	}
+	type TestObject struct {
+		Me *AnotherObject
+	}
+	obj := TestObject{}
+	str, err := MarshalToString(obj)
+	should.Nil(err)
+	should.Equal(`{"Me":{}}`, str)
+	err = UnmarshalFromString(str, &obj)
+	should.Nil(err)
+}

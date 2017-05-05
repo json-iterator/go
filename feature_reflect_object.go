@@ -51,6 +51,10 @@ func encoderOfStruct(typ reflect.Type) (Encoder, error) {
 			if field.Type.Kind() == reflect.Map && typ.NumField() > 1 {
 				encoder = &optionalEncoder{encoder}
 			}
+			// one field pointer field will be inlined
+			if field.Type.Kind() == reflect.Ptr && typ.NumField() == 1 {
+				encoder = (encoder.(*optionalEncoder)).valueEncoder
+			}
 		}
 		for _, fieldName := range fieldNames {
 			structEncoder_.fields = append(structEncoder_.fields,
