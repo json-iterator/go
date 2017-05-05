@@ -7,6 +7,7 @@ import (
 
 // Unmarshal adapts to json/encoding APIs
 func Unmarshal(data []byte, v interface{}) error {
+	data = data[:lastNotSpacePos(data)]
 	iter := ParseBytes(data)
 	iter.ReadVal(v)
 	if iter.head == iter.tail {
@@ -22,6 +23,7 @@ func Unmarshal(data []byte, v interface{}) error {
 }
 
 func UnmarshalAny(data []byte) (Any, error) {
+	data = data[:lastNotSpacePos(data)]
 	iter := ParseBytes(data)
 	any := iter.ReadAny()
 	if iter.head == iter.tail {
@@ -36,8 +38,18 @@ func UnmarshalAny(data []byte) (Any, error) {
 	return any, iter.Error
 }
 
+func lastNotSpacePos(data []byte) int {
+	for i := len(data) - 1; i >= 0; i-- {
+		if data[i] != ' ' && data[i] != '\t' && data[i] != '\r' && data[i] != '\n' {
+			return i + 1
+		}
+	}
+	return 0
+}
+
 func UnmarshalFromString(str string, v interface{}) error {
 	data := []byte(str)
+	data = data[:lastNotSpacePos(data)]
 	iter := ParseBytes(data)
 	iter.ReadVal(v)
 	if iter.head == iter.tail {
@@ -54,6 +66,7 @@ func UnmarshalFromString(str string, v interface{}) error {
 
 func UnmarshalAnyFromString(str string) (Any, error) {
 	data := []byte(str)
+	data = data[:lastNotSpacePos(data)]
 	iter := ParseBytes(data)
 	any := iter.ReadAny()
 	if iter.head == iter.tail {
