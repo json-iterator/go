@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 	"unsafe"
+	"github.com/json-iterator/go/require"
 )
 
 func Test_customize_type_decoder(t *testing.T) {
@@ -27,6 +28,19 @@ func Test_customize_type_decoder(t *testing.T) {
 	if year != 2016 || month != 12 || day != 5 {
 		t.Fatal(val)
 	}
+}
+
+func Test_customize_type_encoder(t *testing.T) {
+	should := require.New(t)
+	RegisterTypeEncoder("time.Time", func(ptr unsafe.Pointer, stream *Stream) {
+		t := *((*time.Time)(ptr))
+		stream.WriteString(t.UTC().Format("2006-01-02 15:04:05"))
+	})
+	defer CleanEncoders()
+	val := time.Unix(0, 0)
+	str, err := MarshalToString(val)
+	should.Nil(err)
+	should.Equal(`"1970-01-01 00:00:00"`, str)
 }
 
 type Tom struct {

@@ -154,6 +154,11 @@ func CleanDecoders() {
 	fieldDecoders = map[string]Decoder{}
 }
 
+func CleanEncoders() {
+	typeEncoders = map[string]Encoder{}
+	fieldEncoders = map[string]Encoder{}
+}
+
 type optionalDecoder struct {
 	valueType    reflect.Type
 	valueDecoder Decoder
