@@ -186,3 +186,17 @@ func Test_any_within_struct(t *testing.T) {
 	should.Equal("hello", obj.Field1.ToString())
 	should.Equal("[1,2,3]", obj.Field2.ToString())
 }
+
+func Test_recursive_struct(t *testing.T) {
+	should := require.New(t)
+	type TestObject struct {
+		Field1 string
+		Me *TestObject
+	}
+	obj := TestObject{}
+	str, err := MarshalToString(obj)
+	should.Nil(err)
+	should.Equal(`{"Field1":"","Me":null}`, str)
+	err = UnmarshalFromString(str, &obj)
+	should.Nil(err)
+}

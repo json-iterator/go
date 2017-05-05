@@ -21,7 +21,7 @@ func encoderOfSlice(typ reflect.Type) (Encoder, error) {
 		return nil, err
 	}
 	if typ.Elem().Kind() == reflect.Map {
-		encoder = &optionalEncoder{typ.Elem(), encoder}
+		encoder = &optionalEncoder{ encoder}
 	}
 	return &sliceEncoder{typ, typ.Elem(), encoder}, nil
 }

@@ -181,7 +181,6 @@ func (decoder *optionalDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 }
 
 type optionalEncoder struct {
-	valueType    reflect.Type
 	valueEncoder Encoder
 }
 
@@ -203,6 +202,30 @@ func (encoder *optionalEncoder) isEmpty(ptr unsafe.Pointer) bool {
 	} else {
 		return encoder.valueEncoder.isEmpty(*((*unsafe.Pointer)(ptr)))
 	}
+}
+
+type placeholderEncoder struct {
+	valueEncoder Encoder
+}
+
+func (encoder *placeholderEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
+	encoder.valueEncoder.encode(ptr, stream)
+}
+
+func (encoder *placeholderEncoder) encodeInterface(val interface{}, stream *Stream) {
+	WriteToStream(val, stream, encoder)
+}
+
+func (encoder *placeholderEncoder) isEmpty(ptr unsafe.Pointer) bool {
+	return encoder.valueEncoder.isEmpty(ptr)
+}
+
+type placeholderDecoder struct {
+	valueDecoder Decoder
+}
+
+func (decoder *placeholderDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+	decoder.valueDecoder.decode(ptr, iter)
 }
 
 type mapDecoder struct {
@@ -374,6 +397,20 @@ func decoderOfType(typ reflect.Type) (Decoder, error) {
 	if typeDecoder != nil {
 		return typeDecoder, nil
 	}
+	cacheKey := typ
+	cachedDecoder := getDecoderFromCache(cacheKey)
+	if cachedDecoder != nil {
+		return cachedDecoder, nil
+	}
+	placeholder := &placeholderDecoder{}
+	addDecoderToCache(cacheKey, placeholder)
+	newDecoder, err := createDecoderOfType(typ)
+	placeholder.valueDecoder = newDecoder
+	addDecoderToCache(cacheKey, newDecoder)
+	return newDecoder, err
+}
+
+func createDecoderOfType(typ reflect.Type) (Decoder, error) {
 	switch typ.Kind() {
 	case reflect.String:
 		return &stringCodec{}, nil
@@ -410,7 +447,7 @@ func decoderOfType(typ reflect.Type) (Decoder, error) {
 			return nil, errors.New("unsupportd type: " + typ.String())
 		}
 	case reflect.Struct:
-		return prefix(fmt.Sprintf("[%s]", typeName)).addToDecoder(decoderOfStruct(typ))
+		return prefix(fmt.Sprintf("[%s]", typ.String())).addToDecoder(decoderOfStruct(typ))
 	case reflect.Slice:
 		return prefix("[slice]").addToDecoder(decoderOfSlice(typ))
 	case reflect.Map:
@@ -431,6 +468,20 @@ func encoderOfType(typ reflect.Type) (Encoder, error) {
 	if typeEncoder != nil {
 		return typeEncoder, nil
 	}
+	cacheKey := typ
+	cachedEncoder := getEncoderFromCache(cacheKey)
+	if cachedEncoder != nil {
+		return cachedEncoder, nil
+	}
+	placeholder := &placeholderEncoder{}
+	addEncoderToCache(cacheKey, placeholder)
+	newEncoder, err := createEncoderOfType(typ)
+	placeholder.valueEncoder = newEncoder
+	addEncoderToCache(cacheKey, newEncoder)
+	return newEncoder, err
+}
+
+func createEncoderOfType(typ reflect.Type) (Encoder, error) {
 	switch typ.Kind() {
 	case reflect.String:
 		return &stringCodec{}, nil
@@ -463,7 +514,7 @@ func encoderOfType(typ reflect.Type) (Encoder, error) {
 	case reflect.Interface:
 		return &interfaceCodec{}, nil
 	case reflect.Struct:
-		return prefix(fmt.Sprintf("[%s]", typeName)).addToEncoder(encoderOfStruct(typ))
+		return prefix(fmt.Sprintf("[%s]", typ.String())).addToEncoder(encoderOfStruct(typ))
 	case reflect.Slice:
 		return prefix("[slice]").addToEncoder(encoderOfSlice(typ))
 	case reflect.Map:
@@ -490,7 +541,7 @@ func encoderOfOptional(typ reflect.Type) (Encoder, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &optionalEncoder{elemType, decoder}, nil
+	return &optionalEncoder{ decoder}, nil
 }
 
 func decoderOfMap(typ reflect.Type) (Decoder, error) {

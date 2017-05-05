@@ -49,7 +49,7 @@ func encoderOfStruct(typ reflect.Type) (Encoder, error) {
 			// map is stored as pointer in the struct
 			// but if struct only has one map, it is inlined
 			if field.Type.Kind() == reflect.Map && typ.NumField() > 1 {
-				encoder = &optionalEncoder{field.Type, encoder}
+				encoder = &optionalEncoder{encoder}
 			}
 		}
 		for _, fieldName := range fieldNames {
