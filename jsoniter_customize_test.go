@@ -43,6 +43,19 @@ func Test_customize_type_encoder(t *testing.T) {
 	should.Equal(`"1970-01-01 00:00:00"`, str)
 }
 
+func Test_customize_byte_array_encoder(t *testing.T) {
+	should := require.New(t)
+	RegisterTypeEncoder("[]uint8", func(ptr unsafe.Pointer, stream *Stream) {
+		t := *((*[]byte)(ptr))
+		stream.WriteString(string(t))
+	})
+	defer CleanEncoders()
+	val := []byte("abc")
+	str, err := MarshalToString(val)
+	should.Nil(err)
+	should.Equal(`"abc"`, str)
+}
+
 type Tom struct {
 	field1 string
 }
