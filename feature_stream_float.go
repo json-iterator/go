@@ -34,9 +34,9 @@ func (stream *Stream) WriteFloat32(val float32) {
 	for p := precision - 1; p > 0 && fval < POW10[p]; p-- {
 		stream.writeByte('0')
 	}
-	stream.WriteUint64(fval);
+	stream.WriteUint64(fval)
 	for stream.buf[stream.n - 1] == '0' {
-		stream.n--;
+		stream.n--
 	}
 }
 
@@ -64,8 +64,8 @@ func (stream *Stream) WriteFloat64(val float64) {
 	for p := precision - 1; p > 0 && fval < POW10[p]; p-- {
 		stream.writeByte('0')
 	}
-	stream.WriteUint64(fval);
+	stream.WriteUint64(fval)
 	for stream.buf[stream.n - 1] == '0' {
-		stream.n--;
+		stream.n--
 	}
 }
