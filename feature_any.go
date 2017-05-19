@@ -98,6 +98,10 @@ func Wrap(val interface{}) Any {
 	if val == nil {
 		return &nilAny{}
 	}
+	asAny, isAny := val.(Any)
+	if isAny {
+		return asAny
+	}
 	type_ := reflect.TypeOf(val)
 	switch type_.Kind() {
 	case reflect.Slice:
