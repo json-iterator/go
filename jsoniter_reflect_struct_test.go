@@ -148,7 +148,7 @@ func Test_write_val_one_field_struct(t *testing.T) {
 
 func Test_mixed(t *testing.T) {
 	should := require.New(t)
-	type  AA struct {
+	type AA struct {
 		ID      int `json:"id"`
 		Payload map[string]interface{} `json:"payload"`
 		buf     *bytes.Buffer `json:"-"`
@@ -191,7 +191,7 @@ func Test_recursive_struct(t *testing.T) {
 	should := require.New(t)
 	type TestObject struct {
 		Field1 string
-		Me *TestObject
+		Me     *TestObject
 	}
 	obj := TestObject{}
 	str, err := MarshalToString(obj)
@@ -203,15 +203,23 @@ func Test_recursive_struct(t *testing.T) {
 
 func Test_one_field_struct(t *testing.T) {
 	should := require.New(t)
+	type YetYetAnotherObject struct {
+		Field string
+	}
+	type YetAnotherObject struct {
+		Field *YetYetAnotherObject
+	}
 	type AnotherObject struct {
+		Field *YetAnotherObject
 	}
 	type TestObject struct {
 		Me *AnotherObject
 	}
-	obj := TestObject{}
+	obj := TestObject{&AnotherObject{&YetAnotherObject{&YetYetAnotherObject{"abc"}}}}
 	str, err := MarshalToString(obj)
 	should.Nil(err)
-	should.Equal(`{"Me":{}}`, str)
-	err = UnmarshalFromString(str, &obj)
+	should.Equal(`{"Me":{"Field":{"Field":{"Field":"abc"}}}}`, str)
+	str, err = MarshalToString(&obj)
 	should.Nil(err)
+	should.Equal(`{"Me":{"Field":{"Field":{"Field":"abc"}}}}`, str)
 }

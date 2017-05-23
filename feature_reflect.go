@@ -27,7 +27,7 @@ type Encoder interface {
 	encodeInterface(val interface{}, stream *Stream)
 }
 
-func WriteToStream(val interface{}, stream *Stream, encoder Encoder) {
+func writeToStream(val interface{}, stream *Stream, encoder Encoder) {
 	e := (*emptyInterface)(unsafe.Pointer(&val))
 	if reflect.TypeOf(val).Kind() == reflect.Ptr {
 		encoder.encode(unsafe.Pointer(&e.word), stream)
@@ -57,7 +57,7 @@ func (encoder *funcEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
 }
 
 func (encoder *funcEncoder) encodeInterface(val interface{}, stream *Stream) {
-	WriteToStream(val, stream, encoder)
+	writeToStream(val, stream, encoder)
 }
 
 func (encoder *funcEncoder) isEmpty(ptr unsafe.Pointer) bool {
@@ -193,7 +193,7 @@ func (encoder *optionalEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
 }
 
 func (encoder *optionalEncoder) encodeInterface(val interface{}, stream *Stream) {
-	WriteToStream(val, stream, encoder)
+	writeToStream(val, stream, encoder)
 }
 
 func (encoder *optionalEncoder) isEmpty(ptr unsafe.Pointer) bool {
@@ -213,7 +213,7 @@ func (encoder *placeholderEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
 }
 
 func (encoder *placeholderEncoder) encodeInterface(val interface{}, stream *Stream) {
-	WriteToStream(val, stream, encoder)
+	writeToStream(val, stream, encoder)
 }
 
 func (encoder *placeholderEncoder) isEmpty(ptr unsafe.Pointer) bool {
@@ -278,7 +278,7 @@ func (encoder *mapEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
 }
 
 func (encoder *mapEncoder) encodeInterface(val interface{}, stream *Stream) {
-	WriteToStream(val, stream, encoder)
+	writeToStream(val, stream, encoder)
 }
 
 func (encoder *mapEncoder) isEmpty(ptr unsafe.Pointer) bool {
@@ -315,7 +315,7 @@ func (encoder *mapInterfaceEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
 }
 
 func (encoder *mapInterfaceEncoder) encodeInterface(val interface{}, stream *Stream) {
-	WriteToStream(val, stream, encoder)
+	writeToStream(val, stream, encoder)
 }
 
 func (encoder *mapInterfaceEncoder) isEmpty(ptr unsafe.Pointer) bool {

@@ -8,7 +8,6 @@ import (
 	"strings"
 )
 
-
 func encoderOfStruct(typ reflect.Type) (Encoder, error) {
 	structEncoder_ := &structEncoder{}
 	for i := 0; i < typ.NumField(); i++ {
@@ -47,13 +46,8 @@ func encoderOfStruct(typ reflect.Type) (Encoder, error) {
 				return prefix(fmt.Sprintf("{%s}", field.Name)).addToEncoder(encoder, err)
 			}
 			// map is stored as pointer in the struct
-			// but if struct only has one map, it is inlined
-			if field.Type.Kind() == reflect.Map && typ.NumField() > 1 {
+			if field.Type.Kind() == reflect.Map {
 				encoder = &optionalEncoder{encoder}
-			}
-			// one field pointer field will be inlined
-			if field.Type.Kind() == reflect.Ptr && typ.NumField() == 1 {
-				encoder = (encoder.(*optionalEncoder)).valueEncoder
 			}
 		}
 		for _, fieldName := range fieldNames {
@@ -180,7 +174,7 @@ func createStructDecoder(typ reflect.Type, fields map[string]*structFieldDecoder
 			}
 		}
 		return &threeFieldsStructDecoder{typ,
-			fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3}, nil
+						 fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3}, nil
 	case 4:
 		var fieldName1 int32
 		var fieldName2 int32
@@ -213,8 +207,8 @@ func createStructDecoder(typ reflect.Type, fields map[string]*structFieldDecoder
 			}
 		}
 		return &fourFieldsStructDecoder{typ,
-			fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3,
-			fieldName4, fieldDecoder4}, nil
+						fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3,
+						fieldName4, fieldDecoder4}, nil
 	case 5:
 		var fieldName1 int32
 		var fieldName2 int32
@@ -252,8 +246,8 @@ func createStructDecoder(typ reflect.Type, fields map[string]*structFieldDecoder
 			}
 		}
 		return &fiveFieldsStructDecoder{typ,
-			fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3,
-			fieldName4, fieldDecoder4, fieldName5, fieldDecoder5}, nil
+						fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3,
+						fieldName4, fieldDecoder4, fieldName5, fieldDecoder5}, nil
 	case 6:
 		var fieldName1 int32
 		var fieldName2 int32
@@ -296,8 +290,8 @@ func createStructDecoder(typ reflect.Type, fields map[string]*structFieldDecoder
 			}
 		}
 		return &sixFieldsStructDecoder{typ,
-			fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3,
-			fieldName4, fieldDecoder4, fieldName5, fieldDecoder5, fieldName6, fieldDecoder6}, nil
+					       fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3,
+					       fieldName4, fieldDecoder4, fieldName5, fieldDecoder5, fieldName6, fieldDecoder6}, nil
 	case 7:
 		var fieldName1 int32
 		var fieldName2 int32
@@ -345,9 +339,9 @@ func createStructDecoder(typ reflect.Type, fields map[string]*structFieldDecoder
 			}
 		}
 		return &sevenFieldsStructDecoder{typ,
-			fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3,
-			fieldName4, fieldDecoder4, fieldName5, fieldDecoder5, fieldName6, fieldDecoder6,
-			fieldName7, fieldDecoder7}, nil
+						 fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3,
+						 fieldName4, fieldDecoder4, fieldName5, fieldDecoder5, fieldName6, fieldDecoder6,
+						 fieldName7, fieldDecoder7}, nil
 	case 8:
 		var fieldName1 int32
 		var fieldName2 int32
@@ -400,9 +394,9 @@ func createStructDecoder(typ reflect.Type, fields map[string]*structFieldDecoder
 			}
 		}
 		return &eightFieldsStructDecoder{typ,
-			fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3,
-			fieldName4, fieldDecoder4, fieldName5, fieldDecoder5, fieldName6, fieldDecoder6,
-			fieldName7, fieldDecoder7, fieldName8, fieldDecoder8}, nil
+						 fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3,
+						 fieldName4, fieldDecoder4, fieldName5, fieldDecoder5, fieldName6, fieldDecoder6,
+						 fieldName7, fieldDecoder7, fieldName8, fieldDecoder8}, nil
 	case 9:
 		var fieldName1 int32
 		var fieldName2 int32
@@ -460,9 +454,9 @@ func createStructDecoder(typ reflect.Type, fields map[string]*structFieldDecoder
 			}
 		}
 		return &nineFieldsStructDecoder{typ,
-			fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3,
-			fieldName4, fieldDecoder4, fieldName5, fieldDecoder5, fieldName6, fieldDecoder6,
-			fieldName7, fieldDecoder7, fieldName8, fieldDecoder8, fieldName9, fieldDecoder9}, nil
+						fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3,
+						fieldName4, fieldDecoder4, fieldName5, fieldDecoder5, fieldName6, fieldDecoder6,
+						fieldName7, fieldDecoder7, fieldName8, fieldDecoder8, fieldName9, fieldDecoder9}, nil
 	case 10:
 		var fieldName1 int32
 		var fieldName2 int32
@@ -525,10 +519,10 @@ func createStructDecoder(typ reflect.Type, fields map[string]*structFieldDecoder
 			}
 		}
 		return &tenFieldsStructDecoder{typ,
-			fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3,
-			fieldName4, fieldDecoder4, fieldName5, fieldDecoder5, fieldName6, fieldDecoder6,
-			fieldName7, fieldDecoder7, fieldName8, fieldDecoder8, fieldName9, fieldDecoder9,
-			fieldName10, fieldDecoder10}, nil
+					       fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3,
+					       fieldName4, fieldDecoder4, fieldName5, fieldDecoder5, fieldName6, fieldDecoder6,
+					       fieldName7, fieldDecoder7, fieldName8, fieldDecoder8, fieldName9, fieldDecoder9,
+					       fieldName10, fieldDecoder10}, nil
 	}
 	return &generalStructDecoder{typ, fields}, nil
 }
@@ -602,11 +596,11 @@ func (decoder *oneFieldStructDecoder) decode(ptr unsafe.Pointer, iter *Iterator)
 }
 
 type twoFieldsStructDecoder struct {
-	typ            reflect.Type
-	fieldHash1     int32
-	fieldDecoder1  *structFieldDecoder
-	fieldHash2     int32
-	fieldDecoder2  *structFieldDecoder
+	typ           reflect.Type
+	fieldHash1    int32
+	fieldDecoder1 *structFieldDecoder
+	fieldHash2    int32
+	fieldDecoder2 *structFieldDecoder
 }
 
 func (decoder *twoFieldsStructDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
@@ -632,13 +626,13 @@ func (decoder *twoFieldsStructDecoder) decode(ptr unsafe.Pointer, iter *Iterator
 }
 
 type threeFieldsStructDecoder struct {
-	typ            reflect.Type
-	fieldHash1     int32
-	fieldDecoder1  *structFieldDecoder
-	fieldHash2     int32
-	fieldDecoder2  *structFieldDecoder
-	fieldHash3     int32
-	fieldDecoder3  *structFieldDecoder
+	typ           reflect.Type
+	fieldHash1    int32
+	fieldDecoder1 *structFieldDecoder
+	fieldHash2    int32
+	fieldDecoder2 *structFieldDecoder
+	fieldHash3    int32
+	fieldDecoder3 *structFieldDecoder
 }
 
 func (decoder *threeFieldsStructDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
@@ -666,15 +660,15 @@ func (decoder *threeFieldsStructDecoder) decode(ptr unsafe.Pointer, iter *Iterat
 }
 
 type fourFieldsStructDecoder struct {
-	typ            reflect.Type
-	fieldHash1     int32
-	fieldDecoder1  *structFieldDecoder
-	fieldHash2     int32
-	fieldDecoder2  *structFieldDecoder
-	fieldHash3     int32
-	fieldDecoder3  *structFieldDecoder
-	fieldHash4     int32
-	fieldDecoder4  *structFieldDecoder
+	typ           reflect.Type
+	fieldHash1    int32
+	fieldDecoder1 *structFieldDecoder
+	fieldHash2    int32
+	fieldDecoder2 *structFieldDecoder
+	fieldHash3    int32
+	fieldDecoder3 *structFieldDecoder
+	fieldHash4    int32
+	fieldDecoder4 *structFieldDecoder
 }
 
 func (decoder *fourFieldsStructDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
@@ -704,17 +698,17 @@ func (decoder *fourFieldsStructDecoder) decode(ptr unsafe.Pointer, iter *Iterato
 }
 
 type fiveFieldsStructDecoder struct {
-	typ            reflect.Type
-	fieldHash1     int32
-	fieldDecoder1  *structFieldDecoder
-	fieldHash2     int32
-	fieldDecoder2  *structFieldDecoder
-	fieldHash3     int32
-	fieldDecoder3  *structFieldDecoder
-	fieldHash4     int32
-	fieldDecoder4  *structFieldDecoder
-	fieldHash5     int32
-	fieldDecoder5  *structFieldDecoder
+	typ           reflect.Type
+	fieldHash1    int32
+	fieldDecoder1 *structFieldDecoder
+	fieldHash2    int32
+	fieldDecoder2 *structFieldDecoder
+	fieldHash3    int32
+	fieldDecoder3 *structFieldDecoder
+	fieldHash4    int32
+	fieldDecoder4 *structFieldDecoder
+	fieldHash5    int32
+	fieldDecoder5 *structFieldDecoder
 }
 
 func (decoder *fiveFieldsStructDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
@@ -746,19 +740,19 @@ func (decoder *fiveFieldsStructDecoder) decode(ptr unsafe.Pointer, iter *Iterato
 }
 
 type sixFieldsStructDecoder struct {
-	typ            reflect.Type
-	fieldHash1     int32
-	fieldDecoder1  *structFieldDecoder
-	fieldHash2     int32
-	fieldDecoder2  *structFieldDecoder
-	fieldHash3     int32
-	fieldDecoder3  *structFieldDecoder
-	fieldHash4     int32
-	fieldDecoder4  *structFieldDecoder
-	fieldHash5     int32
-	fieldDecoder5  *structFieldDecoder
-	fieldHash6     int32
-	fieldDecoder6  *structFieldDecoder
+	typ           reflect.Type
+	fieldHash1    int32
+	fieldDecoder1 *structFieldDecoder
+	fieldHash2    int32
+	fieldDecoder2 *structFieldDecoder
+	fieldHash3    int32
+	fieldDecoder3 *structFieldDecoder
+	fieldHash4    int32
+	fieldDecoder4 *structFieldDecoder
+	fieldHash5    int32
+	fieldDecoder5 *structFieldDecoder
+	fieldHash6    int32
+	fieldDecoder6 *structFieldDecoder
 }
 
 func (decoder *sixFieldsStructDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
@@ -792,21 +786,21 @@ func (decoder *sixFieldsStructDecoder) decode(ptr unsafe.Pointer, iter *Iterator
 }
 
 type sevenFieldsStructDecoder struct {
-	typ            reflect.Type
-	fieldHash1     int32
-	fieldDecoder1  *structFieldDecoder
-	fieldHash2     int32
-	fieldDecoder2  *structFieldDecoder
-	fieldHash3     int32
-	fieldDecoder3  *structFieldDecoder
-	fieldHash4     int32
-	fieldDecoder4  *structFieldDecoder
-	fieldHash5     int32
-	fieldDecoder5  *structFieldDecoder
-	fieldHash6     int32
-	fieldDecoder6  *structFieldDecoder
-	fieldHash7     int32
-	fieldDecoder7  *structFieldDecoder
+	typ           reflect.Type
+	fieldHash1    int32
+	fieldDecoder1 *structFieldDecoder
+	fieldHash2    int32
+	fieldDecoder2 *structFieldDecoder
+	fieldHash3    int32
+	fieldDecoder3 *structFieldDecoder
+	fieldHash4    int32
+	fieldDecoder4 *structFieldDecoder
+	fieldHash5    int32
+	fieldDecoder5 *structFieldDecoder
+	fieldHash6    int32
+	fieldDecoder6 *structFieldDecoder
+	fieldHash7    int32
+	fieldDecoder7 *structFieldDecoder
 }
 
 func (decoder *sevenFieldsStructDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
@@ -842,23 +836,23 @@ func (decoder *sevenFieldsStructDecoder) decode(ptr unsafe.Pointer, iter *Iterat
 }
 
 type eightFieldsStructDecoder struct {
-	typ            reflect.Type
-	fieldHash1     int32
-	fieldDecoder1  *structFieldDecoder
-	fieldHash2     int32
-	fieldDecoder2  *structFieldDecoder
-	fieldHash3     int32
-	fieldDecoder3  *structFieldDecoder
-	fieldHash4     int32
-	fieldDecoder4  *structFieldDecoder
-	fieldHash5     int32
-	fieldDecoder5  *structFieldDecoder
-	fieldHash6     int32
-	fieldDecoder6  *structFieldDecoder
-	fieldHash7     int32
-	fieldDecoder7  *structFieldDecoder
-	fieldHash8     int32
-	fieldDecoder8  *structFieldDecoder
+	typ           reflect.Type
+	fieldHash1    int32
+	fieldDecoder1 *structFieldDecoder
+	fieldHash2    int32
+	fieldDecoder2 *structFieldDecoder
+	fieldHash3    int32
+	fieldDecoder3 *structFieldDecoder
+	fieldHash4    int32
+	fieldDecoder4 *structFieldDecoder
+	fieldHash5    int32
+	fieldDecoder5 *structFieldDecoder
+	fieldHash6    int32
+	fieldDecoder6 *structFieldDecoder
+	fieldHash7    int32
+	fieldDecoder7 *structFieldDecoder
+	fieldHash8    int32
+	fieldDecoder8 *structFieldDecoder
 }
 
 func (decoder *eightFieldsStructDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
@@ -896,25 +890,25 @@ func (decoder *eightFieldsStructDecoder) decode(ptr unsafe.Pointer, iter *Iterat
 }
 
 type nineFieldsStructDecoder struct {
-	typ            reflect.Type
-	fieldHash1     int32
-	fieldDecoder1  *structFieldDecoder
-	fieldHash2     int32
-	fieldDecoder2  *structFieldDecoder
-	fieldHash3     int32
-	fieldDecoder3  *structFieldDecoder
-	fieldHash4     int32
-	fieldDecoder4  *structFieldDecoder
-	fieldHash5     int32
-	fieldDecoder5  *structFieldDecoder
-	fieldHash6     int32
-	fieldDecoder6  *structFieldDecoder
-	fieldHash7     int32
-	fieldDecoder7  *structFieldDecoder
-	fieldHash8     int32
-	fieldDecoder8  *structFieldDecoder
-	fieldHash9     int32
-	fieldDecoder9  *structFieldDecoder
+	typ           reflect.Type
+	fieldHash1    int32
+	fieldDecoder1 *structFieldDecoder
+	fieldHash2    int32
+	fieldDecoder2 *structFieldDecoder
+	fieldHash3    int32
+	fieldDecoder3 *structFieldDecoder
+	fieldHash4    int32
+	fieldDecoder4 *structFieldDecoder
+	fieldHash5    int32
+	fieldDecoder5 *structFieldDecoder
+	fieldHash6    int32
+	fieldDecoder6 *structFieldDecoder
+	fieldHash7    int32
+	fieldDecoder7 *structFieldDecoder
+	fieldHash8    int32
+	fieldDecoder8 *structFieldDecoder
+	fieldHash9    int32
+	fieldDecoder9 *structFieldDecoder
 }
 
 func (decoder *nineFieldsStructDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
@@ -1045,14 +1039,13 @@ func (encoder *structFieldEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
 }
 
 func (encoder *structFieldEncoder) encodeInterface(val interface{}, stream *Stream) {
-	WriteToStream(val, stream, encoder)
+	writeToStream(val, stream, encoder)
 }
 
 func (encoder *structFieldEncoder) isEmpty(ptr unsafe.Pointer) bool {
 	fieldPtr := uintptr(ptr) + encoder.field.Offset
 	return encoder.fieldEncoder.isEmpty(unsafe.Pointer(fieldPtr))
 }
-
 
 type structEncoder struct {
 	fields []*structFieldEncoder
@@ -1075,7 +1068,24 @@ func (encoder *structEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
 }
 
 func (encoder *structEncoder) encodeInterface(val interface{}, stream *Stream) {
-	WriteToStream(val, stream, encoder)
+	var encoderToUse Encoder
+	encoderToUse = encoder
+	if len(encoder.fields) == 1 {
+		firstEncoder := encoder.fields[0].fieldEncoder
+		firstEncoderName := reflect.TypeOf(firstEncoder).String()
+		// interface{} has inline optimization for this case
+		if firstEncoderName == "*jsoniter.optionalEncoder" {
+			encoderToUse = &structEncoder{
+				fields: []*structFieldEncoder{{
+					field:        encoder.fields[0].field,
+					fieldName:    encoder.fields[0].fieldName,
+					fieldEncoder: firstEncoder.(*optionalEncoder).valueEncoder,
+					omitempty:    encoder.fields[0].omitempty,
+				}},
+			}
+		}
+	}
+	writeToStream(val, stream, encoderToUse)
 }
 
 func (encoder *structEncoder) isEmpty(ptr unsafe.Pointer) bool {
@@ -1087,7 +1097,6 @@ func (encoder *structEncoder) isEmpty(ptr unsafe.Pointer) bool {
 	return true
 }
 
-
 type emptyStructEncoder struct {
 }
 
@@ -1096,7 +1105,7 @@ func (encoder *emptyStructEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
 }
 
 func (encoder *emptyStructEncoder) encodeInterface(val interface{}, stream *Stream) {
-	WriteToStream(val, stream, encoder)
+	writeToStream(val, stream, encoder)
 }
 
 func (encoder *emptyStructEncoder) isEmpty(ptr unsafe.Pointer) bool {
