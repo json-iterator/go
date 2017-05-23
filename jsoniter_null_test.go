@@ -39,6 +39,7 @@ func Test_encode_null(t *testing.T) {
 }
 
 func Test_decode_null_object(t *testing.T) {
+	should := require.New(t)
 	iter := ParseString(`[null,"a"]`)
 	iter.ReadArray()
 	if iter.ReadObject() != "" {
@@ -48,6 +49,12 @@ func Test_decode_null_object(t *testing.T) {
 	if iter.ReadString() != "a" {
 		t.FailNow()
 	}
+	type TestObject struct {
+		Field string
+	}
+	objs := []TestObject{}
+	should.Nil(UnmarshalFromString("[null]", &objs))
+	should.Len(objs, 1)
 }
 
 func Test_decode_null_array(t *testing.T) {
@@ -66,7 +73,7 @@ func Test_decode_null_string(t *testing.T) {
 	should := require.New(t)
 	iter := ParseString(`[null,"a"]`)
 	should.True(iter.ReadArray())
-	should.True(iter.ReadNil())
+	should.Equal("", iter.ReadString())
 	should.True(iter.ReadArray())
 	should.Equal("a", iter.ReadString())
 }

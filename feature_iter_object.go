@@ -108,8 +108,11 @@ func (iter *Iterator) readObjectStart() bool {
 		}
 		iter.unreadByte()
 		return true
+	} else if c == 'n' {
+		iter.skipFixedBytes(3)
+		return false
 	}
-	iter.reportError("readObjectStart", "expect { ")
+	iter.reportError("readObjectStart", "expect { or n")
 	return false
 }
 
