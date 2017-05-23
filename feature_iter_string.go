@@ -2,59 +2,37 @@ package jsoniter
 
 import (
 	"unicode/utf16"
-	"unsafe"
 )
 
-// TODO: avoid append
 func (iter *Iterator) ReadString() (ret string) {
 	c := iter.nextToken()
 	if c == '"' {
-		copied := make([]byte, 32)
-		j := 0
-		fast_loop:
-		for {
-			i := iter.head
-			for ; i < iter.tail && j < len(copied); i++ {
-				c := iter.buf[i]
-				if c == '"' {
-					iter.head = i + 1
-					copied = copied[:j]
-					return *(*string)(unsafe.Pointer(&copied))
-				} else if c == '\\' {
-					iter.head = i
-					break fast_loop
-				}
-				copied[j] = c
-				j++
-			}
-			if i == iter.tail {
-				if iter.loadMore() {
-					i = iter.head
-					continue
-				} else {
-					iter.reportError("ReadString", "incomplete string")
-					return
-				}
-			}
-			iter.head = i
-			if j == len(copied) {
-				newBuf := make([]byte, len(copied) * 2)
-				copy(newBuf, copied)
-				copied = newBuf
+		for i := iter.head ; i < iter.tail; i++ {
+			c := iter.buf[i]
+			if c == '"' {
+				ret = string(iter.buf[iter.head:i])
+				iter.head = i + 1
+				return ret
+			} else if c == '\\' {
+				break
 			}
 		}
-		return iter.readStringSlowPath(copied[:j])
+		return iter.readStringSlowPath()
+	} else if c == 'n' {
+		iter.skipFixedBytes(3)
+		return ""
 	}
 	iter.reportError("ReadString", `expects " or n`)
 	return
 }
 
-func (iter *Iterator) readStringSlowPath(str []byte) (ret string) {
+func (iter *Iterator) readStringSlowPath() (ret string) {
+	var str []byte
 	var c byte
 	for iter.Error == nil {
 		c = iter.readByte()
 		if c == '"' {
-			return *(*string)(unsafe.Pointer(&str))
+			return string(str)
 		}
 		if c == '\\' {
 			c = iter.readByte()
