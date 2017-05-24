@@ -103,3 +103,22 @@ func Test_customize_field_by_extension(t *testing.T) {
 		t.Fatal(obj.field1)
 	}
 }
+
+func Test_unexported_fields(t *testing.T) {
+	EnableUnexportedStructFieldsSupport()
+	should := require.New(t)
+	type TestObject struct {
+		field1 string
+		field2 string `json:"field-2"`
+	}
+	obj := TestObject{}
+	obj.field1 = "hello"
+	should.Nil(UnmarshalFromString(`{}`, &obj))
+	should.Equal("hello", obj.field1)
+	should.Nil(UnmarshalFromString(`{"field1": "world", "field-2": "abc"}`, &obj))
+	should.Equal("world", obj.field1)
+	should.Equal("abc", obj.field2)
+	str, err := MarshalToString(obj)
+	should.Nil(err)
+	should.Equal(`{"field1":"world","field-2":"abc"}`, str)
+}

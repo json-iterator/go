@@ -6,32 +6,23 @@ import (
 	"reflect"
 	"unsafe"
 	"strings"
+	"unicode"
 )
 
 func encoderOfStruct(typ reflect.Type) (Encoder, error) {
 	structEncoder_ := &structEncoder{}
 	for i := 0; i < typ.NumField(); i++ {
 		field := typ.Field(i)
-		var fieldNames []string
+		var extensionProvidedFieldNames []string
 		for _, extension := range extensions {
 			alternativeFieldNames, _ := extension(typ, &field)
 			if alternativeFieldNames != nil {
-				fieldNames = alternativeFieldNames
+				extensionProvidedFieldNames = alternativeFieldNames
 			}
 		}
 		tagParts := strings.Split(field.Tag.Get("json"), ",")
 		// if fieldNames set by extension, use theirs, otherwise try tags
-		if fieldNames == nil {
-			/// tagParts[0] always present, even if no tags
-			switch tagParts[0] {
-			case "":
-				fieldNames = []string{field.Name}
-			case "-":
-				fieldNames = []string{}
-			default:
-				fieldNames = []string{tagParts[0]}
-			}
-		}
+		fieldNames := calcFieldNames(field.Name, tagParts[0], extensionProvidedFieldNames)
 		omitempty := false
 		for _, tagPart := range tagParts {
 			if tagPart == "omitempty" {
@@ -66,11 +57,11 @@ func decoderOfStruct(typ reflect.Type) (Decoder, error) {
 	for i := 0; i < typ.NumField(); i++ {
 		field := typ.Field(i)
 		fieldDecoderKey := fmt.Sprintf("%s/%s", typ.String(), field.Name)
-		var fieldNames []string
+		var extensionProviedFieldNames []string
 		for _, extension := range extensions {
 			alternativeFieldNames, fun := extension(typ, &field)
 			if alternativeFieldNames != nil {
-				fieldNames = alternativeFieldNames
+				extensionProviedFieldNames = alternativeFieldNames
 			}
 			if fun != nil {
 				fieldDecoders[fieldDecoderKey] = &funcDecoder{fun}
@@ -78,18 +69,7 @@ func decoderOfStruct(typ reflect.Type) (Decoder, error) {
 		}
 		decoder := fieldDecoders[fieldDecoderKey]
 		tagParts := strings.Split(field.Tag.Get("json"), ",")
-		// if fieldNames set by extension, use theirs, otherwise try tags
-		if fieldNames == nil {
-			/// tagParts[0] always present, even if no tags
-			switch tagParts[0] {
-			case "":
-				fieldNames = []string{field.Name}
-			case "-":
-				fieldNames = []string{}
-			default:
-				fieldNames = []string{tagParts[0]}
-			}
-		}
+		fieldNames := calcFieldNames(field.Name, tagParts[0], extensionProviedFieldNames)
 		if decoder == nil && len(fieldNames) > 0 {
 			var err error
 			decoder, err = decoderOfType(field.Type)
@@ -105,6 +85,36 @@ func decoderOfStruct(typ reflect.Type) (Decoder, error) {
 		}
 	}
 	return createStructDecoder(typ, fields)
+}
+
+func calcFieldNames(originalFieldName string, tagProvidedFieldName string, extensionProvidedFieldNames []string) []string {
+	// tag => extension => exported? => original
+	isNotExported := unicode.IsLower(rune(originalFieldName[0]))
+	var fieldNames []string
+	/// tagParts[0] always present, even if no tags
+	switch tagProvidedFieldName {
+	case "":
+		if extensionProvidedFieldNames != nil {
+			fieldNames = extensionProvidedFieldNames
+		} else {
+			if isNotExported {
+				fieldNames = []string{}
+			} else {
+				fieldNames = []string{originalFieldName}
+			}
+		}
+	case "-":
+		fieldNames = []string{}
+	default:
+		fieldNames = []string{tagProvidedFieldName}
+	}
+	return fieldNames
+}
+
+func EnableUnexportedStructFieldsSupport() {
+	RegisterExtension(func(type_ reflect.Type, field *reflect.StructField) ([]string, DecoderFunc) {
+		return []string{field.Name}, nil
+	})
 }
 
 func createStructDecoder(typ reflect.Type, fields map[string]*structFieldDecoder) (Decoder, error) {
