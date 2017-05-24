@@ -2,6 +2,7 @@ package jsoniter
 
 import (
 	"unsafe"
+	"encoding/json"
 )
 
 type stringCodec struct {
@@ -327,5 +328,38 @@ func (decoder *stringNumberDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 	if c != '"' {
 		iter.reportError("stringNumberDecoder", `expect "`)
 		return
+	}
+}
+
+type marshalerEncoder struct {
+	templateInterface emptyInterface
+}
+
+func (encoder *marshalerEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
+	templateInterface := encoder.templateInterface
+	templateInterface.word = ptr
+	realInterface := (*interface{})(unsafe.Pointer(&templateInterface))
+	marshaler := (*realInterface).(json.Marshaler)
+	bytes, err := marshaler.MarshalJSON()
+	if err != nil {
+		stream.Error = err
+	} else {
+		stream.Write(bytes)
+	}
+}
+func (encoder *marshalerEncoder) encodeInterface(val interface{}, stream *Stream) {
+	writeToStream(val, stream, encoder)
+}
+
+func (encoder *marshalerEncoder) isEmpty(ptr unsafe.Pointer) bool {
+	templateInterface := encoder.templateInterface
+	templateInterface.word = ptr
+	realInterface := (*interface{})(unsafe.Pointer(&templateInterface))
+	marshaler := (*realInterface).(json.Marshaler)
+	bytes, err := marshaler.MarshalJSON()
+	if err != nil {
+		return true
+	} else {
+		return len(bytes) > 0
 	}
 }

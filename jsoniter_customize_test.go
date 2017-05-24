@@ -7,6 +7,7 @@ import (
 	"time"
 	"unsafe"
 	"github.com/json-iterator/go/require"
+	"encoding/json"
 )
 
 func Test_customize_type_decoder(t *testing.T) {
@@ -127,4 +128,25 @@ func Test_unexported_fields(t *testing.T) {
 	str, err := MarshalToString(obj)
 	should.Nil(err)
 	should.Equal(`{"field1":"world","field-2":"abc"}`, str)
+}
+
+type ObjectImplementedMarshaler int
+
+func (obj *ObjectImplementedMarshaler) MarshalJSON() ([]byte, error) {
+	return []byte(`"hello"`), nil
+}
+
+func Test_marshaler(t *testing.T) {
+	type TestObject struct {
+		Field *ObjectImplementedMarshaler
+	}
+	should := require.New(t)
+	val := ObjectImplementedMarshaler(100)
+	obj := TestObject{&val}
+	bytes, err := json.Marshal(obj)
+	should.Nil(err)
+	should.Equal(`{"Field":"hello"}`, string(bytes))
+	str, err := MarshalToString(obj)
+	should.Nil(err)
+	should.Equal(`{"Field":"hello"}`, str)
 }
