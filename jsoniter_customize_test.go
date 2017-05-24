@@ -151,6 +151,24 @@ func Test_marshaler(t *testing.T) {
 	should.Equal(`{"Field":"hello"}`, str)
 }
 
+func Test_marshaler_and_encoder(t *testing.T) {
+	type TestObject struct {
+		Field *ObjectImplementedMarshaler
+	}
+	should := require.New(t)
+	RegisterTypeEncoder("jsoniter.ObjectImplementedMarshaler", func(ptr unsafe.Pointer, stream *Stream) {
+		stream.WriteString("hello from encoder")
+	})
+	val := ObjectImplementedMarshaler(100)
+	obj := TestObject{&val}
+	bytes, err := json.Marshal(obj)
+	should.Nil(err)
+	should.Equal(`{"Field":"hello"}`, string(bytes))
+	str, err := MarshalToString(obj)
+	should.Nil(err)
+	should.Equal(`{"Field":"hello from encoder"}`, str)
+}
+
 type ObjectImplementedUnmarshaler int
 
 func (obj *ObjectImplementedUnmarshaler) UnmarshalJSON([]byte) error {
@@ -173,4 +191,25 @@ func Test_unmarshaler(t *testing.T) {
 	err = Unmarshal([]byte(`{"Field":"hello"}`), &obj)
 	should.Nil(err)
 	should.Equal(100, int(*obj.Field))
+}
+
+func Test_unmarshaler_and_decoder(t *testing.T) {
+	type TestObject struct {
+		Field *ObjectImplementedUnmarshaler
+		Field2 string
+	}
+	should := require.New(t)
+	RegisterTypeDecoder("jsoniter.ObjectImplementedUnmarshaler", func(ptr unsafe.Pointer, iter *Iterator) {
+		*(*ObjectImplementedUnmarshaler)(ptr) = 10
+		iter.Skip()
+	})
+	obj := TestObject{}
+	val := ObjectImplementedUnmarshaler(0)
+	obj.Field = &val
+	err := json.Unmarshal([]byte(`{"Field":"hello"}`), &obj)
+	should.Nil(err)
+	should.Equal(100, int(*obj.Field))
+	err = Unmarshal([]byte(`{"Field":"hello"}`), &obj)
+	should.Nil(err)
+	should.Equal(10, int(*obj.Field))
 }

@@ -300,6 +300,12 @@ func decoderOfType(typ reflect.Type) (Decoder, error) {
 	if typeDecoder != nil {
 		return typeDecoder, nil
 	}
+	if typ.Kind() == reflect.Ptr {
+		typeDecoder := typeDecoders[typ.Elem().String()]
+		if typeDecoder != nil {
+			return &optionalDecoder{typ.Elem(),typeDecoder}, nil
+		}
+	}
 	cacheKey := typ
 	cachedDecoder := getDecoderFromCache(cacheKey)
 	if cachedDecoder != nil {
@@ -374,6 +380,12 @@ func encoderOfType(typ reflect.Type) (Encoder, error) {
 	typeEncoder := typeEncoders[typeName]
 	if typeEncoder != nil {
 		return typeEncoder, nil
+	}
+	if typ.Kind() == reflect.Ptr {
+		typeEncoder := typeEncoders[typ.Elem().String()]
+		if typeEncoder != nil {
+			return &optionalEncoder{typeEncoder}, nil
+		}
 	}
 	cacheKey := typ
 	cachedEncoder := getEncoderFromCache(cacheKey)
