@@ -363,3 +363,19 @@ func (encoder *marshalerEncoder) isEmpty(ptr unsafe.Pointer) bool {
 		return len(bytes) > 0
 	}
 }
+
+type unmarshalerDecoder struct {
+	templateInterface emptyInterface
+}
+
+func (decoder *unmarshalerDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+	templateInterface := decoder.templateInterface
+	templateInterface.word = ptr
+	realInterface := (*interface{})(unsafe.Pointer(&templateInterface))
+	unmarshaler := (*realInterface).(json.Unmarshaler)
+	bytes := iter.SkipAndReturnBytes()
+	err := unmarshaler.UnmarshalJSON(bytes)
+	if err != nil {
+		iter.reportError("unmarshaler", err.Error())
+	}
+}

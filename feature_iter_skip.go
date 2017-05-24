@@ -30,6 +30,17 @@ func (iter *Iterator) ReadBool() (ret bool) {
 }
 
 
+func (iter *Iterator) SkipAndReturnBytes() []byte {
+	if iter.reader != nil {
+		panic("reader input does not support this api")
+	}
+	before := iter.head
+	iter.Skip()
+	after := iter.head
+	return iter.buf[before:after]
+}
+
+
 // Skip skips a json object and positions to relatively the next json object
 func (iter *Iterator) Skip() {
 	c := iter.nextToken()

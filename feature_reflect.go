@@ -75,6 +75,7 @@ var fieldEncoders map[string]Encoder
 var extensions []ExtensionFunc
 var anyType reflect.Type
 var marshalerType reflect.Type
+var unmarshalerType reflect.Type
 
 func init() {
 	typeDecoders = map[string]Decoder{}
@@ -86,6 +87,7 @@ func init() {
 	atomic.StorePointer(&ENCODERS, unsafe.Pointer(&map[string]Encoder{}))
 	anyType = reflect.TypeOf((*Any)(nil)).Elem()
 	marshalerType = reflect.TypeOf((*json.Marshaler)(nil)).Elem()
+	unmarshalerType = reflect.TypeOf((*json.Unmarshaler)(nil)).Elem()
 }
 
 func addDecoderToCache(cacheKey reflect.Type, decoder Decoder) {
@@ -293,9 +295,6 @@ func (p prefix) addToEncoder(encoder Encoder, err error) (Encoder, error) {
 }
 
 func decoderOfType(typ reflect.Type) (Decoder, error) {
-	if typ.ConvertibleTo(anyType) {
-		return &anyCodec{}, nil
-	}
 	typeName := typ.String()
 	typeDecoder := typeDecoders[typeName]
 	if typeDecoder != nil {
@@ -315,6 +314,13 @@ func decoderOfType(typ reflect.Type) (Decoder, error) {
 }
 
 func createDecoderOfType(typ reflect.Type) (Decoder, error) {
+	if typ.ConvertibleTo(anyType) {
+		return &anyCodec{}, nil
+	}
+	if typ.ConvertibleTo(unmarshalerType) {
+		templateInterface := reflect.New(typ).Elem().Interface()
+		return &optionalDecoder{typ, &unmarshalerDecoder{extractInterface(templateInterface)}}, nil
+	}
 	switch typ.Kind() {
 	case reflect.String:
 		return &stringCodec{}, nil

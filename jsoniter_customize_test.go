@@ -150,3 +150,27 @@ func Test_marshaler(t *testing.T) {
 	should.Nil(err)
 	should.Equal(`{"Field":"hello"}`, str)
 }
+
+type ObjectImplementedUnmarshaler int
+
+func (obj *ObjectImplementedUnmarshaler) UnmarshalJSON([]byte) error {
+	*obj = 100
+	return nil
+}
+
+func Test_unmarshaler(t *testing.T) {
+	type TestObject struct {
+		Field *ObjectImplementedUnmarshaler
+		Field2 string
+	}
+	should := require.New(t)
+	obj := TestObject{}
+	val := ObjectImplementedUnmarshaler(0)
+	obj.Field = &val
+	err := json.Unmarshal([]byte(`{"Field":"hello"}`), &obj)
+	should.Nil(err)
+	should.Equal(100, int(*obj.Field))
+	err = Unmarshal([]byte(`{"Field":"hello"}`), &obj)
+	should.Nil(err)
+	should.Equal(100, int(*obj.Field))
+}
