@@ -2,6 +2,7 @@ package jsoniter
 
 import (
 	"strconv"
+	"unsafe"
 )
 
 var POW10 []uint64
@@ -11,6 +12,10 @@ func init() {
 }
 
 func (stream *Stream) WriteFloat32(val float32) {
+	stream.WriteRaw(strconv.FormatFloat(float64(val), 'f', -1, 32))
+}
+
+func (stream *Stream) WriteFloat32Lossy(val float32) {
 	if val < 0 {
 		stream.writeByte('-')
 		val = -val
@@ -41,6 +46,10 @@ func (stream *Stream) WriteFloat32(val float32) {
 }
 
 func (stream *Stream) WriteFloat64(val float64) {
+	stream.WriteRaw(strconv.FormatFloat(float64(val), 'f', -1, 64))
+}
+
+func (stream *Stream) WriteFloat64Lossy(val float64) {
 	if val < 0 {
 		stream.writeByte('-')
 		val = -val
@@ -68,4 +77,16 @@ func (stream *Stream) WriteFloat64(val float64) {
 	for stream.buf[stream.n - 1] == '0' {
 		stream.n--
 	}
+}
+
+func EnableLossyFloatMarshalling() {
+	// for better performance
+	RegisterTypeEncoder("float32", func(ptr unsafe.Pointer, stream *Stream) {
+		val := *((*float32)(ptr))
+		stream.WriteFloat32Lossy(val)
+	})
+	RegisterTypeEncoder("float64", func(ptr unsafe.Pointer, stream *Stream) {
+		val := *((*float64)(ptr))
+		stream.WriteFloat64Lossy(val)
+	})
 }

@@ -75,7 +75,7 @@ func Test_write_float32(t *testing.T) {
 			should := require.New(t)
 			buf := &bytes.Buffer{}
 			stream := NewStream(buf, 4096)
-			stream.WriteFloat32(val)
+			stream.WriteFloat32Lossy(val)
 			stream.Flush()
 			should.Nil(stream.Error)
 			should.Equal(strconv.FormatFloat(float64(val), 'f', -1, 32), buf.String())
@@ -94,7 +94,7 @@ func Test_write_float32(t *testing.T) {
 	buf := &bytes.Buffer{}
 	stream := NewStream(buf, 10)
 	stream.WriteRaw("abcdefg")
-	stream.WriteFloat32(1.123456)
+	stream.WriteFloat32Lossy(1.123456)
 	stream.Flush()
 	should.Nil(stream.Error)
 	should.Equal("abcdefg1.123456", buf.String())
@@ -108,7 +108,7 @@ func Test_write_float64(t *testing.T) {
 			should := require.New(t)
 			buf := &bytes.Buffer{}
 			stream := NewStream(buf, 4096)
-			stream.WriteFloat64(val)
+			stream.WriteFloat64Lossy(val)
 			stream.Flush()
 			should.Nil(stream.Error)
 			should.Equal(strconv.FormatFloat(val, 'f', -1, 64), buf.String())
@@ -127,7 +127,7 @@ func Test_write_float64(t *testing.T) {
 	buf := &bytes.Buffer{}
 	stream := NewStream(buf, 10)
 	stream.WriteRaw("abcdefg")
-	stream.WriteFloat64(1.123456)
+	stream.WriteFloat64Lossy(1.123456)
 	stream.Flush()
 	should.Nil(stream.Error)
 	should.Equal("abcdefg1.123456", buf.String())

@@ -56,6 +56,15 @@ func Test_customize_byte_array_encoder(t *testing.T) {
 	should.Equal(`"abc"`, str)
 }
 
+func Test_customize_float_marshal(t *testing.T) {
+	should := require.New(t)
+	EnableLossyFloatMarshalling()
+	defer CleanEncoders()
+	str, err := MarshalToString(float32(1.23456789))
+	should.Nil(err)
+	should.Equal("1.234568", str)
+}
+
 type Tom struct {
 	field1 string
 }
