@@ -14,7 +14,7 @@ func Test_decode_one_field_struct(t *testing.T) {
 	obj := TestObject{}
 	should.Nil(UnmarshalFromString(`{}`, &obj))
 	should.Equal("", obj.Field1)
-	should.Nil(UnmarshalFromString(`{"Field1": "hello"}`, &obj))
+	should.Nil(UnmarshalFromString(`{"field1": "hello"}`, &obj))
 	should.Equal("hello", obj.Field1)
 }
 

@@ -1,6 +1,9 @@
 package jsoniter
 
-import "fmt"
+import (
+	"fmt"
+	"unicode"
+)
 
 func (iter *Iterator) ReadObject() (ret string) {
 	c := iter.nextToken()
@@ -37,6 +40,9 @@ func (iter *Iterator) readFieldHash() int32 {
 			for i := iter.head; i < iter.tail; i++ {
 				// require ascii string and no escape
 				b := iter.buf[i]
+				if 'A' <= b && b <= 'Z' {
+					b += 'a' - 'A'
+				}
 				if b == '"' {
 					iter.head = i+1
 					c = iter.nextToken()
@@ -61,7 +67,7 @@ func (iter *Iterator) readFieldHash() int32 {
 func calcHash(str string) int32 {
 	hash := int64(0x811c9dc5)
 	for _, b := range str {
-		hash ^= int64(b)
+		hash ^= int64(unicode.ToLower(b))
 		hash *= 0x1000193
 	}
 	return int32(hash)
