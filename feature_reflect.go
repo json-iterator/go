@@ -38,7 +38,7 @@ func writeToStream(val interface{}, stream *Stream, encoder Encoder) {
 
 type DecoderFunc func(ptr unsafe.Pointer, iter *Iterator)
 type EncoderFunc func(ptr unsafe.Pointer, stream *Stream)
-type ExtensionFunc func(typ reflect.Type, field *reflect.StructField) ([]string, DecoderFunc)
+type ExtensionFunc func(typ reflect.Type, field *reflect.StructField) ([]string, EncoderFunc, DecoderFunc)
 
 type funcDecoder struct {
 	fun DecoderFunc

@@ -13,11 +13,15 @@ func encoderOfStruct(typ reflect.Type) (Encoder, error) {
 	structEncoder_ := &structEncoder{}
 	for i := 0; i < typ.NumField(); i++ {
 		field := typ.Field(i)
+		fieldEncoderKey := fmt.Sprintf("%s/%s", typ.String(), field.Name)
 		var extensionProvidedFieldNames []string
 		for _, extension := range extensions {
-			alternativeFieldNames, _ := extension(typ, &field)
+			alternativeFieldNames, fun, _ := extension(typ, &field)
 			if alternativeFieldNames != nil {
 				extensionProvidedFieldNames = alternativeFieldNames
+			}
+			if fun != nil {
+				fieldEncoders[fieldEncoderKey] = &funcEncoder{fun}
 			}
 		}
 		tagParts := strings.Split(field.Tag.Get("json"), ",")
@@ -29,9 +33,9 @@ func encoderOfStruct(typ reflect.Type) (Encoder, error) {
 				omitempty = true
 			}
 		}
-		var encoder Encoder
+		encoder := fieldEncoders[fieldEncoderKey]
 		var err error
-		if len(fieldNames) > 0 {
+		if encoder == nil && len(fieldNames) > 0 {
 			encoder, err = encoderOfType(field.Type)
 			if err != nil {
 				return prefix(fmt.Sprintf("{%s}", field.Name)).addToEncoder(encoder, err)
@@ -59,7 +63,7 @@ func decoderOfStruct(typ reflect.Type) (Decoder, error) {
 		fieldDecoderKey := fmt.Sprintf("%s/%s", typ.String(), field.Name)
 		var extensionProviedFieldNames []string
 		for _, extension := range extensions {
-			alternativeFieldNames, fun := extension(typ, &field)
+			alternativeFieldNames, _, fun := extension(typ, &field)
 			if alternativeFieldNames != nil {
 				extensionProviedFieldNames = alternativeFieldNames
 			}
@@ -112,8 +116,8 @@ func calcFieldNames(originalFieldName string, tagProvidedFieldName string, exten
 }
 
 func EnableUnexportedStructFieldsSupport() {
-	RegisterExtension(func(type_ reflect.Type, field *reflect.StructField) ([]string, DecoderFunc) {
-		return []string{field.Name}, nil
+	RegisterExtension(func(type_ reflect.Type, field *reflect.StructField) ([]string, EncoderFunc, DecoderFunc) {
+		return []string{field.Name}, nil, nil
 	})
 }
 

@@ -86,22 +86,28 @@ type TestObject1 struct {
 }
 
 func Test_customize_field_by_extension(t *testing.T) {
-	RegisterExtension(func(type_ reflect.Type, field *reflect.StructField) ([]string, DecoderFunc) {
+	should := require.New(t)
+	RegisterExtension(func(type_ reflect.Type, field *reflect.StructField) ([]string, EncoderFunc, DecoderFunc) {
 		if type_.String() == "jsoniter.TestObject1" && field.Name == "field1" {
-			return []string{"field-1"}, func(ptr unsafe.Pointer, iter *Iterator) {
+			encode := func(ptr unsafe.Pointer, stream *Stream) {
+				str := *((*string)(ptr))
+				val, _ := strconv.Atoi(str)
+				stream.WriteInt(val)
+			}
+			decode := func(ptr unsafe.Pointer, iter *Iterator) {
 				*((*string)(ptr)) = strconv.Itoa(iter.ReadInt())
 			}
+			return []string{"field-1"}, encode, decode
 		}
-		return nil, nil
+		return nil, nil, nil
 	})
 	obj := TestObject1{}
-	err := Unmarshal([]byte(`{"field-1": 100}`), &obj)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if obj.field1 != "100" {
-		t.Fatal(obj.field1)
-	}
+	err := UnmarshalFromString(`{"field-1": 100}`, &obj)
+	should.Nil(err)
+	should.Equal("100", obj.field1)
+	str, err := MarshalToString(obj)
+	should.Nil(err)
+	should.Equal(`{"field-1":100}`, str)
 }
 
 func Test_unexported_fields(t *testing.T) {
