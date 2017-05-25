@@ -83,7 +83,7 @@ func UnmarshalAnyFromString(str string) (Any, error) {
 
 func Marshal(v interface{}) ([]byte, error) {
 	buf := &bytes.Buffer{}
-	stream := NewStream(buf, 4096)
+	stream := NewStream(buf, 512)
 	stream.WriteVal(v)
 	stream.Flush()
 	if stream.Error != nil {
