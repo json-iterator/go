@@ -272,23 +272,54 @@ func (codec *boolCodec) isEmpty(ptr unsafe.Pointer) bool {
 	return !(*((*bool)(ptr)))
 }
 
-type interfaceCodec struct {
+type emptyInterfaceCodec struct {
 }
 
-func (codec *interfaceCodec) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (codec *emptyInterfaceCodec) decode(ptr unsafe.Pointer, iter *Iterator) {
 	*((*interface{})(ptr)) = iter.Read()
 }
 
-func (codec *interfaceCodec) encode(ptr unsafe.Pointer, stream *Stream) {
+func (codec *emptyInterfaceCodec) encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteVal(*((*interface{})(ptr)))
 }
 
-func (encoder *interfaceCodec) encodeInterface(val interface{}, stream *Stream) {
+func (encoder *emptyInterfaceCodec) encodeInterface(val interface{}, stream *Stream) {
 	stream.WriteVal(val)
 }
 
-func (codec *interfaceCodec) isEmpty(ptr unsafe.Pointer) bool {
+func (codec *emptyInterfaceCodec) isEmpty(ptr unsafe.Pointer) bool {
 	return ptr == nil
+}
+
+type nonEmptyInterfaceCodec struct {
+}
+
+func (codec *nonEmptyInterfaceCodec) decode(ptr unsafe.Pointer, iter *Iterator) {
+	nonEmptyInterface := (*nonEmptyInterface)(ptr)
+	var i interface{}
+	e := (*emptyInterface)(unsafe.Pointer(&i))
+	e.typ = nonEmptyInterface.itab.typ
+	e.word = nonEmptyInterface.word
+	iter.ReadVal(&i)
+	nonEmptyInterface.word = e.word
+}
+
+func (codec *nonEmptyInterfaceCodec) encode(ptr unsafe.Pointer, stream *Stream) {
+	nonEmptyInterface := (*nonEmptyInterface)(ptr)
+	var i interface{}
+	e := (*emptyInterface)(unsafe.Pointer(&i))
+	e.typ = nonEmptyInterface.itab.typ
+	e.word = nonEmptyInterface.word
+	stream.WriteVal(i)
+}
+
+func (encoder *nonEmptyInterfaceCodec) encodeInterface(val interface{}, stream *Stream) {
+	stream.WriteVal(val)
+}
+
+func (codec *nonEmptyInterfaceCodec) isEmpty(ptr unsafe.Pointer) bool {
+	nonEmptyInterface := (*nonEmptyInterface)(ptr)
+	return nonEmptyInterface.word == nil
 }
 
 type anyCodec struct {

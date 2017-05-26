@@ -5,7 +5,6 @@ import (
 	"reflect"
 	"sync/atomic"
 	"unsafe"
-	"errors"
 	"encoding/json"
 )
 
@@ -235,7 +234,21 @@ func (decoder *placeholderDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 
 // emptyInterface is the header for an interface{} value.
 type emptyInterface struct {
-	typ  *struct{}
+	typ  unsafe.Pointer
+	word unsafe.Pointer
+}
+
+// emptyInterface is the header for an interface with method (not interface{})
+type nonEmptyInterface struct {
+	// see ../runtime/iface.go:/Itab
+	itab *struct {
+		ityp   unsafe.Pointer // static interface type
+		typ    unsafe.Pointer // dynamic concrete type
+		link   unsafe.Pointer
+		bad    int32
+		unused int32
+		fun    [100000]unsafe.Pointer // method table
+	}
 	word unsafe.Pointer
 }
 
@@ -358,9 +371,9 @@ func createDecoderOfType(typ reflect.Type) (Decoder, error) {
 		return &boolCodec{}, nil
 	case reflect.Interface:
 		if typ.NumMethod() == 0 {
-			return &interfaceCodec{}, nil
+			return &emptyInterfaceCodec{}, nil
 		} else {
-			return nil, errors.New("unsupportd type: " + typ.String())
+			return &nonEmptyInterfaceCodec{}, nil
 		}
 	case reflect.Struct:
 		return prefix(fmt.Sprintf("[%s]", typ.String())).addToDecoder(decoderOfStruct(typ))
@@ -408,7 +421,8 @@ func createEncoderOfType(typ reflect.Type) (Encoder, error) {
 		templateInterface := reflect.New(typ).Elem().Interface()
 		return &marshalerEncoder{extractInterface(templateInterface)}, nil
 	}
-	switch typ.Kind() {
+	kind := typ.Kind()
+	switch kind {
 	case reflect.String:
 		return &stringCodec{}, nil
 	case reflect.Int:
@@ -438,7 +452,11 @@ func createEncoderOfType(typ reflect.Type) (Encoder, error) {
 	case reflect.Bool:
 		return &boolCodec{}, nil
 	case reflect.Interface:
-		return &interfaceCodec{}, nil
+		if typ.NumMethod() == 0 {
+			return &emptyInterfaceCodec{}, nil
+		} else {
+			return &nonEmptyInterfaceCodec{}, nil
+		}
 	case reflect.Struct:
 		return prefix(fmt.Sprintf("[%s]", typ.String())).addToEncoder(encoderOfStruct(typ))
 	case reflect.Slice:

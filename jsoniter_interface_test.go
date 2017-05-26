@@ -92,3 +92,49 @@ func Test_read_custom_interface(t *testing.T) {
 	should.Nil(err)
 	should.Equal("hello", val.Hello())
 }
+
+func Test_decode_object_contain_empty_interface(t *testing.T) {
+	type TestObject struct {
+		Field interface{}
+	}
+	should := require.New(t)
+	obj := TestObject{}
+	obj.Field = 1024
+	should.Nil(UnmarshalFromString(`{"Field": "hello"}`, &obj))
+	should.Equal("hello", obj.Field)
+}
+
+func Test_decode_object_contain_non_empty_interface(t *testing.T) {
+	type TestObject struct {
+		Field MyInterface
+	}
+	should := require.New(t)
+	obj := TestObject{}
+	obj.Field = MyString("abc")
+	should.Nil(UnmarshalFromString(`{"Field": "hello"}`, &obj))
+	should.Equal(MyString("hello"), obj.Field)
+}
+
+func Test_encode_object_contain_empty_interface(t *testing.T) {
+	type TestObject struct {
+		Field interface{}
+	}
+	should := require.New(t)
+	obj := TestObject{}
+	obj.Field = 1024
+	str, err := MarshalToString(obj)
+	should.Nil(err)
+	should.Equal(`{"Field":1024}`, str)
+}
+
+func Test_encode_object_contain_non_empty_interface(t *testing.T) {
+	type TestObject struct {
+		Field MyInterface
+	}
+	should := require.New(t)
+	obj := TestObject{}
+	obj.Field = MyString("hello")
+	str, err := MarshalToString(obj)
+	should.Nil(err)
+	should.Equal(`{"Field":"hello"}`, str)
+}
