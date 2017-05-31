@@ -4,6 +4,7 @@ import (
 	"io"
 	"strconv"
 	"unsafe"
+	"math/big"
 )
 
 var floatDigits []int8
@@ -26,6 +27,38 @@ func init() {
 	floatDigits['\t'] = endOfNumber
 	floatDigits['\n'] = endOfNumber
 	floatDigits['.'] = dotInNumber
+}
+
+func (iter *Iterator) ReadBigFloat() (ret *big.Float) {
+	str := iter.readNumberAsString()
+	if iter.Error != nil && iter.Error != io.EOF {
+		return nil
+	}
+	prec := 64
+	if len(str) > prec {
+		prec = len(str)
+	}
+	val, _, err := big.ParseFloat(str, 10, uint(prec), big.ToZero)
+	if err != nil {
+		iter.Error = err
+		return nil
+	}
+	return val
+}
+
+func (iter *Iterator) ReadBigInt() (ret *big.Int) {
+	str := iter.readNumberAsString()
+	if iter.Error != nil && iter.Error != io.EOF {
+		return nil
+	}
+	ret = big.NewInt(0)
+	var success bool
+	ret, success = ret.SetString(str, 10)
+	if !success {
+		iter.reportError("ReadBigInt", "invalid big int")
+		return nil
+	}
+	return ret
 }
 
 func (iter *Iterator) ReadFloat32() (ret float32) {
@@ -89,7 +122,7 @@ func (iter *Iterator) readPositiveFloat32() (ret float32) {
 	return iter.readFloat32SlowPath()
 }
 
-func (iter *Iterator) readFloat32SlowPath() (ret float32) {
+func (iter *Iterator) readNumberAsString() (ret string) {
 	strBuf := [16]byte{}
 	str := strBuf[0:0]
 	load_loop:
@@ -112,7 +145,15 @@ func (iter *Iterator) readFloat32SlowPath() (ret float32) {
 	if iter.Error != nil && iter.Error != io.EOF {
 		return
 	}
-	val, err := strconv.ParseFloat(*(*string)(unsafe.Pointer(&str)), 32)
+	return *(*string)(unsafe.Pointer(&str))
+}
+
+func (iter *Iterator) readFloat32SlowPath() (ret float32) {
+	str := iter.readNumberAsString()
+	if iter.Error != nil && iter.Error != io.EOF {
+		return
+	}
+	val, err := strconv.ParseFloat(str, 32)
 	if err != nil {
 		iter.Error = err
 		return
@@ -182,29 +223,11 @@ func (iter *Iterator) readPositiveFloat64() (ret float64) {
 }
 
 func (iter *Iterator) readFloat64SlowPath() (ret float64) {
-	strBuf := [16]byte{}
-	str := strBuf[0:0]
-	load_loop:
-	for {
-		for i := iter.head; i < iter.tail; i++ {
-			c := iter.buf[i]
-			switch c {
-			case '-', '.', 'e', 'E', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
-				str = append(str, c)
-				continue
-			default:
-				iter.head = i
-				break load_loop
-			}
-		}
-		if !iter.loadMore() {
-			break
-		}
-	}
+	str := iter.readNumberAsString()
 	if iter.Error != nil && iter.Error != io.EOF {
 		return
 	}
-	val, err := strconv.ParseFloat(*(*string)(unsafe.Pointer(&str)), 64)
+	val, err := strconv.ParseFloat(str, 64)
 	if err != nil {
 		iter.Error = err
 		return

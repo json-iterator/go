@@ -9,6 +9,22 @@ import (
 	"strconv"
 )
 
+func Test_read_big_float(t *testing.T) {
+	should := require.New(t)
+	iter := ParseString(`12.3`)
+	val := iter.ReadBigFloat()
+	val64, _ := val.Float64()
+	should.Equal(12.3, val64)
+}
+
+func Test_read_big_int(t *testing.T) {
+	should := require.New(t)
+	iter := ParseString(`92233720368547758079223372036854775807`)
+	val := iter.ReadBigInt()
+	should.NotNil(val)
+	should.Equal(`92233720368547758079223372036854775807`, val.String())
+}
+
 func Test_read_float(t *testing.T) {
 	inputs := []string{`1.1`, `1000`, `9223372036854775807`, `12.3`, `-12.3`, `720368.54775807`, `720368.547758075`}
 	for _, input := range inputs {
