@@ -360,6 +360,25 @@ func (encoder *jsonNumberCodec) isEmpty(ptr unsafe.Pointer) bool {
 	return len(*((*json.Number)(ptr))) == 0
 }
 
+type jsonRawMessageCodec struct {
+}
+
+func (codec *jsonRawMessageCodec) decode(ptr unsafe.Pointer, iter *Iterator) {
+	*((*json.RawMessage)(ptr)) = json.RawMessage(iter.SkipAndReturnBytes())
+}
+
+func (codec *jsonRawMessageCodec) encode(ptr unsafe.Pointer, stream *Stream) {
+	stream.WriteRaw(string(*((*json.RawMessage)(ptr))))
+}
+
+func (encoder *jsonRawMessageCodec) encodeInterface(val interface{}, stream *Stream) {
+	stream.WriteRaw(string(val.(json.RawMessage)))
+}
+
+func (encoder *jsonRawMessageCodec) isEmpty(ptr unsafe.Pointer) bool {
+	return len(*((*json.RawMessage)(ptr))) == 0
+}
+
 type stringNumberDecoder struct {
 	elemDecoder Decoder
 }

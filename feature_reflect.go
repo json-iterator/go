@@ -73,6 +73,7 @@ var typeEncoders map[string]Encoder
 var fieldEncoders map[string]Encoder
 var extensions []ExtensionFunc
 var jsonNumberType reflect.Type
+var jsonRawMessageType reflect.Type
 var anyType reflect.Type
 var marshalerType reflect.Type
 var unmarshalerType reflect.Type
@@ -86,6 +87,7 @@ func init() {
 	atomic.StorePointer(&DECODERS, unsafe.Pointer(&map[string]Decoder{}))
 	atomic.StorePointer(&ENCODERS, unsafe.Pointer(&map[string]Encoder{}))
 	jsonNumberType = reflect.TypeOf((*json.Number)(nil)).Elem()
+	jsonRawMessageType = reflect.TypeOf((*json.RawMessage)(nil)).Elem()
 	anyType = reflect.TypeOf((*Any)(nil)).Elem()
 	marshalerType = reflect.TypeOf((*json.Marshaler)(nil)).Elem()
 	unmarshalerType = reflect.TypeOf((*json.Unmarshaler)(nil)).Elem()
@@ -335,15 +337,18 @@ func decoderOfType(typ reflect.Type) (Decoder, error) {
 }
 
 func createDecoderOfType(typ reflect.Type) (Decoder, error) {
+	if typ.ConvertibleTo(jsonRawMessageType) {
+		return &jsonRawMessageCodec{}, nil
+	}
 	if typ.ConvertibleTo(jsonNumberType) {
 		return &jsonNumberCodec{}, nil
-	}
-	if typ.ConvertibleTo(anyType) {
-		return &anyCodec{}, nil
 	}
 	if typ.ConvertibleTo(unmarshalerType) {
 		templateInterface := reflect.New(typ).Elem().Interface()
 		return &optionalDecoder{typ, &unmarshalerDecoder{extractInterface(templateInterface)}}, nil
+	}
+	if typ.ConvertibleTo(anyType) {
+		return &anyCodec{}, nil
 	}
 	switch typ.Kind() {
 	case reflect.String:
@@ -419,15 +424,18 @@ func encoderOfType(typ reflect.Type) (Encoder, error) {
 }
 
 func createEncoderOfType(typ reflect.Type) (Encoder, error) {
+	if typ.ConvertibleTo(jsonRawMessageType) {
+		return &jsonRawMessageCodec{}, nil
+	}
 	if typ.ConvertibleTo(jsonNumberType) {
 		return &jsonNumberCodec{}, nil
-	}
-	if typ.ConvertibleTo(anyType) {
-		return &anyCodec{}, nil
 	}
 	if typ.ConvertibleTo(marshalerType) {
 		templateInterface := reflect.New(typ).Elem().Interface()
 		return &marshalerEncoder{extractInterface(templateInterface)}, nil
+	}
+	if typ.ConvertibleTo(anyType) {
+		return &anyCodec{}, nil
 	}
 	kind := typ.Kind()
 	switch kind {

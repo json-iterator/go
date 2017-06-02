@@ -145,6 +145,9 @@ func (iter *Iterator) readNumberAsString() (ret string) {
 	if iter.Error != nil && iter.Error != io.EOF {
 		return
 	}
+	if len(str) == 0 {
+		iter.reportError("readNumberAsString", "invalid number")
+	}
 	return *(*string)(unsafe.Pointer(&str))
 }
 
