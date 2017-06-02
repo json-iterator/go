@@ -421,6 +421,17 @@ func Test_write_val_int_ptr(t *testing.T) {
 	should.Equal("1001", buf.String())
 }
 
+func Test_json_number(t *testing.T) {
+	should := require.New(t)
+	var arr []json.Number
+	err := Unmarshal([]byte(`[1]`), &arr)
+	should.Nil(err)
+	should.Equal(json.Number("1"), arr[0])
+	str, err := MarshalToString(arr)
+	should.Nil(err)
+	should.Equal(`[1]`, str)
+}
+
 func Benchmark_jsoniter_encode_int(b *testing.B) {
 	stream := NewStream(ioutil.Discard, 64)
 	for n := 0; n < b.N; n++ {

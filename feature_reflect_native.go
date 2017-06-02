@@ -341,6 +341,25 @@ func (encoder *anyCodec) isEmpty(ptr unsafe.Pointer) bool {
 	return (*((*Any)(ptr))).Size() == 0
 }
 
+type jsonNumberCodec struct {
+}
+
+func (codec *jsonNumberCodec) decode(ptr unsafe.Pointer, iter *Iterator) {
+	*((*json.Number)(ptr)) = json.Number([]byte(iter.readNumberAsString()))
+}
+
+func (codec *jsonNumberCodec) encode(ptr unsafe.Pointer, stream *Stream) {
+	stream.WriteRaw(string(*((*json.Number)(ptr))))
+}
+
+func (encoder *jsonNumberCodec) encodeInterface(val interface{}, stream *Stream) {
+	stream.WriteRaw(string(val.(json.Number)))
+}
+
+func (encoder *jsonNumberCodec) isEmpty(ptr unsafe.Pointer) bool {
+	return len(*((*json.Number)(ptr))) == 0
+}
+
 type stringNumberDecoder struct {
 	elemDecoder Decoder
 }

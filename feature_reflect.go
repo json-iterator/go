@@ -72,6 +72,7 @@ var fieldDecoders map[string]Decoder
 var typeEncoders map[string]Encoder
 var fieldEncoders map[string]Encoder
 var extensions []ExtensionFunc
+var jsonNumberType reflect.Type
 var anyType reflect.Type
 var marshalerType reflect.Type
 var unmarshalerType reflect.Type
@@ -84,6 +85,7 @@ func init() {
 	extensions = []ExtensionFunc{}
 	atomic.StorePointer(&DECODERS, unsafe.Pointer(&map[string]Decoder{}))
 	atomic.StorePointer(&ENCODERS, unsafe.Pointer(&map[string]Encoder{}))
+	jsonNumberType = reflect.TypeOf((*json.Number)(nil)).Elem()
 	anyType = reflect.TypeOf((*Any)(nil)).Elem()
 	marshalerType = reflect.TypeOf((*json.Marshaler)(nil)).Elem()
 	unmarshalerType = reflect.TypeOf((*json.Unmarshaler)(nil)).Elem()
@@ -333,6 +335,9 @@ func decoderOfType(typ reflect.Type) (Decoder, error) {
 }
 
 func createDecoderOfType(typ reflect.Type) (Decoder, error) {
+	if typ.ConvertibleTo(jsonNumberType) {
+		return &jsonNumberCodec{}, nil
+	}
 	if typ.ConvertibleTo(anyType) {
 		return &anyCodec{}, nil
 	}
@@ -414,6 +419,9 @@ func encoderOfType(typ reflect.Type) (Encoder, error) {
 }
 
 func createEncoderOfType(typ reflect.Type) (Encoder, error) {
+	if typ.ConvertibleTo(jsonNumberType) {
+		return &jsonNumberCodec{}, nil
+	}
 	if typ.ConvertibleTo(anyType) {
 		return &anyCodec{}, nil
 	}
