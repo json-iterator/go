@@ -99,3 +99,17 @@ func MarshalToString(v interface{}) (string, error) {
 	}
 	return string(buf), nil
 }
+
+func NewDecoder(reader io.Reader) *AdaptedDecoder {
+	iter := Parse(reader, 512)
+	return &AdaptedDecoder{iter}
+}
+
+type AdaptedDecoder struct {
+	iter *Iterator
+}
+
+func (adapter *AdaptedDecoder) Decode(obj interface{}) error {
+	adapter.iter.ReadVal(obj)
+	return adapter.iter.Error
+}
