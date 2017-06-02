@@ -113,3 +113,12 @@ func (adapter *AdaptedDecoder) Decode(obj interface{}) error {
 	adapter.iter.ReadVal(obj)
 	return adapter.iter.Error
 }
+
+func (adapter *AdaptedDecoder) More() bool {
+	return adapter.iter.head != adapter.iter.tail
+}
+
+func (adapter *AdaptedDecoder) Buffered() io.Reader {
+	remaining := adapter.iter.buf[adapter.iter.head:adapter.iter.tail]
+	return bytes.NewReader(remaining)
+}
