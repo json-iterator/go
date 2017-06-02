@@ -337,10 +337,10 @@ func decoderOfType(typ reflect.Type) (Decoder, error) {
 }
 
 func createDecoderOfType(typ reflect.Type) (Decoder, error) {
-	if typ.ConvertibleTo(jsonRawMessageType) {
+	if typ.AssignableTo(jsonRawMessageType) {
 		return &jsonRawMessageCodec{}, nil
 	}
-	if typ.ConvertibleTo(jsonNumberType) {
+	if typ.AssignableTo(jsonNumberType) {
 		return &jsonNumberCodec{}, nil
 	}
 	if typ.ConvertibleTo(unmarshalerType) {
@@ -424,10 +424,10 @@ func encoderOfType(typ reflect.Type) (Encoder, error) {
 }
 
 func createEncoderOfType(typ reflect.Type) (Encoder, error) {
-	if typ.ConvertibleTo(jsonRawMessageType) {
+	if typ.AssignableTo(jsonRawMessageType) {
 		return &jsonRawMessageCodec{}, nil
 	}
-	if typ.ConvertibleTo(jsonNumberType) {
+	if typ.AssignableTo(jsonNumberType) {
 		return &jsonNumberCodec{}, nil
 	}
 	if typ.ConvertibleTo(marshalerType) {
