@@ -126,3 +126,22 @@ func (adapter *AdaptedDecoder) Buffered() io.Reader {
 	remaining := adapter.iter.buf[adapter.iter.head:adapter.iter.tail]
 	return bytes.NewReader(remaining)
 }
+
+func NewEncoder(writer io.Writer) *AdaptedEncoder {
+	stream := NewStream(writer, 512)
+	return &AdaptedEncoder{stream}
+}
+
+type AdaptedEncoder struct {
+	stream *Stream
+}
+
+func (adapter *AdaptedEncoder) Encode(val interface{}) error {
+	adapter.stream.WriteVal(val)
+	adapter.stream.Flush()
+	return adapter.stream.Error
+}
+
+func (adapter *AdaptedEncoder) SetIndent(prefix, indent string) {
+	// not implemented yet
+}

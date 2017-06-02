@@ -32,3 +32,15 @@ func Test_new_decoder(t *testing.T) {
 	should.Equal([]int{2}, arr2)
 	should.False(decoder2.More())
 }
+
+func Test_new_encoder(t *testing.T) {
+	should := require.New(t)
+	buf1 := &bytes.Buffer{}
+	encoder1 := json.NewEncoder(buf1)
+	encoder1.Encode([]int{1})
+	should.Equal("[1]\n", buf1.String())
+	buf2 := &bytes.Buffer{}
+	encoder2 := NewEncoder(buf2)
+	encoder2.Encode([]int{1})
+	should.Equal("[1]", buf2.String())
+}
