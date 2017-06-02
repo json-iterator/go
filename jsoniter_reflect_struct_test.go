@@ -223,3 +223,18 @@ func Test_one_field_struct(t *testing.T) {
 	should.Nil(err)
 	should.Equal(`{"Me":{"Field":{"Field":{"Field":"abc"}}}}`, str)
 }
+
+func Test_anonymous_struct_marshal(t *testing.T) {
+	should := require.New(t)
+	type TestObject struct {
+		Field string
+	}
+	str, err := MarshalToString(struct{
+		TestObject
+		Field int
+	}{
+		Field: 100,
+	})
+	should.Nil(err)
+	should.Equal(`{"Field":100}`, str)
+}

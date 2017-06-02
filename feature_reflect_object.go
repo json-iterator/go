@@ -11,12 +11,12 @@ import (
 
 func encoderOfStruct(typ reflect.Type) (Encoder, error) {
 	structEncoder_ := &structEncoder{}
-	for i := 0; i < typ.NumField(); i++ {
-		field := typ.Field(i)
+	fields := map[string]*structFieldEncoder{}
+	for _, field := range listStructFields(typ) {
 		fieldEncoderKey := fmt.Sprintf("%s/%s", typ.String(), field.Name)
 		var extensionProvidedFieldNames []string
 		for _, extension := range extensions {
-			alternativeFieldNames, fun, _ := extension(typ, &field)
+			alternativeFieldNames, fun, _ := extension(typ, field)
 			if alternativeFieldNames != nil {
 				extensionProvidedFieldNames = alternativeFieldNames
 			}
@@ -46,14 +46,29 @@ func encoderOfStruct(typ reflect.Type) (Encoder, error) {
 			}
 		}
 		for _, fieldName := range fieldNames {
-			structEncoder_.fields = append(structEncoder_.fields,
-				&structFieldEncoder{&field, fieldName, encoder, omitempty})
-		}
+			fields[fieldName] = &structFieldEncoder{field, fieldName, encoder, omitempty}
+			}
 	}
-	if len(structEncoder_.fields) == 0 {
+	if len(fields) == 0 {
 		return &emptyStructEncoder{}, nil
 	}
+	for _, field := range fields {
+		structEncoder_.fields = append(structEncoder_.fields, field)
+	}
 	return structEncoder_, nil
+}
+
+func listStructFields(typ reflect.Type) []*reflect.StructField {
+	fields := []*reflect.StructField{}
+	for i := 0; i < typ.NumField(); i++ {
+		field := typ.Field(i)
+		if field.Anonymous {
+			fields = append(fields, listStructFields(field.Type)...)
+		} else {
+			fields = append(fields, &field)
+		}
+	}
+	return fields
 }
 
 func decoderOfStruct(typ reflect.Type) (Decoder, error) {
