@@ -127,7 +127,7 @@ func Test_unexported_fields(t *testing.T) {
 	should.Equal("abc", obj.field2)
 	str, err := MarshalToString(obj)
 	should.Nil(err)
-	should.Equal(`{"field1":"world","field-2":"abc"}`, str)
+	should.Contains(str, `"field-2":"abc"`)
 }
 
 type ObjectImplementedMarshaler int

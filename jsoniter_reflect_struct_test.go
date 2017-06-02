@@ -196,7 +196,8 @@ func Test_recursive_struct(t *testing.T) {
 	obj := TestObject{}
 	str, err := MarshalToString(obj)
 	should.Nil(err)
-	should.Equal(`{"Field1":"","Me":null}`, str)
+	should.Contains(str, `"Field1":""`)
+	should.Contains(str, `"Me":null`)
 	err = UnmarshalFromString(str, &obj)
 	should.Nil(err)
 }

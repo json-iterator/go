@@ -41,5 +41,6 @@ func Test_encode_struct_with_optional_field(t *testing.T) {
 	obj.field2 = &world
 	str, err := MarshalToString(obj)
 	should.Nil(err)
-	should.Equal(`{"field1":null,"field2":"world"}`, str)
+	should.Contains(str, `"field1":null`)
+	should.Contains(str, `"field2":"world"`)
 }

@@ -322,6 +322,7 @@ func (any *objectLazyAny) IterateObject() (func() (string, Any, bool), bool) {
 				any.err = iter.Error
 				return key, value, true
 			} else {
+				nextKey = ""
 				remaining = nil
 				any.remaining = nil
 				any.err = iter.Error

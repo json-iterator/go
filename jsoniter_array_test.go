@@ -250,7 +250,8 @@ func Test_write_array_of_interface_in_struct(t *testing.T) {
 	val := TestObject{[]interface{}{1, 2}, ""}
 	str, err := MarshalToString(val)
 	should.Nil(err)
-	should.Equal(`{"Field":[1,2],"Field2":""}`, str)
+	should.Contains(str, `"Field":[1,2]`)
+	should.Contains(str, `"Field2":""`)
 }
 
 func Test_json_RawMessage(t *testing.T) {
