@@ -8,28 +8,28 @@ jsoniter (json-iterator) is fast and flexible JSON parser available in [Java](ht
 
 Replace
 
-```
+```go
 import "encoding/json"
 json.Marshal(&data)
 ```
 
 with 
 
-```
+```go
 import "github.com/json-iterator/go"
 jsoniter.Marshal(&data)
 ```
 
 Replace
 
-```
+```go
 import "encoding/json"
 json.Unmarshal(input, &data)
 ```
 
 with
 
-```
+```go
 import "github.com/json-iterator/go"
 jsoniter.Unmarshal(input, &data)
 ```
