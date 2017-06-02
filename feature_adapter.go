@@ -111,6 +111,10 @@ type AdaptedDecoder struct {
 
 func (adapter *AdaptedDecoder) Decode(obj interface{}) error {
 	adapter.iter.ReadVal(obj)
+	err := adapter.iter.Error
+	if err == io.EOF {
+		return nil
+	}
 	return adapter.iter.Error
 }
 
