@@ -6,6 +6,7 @@ import (
 	"sync/atomic"
 	"unsafe"
 	"encoding/json"
+	"encoding"
 )
 
 /*
@@ -77,6 +78,7 @@ var jsonRawMessageType reflect.Type
 var anyType reflect.Type
 var marshalerType reflect.Type
 var unmarshalerType reflect.Type
+var textUnmarshalerType reflect.Type
 
 func init() {
 	typeDecoders = map[string]Decoder{}
@@ -91,6 +93,7 @@ func init() {
 	anyType = reflect.TypeOf((*Any)(nil)).Elem()
 	marshalerType = reflect.TypeOf((*json.Marshaler)(nil)).Elem()
 	unmarshalerType = reflect.TypeOf((*json.Unmarshaler)(nil)).Elem()
+	textUnmarshalerType = reflect.TypeOf((*encoding.TextUnmarshaler)(nil)).Elem()
 }
 
 func addDecoderToCache(cacheKey reflect.Type, decoder Decoder) {
