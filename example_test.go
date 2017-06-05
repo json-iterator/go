@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"github.com/json-iterator/go"
 	"os"
-	"testing"
 )
 
-func Test_ExampleMarshal(t *testing.T) {
+func ExampleMarshal() {
 	type ColorGroup struct {
 		ID     int
 		Name   string
