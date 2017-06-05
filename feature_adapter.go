@@ -95,6 +95,7 @@ func Marshal(v interface{}) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+// notbeginwithfuncname MarshalToString does not show in doc
 func MarshalToString(v interface{}) (string, error) {
 	buf, err := Marshal(v)
 	if err != nil {
@@ -103,6 +104,7 @@ func MarshalToString(v interface{}) (string, error) {
 	return string(buf), nil
 }
 
+// NewDecoder show in doc
 func NewDecoder(reader io.Reader) *AdaptedDecoder {
 	iter := Parse(reader, 512)
 	return &AdaptedDecoder{iter}
