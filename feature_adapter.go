@@ -8,6 +8,9 @@ import (
 // Unmarshal adapts to json/encoding Unmarshal API
 //
 // Unmarshal parses the JSON-encoded data and stores the result in the value pointed to by v.
+// <l>https://godoc.org/encoding/json#Unmarshal</l>
+// linktest: https://godoc.org/encoding/json#Unmarshal
+// <a href="https://godoc.org/encoding/json#Unmarshal">link test</a>
 func Unmarshal(data []byte, v interface{}) error {
 	data = data[:lastNotSpacePos(data)]
 	iter := ParseBytes(data)
