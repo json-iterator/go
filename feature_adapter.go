@@ -5,7 +5,9 @@ import (
 	"bytes"
 )
 
-// Unmarshal adapts to json/encoding APIs
+// Unmarshal adapts to json/encoding Unmarshal API
+//
+// Unmarshal parses the JSON-encoded data and stores the result in the value pointed to by v.
 func Unmarshal(data []byte, v interface{}) error {
 	data = data[:lastNotSpacePos(data)]
 	iter := ParseBytes(data)
@@ -81,7 +83,7 @@ func UnmarshalAnyFromString(str string) (Any, error) {
 	return nil, iter.Error
 }
 
-// Marshal is an adapter to json.Marshal
+// Marshal adapts to json/encoding Marshal API
 //
 // Marshal returns the JSON encoding of v, adapts to json/encoding Marshal API
 func Marshal(v interface{}) ([]byte, error) {
@@ -95,7 +97,6 @@ func Marshal(v interface{}) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-// notbeginwithfuncname MarshalToString does not show in doc
 func MarshalToString(v interface{}) (string, error) {
 	buf, err := Marshal(v)
 	if err != nil {
@@ -104,7 +105,9 @@ func MarshalToString(v interface{}) (string, error) {
 	return string(buf), nil
 }
 
-// NewDecoder show in doc
+// NewDecoder adapts to json/stream NewDecoder API.
+//
+// NewDecoder returns a new decoder that reads from r.
 func NewDecoder(reader io.Reader) *AdaptedDecoder {
 	iter := Parse(reader, 512)
 	return &AdaptedDecoder{iter}
