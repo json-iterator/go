@@ -81,6 +81,10 @@ func UnmarshalAnyFromString(str string) (Any, error) {
 	return nil, iter.Error
 }
 
+// jsoniterator.Marshal is an adapter to json.Marshal
+
+// Marshal returns the JSON encoding of v, adapts to json/encoding API
+
 func Marshal(v interface{}) ([]byte, error) {
 	buf := &bytes.Buffer{}
 	stream := NewStream(buf, 512)
