@@ -274,7 +274,6 @@ func (iter *Iterator) ReadVal(obj interface{}) {
 	cachedDecoder.decode(e.word, iter)
 }
 
-
 func (stream *Stream) WriteVal(val interface{}) {
 	if nil == val {
 		stream.WriteNil()
@@ -320,7 +319,7 @@ func decoderOfType(typ reflect.Type) (Decoder, error) {
 	if typ.Kind() == reflect.Ptr {
 		typeDecoder := typeDecoders[typ.Elem().String()]
 		if typeDecoder != nil {
-			return &optionalDecoder{typ.Elem(),typeDecoder}, nil
+			return &optionalDecoder{typ.Elem(), typeDecoder}, nil
 		}
 	}
 	cacheKey := typ
@@ -501,7 +500,7 @@ func encoderOfOptional(typ reflect.Type) (Encoder, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &optionalEncoder{ decoder}, nil
+	return &optionalEncoder{decoder}, nil
 }
 
 func decoderOfMap(typ reflect.Type) (Decoder, error) {
@@ -524,9 +523,5 @@ func encoderOfMap(typ reflect.Type) (Encoder, error) {
 		return nil, err
 	}
 	mapInterface := reflect.New(typ).Elem().Interface()
-	if elemType.Kind() == reflect.Interface && elemType.NumMethod() == 0 {
-		return &mapInterfaceEncoder{typ, elemType, encoder, *((*emptyInterface)(unsafe.Pointer(&mapInterface)))}, nil
-	} else {
-		return &mapEncoder{typ, elemType, encoder, *((*emptyInterface)(unsafe.Pointer(&mapInterface)))}, nil
-	}
+	return &mapEncoder{typ, elemType, encoder, *((*emptyInterface)(unsafe.Pointer(&mapInterface)))}, nil
 }
