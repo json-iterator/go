@@ -5,10 +5,12 @@ import (
 	"reflect"
 	"encoding/json"
 	"encoding"
+	"strconv"
 )
 
 type mapDecoder struct {
 	mapType      reflect.Type
+	keyType      reflect.Type
 	elemType     reflect.Type
 	elemDecoder  Decoder
 	mapInterface emptyInterface
@@ -23,12 +25,43 @@ func (decoder *mapDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 	if realVal.IsNil() {
 		realVal.Set(reflect.MakeMap(realVal.Type()))
 	}
-	for field := iter.ReadObject(); field != ""; field = iter.ReadObject() {
+	iter.ReadObjectCB(func(iter *Iterator, keyStr string) bool{
 		elem := reflect.New(decoder.elemType)
 		decoder.elemDecoder.decode(unsafe.Pointer(elem.Pointer()), iter)
 		// to put into map, we have to use reflection
-		realVal.SetMapIndex(reflect.ValueOf(string([]byte(field))), elem.Elem())
+		realVal.SetMapIndex(decodeMapKey(iter, keyStr, decoder.keyType), elem.Elem())
+		return true
+	})
+}
+
+func decodeMapKey(iter *Iterator, keyStr string, keyType reflect.Type) reflect.Value {
+	switch {
+	case keyType.Kind() == reflect.String:
+		return reflect.ValueOf(keyStr)
+	//case reflect.PtrTo(kt).Implements(textUnmarshalerType):
+	//	kv = reflect.New(v.Type().Key())
+	//	d.literalStore(item, kv, true)
+	//	kv = kv.Elem()
+	default:
+		switch keyType.Kind() {
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			n, err := strconv.ParseInt(keyStr, 10, 64)
+			if err != nil || reflect.Zero(keyType).OverflowInt(n) {
+				iter.reportError("read map key as int64", "read int64 failed")
+				return reflect.ValueOf("")
+			}
+			return reflect.ValueOf(n).Convert(keyType)
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+			n, err := strconv.ParseUint(keyStr, 10, 64)
+			if err != nil || reflect.Zero(keyType).OverflowUint(n) {
+				iter.reportError("read map key as uint64", "read uint64 failed")
+				return reflect.ValueOf("")
+			}
+			return reflect.ValueOf(n).Convert(keyType)
+		}
 	}
+	iter.reportError("read map key", "json: Unexpected key type")
+	return reflect.ValueOf("")
 }
 
 type mapEncoder struct {

@@ -510,7 +510,7 @@ func decoderOfMap(typ reflect.Type) (Decoder, error) {
 		return nil, err
 	}
 	mapInterface := reflect.New(typ).Interface()
-	return &mapDecoder{typ, typ.Elem(), decoder, extractInterface(mapInterface)}, nil
+	return &mapDecoder{typ, typ.Key(), typ.Elem(), decoder, extractInterface(mapInterface)}, nil
 }
 
 func extractInterface(val interface{}) emptyInterface {
