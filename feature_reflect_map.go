@@ -3,6 +3,8 @@ package jsoniter
 import (
 	"unsafe"
 	"reflect"
+	"encoding/json"
+	"encoding"
 )
 
 type mapDecoder struct {
@@ -47,11 +49,43 @@ func (encoder *mapEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
 		if i != 0 {
 			stream.WriteMore()
 		}
-		stream.WriteObjectField(key.String())
+		encodeMapKey(key, stream)
+		stream.writeByte(':')
 		val := realVal.MapIndex(key).Interface()
 		encoder.elemEncoder.encodeInterface(val, stream)
 	}
 	stream.WriteObjectEnd()
+}
+
+func encodeMapKey(key reflect.Value, stream *Stream) {
+	if key.Kind() == reflect.String {
+		stream.WriteString(key.String())
+		return
+	}
+	if tm, ok := key.Interface().(encoding.TextMarshaler); ok {
+		buf, err := tm.MarshalText()
+		if err != nil {
+			stream.Error = err
+			return
+		}
+		stream.writeByte('"')
+		stream.Write(buf)
+		stream.writeByte('"')
+		return
+	}
+	switch key.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		stream.writeByte('"')
+		stream.WriteInt64(key.Int())
+		stream.writeByte('"')
+		return
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		stream.writeByte('"')
+		stream.WriteUint64(key.Uint())
+		stream.writeByte('"')
+		return
+	}
+	stream.Error = &json.UnsupportedTypeError{key.Type()}
 }
 
 func (encoder *mapEncoder) encodeInterface(val interface{}, stream *Stream) {
@@ -84,7 +118,13 @@ func (encoder *mapInterfaceEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
 		if i != 0 {
 			stream.WriteMore()
 		}
-		stream.WriteObjectField(key.String())
+		switch key.Interface().(type) {
+		case string:
+			stream.WriteObjectField(key.String())
+		default:
+			stream.Error = &json.UnsupportedTypeError{key.Type()}
+			return
+		}
 		val := realVal.MapIndex(key).Interface()
 		encoder.elemEncoder.encode(unsafe.Pointer(&val), stream)
 	}

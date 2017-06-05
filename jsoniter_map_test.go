@@ -67,3 +67,11 @@ func Test_slice_of_map(t *testing.T) {
 	should.Nil(UnmarshalFromString(str, &val))
 	should.Equal("2", val[0]["1"])
 }
+
+func Test_write_int_key_map(t *testing.T) {
+	should := require.New(t)
+	val := map[int]string{1: "2"}
+	str, err := MarshalToString(val)
+	should.Nil(err)
+	should.Equal(`{"1":"2"}`, str)
+}
