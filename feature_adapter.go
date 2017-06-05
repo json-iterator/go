@@ -8,9 +8,7 @@ import (
 // Unmarshal adapts to json/encoding Unmarshal API
 //
 // Unmarshal parses the JSON-encoded data and stores the result in the value pointed to by v.
-// <l>https://godoc.org/encoding/json#Unmarshal</l>
-// linktest: https://godoc.org/encoding/json#Unmarshal
-// <a href="https://godoc.org/encoding/json#Unmarshal">link test</a>
+// Refer to https://godoc.org/encoding/json#Unmarshal for more information
 func Unmarshal(data []byte, v interface{}) error {
 	data = data[:lastNotSpacePos(data)]
 	iter := ParseBytes(data)
@@ -89,6 +87,7 @@ func UnmarshalAnyFromString(str string) (Any, error) {
 // Marshal adapts to json/encoding Marshal API
 //
 // Marshal returns the JSON encoding of v, adapts to json/encoding Marshal API
+// Refer to https://godoc.org/encoding/json#Marshal for more information
 func Marshal(v interface{}) ([]byte, error) {
 	buf := &bytes.Buffer{}
 	stream := NewStream(buf, 512)
@@ -111,11 +110,16 @@ func MarshalToString(v interface{}) (string, error) {
 // NewDecoder adapts to json/stream NewDecoder API.
 //
 // NewDecoder returns a new decoder that reads from r.
+//
+// Instead of a json/encoding Decoder, an AdaptedDecoder is returned
+// Refer to https://godoc.org/encoding/json#NewDecoder for more information
 func NewDecoder(reader io.Reader) *AdaptedDecoder {
 	iter := Parse(reader, 512)
 	return &AdaptedDecoder{iter}
 }
 
+// AdaptedDecoder reads and decodes JSON values from an input stream.
+// AdaptedDecoder provides identical APIs with json/stream Decoder (Token() and UseNumber() are in progress)
 type AdaptedDecoder struct {
 	iter *Iterator
 }
