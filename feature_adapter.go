@@ -81,7 +81,7 @@ func UnmarshalAnyFromString(str string) (Any, error) {
 	return nil, iter.Error
 }
 
-// jsoniterator.Marshal is an adapter to json.Marshal
+// Marshal is an adapter to json.Marshal
 //
 // Marshal returns the JSON encoding of v, adapts to json/encoding Marshal API
 func Marshal(v interface{}) ([]byte, error) {
