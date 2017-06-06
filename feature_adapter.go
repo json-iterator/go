@@ -175,5 +175,5 @@ func (adapter *AdaptedEncoder) Encode(val interface{}) error {
 }
 
 func (adapter *AdaptedEncoder) SetIndent(prefix, indent string) {
-	// not implemented yet
+	adapter.stream.IndentionStep = len(indent)
 }
