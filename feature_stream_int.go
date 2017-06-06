@@ -1,43 +1,8 @@
 package jsoniter
 
-var digits []uint8
-var digitTens []uint8
-var digitOnes []uint8
 var DIGITS []uint32
 
 func init() {
-	digits = []uint8{
-		'0', '1', '2', '3', '4', '5',
-		'6', '7', '8', '9', 'a', 'b',
-		'c', 'd', 'e', 'f', 'g', 'h',
-		'i', 'j', 'k', 'l', 'm', 'n',
-		'o', 'p', 'q', 'r', 's', 't',
-		'u', 'v', 'w', 'x', 'y', 'z',
-	}
-	digitTens = []uint8{
-		'0', '0', '0', '0', '0', '0', '0', '0', '0', '0',
-		'1', '1', '1', '1', '1', '1', '1', '1', '1', '1',
-		'2', '2', '2', '2', '2', '2', '2', '2', '2', '2',
-		'3', '3', '3', '3', '3', '3', '3', '3', '3', '3',
-		'4', '4', '4', '4', '4', '4', '4', '4', '4', '4',
-		'5', '5', '5', '5', '5', '5', '5', '5', '5', '5',
-		'6', '6', '6', '6', '6', '6', '6', '6', '6', '6',
-		'7', '7', '7', '7', '7', '7', '7', '7', '7', '7',
-		'8', '8', '8', '8', '8', '8', '8', '8', '8', '8',
-		'9', '9', '9', '9', '9', '9', '9', '9', '9', '9',
-	}
-	digitOnes = []uint8{
-		'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-		'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-		'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-		'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-		'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-		'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-		'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-		'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-		'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-		'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-	}
 	DIGITS = make([]uint32, 1000)
 	for i := uint32(0); i < 1000; i++ {
 		DIGITS[i] = (((i / 100) + '0') << 16) + ((((i / 10) % 10) + '0') << 8) + i % 10 + '0';
@@ -72,19 +37,15 @@ func writeBuf(buf []byte, v uint32, n int) {
 }
 
 func (stream *Stream) WriteUint8(val uint8) {
-	if stream.Available() < 3 {
-		stream.Flush()
-	}
+	stream.ensure(3)
 	stream.n = writeFirstBuf(stream.buf, DIGITS[val], stream.n)
 }
 
 func (stream *Stream) WriteInt8(nval int8) {
-	if stream.Available() < 4 {
-		stream.Flush()
-	}
+	stream.ensure(4)
 	n := stream.n
 	var val uint8
-	if (nval < 0) {
+	if nval < 0 {
 		val = uint8(-nval)
 		stream.buf[n] = '-'
 		n++
@@ -95,15 +56,13 @@ func (stream *Stream) WriteInt8(nval int8) {
 }
 
 func (stream *Stream) WriteUint16(val uint16) {
-	if stream.Available() < 5 {
-		stream.Flush()
-	}
+	stream.ensure(5)
 	q1 := val / 1000
 	if q1 == 0 {
 		stream.n = writeFirstBuf(stream.buf, DIGITS[val], stream.n)
 		return
 	}
-	r1 := val - q1 * 1000;
+	r1 := val - q1 * 1000
 	n := writeFirstBuf(stream.buf, DIGITS[q1], stream.n)
 	writeBuf(stream.buf, DIGITS[r1], n)
 	stream.n = n + 3
@@ -111,12 +70,10 @@ func (stream *Stream) WriteUint16(val uint16) {
 }
 
 func (stream *Stream) WriteInt16(nval int16) {
-	if stream.Available() < 6 {
-		stream.Flush()
-	}
+	stream.ensure(6)
 	n := stream.n
 	var val uint16
-	if (nval < 0) {
+	if nval < 0 {
 		val = uint16(-nval)
 		stream.buf[n] = '-'
 		n++
@@ -128,7 +85,7 @@ func (stream *Stream) WriteInt16(nval int16) {
 		stream.n = writeFirstBuf(stream.buf, DIGITS[val], n)
 		return
 	}
-	r1 := val - q1 * 1000;
+	r1 := val - q1 * 1000
 	n = writeFirstBuf(stream.buf, DIGITS[q1], n)
 	writeBuf(stream.buf, DIGITS[r1], n)
 	stream.n = n + 3
@@ -136,16 +93,14 @@ func (stream *Stream) WriteInt16(nval int16) {
 }
 
 func (stream *Stream) WriteUint32(val uint32) {
-	if stream.Available() < 10 {
-		stream.Flush()
-	}
+	stream.ensure(10)
 	n := stream.n
 	q1 := val / 1000
 	if q1 == 0 {
 		stream.n = writeFirstBuf(stream.buf, DIGITS[val], n)
 		return
 	}
-	r1 := val - q1 * 1000;
+	r1 := val - q1 * 1000
 	q2 := q1 / 1000
 	if q2 == 0 {
 		n := writeFirstBuf(stream.buf, DIGITS[q1], n)
@@ -170,9 +125,7 @@ func (stream *Stream) WriteUint32(val uint32) {
 }
 
 func (stream *Stream) WriteInt32(nval int32) {
-	if stream.Available() < 11 {
-		stream.Flush()
-	}
+	stream.ensure(11)
 	n := stream.n
 	var val uint32
 	if (nval < 0) {
@@ -187,7 +140,7 @@ func (stream *Stream) WriteInt32(nval int32) {
 		stream.n = writeFirstBuf(stream.buf, DIGITS[val], n)
 		return
 	}
-	r1 := val - q1 * 1000;
+	r1 := val - q1 * 1000
 	q2 := q1 / 1000
 	if q2 == 0 {
 		n := writeFirstBuf(stream.buf, DIGITS[q1], n)
@@ -212,16 +165,14 @@ func (stream *Stream) WriteInt32(nval int32) {
 }
 
 func (stream *Stream) WriteUint64(val uint64) {
-	if stream.Available() < 20 {
-		stream.Flush()
-	}
+	stream.ensure(20)
 	n := stream.n
 	q1 := val / 1000
 	if q1 == 0 {
 		stream.n = writeFirstBuf(stream.buf, DIGITS[val], n)
 		return
 	}
-	r1 := val - q1 * 1000;
+	r1 := val - q1 * 1000
 	q2 := q1 / 1000
 	if q2 == 0 {
 		n := writeFirstBuf(stream.buf, DIGITS[q1], n)
@@ -278,9 +229,7 @@ func (stream *Stream) WriteUint64(val uint64) {
 }
 
 func (stream *Stream) WriteInt64(nval int64) {
-	if stream.Available() < 20 {
-		stream.Flush()
-	}
+	stream.ensure(20)
 	n := stream.n
 	var val uint64
 	if (nval < 0) {

@@ -159,15 +159,18 @@ func RegisterExtension(extension ExtensionFunc) {
 	extensions = append(extensions, extension)
 }
 
-// CleanDecoders cleans decoders registered
+// CleanDecoders cleans decoders registered or cached
 func CleanDecoders() {
 	typeDecoders = map[string]Decoder{}
 	fieldDecoders = map[string]Decoder{}
+	atomic.StorePointer(&DECODERS, unsafe.Pointer(&map[string]Decoder{}))
 }
 
+// CleanEncoders cleans decoders registered or cached
 func CleanEncoders() {
 	typeEncoders = map[string]Encoder{}
 	fieldEncoders = map[string]Encoder{}
+	atomic.StorePointer(&ENCODERS, unsafe.Pointer(&map[string]Encoder{}))
 }
 
 type optionalDecoder struct {
@@ -339,6 +342,9 @@ func decoderOfType(typ reflect.Type) (Decoder, error) {
 }
 
 func createDecoderOfType(typ reflect.Type) (Decoder, error) {
+	if typ.String() == "[]uint8" {
+		return &base64Codec{}, nil
+	}
 	if typ.AssignableTo(jsonRawMessageType) {
 		return &jsonRawMessageCodec{}, nil
 	}
@@ -426,6 +432,9 @@ func encoderOfType(typ reflect.Type) (Encoder, error) {
 }
 
 func createEncoderOfType(typ reflect.Type) (Encoder, error) {
+	if typ.String() == "[]uint8" {
+		return &base64Codec{}, nil
+	}
 	if typ.AssignableTo(jsonRawMessageType) {
 		return &jsonRawMessageCodec{}, nil
 	}

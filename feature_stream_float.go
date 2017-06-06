@@ -33,9 +33,7 @@ func (stream *Stream) WriteFloat32Lossy(val float32) {
 		return
 	}
 	stream.writeByte('.')
-	if stream.Available() < 10 {
-		stream.Flush()
-	}
+	stream.ensure(10)
 	for p := precision - 1; p > 0 && fval < POW10[p]; p-- {
 		stream.writeByte('0')
 	}
@@ -67,9 +65,7 @@ func (stream *Stream) WriteFloat64Lossy(val float64) {
 		return
 	}
 	stream.writeByte('.')
-	if stream.Available() < 10 {
-		stream.Flush()
-	}
+	stream.ensure(10)
 	for p := precision - 1; p > 0 && fval < POW10[p]; p-- {
 		stream.writeByte('0')
 	}

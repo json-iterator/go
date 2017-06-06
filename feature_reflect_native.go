@@ -3,6 +3,7 @@ package jsoniter
 import (
 	"unsafe"
 	"encoding/json"
+	"encoding/base64"
 )
 
 type stringCodec struct {
@@ -377,6 +378,49 @@ func (encoder *jsonRawMessageCodec) encodeInterface(val interface{}, stream *Str
 
 func (encoder *jsonRawMessageCodec) isEmpty(ptr unsafe.Pointer) bool {
 	return len(*((*json.RawMessage)(ptr))) == 0
+}
+
+type base64Codec struct {
+}
+
+func (codec *base64Codec) decode(ptr unsafe.Pointer, iter *Iterator) {
+	encoding := base64.StdEncoding
+	src := iter.SkipAndReturnBytes()
+	src = src[1:len(src)-1]
+	decodedLen := encoding.DecodedLen(len(src))
+	dst := make([]byte, decodedLen)
+	_, err := encoding.Decode(dst, src)
+	if err != nil {
+		iter.reportError("decode base64", err.Error())
+	} else {
+		*((*[]byte)(ptr)) = dst
+	}
+}
+
+func (codec *base64Codec) encode(ptr unsafe.Pointer, stream *Stream) {
+	encoding := base64.StdEncoding
+	stream.writeByte('"')
+	src := *((*[]byte)(ptr))
+	toGrow := encoding.EncodedLen(len(src))
+	stream.ensure(toGrow)
+	encoding.Encode(stream.buf[stream.n:], src)
+	stream.n += toGrow
+	stream.writeByte('"')
+}
+
+func (encoder *base64Codec) encodeInterface(val interface{}, stream *Stream) {
+	encoding := base64.StdEncoding
+	stream.writeByte('"')
+	src := val.([]byte)
+	toGrow := encoding.EncodedLen(len(src))
+	stream.ensure(toGrow)
+	encoding.Encode(stream.buf[stream.n:], src)
+	stream.n += toGrow
+	stream.writeByte('"')
+}
+
+func (encoder *base64Codec) isEmpty(ptr unsafe.Pointer) bool {
+	return len(*((*[]byte)(ptr))) == 0
 }
 
 type stringNumberDecoder struct {

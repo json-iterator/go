@@ -32,24 +32,32 @@ func (b *Stream) Buffered() int {
 	return b.n
 }
 
+func (b *Stream) Buffer() []byte {
+	return b.buf[:b.n]
+}
+
 // Write writes the contents of p into the buffer.
 // It returns the number of bytes written.
 // If nn < len(p), it also returns an error explaining
 // why the write is short.
 func (b *Stream) Write(p []byte) (nn int, err error) {
 	for len(p) > b.Available() && b.Error == nil {
-		var n int
-		if b.Buffered() == 0 {
-			// Large write, empty buffer.
-			// Write directly from p to avoid copy.
-			n, b.Error = b.out.Write(p)
+		if b.out == nil {
+			b.growAtLeast(len(p))
 		} else {
-			n = copy(b.buf[b.n:], p)
-			b.n += n
-			b.Flush()
+			var n int
+			if b.Buffered() == 0 {
+				// Large write, empty buffer.
+				// Write directly from p to avoid copy.
+				n, b.Error = b.out.Write(p)
+			} else {
+				n = copy(b.buf[b.n:], p)
+				b.n += n
+				b.Flush()
+			}
+			nn += n
+			p = p[n:]
 		}
-		nn += n
-		p = p[n:]
 	}
 	if b.Error != nil {
 		return nn, b.Error
@@ -60,14 +68,13 @@ func (b *Stream) Write(p []byte) (nn int, err error) {
 	return nn, nil
 }
 
-
 // WriteByte writes a single byte.
 func (b *Stream) writeByte(c byte) {
 	if b.Error != nil {
 		return
 	}
-	if b.Available() <= 0 && b.Flush() != nil {
-		return
+	if b.Available() < 1 {
+		b.growAtLeast(1)
 	}
 	b.buf[b.n] = c
 	b.n++
@@ -77,11 +84,11 @@ func (b *Stream) writeTwoBytes(c1 byte, c2 byte) {
 	if b.Error != nil {
 		return
 	}
-	if b.Available() <= 1 && b.Flush() != nil {
-		return
+	if b.Available() < 2 {
+		b.growAtLeast(2)
 	}
 	b.buf[b.n] = c1
-	b.buf[b.n + 1] = c2
+	b.buf[b.n+1] = c2
 	b.n += 2
 }
 
@@ -89,12 +96,12 @@ func (b *Stream) writeThreeBytes(c1 byte, c2 byte, c3 byte) {
 	if b.Error != nil {
 		return
 	}
-	if b.Available() <= 2 && b.Flush() != nil {
-		return
+	if b.Available() < 3 {
+		b.growAtLeast(3)
 	}
 	b.buf[b.n] = c1
-	b.buf[b.n + 1] = c2
-	b.buf[b.n + 2] = c3
+	b.buf[b.n+1] = c2
+	b.buf[b.n+2] = c3
 	b.n += 3
 }
 
@@ -102,13 +109,13 @@ func (b *Stream) writeFourBytes(c1 byte, c2 byte, c3 byte, c4 byte) {
 	if b.Error != nil {
 		return
 	}
-	if b.Available() <= 3 && b.Flush() != nil {
-		return
+	if b.Available() < 4 {
+		b.growAtLeast(4)
 	}
 	b.buf[b.n] = c1
-	b.buf[b.n + 1] = c2
-	b.buf[b.n + 2] = c3
-	b.buf[b.n + 3] = c4
+	b.buf[b.n+1] = c2
+	b.buf[b.n+2] = c3
+	b.buf[b.n+3] = c4
 	b.n += 4
 }
 
@@ -116,19 +123,22 @@ func (b *Stream) writeFiveBytes(c1 byte, c2 byte, c3 byte, c4 byte, c5 byte) {
 	if b.Error != nil {
 		return
 	}
-	if b.Available() <= 3 && b.Flush() != nil {
-		return
+	if b.Available() < 5 {
+		b.growAtLeast(5)
 	}
 	b.buf[b.n] = c1
-	b.buf[b.n + 1] = c2
-	b.buf[b.n + 2] = c3
-	b.buf[b.n + 3] = c4
-	b.buf[b.n + 4] = c5
+	b.buf[b.n+1] = c2
+	b.buf[b.n+2] = c3
+	b.buf[b.n+3] = c4
+	b.buf[b.n+4] = c5
 	b.n += 5
 }
 
 // Flush writes any buffered data to the underlying io.Writer.
 func (b *Stream) Flush() error {
+	if b.out == nil {
+		return nil
+	}
 	if b.Error != nil {
 		return b.Error
 	}
@@ -141,7 +151,7 @@ func (b *Stream) Flush() error {
 	}
 	if err != nil {
 		if n > 0 && n < b.n {
-			copy(b.buf[0:b.n - n], b.buf[n:b.n])
+			copy(b.buf[0:b.n-n], b.buf[n:b.n])
 		}
 		b.n -= n
 		b.Error = err
@@ -151,13 +161,28 @@ func (b *Stream) Flush() error {
 	return nil
 }
 
-func (b *Stream) WriteRaw(s string) {
-	for len(s) > b.Available() && b.Error == nil {
-		n := copy(b.buf[b.n:], s)
-		b.n += n
-		s = s[n:]
-		b.Flush()
+func (b *Stream) ensure(minimal int) {
+	available := b.Available()
+	if available < minimal {
+		if available < 128 {
+			b.Flush()
+		}
+		b.growAtLeast(minimal)
 	}
+}
+
+func (b *Stream) growAtLeast(minimal int) {
+	toGrow := len(b.buf)
+	if toGrow < minimal {
+		toGrow = minimal
+	}
+	newBuf := make([]byte, len(b.buf)+toGrow)
+	copy(newBuf, b.Buffer())
+	b.buf = newBuf
+}
+
+func (b *Stream) WriteRaw(s string) {
+	b.ensure(len(s))
 	if b.Error != nil {
 		return
 	}
@@ -166,17 +191,12 @@ func (b *Stream) WriteRaw(s string) {
 }
 
 func (stream *Stream) WriteString(s string) {
+	stream.ensure(32)
 	valLen := len(s)
 	toWriteLen := valLen
 	bufLengthMinusTwo := len(stream.buf) - 2 // make room for the quotes
-	if stream.n + toWriteLen > bufLengthMinusTwo {
+	if stream.n+toWriteLen > bufLengthMinusTwo {
 		toWriteLen = bufLengthMinusTwo - stream.n
-	}
-	if toWriteLen < 0 {
-		stream.Flush()
-		if stream.n + toWriteLen > bufLengthMinusTwo {
-			toWriteLen = bufLengthMinusTwo - stream.n
-		}
 	}
 	n := stream.n
 	stream.buf[n] = '"'
@@ -189,7 +209,7 @@ func (stream *Stream) WriteString(s string) {
 			stream.buf[n] = c
 			n++
 		} else {
-			break;
+			break
 		}
 	}
 	if i == valLen {
@@ -200,14 +220,14 @@ func (stream *Stream) WriteString(s string) {
 	}
 	stream.n = n
 	// for the remaining parts, we process them char by char
-	stream.writeStringSlowPath(s, i, valLen);
+	stream.writeStringSlowPath(s, i, valLen)
 	stream.writeByte('"')
 }
 
 func (stream *Stream) writeStringSlowPath(s string, i int, valLen int) {
 	for ; i < valLen; i++ {
 		c := s[i]
-		switch (c) {
+		switch c {
 		case '"':
 			stream.writeTwoBytes('\\', '"')
 		case '\\':
@@ -223,7 +243,7 @@ func (stream *Stream) writeStringSlowPath(s string, i int, valLen int) {
 		case '\t':
 			stream.writeTwoBytes('\\', 't')
 		default:
-			stream.writeByte(c);
+			stream.writeByte(c)
 		}
 	}
 }
@@ -293,21 +313,14 @@ func (stream *Stream) WriteArrayEnd() {
 }
 
 func (stream *Stream) writeIndention(delta int) {
-	if (stream.indention == 0) {
+	if stream.indention == 0 {
 		return
 	}
 	stream.writeByte('\n')
 	toWrite := stream.indention - delta
-	i := 0
-	for {
-		for ; i < toWrite && stream.n < len(stream.buf); i++ {
-			stream.buf[stream.n] = ' '
-			stream.n ++
-		}
-		if i == toWrite {
-			break;
-		} else {
-			stream.Flush()
-		}
+	stream.ensure(toWrite)
+	for i := 0 ; i < toWrite && stream.n < len(stream.buf); i++ {
+		stream.buf[stream.n] = ' '
+		stream.n ++
 	}
 }

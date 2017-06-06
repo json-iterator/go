@@ -45,6 +45,7 @@ func Test_customize_type_encoder(t *testing.T) {
 }
 
 func Test_customize_byte_array_encoder(t *testing.T) {
+	CleanEncoders()
 	should := require.New(t)
 	RegisterTypeEncoder("[]uint8", func(ptr unsafe.Pointer, stream *Stream) {
 		t := *((*[]byte)(ptr))

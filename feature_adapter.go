@@ -89,14 +89,12 @@ func UnmarshalAnyFromString(str string) (Any, error) {
 // Marshal returns the JSON encoding of v, adapts to json/encoding Marshal API
 // Refer to https://godoc.org/encoding/json#Marshal for more information
 func Marshal(v interface{}) ([]byte, error) {
-	buf := &bytes.Buffer{}
-	stream := NewStream(buf, 512)
+	stream := NewStream(nil, 256)
 	stream.WriteVal(v)
-	stream.Flush()
 	if stream.Error != nil {
 		return nil, stream.Error
 	}
-	return buf.Bytes(), nil
+	return stream.Buffer(), nil
 }
 
 func MarshalToString(v interface{}) (string, error) {

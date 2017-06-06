@@ -264,6 +264,27 @@ func Test_json_RawMessage(t *testing.T) {
 	should.Equal(`[1,2,3]`, str)
 }
 
+func Test_encode_byte_array(t *testing.T) {
+	should := require.New(t)
+	bytes, err := json.Marshal([]byte{1,2,3})
+	should.Nil(err)
+	should.Equal(`"AQID"`, string(bytes))
+	bytes, err = Marshal([]byte{1,2,3})
+	should.Nil(err)
+	should.Equal(`"AQID"`, string(bytes))
+}
+
+func Test_decode_byte_array(t *testing.T) {
+	should := require.New(t)
+	data := []byte{}
+	err := json.Unmarshal([]byte(`"AQID"`), &data)
+	should.Nil(err)
+	should.Equal([]byte{1,2,3}, data)
+	err = Unmarshal([]byte(`"AQID"`), &data)
+	should.Nil(err)
+	should.Equal([]byte{1,2,3}, data)
+}
+
 func Benchmark_jsoniter_array(b *testing.B) {
 	b.ReportAllocs()
 	input := []byte(`[1,2,3,4,5,6,7,8,9]`)
