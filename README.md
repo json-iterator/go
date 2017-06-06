@@ -11,7 +11,7 @@ Source code: https://github.com/json-iterator/go-benchmark/blob/master/src/githu
 Raw Result (easyjson requires static code generation)
 
 | | ns/op | allocation bytes | allocation times |
-| === | === | === | === |
+| --- | --- | --- | --- |
 | std decode | 35510 ns/op | 1960 B/op | 99 allocs/op |
 | easyjson decode | 8499 ns/op | 160 B/op | 4 allocs/op |
 | jsoniter decode | 5623 ns/op | 160 B/op | 3 allocs/op |
