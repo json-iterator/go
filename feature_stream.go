@@ -164,7 +164,7 @@ func (b *Stream) Flush() error {
 func (b *Stream) ensure(minimal int) {
 	available := b.Available()
 	if available < minimal {
-		if available < 128 {
+		if b.n > 1024 {
 			b.Flush()
 		}
 		b.growAtLeast(minimal)
