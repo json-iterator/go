@@ -1,8 +1,10 @@
 package jsoniter
 
 import (
-	"io"
 	"bytes"
+	"errors"
+	"io"
+	"reflect"
 )
 
 // Unmarshal adapts to json/encoding Unmarshal API
@@ -12,6 +14,12 @@ import (
 func Unmarshal(data []byte, v interface{}) error {
 	data = data[:lastNotSpacePos(data)]
 	iter := ParseBytes(data)
+	typ := reflect.TypeOf(v)
+	if typ.Kind() != reflect.Ptr {
+		// return non-pointer error
+		err = errors.New("the second param must be ptr type")
+		return
+	}
 	iter.ReadVal(v)
 	if iter.head == iter.tail {
 		iter.loadMore()
