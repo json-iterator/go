@@ -1,9 +1,9 @@
 package jsoniter
 
 import (
-	"unsafe"
 	"fmt"
 	"reflect"
+	"unsafe"
 )
 
 type arrayLazyAny struct {
@@ -44,7 +44,7 @@ func (any *arrayLazyAny) fillCacheUntil(target int) Any {
 		return any.cache[target]
 	}
 	iter := any.Parse()
-	if (len(any.remaining) == len(any.buf)) {
+	if len(any.remaining) == len(any.buf) {
 		iter.head++
 		c := iter.nextToken()
 		if c != ']' {
@@ -337,9 +337,9 @@ func (any *arrayLazyAny) GetInterface() interface{} {
 
 type arrayAny struct {
 	baseAny
-	err      error
-	cache    []Any
-	val      reflect.Value
+	err   error
+	cache []Any
+	val   reflect.Value
 }
 
 func wrapArray(val interface{}) *arrayAny {

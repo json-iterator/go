@@ -1,12 +1,12 @@
 package jsoniter
 
 import (
+	"encoding"
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"sync/atomic"
 	"unsafe"
-	"encoding/json"
-	"encoding"
 )
 
 /*

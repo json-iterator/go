@@ -1,11 +1,11 @@
 package jsoniter
 
 import (
-	"unsafe"
-	"reflect"
-	"encoding/json"
 	"encoding"
+	"encoding/json"
+	"reflect"
 	"strconv"
+	"unsafe"
 )
 
 type mapDecoder struct {

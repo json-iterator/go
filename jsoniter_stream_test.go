@@ -1,8 +1,8 @@
 package jsoniter
 
 import (
-	"testing"
 	"github.com/json-iterator/go/require"
+	"testing"
 )
 
 func Test_writeByte_should_grow_buffer(t *testing.T) {
@@ -33,7 +33,7 @@ func Test_writeIndention_should_grow_buffer(t *testing.T) {
 	should := require.New(t)
 	stream := NewStream(nil, 1)
 	stream.IndentionStep = 2
-	stream.WriteVal([]int{1,2,3})
+	stream.WriteVal([]int{1, 2, 3})
 	should.Equal("[\n  1,\n  2,\n  3\n]", string(stream.Buffer()))
 }
 

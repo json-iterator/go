@@ -1,10 +1,10 @@
 package jsoniter
 
 import (
-	"fmt"
-	"testing"
-	"github.com/json-iterator/go/require"
 	"encoding/json"
+	"fmt"
+	"github.com/json-iterator/go/require"
+	"testing"
 )
 
 func Test_bind_api_demo(t *testing.T) {
@@ -25,13 +25,13 @@ func Test_iterator_api_demo(t *testing.T) {
 }
 
 type People struct {
-	Name string
-	Gender string
-	Age int
+	Name    string
+	Gender  string
+	Age     int
 	Address string
-	Mobile string
+	Mobile  string
 	Country string
-	Height int
+	Height  int
 }
 
 func jsoniterMarshal(p *People) error {
@@ -84,4 +84,3 @@ func BenchmarkStdMarshal(b *testing.B) {
 		}
 	}
 }
-

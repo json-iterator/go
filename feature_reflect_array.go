@@ -1,10 +1,10 @@
 package jsoniter
 
 import (
-	"unsafe"
-	"reflect"
-	"io"
 	"fmt"
+	"io"
+	"reflect"
+	"unsafe"
 )
 
 func decoderOfSlice(typ reflect.Type) (Decoder, error) {
@@ -21,7 +21,7 @@ func encoderOfSlice(typ reflect.Type) (Encoder, error) {
 		return nil, err
 	}
 	if typ.Elem().Kind() == reflect.Map {
-		encoder = &optionalEncoder{ encoder}
+		encoder = &optionalEncoder{encoder}
 	}
 	return &sliceEncoder{typ, typ.Elem(), encoder}, nil
 }
@@ -88,30 +88,30 @@ func (decoder *sliceDecoder) doDecode(ptr unsafe.Pointer, iter *Iterator) {
 		return
 	}
 	offset := uintptr(0)
-	decoder.elemDecoder.decode(unsafe.Pointer(uintptr(slice.Data) + offset), iter)
+	decoder.elemDecoder.decode(unsafe.Pointer(uintptr(slice.Data)+offset), iter)
 	if !iter.ReadArray() {
 		slice.Len = 1
 		return
 	}
 	offset += decoder.elemType.Size()
-	decoder.elemDecoder.decode(unsafe.Pointer(uintptr(slice.Data) + offset), iter)
+	decoder.elemDecoder.decode(unsafe.Pointer(uintptr(slice.Data)+offset), iter)
 	if !iter.ReadArray() {
 		slice.Len = 2
 		return
 	}
 	offset += decoder.elemType.Size()
-	decoder.elemDecoder.decode(unsafe.Pointer(uintptr(slice.Data) + offset), iter)
+	decoder.elemDecoder.decode(unsafe.Pointer(uintptr(slice.Data)+offset), iter)
 	if !iter.ReadArray() {
 		slice.Len = 3
 		return
 	}
 	offset += decoder.elemType.Size()
-	decoder.elemDecoder.decode(unsafe.Pointer(uintptr(slice.Data) + offset), iter)
+	decoder.elemDecoder.decode(unsafe.Pointer(uintptr(slice.Data)+offset), iter)
 	slice.Len = 4
 	for iter.ReadArray() {
 		growOne(slice, decoder.sliceType, decoder.elemType)
 		offset += decoder.elemType.Size()
-		decoder.elemDecoder.decode(unsafe.Pointer(uintptr(slice.Data) + offset), iter)
+		decoder.elemDecoder.decode(unsafe.Pointer(uintptr(slice.Data)+offset), iter)
 	}
 }
 

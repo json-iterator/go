@@ -1,9 +1,9 @@
 package jsoniter
 
 import (
+	"github.com/json-iterator/go/require"
 	"io"
 	"testing"
-	"github.com/json-iterator/go/require"
 )
 
 func Test_string_end(t *testing.T) {

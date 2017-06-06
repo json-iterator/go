@@ -1,9 +1,9 @@
 package jsoniter
 
 import (
-	"testing"
 	"github.com/json-iterator/go/require"
 	"math/big"
+	"testing"
 )
 
 func Test_read_map(t *testing.T) {
@@ -41,12 +41,12 @@ func Test_wrap_map(t *testing.T) {
 			vals[k] = v.ToString()
 		}
 	}
-	should.Equal(map[string]string{"Field1":"hello"}, vals)
+	should.Equal(map[string]string{"Field1": "hello"}, vals)
 }
 
 func Test_map_wrapper_any_get_all(t *testing.T) {
 	should := require.New(t)
-	any := Wrap(map[string][]int{"Field1": []int{1, 2}})
+	any := Wrap(map[string][]int{"Field1": {1, 2}})
 	should.Equal(`{"Field1":1}`, any.Get('*', 0).ToString())
 }
 
@@ -86,7 +86,7 @@ func Test_decode_int_key_map(t *testing.T) {
 
 func Test_encode_TextMarshaler_key_map(t *testing.T) {
 	should := require.New(t)
-	f, _, _  := big.ParseFloat("1", 10, 64, big.ToZero)
+	f, _, _ := big.ParseFloat("1", 10, 64, big.ToZero)
 	val := map[*big.Float]string{f: "2"}
 	str, err := MarshalToString(val)
 	should.Nil(err)

@@ -1,10 +1,10 @@
 package jsoniter
 
 import (
-	"encoding/json"
-	"testing"
-	"github.com/json-iterator/go/require"
 	"bytes"
+	"encoding/json"
+	"github.com/json-iterator/go/require"
+	"testing"
 )
 
 func Test_empty_object(t *testing.T) {
@@ -100,7 +100,7 @@ func Test_object_any_lazy_iterator(t *testing.T) {
 	should.False(hasNext)
 	vals[k] = v.ToString()
 
-	should.Equal(map[string]string{"a":"b", "c":"d"}, vals)
+	should.Equal(map[string]string{"a": "b", "c": "d"}, vals)
 	vals = map[string]string{}
 	for next, hasNext := any.IterateObject(); hasNext; {
 		k, v, hasNext = next()
@@ -108,7 +108,7 @@ func Test_object_any_lazy_iterator(t *testing.T) {
 			vals[k] = v.ToString()
 		}
 	}
-	should.Equal(map[string]string{"a":"b", "c":"d"}, vals)
+	should.Equal(map[string]string{"a": "b", "c": "d"}, vals)
 }
 
 func Test_object_any_with_two_lazy_iterators(t *testing.T) {
@@ -194,7 +194,7 @@ func Test_wrap_object(t *testing.T) {
 			vals[k] = v.ToString()
 		}
 	}
-	should.Equal(map[string]string{"Field1":"hello"}, vals)
+	should.Equal(map[string]string{"Field1": "hello"}, vals)
 }
 
 func Test_object_wrapper_any_get_all(t *testing.T) {

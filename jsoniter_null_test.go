@@ -1,9 +1,9 @@
 package jsoniter
 
 import (
-	"testing"
-	"github.com/json-iterator/go/require"
 	"bytes"
+	"github.com/json-iterator/go/require"
+	"testing"
 )
 
 func Test_read_null(t *testing.T) {

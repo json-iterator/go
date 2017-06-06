@@ -1,13 +1,13 @@
 package jsoniter
 
 import (
+	"encoding/json"
+	"github.com/json-iterator/go/require"
 	"reflect"
 	"strconv"
 	"testing"
 	"time"
 	"unsafe"
-	"github.com/json-iterator/go/require"
-	"encoding/json"
 )
 
 func Test_customize_type_decoder(t *testing.T) {
@@ -179,7 +179,7 @@ func (obj *ObjectImplementedUnmarshaler) UnmarshalJSON([]byte) error {
 
 func Test_unmarshaler(t *testing.T) {
 	type TestObject struct {
-		Field *ObjectImplementedUnmarshaler
+		Field  *ObjectImplementedUnmarshaler
 		Field2 string
 	}
 	should := require.New(t)
@@ -196,7 +196,7 @@ func Test_unmarshaler(t *testing.T) {
 
 func Test_unmarshaler_and_decoder(t *testing.T) {
 	type TestObject struct {
-		Field *ObjectImplementedUnmarshaler
+		Field  *ObjectImplementedUnmarshaler
 		Field2 string
 	}
 	should := require.New(t)

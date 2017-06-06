@@ -44,10 +44,10 @@ func (iter *Iterator) readFieldHash() int32 {
 					b += 'a' - 'A'
 				}
 				if b == '"' {
-					iter.head = i+1
+					iter.head = i + 1
 					c = iter.nextToken()
 					if c != ':' {
-						iter.reportError("readFieldHash", `expect :, but found ` + string([]byte{c}))
+						iter.reportError("readFieldHash", `expect :, but found `+string([]byte{c}))
 					}
 					return int32(hash)
 				}
@@ -60,7 +60,7 @@ func (iter *Iterator) readFieldHash() int32 {
 			}
 		}
 	}
-	iter.reportError("readFieldHash", `expect ", but found ` + string([]byte{c}))
+	iter.reportError("readFieldHash", `expect ", but found `+string([]byte{c}))
 	return 0
 }
 

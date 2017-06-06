@@ -319,8 +319,8 @@ func (stream *Stream) writeIndention(delta int) {
 	stream.writeByte('\n')
 	toWrite := stream.indention - delta
 	stream.ensure(toWrite)
-	for i := 0 ; i < toWrite && stream.n < len(stream.buf); i++ {
+	for i := 0; i < toWrite && stream.n < len(stream.buf); i++ {
 		stream.buf[stream.n] = ' '
-		stream.n ++
+		stream.n++
 	}
 }

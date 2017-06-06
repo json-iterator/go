@@ -1,9 +1,9 @@
 package jsoniter
 
 import (
-	"unsafe"
-	"encoding/json"
 	"encoding/base64"
+	"encoding/json"
+	"unsafe"
 )
 
 type stringCodec struct {
@@ -386,7 +386,7 @@ type base64Codec struct {
 func (codec *base64Codec) decode(ptr unsafe.Pointer, iter *Iterator) {
 	encoding := base64.StdEncoding
 	src := iter.SkipAndReturnBytes()
-	src = src[1:len(src)-1]
+	src = src[1 : len(src)-1]
 	decodedLen := encoding.DecodedLen(len(src))
 	dst := make([]byte, decodedLen)
 	_, err := encoding.Decode(dst, src)

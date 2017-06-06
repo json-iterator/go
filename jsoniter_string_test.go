@@ -3,15 +3,15 @@ package jsoniter
 import (
 	"bytes"
 	"encoding/json"
-	"testing"
-	"github.com/json-iterator/go/require"
 	"fmt"
+	"github.com/json-iterator/go/require"
+	"testing"
 )
 
 func Test_read_normal_string(t *testing.T) {
 	cases := map[string]string{
 		`"0123456789012345678901234567890123456789"`: `0123456789012345678901234567890123456789`,
-		`""`: ``,
+		`""`:      ``,
 		`"hello"`: `hello`,
 	}
 	for input, output := range cases {
@@ -40,8 +40,8 @@ func Test_read_normal_string(t *testing.T) {
 
 func Test_read_exotic_string(t *testing.T) {
 	cases := map[string]string{
-		`"hel\"lo"`: `hel"lo`,
-		`"hel\nlo"`: "hel\nlo",
+		`"hel\"lo"`:      `hel"lo`,
+		`"hel\nlo"`:      "hel\nlo",
 		`"\u4e2d\u6587"`: "中文",
 		`"\ud83d\udc4a"`: "\xf0\x9f\x91\x8a", // surrogate
 	}

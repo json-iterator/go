@@ -1,8 +1,8 @@
 package jsoniter
 
 import (
-	"testing"
 	"github.com/json-iterator/go/require"
+	"testing"
 )
 
 func Test_encode_optional_int_pointer(t *testing.T) {

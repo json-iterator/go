@@ -1,9 +1,9 @@
 package jsoniter
 
 import (
-	"testing"
-	"github.com/json-iterator/go/require"
 	"bytes"
+	"github.com/json-iterator/go/require"
+	"testing"
 )
 
 func Test_decode_one_field_struct(t *testing.T) {
@@ -149,9 +149,9 @@ func Test_write_val_one_field_struct(t *testing.T) {
 func Test_mixed(t *testing.T) {
 	should := require.New(t)
 	type AA struct {
-		ID      int `json:"id"`
+		ID      int                    `json:"id"`
 		Payload map[string]interface{} `json:"payload"`
-		buf     *bytes.Buffer `json:"-"`
+		buf     *bytes.Buffer          `json:"-"`
 	}
 	aa := AA{}
 	err := UnmarshalFromString(` {"id":1, "payload":{"account":"123","password":"456"}}`, &aa)
@@ -230,7 +230,7 @@ func Test_anonymous_struct_marshal(t *testing.T) {
 	type TestObject struct {
 		Field string
 	}
-	str, err := MarshalToString(struct{
+	str, err := MarshalToString(struct {
 		TestObject
 		Field int
 	}{

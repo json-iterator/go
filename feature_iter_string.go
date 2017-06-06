@@ -7,7 +7,7 @@ import (
 func (iter *Iterator) ReadString() (ret string) {
 	c := iter.nextToken()
 	if c == '"' {
-		for i := iter.head ; i < iter.tail; i++ {
+		for i := iter.head; i < iter.tail; i++ {
 			c := iter.buf[i]
 			if c == '"' {
 				ret = string(iter.buf[iter.head:i])
@@ -103,13 +103,13 @@ func (iter *Iterator) ReadStringAsSlice() (ret []byte) {
 			// for: field name, base64, number
 			if iter.buf[i] == '"' {
 				// fast path: reuse the underlying buffer
-				ret = iter.buf[iter.head : i]
+				ret = iter.buf[iter.head:i]
 				iter.head = i + 1
 				return ret
 			}
 		}
 		readLen := iter.tail - iter.head
-		copied := make([]byte, readLen, readLen * 2)
+		copied := make([]byte, readLen, readLen*2)
 		copy(copied, iter.buf[iter.head:iter.tail])
 		iter.head = iter.tail
 		for iter.Error == nil {
@@ -132,11 +132,11 @@ func (iter *Iterator) readU4() (ret rune) {
 			return
 		}
 		if c >= '0' && c <= '9' {
-			ret = ret * 16 + rune(c - '0')
+			ret = ret*16 + rune(c-'0')
 		} else if c >= 'a' && c <= 'f' {
-			ret = ret * 16 + rune(c - 'a' + 10)
+			ret = ret*16 + rune(c-'a'+10)
 		} else if c >= 'A' && c <= 'F' {
-			ret = ret * 16 + rune(c - 'A' + 10)
+			ret = ret*16 + rune(c-'A'+10)
 		} else {
 			iter.reportError("readU4", "expects 0~9 or a~f")
 			return
@@ -158,14 +158,14 @@ const (
 	mask3 = 0x0F // 0000 1111
 	mask4 = 0x07 // 0000 0111
 
-	rune1Max = 1 << 7 - 1
-	rune2Max = 1 << 11 - 1
-	rune3Max = 1 << 16 - 1
+	rune1Max = 1<<7 - 1
+	rune2Max = 1<<11 - 1
+	rune3Max = 1<<16 - 1
 
 	surrogateMin = 0xD800
 	surrogateMax = 0xDFFF
 
-	maxRune = '\U0010FFFF' // Maximum valid Unicode code point.
+	maxRune   = '\U0010FFFF' // Maximum valid Unicode code point.
 	runeError = '\uFFFD'     // the "error" Rune or "Unicode replacement character"
 )
 
@@ -176,22 +176,22 @@ func appendRune(p []byte, r rune) []byte {
 		p = append(p, byte(r))
 		return p
 	case i <= rune2Max:
-		p = append(p, t2 | byte(r >> 6))
-		p = append(p, tx | byte(r) & maskx)
+		p = append(p, t2|byte(r>>6))
+		p = append(p, tx|byte(r)&maskx)
 		return p
 	case i > maxRune, surrogateMin <= i && i <= surrogateMax:
 		r = runeError
 		fallthrough
 	case i <= rune3Max:
-		p = append(p, t3 | byte(r >> 12))
-		p = append(p, tx | byte(r >> 6) & maskx)
-		p = append(p, tx | byte(r) & maskx)
+		p = append(p, t3|byte(r>>12))
+		p = append(p, tx|byte(r>>6)&maskx)
+		p = append(p, tx|byte(r)&maskx)
 		return p
 	default:
-		p = append(p, t4 | byte(r >> 18))
-		p = append(p, tx | byte(r >> 12) & maskx)
-		p = append(p, tx | byte(r >> 6) & maskx)
-		p = append(p, tx | byte(r) & maskx)
+		p = append(p, t4|byte(r>>18))
+		p = append(p, tx|byte(r>>12)&maskx)
+		p = append(p, tx|byte(r>>6)&maskx)
+		p = append(p, tx|byte(r)&maskx)
 		return p
 	}
 }

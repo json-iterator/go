@@ -1,8 +1,8 @@
 package jsoniter
 
 import (
-	"testing"
 	"github.com/json-iterator/go/require"
+	"testing"
 	"unsafe"
 )
 
@@ -16,7 +16,7 @@ func Test_write_array_of_interface(t *testing.T) {
 
 func Test_write_map_of_interface(t *testing.T) {
 	should := require.New(t)
-	val := map[string]interface{}{"hello":"world"}
+	val := map[string]interface{}{"hello": "world"}
 	str, err := MarshalToString(val)
 	should.Nil(err)
 	should.Equal(`{"hello":"world"}`, str)
@@ -27,7 +27,7 @@ func Test_write_map_of_interface_in_struct(t *testing.T) {
 		Field map[string]interface{}
 	}
 	should := require.New(t)
-	val := TestObject{map[string]interface{}{"hello":"world"}}
+	val := TestObject{map[string]interface{}{"hello": "world"}}
 	str, err := MarshalToString(val)
 	should.Nil(err)
 	should.Equal(`{"Field":{"hello":"world"}}`, str)
@@ -35,11 +35,11 @@ func Test_write_map_of_interface_in_struct(t *testing.T) {
 
 func Test_write_map_of_interface_in_struct_with_two_fields(t *testing.T) {
 	type TestObject struct {
-		Field map[string]interface{}
+		Field  map[string]interface{}
 		Field2 string
 	}
 	should := require.New(t)
-	val := TestObject{map[string]interface{}{"hello":"world"}, ""}
+	val := TestObject{map[string]interface{}{"hello": "world"}, ""}
 	str, err := MarshalToString(val)
 	should.Nil(err)
 	should.Contains(str, `"Field":{"hello":"world"}`)
@@ -59,7 +59,7 @@ func Test_write_map_of_custom_interface(t *testing.T) {
 	should := require.New(t)
 	myStr := MyString("world")
 	should.Equal("world", myStr.Hello())
-	val := map[string]MyInterface{"hello":myStr}
+	val := map[string]MyInterface{"hello": myStr}
 	str, err := MarshalToString(val)
 	should.Nil(err)
 	should.Equal(`{"hello":"world"}`, str)

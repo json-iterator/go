@@ -1,12 +1,12 @@
 package jsoniter
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
-	"testing"
 	"github.com/json-iterator/go/require"
-	"bytes"
 	"strconv"
+	"testing"
 )
 
 func Test_read_big_float(t *testing.T) {
@@ -46,14 +46,14 @@ func Test_read_float(t *testing.T) {
 		// streaming
 		t.Run(fmt.Sprintf("%v", input), func(t *testing.T) {
 			should := require.New(t)
-			iter := Parse(bytes.NewBufferString(input + ","), 2)
+			iter := Parse(bytes.NewBufferString(input+","), 2)
 			expected, err := strconv.ParseFloat(input, 32)
 			should.Nil(err)
 			should.Equal(float32(expected), iter.ReadFloat32())
 		})
 		t.Run(fmt.Sprintf("%v", input), func(t *testing.T) {
 			should := require.New(t)
-			iter := Parse(bytes.NewBufferString(input + ","), 2)
+			iter := Parse(bytes.NewBufferString(input+","), 2)
 			expected, err := strconv.ParseFloat(input, 64)
 			should.Nil(err)
 			should.Equal(expected, iter.ReadFloat64())
@@ -85,7 +85,7 @@ func Test_wrap_float(t *testing.T) {
 
 func Test_write_float32(t *testing.T) {
 	vals := []float32{0, 1, -1, 99, 0xff, 0xfff, 0xffff, 0xfffff, 0xffffff, 0x4ffffff, 0xfffffff,
-	-0x4ffffff, -0xfffffff, 1.2345, 1.23456, 1.234567, 1.001}
+		-0x4ffffff, -0xfffffff, 1.2345, 1.23456, 1.234567, 1.001}
 	for _, val := range vals {
 		t.Run(fmt.Sprintf("%v", val), func(t *testing.T) {
 			should := require.New(t)
@@ -118,7 +118,7 @@ func Test_write_float32(t *testing.T) {
 
 func Test_write_float64(t *testing.T) {
 	vals := []float64{0, 1, -1, 99, 0xff, 0xfff, 0xffff, 0xfffff, 0xffffff, 0x4ffffff, 0xfffffff,
-	-0x4ffffff, -0xfffffff, 1.2345, 1.23456, 1.234567, 1.001}
+		-0x4ffffff, -0xfffffff, 1.2345, 1.23456, 1.234567, 1.001}
 	for _, val := range vals {
 		t.Run(fmt.Sprintf("%v", val), func(t *testing.T) {
 			should := require.New(t)

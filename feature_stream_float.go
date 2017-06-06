@@ -21,12 +21,12 @@ func (stream *Stream) WriteFloat32Lossy(val float32) {
 		val = -val
 	}
 	if val > 0x4ffffff {
-		stream.WriteRaw(strconv.FormatFloat(float64(val), 'f', -1, 32));
+		stream.WriteRaw(strconv.FormatFloat(float64(val), 'f', -1, 32))
 		return
 	}
 	precision := 6
 	exp := uint64(1000000) // 6
-	lval := uint64(float64(val) * float64(exp) + 0.5)
+	lval := uint64(float64(val)*float64(exp) + 0.5)
 	stream.WriteUint64(lval / exp)
 	fval := lval % exp
 	if fval == 0 {
@@ -38,7 +38,7 @@ func (stream *Stream) WriteFloat32Lossy(val float32) {
 		stream.writeByte('0')
 	}
 	stream.WriteUint64(fval)
-	for stream.buf[stream.n - 1] == '0' {
+	for stream.buf[stream.n-1] == '0' {
 		stream.n--
 	}
 }
@@ -53,12 +53,12 @@ func (stream *Stream) WriteFloat64Lossy(val float64) {
 		val = -val
 	}
 	if val > 0x4ffffff {
-		stream.WriteRaw(strconv.FormatFloat(val, 'f', -1, 64));
+		stream.WriteRaw(strconv.FormatFloat(val, 'f', -1, 64))
 		return
 	}
 	precision := 6
 	exp := uint64(1000000) // 6
-	lval := uint64(val * float64(exp) + 0.5)
+	lval := uint64(val*float64(exp) + 0.5)
 	stream.WriteUint64(lval / exp)
 	fval := lval % exp
 	if fval == 0 {
@@ -70,7 +70,7 @@ func (stream *Stream) WriteFloat64Lossy(val float64) {
 		stream.writeByte('0')
 	}
 	stream.WriteUint64(fval)
-	for stream.buf[stream.n - 1] == '0' {
+	for stream.buf[stream.n-1] == '0' {
 		stream.n--
 	}
 }

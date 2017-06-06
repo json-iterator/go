@@ -3,12 +3,12 @@ package jsoniter
 import (
 	"bytes"
 	"encoding/json"
-	"testing"
-	"github.com/json-iterator/go/require"
 	"fmt"
-	"strconv"
-	"io/ioutil"
+	"github.com/json-iterator/go/require"
 	"io"
+	"io/ioutil"
+	"strconv"
+	"testing"
 )
 
 func Test_read_uint64_invalid(t *testing.T) {

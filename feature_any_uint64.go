@@ -1,11 +1,10 @@
 package jsoniter
 
 import (
+	"io"
 	"strconv"
 	"unsafe"
-	"io"
 )
-
 
 type uint64LazyAny struct {
 	baseAny

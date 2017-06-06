@@ -2,12 +2,13 @@ package jsoniter
 
 import (
 	"io"
+	"math/big"
 	"strconv"
 	"unsafe"
-	"math/big"
 )
 
 var floatDigits []int8
+
 const invalidCharForNumber = int8(-1)
 const endOfNumber = int8(-2)
 const dotInNumber = int8(-3)
@@ -75,7 +76,7 @@ func (iter *Iterator) readPositiveFloat32() (ret float32) {
 	value := uint64(0)
 	c := byte(' ')
 	i := iter.head
-	non_decimal_loop:
+non_decimal_loop:
 	for ; i < iter.tail; i++ {
 		c = iter.buf[i]
 		ind := floatDigits[c]
@@ -91,14 +92,14 @@ func (iter *Iterator) readPositiveFloat32() (ret float32) {
 		if value > uint64SafeToMultiple10 {
 			return iter.readFloat32SlowPath()
 		}
-		value = (value << 3) + (value << 1) + uint64(ind); // value = value * 10 + ind;
+		value = (value << 3) + (value << 1) + uint64(ind) // value = value * 10 + ind;
 	}
 	if c == '.' {
 		i++
-		decimalPlaces := 0;
+		decimalPlaces := 0
 		for ; i < iter.tail; i++ {
 			c = iter.buf[i]
-			ind := floatDigits[c];
+			ind := floatDigits[c]
 			switch ind {
 			case endOfNumber:
 				if decimalPlaces > 0 && decimalPlaces < len(POW10) {
@@ -106,7 +107,7 @@ func (iter *Iterator) readPositiveFloat32() (ret float32) {
 					return float32(float64(value) / float64(POW10[decimalPlaces]))
 				}
 				// too many decimal places
-			return iter.readFloat32SlowPath()
+				return iter.readFloat32SlowPath()
 			case invalidCharForNumber:
 				fallthrough
 			case dotInNumber:
@@ -125,7 +126,7 @@ func (iter *Iterator) readPositiveFloat32() (ret float32) {
 func (iter *Iterator) readNumberAsString() (ret string) {
 	strBuf := [16]byte{}
 	str := strBuf[0:0]
-	load_loop:
+load_loop:
 	for {
 		for i := iter.head; i < iter.tail; i++ {
 			c := iter.buf[i]
@@ -178,7 +179,7 @@ func (iter *Iterator) readPositiveFloat64() (ret float64) {
 	value := uint64(0)
 	c := byte(' ')
 	i := iter.head
-	non_decimal_loop:
+non_decimal_loop:
 	for ; i < iter.tail; i++ {
 		c = iter.buf[i]
 		ind := floatDigits[c]
@@ -194,14 +195,14 @@ func (iter *Iterator) readPositiveFloat64() (ret float64) {
 		if value > uint64SafeToMultiple10 {
 			return iter.readFloat64SlowPath()
 		}
-		value = (value << 3) + (value << 1) + uint64(ind); // value = value * 10 + ind;
+		value = (value << 3) + (value << 1) + uint64(ind) // value = value * 10 + ind;
 	}
 	if c == '.' {
 		i++
-		decimalPlaces := 0;
+		decimalPlaces := 0
 		for ; i < iter.tail; i++ {
 			c = iter.buf[i]
-			ind := floatDigits[c];
+			ind := floatDigits[c]
 			switch ind {
 			case endOfNumber:
 				if decimalPlaces > 0 && decimalPlaces < len(POW10) {

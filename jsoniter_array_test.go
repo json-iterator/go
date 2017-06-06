@@ -1,11 +1,11 @@
 package jsoniter
 
 import (
-	"encoding/json"
-	"testing"
-	"github.com/json-iterator/go/require"
 	"bytes"
+	"encoding/json"
+	"github.com/json-iterator/go/require"
 	"io"
+	"testing"
 )
 
 func Test_empty_array(t *testing.T) {
@@ -84,7 +84,7 @@ func Test_read_array_with_any_iterator(t *testing.T) {
 
 func Test_wrap_array(t *testing.T) {
 	should := require.New(t)
-	any := Wrap([]int{1,2,3})
+	any := Wrap([]int{1, 2, 3})
 	should.Equal("[1,2,3]", any.ToString())
 	var element Any
 	var elements []int
@@ -93,9 +93,9 @@ func Test_wrap_array(t *testing.T) {
 		elements = append(elements, element.ToInt())
 	}
 	should.Equal([]int{1, 2, 3}, elements)
-	any = Wrap([]int{1,2,3})
+	any = Wrap([]int{1, 2, 3})
 	should.Equal(3, any.Size())
-	any = Wrap([]int{1,2,3})
+	any = Wrap([]int{1, 2, 3})
 	should.Equal(2, any.Get(1).ToInt())
 }
 
@@ -103,7 +103,7 @@ func Test_array_lazy_any_get(t *testing.T) {
 	should := require.New(t)
 	any, err := UnmarshalAnyFromString("[1,[2,3],4]")
 	should.Nil(err)
-	should.Equal(3, any.Get(1,1).ToInt())
+	should.Equal(3, any.Get(1, 1).ToInt())
 	should.Equal("[1,[2,3],4]", any.ToString())
 }
 
@@ -111,25 +111,25 @@ func Test_array_lazy_any_get_all(t *testing.T) {
 	should := require.New(t)
 	any, err := UnmarshalAnyFromString("[[1],[2],[3,4]]")
 	should.Nil(err)
-	should.Equal("[1,2,3]", any.Get('*',0).ToString())
+	should.Equal("[1,2,3]", any.Get('*', 0).ToString())
 }
 
 func Test_array_wrapper_any_get_all(t *testing.T) {
 	should := require.New(t)
 	any := wrapArray([][]int{
-		[]int{1, 2},
-		[]int{3, 4},
-		[]int{5, 6},
+		{1, 2},
+		{3, 4},
+		{5, 6},
 	})
-	should.Equal("[1,3,5]", any.Get('*',0).ToString())
+	should.Equal("[1,3,5]", any.Get('*', 0).ToString())
 }
 
 func Test_array_lazy_any_get_invalid(t *testing.T) {
 	should := require.New(t)
 	any, err := UnmarshalAnyFromString("[]")
 	should.Nil(err)
-	should.Equal(Invalid, any.Get(1,1).ValueType())
-	should.NotNil(any.Get(1,1).LastError())
+	should.Equal(Invalid, any.Get(1, 1).ValueType())
+	should.NotNil(any.Get(1, 1).LastError())
 	should.Equal(Invalid, any.Get("1").ValueType())
 	should.NotNil(any.Get("1").LastError())
 }
@@ -244,7 +244,7 @@ func Test_write_val_empty_array(t *testing.T) {
 func Test_write_array_of_interface_in_struct(t *testing.T) {
 	should := require.New(t)
 	type TestObject struct {
-		Field []interface{}
+		Field  []interface{}
 		Field2 string
 	}
 	val := TestObject{[]interface{}{1, 2}, ""}
@@ -266,10 +266,10 @@ func Test_json_RawMessage(t *testing.T) {
 
 func Test_encode_byte_array(t *testing.T) {
 	should := require.New(t)
-	bytes, err := json.Marshal([]byte{1,2,3})
+	bytes, err := json.Marshal([]byte{1, 2, 3})
 	should.Nil(err)
 	should.Equal(`"AQID"`, string(bytes))
-	bytes, err = Marshal([]byte{1,2,3})
+	bytes, err = Marshal([]byte{1, 2, 3})
 	should.Nil(err)
 	should.Equal(`"AQID"`, string(bytes))
 }
@@ -279,10 +279,10 @@ func Test_decode_byte_array(t *testing.T) {
 	data := []byte{}
 	err := json.Unmarshal([]byte(`"AQID"`), &data)
 	should.Nil(err)
-	should.Equal([]byte{1,2,3}, data)
+	should.Equal([]byte{1, 2, 3}, data)
 	err = Unmarshal([]byte(`"AQID"`), &data)
 	should.Nil(err)
-	should.Equal([]byte{1,2,3}, data)
+	should.Equal([]byte{1, 2, 3}, data)
 }
 
 func Benchmark_jsoniter_array(b *testing.B) {

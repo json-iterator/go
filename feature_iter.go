@@ -276,4 +276,3 @@ func (iter *Iterator) ReadBase64() (ret []byte) {
 	}
 	return ret[:n]
 }
-

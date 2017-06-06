@@ -1,11 +1,11 @@
 package jsoniter
 
 import (
-	"testing"
-	"github.com/json-iterator/go/require"
-	"encoding/json"
 	"bytes"
+	"encoding/json"
+	"github.com/json-iterator/go/require"
 	"io/ioutil"
+	"testing"
 )
 
 func Test_new_decoder(t *testing.T) {

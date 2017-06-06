@@ -1,9 +1,9 @@
 package jsoniter
 
 import (
-	"testing"
 	"bytes"
 	"github.com/json-iterator/go/require"
+	"testing"
 )
 
 func Test_true(t *testing.T) {
@@ -37,7 +37,6 @@ func Test_write_true_false(t *testing.T) {
 	should.Nil(stream.Error)
 	should.Equal("truefalse", buf.String())
 }
-
 
 func Test_write_val_bool(t *testing.T) {
 	should := require.New(t)

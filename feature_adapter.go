@@ -2,11 +2,11 @@ package jsoniter
 
 import (
 	"bytes"
+	"encoding/json"
+	"errors"
 	"io"
 	"reflect"
-	"errors"
 	"unsafe"
-	"encoding/json"
 )
 
 // Unmarshal adapts to json/encoding Unmarshal API

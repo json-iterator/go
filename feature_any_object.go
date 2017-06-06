@@ -1,9 +1,9 @@
 package jsoniter
 
 import (
-	"unsafe"
 	"fmt"
 	"reflect"
+	"unsafe"
 )
 
 type objectLazyAny struct {

@@ -5,7 +5,7 @@ import (
 	"strconv"
 )
 
-type stringLazyAny struct{
+type stringLazyAny struct {
 	baseAny
 	buf   []byte
 	iter  *Iterator
@@ -136,16 +136,15 @@ func (any *stringLazyAny) GetInterface() interface{} {
 	return any.cache
 }
 
-type stringAny struct{
+type stringAny struct {
 	baseAny
-	err   error
+	err error
 	val string
 }
 
 func (any *stringAny) Parse() *Iterator {
 	return nil
 }
-
 
 func (any *stringAny) ValueType() ValueType {
 	return String

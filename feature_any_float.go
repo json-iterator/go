@@ -2,15 +2,15 @@ package jsoniter
 
 import (
 	"io"
-	"unsafe"
 	"strconv"
+	"unsafe"
 )
 
 type float64LazyAny struct {
 	baseAny
-	buf []byte
-	iter *Iterator
-	err error
+	buf   []byte
+	iter  *Iterator
+	err   error
 	cache float64
 }
 

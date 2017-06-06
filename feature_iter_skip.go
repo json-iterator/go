@@ -29,7 +29,6 @@ func (iter *Iterator) ReadBool() (ret bool) {
 	return
 }
 
-
 func (iter *Iterator) SkipAndReturnBytes() []byte {
 	if iter.reader != nil {
 		panic("reader input does not support this api")
@@ -39,7 +38,6 @@ func (iter *Iterator) SkipAndReturnBytes() []byte {
 	after := iter.head
 	return iter.buf[before:after]
 }
-
 
 // Skip skips a json object and positions to relatively the next json object
 func (iter *Iterator) Skip() {
@@ -204,15 +202,15 @@ func (iter *Iterator) skipUntilBreak() {
 }
 
 func (iter *Iterator) skipFixedBytes(n int) {
-	iter.head += n;
-	if (iter.head >= iter.tail) {
-		more := iter.head - iter.tail;
+	iter.head += n
+	if iter.head >= iter.tail {
+		more := iter.head - iter.tail
 		if !iter.loadMore() {
 			if more > 0 {
-				iter.reportError("skipFixedBytes", "unexpected end");
+				iter.reportError("skipFixedBytes", "unexpected end")
 			}
 			return
 		}
-		iter.head += more;
+		iter.head += more
 	}
 }

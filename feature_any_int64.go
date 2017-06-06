@@ -2,8 +2,8 @@ package jsoniter
 
 import (
 	"io"
-	"unsafe"
 	"strconv"
+	"unsafe"
 )
 
 type int64LazyAny struct {

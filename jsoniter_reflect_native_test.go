@@ -1,8 +1,8 @@
 package jsoniter
 
 import (
-	"testing"
 	"fmt"
+	"testing"
 )
 
 func Test_reflect_str(t *testing.T) {

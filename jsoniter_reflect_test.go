@@ -3,9 +3,9 @@ package jsoniter
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/json-iterator/go/require"
 	"testing"
 	"unsafe"
-	"github.com/json-iterator/go/require"
 )
 
 func Test_decode_slice(t *testing.T) {
