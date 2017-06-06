@@ -44,3 +44,17 @@ func Test_new_encoder(t *testing.T) {
 	encoder2.Encode([]int{1})
 	should.Equal("[1]", buf2.String())
 }
+
+func Test_use_number(t *testing.T) {
+	should := require.New(t)
+	decoder1 := json.NewDecoder(bytes.NewBufferString(`123`))
+	decoder1.UseNumber()
+	decoder2 := NewDecoder(bytes.NewBufferString(`123`))
+	decoder2.UseNumber()
+	var obj1 interface{}
+	should.Nil(decoder1.Decode(&obj1))
+	should.Equal(json.Number("123"), obj1)
+	var obj2 interface{}
+	should.Nil(decoder2.Decode(&obj2))
+	should.Equal(json.Number("123"), obj2)
+}
