@@ -17,7 +17,7 @@ const uint8Max = uint32(0xffff)
 
 func init() {
 	intDigits = make([]int8, 256)
-	for i := 0; i < len(floatDigits); i++ {
+	for i := 0; i < len(intDigits); i++ {
 		intDigits[i] = invalidCharForNumber
 	}
 	for i := int8('0'); i <= int8('9'); i++ {
