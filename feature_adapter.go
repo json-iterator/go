@@ -17,8 +17,7 @@ func Unmarshal(data []byte, v interface{}) error {
 	typ := reflect.TypeOf(v)
 	if typ.Kind() != reflect.Ptr {
 		// return non-pointer error
-		err = errors.New("the second param must be ptr type")
-		return
+		return errors.New("the second param must be ptr type")
 	}
 	iter.ReadVal(v)
 	if iter.head == iter.tail {
