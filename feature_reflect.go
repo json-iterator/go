@@ -345,6 +345,9 @@ func createDecoderOfType(typ reflect.Type) (Decoder, error) {
 	if typ.String() == "[]uint8" {
 		return &base64Codec{}, nil
 	}
+	if typ.String() == "time.Time" {
+		return &timeCodec{}, nil
+	}
 	if typ.AssignableTo(jsonRawMessageType) {
 		return &jsonRawMessageCodec{}, nil
 	}
