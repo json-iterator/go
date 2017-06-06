@@ -2,6 +2,23 @@
 
 jsoniter (json-iterator) is fast and flexible JSON parser available in [Java](https://github.com/json-iterator/java) and [Go](https://github.com/json-iterator/go)
 
+# Benchmark
+
+![benchmark](http://jsoniter.com/benchmarks/go-benchmark.png)
+
+Source code: https://github.com/json-iterator/go-benchmark/blob/master/src/github.com/json-iterator/go-benchmark/benchmark_medium_payload_test.go
+
+Raw Result (easyjson requires static code generation)
+
+| | ns/op | allocation bytes | allocation times |
+| === | === | === | === |
+| std decode | 35510 ns/op | 1960 B/op | 99 allocs/op |
+| easyjson decode | 8499 ns/op | 160 B/op | 4 allocs/op |
+| jsoniter decode | 5623 ns/op | 160 B/op | 3 allocs/op |
+| std encode | 2213 ns/op | 712 B/op | 5 allocs/op |
+| easyjson encode | 883 ns/op | 576 B/op | 3 allocs/op |
+| jsoniter encode | 837 ns/op | 384 B/op | 4 allocs/op |
+
 # Usage
 
 100% compatibility with standard lib
