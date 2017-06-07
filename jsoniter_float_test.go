@@ -158,6 +158,19 @@ func Test_read_float64_cursor(t *testing.T) {
 	should.Equal(float64(2), iter.Read())
 }
 
+func Test_read_float_scientific(t *testing.T) {
+	should := require.New(t)
+	var obj interface{}
+	should.Nil(UnmarshalFromString(`1e1`, &obj))
+	should.Equal(float64(10), obj)
+	should.Nil(json.Unmarshal([]byte(`1e1`), &obj))
+	should.Equal(float64(10), obj)
+	should.Nil(UnmarshalFromString(`1.0e1`, &obj))
+	should.Equal(float64(10), obj)
+	should.Nil(json.Unmarshal([]byte(`1.0e1`), &obj))
+	should.Equal(float64(10), obj)
+}
+
 func Benchmark_jsoniter_float(b *testing.B) {
 	b.ReportAllocs()
 	input := []byte(`1.1123,`)
