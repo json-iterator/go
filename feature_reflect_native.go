@@ -3,6 +3,7 @@ package jsoniter
 import (
 	"encoding/base64"
 	"encoding/json"
+	"time"
 	"unsafe"
 )
 
@@ -491,4 +492,23 @@ func (decoder *unmarshalerDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 	if err != nil {
 		iter.reportError("unmarshaler", err.Error())
 	}
+}
+
+type timeCodec struct {
+}
+
+func (encoder *timeCodec) encode(ptr unsafe.Pointer, stream *Stream) {
+}
+
+func (codec *timeCodec) decode(ptr unsafe.Pointer, iter *Iterator) {
+	// RFC3339     = "2006-01-02T15:04:05"
+	t := iter.ReadTime()
+	*((*time.Time)(ptr)) = *t
+}
+
+func (encoder *timeCodec) encodeInterface(val interface{}, stream *Stream) {
+}
+
+func (codec *timeCodec) isEmpty(ptr unsafe.Pointer) bool {
+	return true
 }
