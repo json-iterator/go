@@ -82,6 +82,7 @@ var textUnmarshalerType reflect.Type
 
 func init() {
 	typeDecoders = map[string]Decoder{}
+	RegisterTypeDecoder("time.Time", TimeDecoder)
 	fieldDecoders = map[string]Decoder{}
 	typeEncoders = map[string]Encoder{}
 	fieldEncoders = map[string]Encoder{}
