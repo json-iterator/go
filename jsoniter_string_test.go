@@ -105,6 +105,13 @@ func Test_write_val_string(t *testing.T) {
 	should.Equal(`"hello"`, buf.String())
 }
 
+func Test_decode_slash(t *testing.T) {
+	should := require.New(t)
+	var obj interface{}
+	should.NotNil(json.Unmarshal([]byte(`"\"`), &obj))
+	should.NotNil(UnmarshalFromString(`"\"`, &obj))
+}
+
 func Benchmark_jsoniter_unicode(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		iter := ParseString(`"\ud83d\udc4a"`)

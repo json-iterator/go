@@ -92,6 +92,7 @@ func (iter *Iterator) readStringSlowPath() (ret string) {
 			str = append(str, c)
 		}
 	}
+	iter.reportError("ReadString", "unexpected end of input")
 	return
 }
 
