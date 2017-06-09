@@ -1,10 +1,10 @@
 package jsoniter_test
 
 import (
-	"encoding/json"
 	"fmt"
-	"github.com/json-iterator/go"
 	"os"
+
+	"github.com/json-iterator/go"
 )
 
 func ExampleMarshal() {
