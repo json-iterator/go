@@ -2,9 +2,9 @@ package jsoniter_test
 
 import (
 	"fmt"
-	"github.com/json-iterator/go"
 	"os"
-	"encoding/json"
+
+	"github.com/json-iterator/go"
 )
 
 func ExampleMarshal() {
@@ -33,13 +33,13 @@ func ExampleUnmarshal() {
 		{"Name": "Quoll",    "Order": "Dasyuromorphia"}
 	]`)
 	type Animal struct {
-	Name  string
-	Order string
+		Name  string
+		Order string
 	}
 	var animals []Animal
-	err := json.Unmarshal(jsonBlob, &animals)
+	err := jsoniter.Unmarshal(jsonBlob, &animals)
 	if err != nil {
-	fmt.Println("error:", err)
+		fmt.Println("error:", err)
 	}
 	fmt.Printf("%+v", animals)
 	// Output:
