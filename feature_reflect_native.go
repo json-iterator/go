@@ -297,6 +297,10 @@ type nonEmptyInterfaceCodec struct {
 
 func (codec *nonEmptyInterfaceCodec) decode(ptr unsafe.Pointer, iter *Iterator) {
 	nonEmptyInterface := (*nonEmptyInterface)(ptr)
+	if nonEmptyInterface.itab == nil {
+		iter.reportError("read non-empty interface", "do not know which concrete type to decode to")
+		return
+	}
 	var i interface{}
 	e := (*emptyInterface)(unsafe.Pointer(&i))
 	e.typ = nonEmptyInterface.itab.typ

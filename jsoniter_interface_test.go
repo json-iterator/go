@@ -4,6 +4,7 @@ import (
 	"github.com/json-iterator/go/require"
 	"testing"
 	"unsafe"
+	"encoding/json"
 )
 
 func Test_write_array_of_interface(t *testing.T) {
@@ -137,4 +138,18 @@ func Test_encode_object_contain_non_empty_interface(t *testing.T) {
 	str, err := MarshalToString(obj)
 	should.Nil(err)
 	should.Equal(`{"Field":"hello"}`, str)
+}
+
+
+func Test_nil_non_empty_interface(t *testing.T) {
+	CleanEncoders()
+	CleanDecoders()
+	type TestObject struct {
+		Field []MyInterface
+	}
+	should := require.New(t)
+	obj := TestObject{}
+	b := []byte(`{"Field":["AAA"]}`)
+	should.NotNil(json.Unmarshal(b, &obj))
+	should.NotNil(Unmarshal(b, &obj))
 }

@@ -108,8 +108,8 @@ func Test_write_val_string(t *testing.T) {
 func Test_decode_slash(t *testing.T) {
 	should := require.New(t)
 	var obj interface{}
-	should.NotNil(json.Unmarshal([]byte(`"\"`), &obj))
-	should.NotNil(UnmarshalFromString(`"\"`, &obj))
+	should.NotNil(json.Unmarshal([]byte("\\"), &obj))
+	should.NotNil(UnmarshalFromString("\\", &obj))
 }
 
 func Benchmark_jsoniter_unicode(b *testing.B) {
