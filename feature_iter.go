@@ -1,3 +1,10 @@
+//
+// Besides, jsoniter.Iterator provides a different set of interfaces
+// iterating given bytes/string/reader
+// and yielding parsed elements one by one.
+// This set of interfaces reads input as required and gives
+// better performance.
+
 package jsoniter
 
 import (
