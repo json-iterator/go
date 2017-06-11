@@ -9,7 +9,6 @@
 // gives a description of how Marshall/Unmarshall operate
 // between arbitrary or predefined json objects and bytes,
 // and it applies to jsoniter.Marshall/Unmarshall.
-
 package jsoniter
 
 import (

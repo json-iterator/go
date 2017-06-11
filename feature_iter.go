@@ -4,7 +4,6 @@
 // and yielding parsed elements one by one.
 // This set of interfaces reads input as required and gives
 // better performance.
-
 package jsoniter
 
 import (
