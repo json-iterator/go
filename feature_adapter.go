@@ -6,9 +6,9 @@
 //
 // "JSON and Go"
 // (https://golang.org/doc/articles/json_and_go.html)
-// gives a description of how Marshall/Unmarshall operate
+// gives a description of how Marshal/Unmarshal operate
 // between arbitrary or predefined json objects and bytes,
-// and it applies to jsoniter.Marshall/Unmarshall.
+// and it applies to jsoniter.Marshal/Unmarshal as well.
 package jsoniter
 
 import (
