@@ -9,10 +9,10 @@ import (
 	"unsafe"
 )
 
+// Decoder is an internal type registered to cache as needed.
 // Don't confuse jsoniter.Decoder with json.Decoder.
-// jsoniter.Decoder/Encoder are an internal types registered to cache as needed.
 // For json.Decoder's adapter, refer to jsoniter.AdapterDecoder(todo link).
-// 
+//
 // Reflection on type to create decoders, which is then cached
 // Reflection on value is avoided as we can, as the reflect.Value itself will allocate, with following exceptions
 // 1. create instance of new value, for example *int will need a int to be allocated
@@ -22,8 +22,9 @@ import (
 type Decoder interface {
 	decode(ptr unsafe.Pointer, iter *Iterator)
 }
+
+// Encoder is an internal type registered to cache as needed.
 // Don't confuse jsoniter.Encoder with json.Encoder.
-// jsoniter.Decoder/Encoder are an internal types registered to cache as needed.
 // For json.Encoder's adapter, refer to jsoniter.AdapterEncoder(todo godoc link).
 type Encoder interface {
 	isEmpty(ptr unsafe.Pointer) bool
