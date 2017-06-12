@@ -75,6 +75,8 @@ func (stream *Stream) WriteFloat64Lossy(val float64) {
 	}
 }
 
+// EnableLossyFloatMarshalling keeps 10**(-6) precision
+// for float variables for better performance.
 func EnableLossyFloatMarshalling() {
 	// for better performance
 	RegisterTypeEncoder("float32", func(ptr unsafe.Pointer, stream *Stream) {

@@ -9,19 +9,23 @@ import (
 	"unsafe"
 )
 
-/*
-Reflection on type to create decoders, which is then cached
-Reflection on value is avoided as we can, as the reflect.Value itself will allocate, with following exceptions
-1. create instance of new value, for example *int will need a int to be allocated
-2. append to slice, if the existing cap is not enough, allocate will be done using Reflect.New
-3. assignment to map, both key and value will be reflect.Value
-For a simple struct binding, it will be reflect.Value free and allocation free
-*/
-
+// Decoder is an internal type registered to cache as needed.
+// Don't confuse jsoniter.Decoder with json.Decoder.
+// For json.Decoder's adapter, refer to jsoniter.AdapterDecoder(todo link).
+//
+// Reflection on type to create decoders, which is then cached
+// Reflection on value is avoided as we can, as the reflect.Value itself will allocate, with following exceptions
+// 1. create instance of new value, for example *int will need a int to be allocated
+// 2. append to slice, if the existing cap is not enough, allocate will be done using Reflect.New
+// 3. assignment to map, both key and value will be reflect.Value
+// For a simple struct binding, it will be reflect.Value free and allocation free
 type Decoder interface {
 	decode(ptr unsafe.Pointer, iter *Iterator)
 }
 
+// Encoder is an internal type registered to cache as needed.
+// Don't confuse jsoniter.Encoder with json.Encoder.
+// For json.Encoder's adapter, refer to jsoniter.AdapterEncoder(todo godoc link).
 type Encoder interface {
 	isEmpty(ptr unsafe.Pointer) bool
 	encode(ptr unsafe.Pointer, stream *Stream)
@@ -166,7 +170,7 @@ func CleanDecoders() {
 	atomic.StorePointer(&DECODERS, unsafe.Pointer(&map[string]Decoder{}))
 }
 
-// CleanEncoders cleans decoders registered or cached
+// CleanEncoders cleans encoders registered or cached
 func CleanEncoders() {
 	typeEncoders = map[string]Encoder{}
 	fieldEncoders = map[string]Encoder{}
