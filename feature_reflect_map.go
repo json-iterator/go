@@ -25,7 +25,7 @@ func (decoder *mapDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 	if realVal.IsNil() {
 		realVal.Set(reflect.MakeMap(realVal.Type()))
 	}
-	iter.ReadObjectCB(func(iter *Iterator, keyStr string) bool {
+	iter.ReadMapCB(func(iter *Iterator, keyStr string) bool {
 		elem := reflect.New(decoder.elemType)
 		decoder.elemDecoder.decode(unsafe.Pointer(elem.Pointer()), iter)
 		// to put into map, we have to use reflection

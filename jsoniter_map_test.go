@@ -4,6 +4,7 @@ import (
 	"github.com/json-iterator/go/require"
 	"math/big"
 	"testing"
+	"encoding/json"
 )
 
 func Test_read_map(t *testing.T) {
@@ -100,4 +101,29 @@ func Test_decode_TextMarshaler_key_map(t *testing.T) {
 	str, err := MarshalToString(val)
 	should.Nil(err)
 	should.Equal(`{"1":"2"}`, str)
+}
+
+
+
+func Test_map_key_with_escaped_char(t *testing.T) {
+	type Ttest struct {
+		Map map[string]string
+	}
+	var jsonBytes = []byte(`
+	{
+	    "Map":{
+		"k\"ey": "val"
+	    }
+	}`)
+	should := require.New(t)
+	{
+		var obj Ttest
+		should.Nil(json.Unmarshal(jsonBytes, &obj))
+		should.Equal(map[string]string{"k\"ey":"val"}, obj.Map)
+	}
+	{
+		var obj Ttest
+		should.Nil(Unmarshal(jsonBytes, &obj))
+		should.Equal(map[string]string{"k\"ey":"val"}, obj.Map)
+	}
 }
