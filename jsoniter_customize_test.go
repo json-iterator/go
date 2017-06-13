@@ -60,7 +60,7 @@ func Test_customize_byte_array_encoder(t *testing.T) {
 
 func Test_customize_float_marshal(t *testing.T) {
 	should := require.New(t)
-	json := Config{MarshalFloatWith6Digits: true}
+	json := Config{MarshalFloatWith6Digits: true}.Froze()
 	str, err := json.MarshalToString(float32(1.23456789))
 	should.Nil(err)
 	should.Equal("1.234568", str)
@@ -112,7 +112,7 @@ func Test_customize_field_by_extension(t *testing.T) {
 }
 
 func Test_unexported_fields(t *testing.T) {
-	jsoniter := &Config{SupportUnexportedStructFields: true}
+	jsoniter := Config{SupportUnexportedStructFields: true}.Froze()
 	should := require.New(t)
 	type TestObject struct {
 		field1 string

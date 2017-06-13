@@ -9,7 +9,7 @@ import (
 	"unsafe"
 )
 
-func encoderOfStruct(cfg *Config, typ reflect.Type) (Encoder, error) {
+func encoderOfStruct(cfg *frozenConfig, typ reflect.Type) (Encoder, error) {
 	structEncoder_ := &structEncoder{}
 	fields := map[string]*structFieldEncoder{}
 	for _, field := range listStructFields(typ) {
@@ -80,7 +80,7 @@ func listStructFields(typ reflect.Type) []*reflect.StructField {
 	return fields
 }
 
-func decoderOfStruct(cfg *Config, typ reflect.Type) (Decoder, error) {
+func decoderOfStruct(cfg *frozenConfig, typ reflect.Type) (Decoder, error) {
 	fields := map[string]*structFieldDecoder{}
 	for i := 0; i < typ.NumField(); i++ {
 		field := typ.Field(i)

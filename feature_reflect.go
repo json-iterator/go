@@ -264,7 +264,7 @@ func (p prefix) addToEncoder(encoder Encoder, err error) (Encoder, error) {
 	return encoder, err
 }
 
-func decoderOfType(cfg *Config, typ reflect.Type) (Decoder, error) {
+func decoderOfType(cfg *frozenConfig, typ reflect.Type) (Decoder, error) {
 	typeName := typ.String()
 	typeDecoder := typeDecoders[typeName]
 	if typeDecoder != nil {
@@ -289,7 +289,7 @@ func decoderOfType(cfg *Config, typ reflect.Type) (Decoder, error) {
 	return newDecoder, err
 }
 
-func createDecoderOfType(cfg *Config, typ reflect.Type) (Decoder, error) {
+func createDecoderOfType(cfg *frozenConfig, typ reflect.Type) (Decoder, error) {
 	if typ.String() == "[]uint8" {
 		return &base64Codec{}, nil
 	}
@@ -354,7 +354,7 @@ func createDecoderOfType(cfg *Config, typ reflect.Type) (Decoder, error) {
 	}
 }
 
-func encoderOfType(cfg *Config, typ reflect.Type) (Encoder, error) {
+func encoderOfType(cfg *frozenConfig, typ reflect.Type) (Encoder, error) {
 	typeName := typ.String()
 	typeEncoder := typeEncoders[typeName]
 	if typeEncoder != nil {
@@ -379,7 +379,7 @@ func encoderOfType(cfg *Config, typ reflect.Type) (Encoder, error) {
 	return newEncoder, err
 }
 
-func createEncoderOfType(cfg *Config, typ reflect.Type) (Encoder, error) {
+func createEncoderOfType(cfg *frozenConfig, typ reflect.Type) (Encoder, error) {
 	if typ.String() == "[]uint8" {
 		return &base64Codec{}, nil
 	}
@@ -445,7 +445,7 @@ func createEncoderOfType(cfg *Config, typ reflect.Type) (Encoder, error) {
 	}
 }
 
-func decoderOfOptional(cfg *Config, typ reflect.Type) (Decoder, error) {
+func decoderOfOptional(cfg *frozenConfig, typ reflect.Type) (Decoder, error) {
 	elemType := typ.Elem()
 	decoder, err := decoderOfType(cfg, elemType)
 	if err != nil {
@@ -454,7 +454,7 @@ func decoderOfOptional(cfg *Config, typ reflect.Type) (Decoder, error) {
 	return &optionalDecoder{elemType, decoder}, nil
 }
 
-func encoderOfOptional(cfg *Config, typ reflect.Type) (Encoder, error) {
+func encoderOfOptional(cfg *frozenConfig, typ reflect.Type) (Encoder, error) {
 	elemType := typ.Elem()
 	elemEncoder, err := encoderOfType(cfg, elemType)
 	if err != nil {
@@ -467,7 +467,7 @@ func encoderOfOptional(cfg *Config, typ reflect.Type) (Encoder, error) {
 	return encoder, nil
 }
 
-func decoderOfMap(cfg *Config, typ reflect.Type) (Decoder, error) {
+func decoderOfMap(cfg *frozenConfig, typ reflect.Type) (Decoder, error) {
 	decoder, err := decoderOfType(cfg, typ.Elem())
 	if err != nil {
 		return nil, err
@@ -480,7 +480,7 @@ func extractInterface(val interface{}) emptyInterface {
 	return *((*emptyInterface)(unsafe.Pointer(&val)))
 }
 
-func encoderOfMap(cfg *Config, typ reflect.Type) (Encoder, error) {
+func encoderOfMap(cfg *frozenConfig, typ reflect.Type) (Encoder, error) {
 	elemType := typ.Elem()
 	encoder, err := encoderOfType(cfg, elemType)
 	if err != nil {

@@ -7,7 +7,7 @@ import (
 	"unsafe"
 )
 
-func decoderOfSlice(cfg *Config, typ reflect.Type) (Decoder, error) {
+func decoderOfSlice(cfg *frozenConfig, typ reflect.Type) (Decoder, error) {
 	decoder, err := decoderOfType(cfg, typ.Elem())
 	if err != nil {
 		return nil, err
@@ -15,7 +15,7 @@ func decoderOfSlice(cfg *Config, typ reflect.Type) (Decoder, error) {
 	return &sliceDecoder{typ, typ.Elem(), decoder}, nil
 }
 
-func encoderOfSlice(cfg *Config, typ reflect.Type) (Encoder, error) {
+func encoderOfSlice(cfg *frozenConfig, typ reflect.Type) (Encoder, error) {
 	encoder, err := encoderOfType(cfg, typ.Elem())
 	if err != nil {
 		return nil, err

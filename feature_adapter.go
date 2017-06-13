@@ -172,7 +172,7 @@ func (decoder *AdaptedDecoder) UseNumber() {
 }
 
 func NewEncoder(writer io.Writer) *AdaptedEncoder {
-	stream := NewStream(&Config{}, writer, 512)
+	stream := NewStream(Config{}.Froze(), writer, 512)
 	return &AdaptedEncoder{stream}
 }
 
@@ -187,5 +187,5 @@ func (adapter *AdaptedEncoder) Encode(val interface{}) error {
 }
 
 func (adapter *AdaptedEncoder) SetIndent(prefix, indent string) {
-	adapter.stream.cfg.IndentionStep = len(indent)
+	adapter.stream.cfg.indentionStep = len(indent)
 }

@@ -11,37 +11,38 @@ type Config struct {
 	IndentionStep                 int
 	MarshalFloatWith6Digits       bool
 	SupportUnexportedStructFields bool
+}
+
+type frozenConfig struct {
+	indentionStep                 int
 	decoderCache                  unsafe.Pointer
 	encoderCache                  unsafe.Pointer
 	extensions                    []ExtensionFunc
 }
 
-var DEFAULT_CONFIG = &Config{}
+var DEFAULT_CONFIG = Config{}.Froze()
 
-func init() {
-	DEFAULT_CONFIG.init()
-}
-
-func (cfg *Config) init() *Config {
-	if cfg.encoderCache == nil {
-		atomic.StorePointer(&cfg.decoderCache, unsafe.Pointer(&map[string]Decoder{}))
-		atomic.StorePointer(&cfg.encoderCache, unsafe.Pointer(&map[string]Encoder{}))
-		if cfg.MarshalFloatWith6Digits {
-			cfg.marshalFloatWith6Digits()
-		}
-		if cfg.SupportUnexportedStructFields {
-			cfg.supportUnexportedStructFields()
-		}
+func (cfg Config) Froze() *frozenConfig {
+	frozenConfig := &frozenConfig{
+		indentionStep: cfg.IndentionStep,
 	}
-	return cfg
+	atomic.StorePointer(&frozenConfig.decoderCache, unsafe.Pointer(&map[string]Decoder{}))
+	atomic.StorePointer(&frozenConfig.encoderCache, unsafe.Pointer(&map[string]Encoder{}))
+	if cfg.MarshalFloatWith6Digits {
+		frozenConfig.marshalFloatWith6Digits()
+	}
+	if cfg.SupportUnexportedStructFields {
+		frozenConfig.supportUnexportedStructFields()
+	}
+	return frozenConfig
 }
 
 // RegisterExtension can register a custom extension
-func (cfg *Config) RegisterExtension(extension ExtensionFunc) {
+func (cfg *frozenConfig) RegisterExtension(extension ExtensionFunc) {
 	cfg.extensions = append(cfg.extensions, extension)
 }
 
-func (cfg *Config) supportUnexportedStructFields() {
+func (cfg *frozenConfig) supportUnexportedStructFields() {
 	cfg.RegisterExtension(func(type_ reflect.Type, field *reflect.StructField) ([]string, EncoderFunc, DecoderFunc) {
 		return []string{field.Name}, nil, nil
 	})
@@ -49,7 +50,7 @@ func (cfg *Config) supportUnexportedStructFields() {
 
 // EnableLossyFloatMarshalling keeps 10**(-6) precision
 // for float variables for better performance.
-func (cfg *Config) marshalFloatWith6Digits() {
+func (cfg *frozenConfig) marshalFloatWith6Digits() {
 	// for better performance
 	cfg.addEncoderToCache(reflect.TypeOf((*float32)(nil)).Elem(), &funcEncoder{func(ptr unsafe.Pointer, stream *Stream) {
 		val := *((*float32)(ptr))
@@ -61,7 +62,7 @@ func (cfg *Config) marshalFloatWith6Digits() {
 	}})
 }
 
-func (cfg *Config) addDecoderToCache(cacheKey reflect.Type, decoder Decoder) {
+func (cfg *frozenConfig) addDecoderToCache(cacheKey reflect.Type, decoder Decoder) {
 	done := false
 	for !done {
 		ptr := atomic.LoadPointer(&cfg.decoderCache)
@@ -75,7 +76,7 @@ func (cfg *Config) addDecoderToCache(cacheKey reflect.Type, decoder Decoder) {
 	}
 }
 
-func (cfg *Config) addEncoderToCache(cacheKey reflect.Type, encoder Encoder) {
+func (cfg *frozenConfig) addEncoderToCache(cacheKey reflect.Type, encoder Encoder) {
 	done := false
 	for !done {
 		ptr := atomic.LoadPointer(&cfg.encoderCache)
@@ -89,33 +90,33 @@ func (cfg *Config) addEncoderToCache(cacheKey reflect.Type, encoder Encoder) {
 	}
 }
 
-func (cfg *Config) getDecoderFromCache(cacheKey reflect.Type) Decoder {
+func (cfg *frozenConfig) getDecoderFromCache(cacheKey reflect.Type) Decoder {
 	ptr := atomic.LoadPointer(&cfg.decoderCache)
 	cache := *(*map[reflect.Type]Decoder)(ptr)
 	return cache[cacheKey]
 }
 
-func (cfg *Config) getEncoderFromCache(cacheKey reflect.Type) Encoder {
+func (cfg *frozenConfig) getEncoderFromCache(cacheKey reflect.Type) Encoder {
 	ptr := atomic.LoadPointer(&cfg.encoderCache)
 	cache := *(*map[reflect.Type]Encoder)(ptr)
 	return cache[cacheKey]
 }
 
 // CleanDecoders cleans decoders registered or cached
-func (cfg *Config) CleanDecoders() {
+func (cfg *frozenConfig) CleanDecoders() {
 	typeDecoders = map[string]Decoder{}
 	fieldDecoders = map[string]Decoder{}
 	atomic.StorePointer(&cfg.decoderCache, unsafe.Pointer(&map[string]Decoder{}))
 }
 
 // CleanEncoders cleans encoders registered or cached
-func (cfg *Config) CleanEncoders() {
+func (cfg *frozenConfig) CleanEncoders() {
 	typeEncoders = map[string]Encoder{}
 	fieldEncoders = map[string]Encoder{}
 	atomic.StorePointer(&cfg.encoderCache, unsafe.Pointer(&map[string]Encoder{}))
 }
 
-func (cfg *Config) MarshalToString(v interface{}) (string, error) {
+func (cfg *frozenConfig) MarshalToString(v interface{}) (string, error) {
 	buf, err := cfg.Marshal(v)
 	if err != nil {
 		return "", err
@@ -123,8 +124,7 @@ func (cfg *Config) MarshalToString(v interface{}) (string, error) {
 	return string(buf), nil
 }
 
-func (cfg *Config) Marshal(v interface{}) ([]byte, error) {
-	cfg.init()
+func (cfg *frozenConfig) Marshal(v interface{}) ([]byte, error) {
 	stream := NewStream(cfg, nil, 256)
 	stream.WriteVal(v)
 	if stream.Error != nil {
@@ -133,7 +133,7 @@ func (cfg *Config) Marshal(v interface{}) ([]byte, error) {
 	return stream.Buffer(), nil
 }
 
-func (cfg *Config) UnmarshalFromString(str string, v interface{}) error {
+func (cfg *frozenConfig) UnmarshalFromString(str string, v interface{}) error {
 	data := []byte(str)
 	data = data[:lastNotSpacePos(data)]
 	iter := ParseBytes(cfg, data)

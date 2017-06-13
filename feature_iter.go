@@ -66,7 +66,7 @@ func init() {
 
 // Iterator is a fast and flexible JSON parser
 type Iterator struct {
-	cfg    *Config
+	cfg    *frozenConfig
 	reader io.Reader
 	buf    []byte
 	head   int
@@ -75,8 +75,7 @@ type Iterator struct {
 }
 
 // Create creates an empty Iterator instance
-func NewIterator(cfg *Config) *Iterator {
-	cfg.init()
+func NewIterator(cfg *frozenConfig) *Iterator {
 	return &Iterator{
 		cfg:    cfg,
 		reader: nil,
@@ -87,8 +86,7 @@ func NewIterator(cfg *Config) *Iterator {
 }
 
 // Parse parses a json buffer in io.Reader into an Iterator instance
-func Parse(cfg *Config, reader io.Reader, bufSize int) *Iterator {
-	cfg.init()
+func Parse(cfg *frozenConfig, reader io.Reader, bufSize int) *Iterator {
 	return &Iterator{
 		cfg:    cfg,
 		reader: reader,
@@ -99,8 +97,7 @@ func Parse(cfg *Config, reader io.Reader, bufSize int) *Iterator {
 }
 
 // ParseBytes parses a json byte slice into an Iterator instance
-func ParseBytes(cfg *Config, input []byte) *Iterator {
-	cfg.init()
+func ParseBytes(cfg *frozenConfig, input []byte) *Iterator {
 	return &Iterator{
 		cfg:    cfg,
 		reader: nil,
@@ -111,7 +108,7 @@ func ParseBytes(cfg *Config, input []byte) *Iterator {
 }
 
 // ParseString parses a json string into an Iterator instance
-func ParseString(cfg *Config, input string) *Iterator {
+func ParseString(cfg *frozenConfig, input string) *Iterator {
 	return ParseBytes(cfg, []byte(input))
 }
 

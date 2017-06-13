@@ -210,7 +210,7 @@ func Test_object_wrapper_any_get_all(t *testing.T) {
 func Test_write_object(t *testing.T) {
 	should := require.New(t)
 	buf := &bytes.Buffer{}
-	stream := NewStream(&Config{IndentionStep: 2}, buf, 4096)
+	stream := NewStream(Config{IndentionStep: 2}.Froze(), buf, 4096)
 	stream.WriteObjectStart()
 	stream.WriteObjectField("hello")
 	stream.WriteInt(1)

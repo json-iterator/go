@@ -213,7 +213,7 @@ func Test_whitespace_before_comma(t *testing.T) {
 func Test_write_array(t *testing.T) {
 	should := require.New(t)
 	buf := &bytes.Buffer{}
-	stream := NewStream(&Config{IndentionStep: 2}, buf, 4096)
+	stream := NewStream(Config{IndentionStep: 2}.Froze(), buf, 4096)
 	stream.WriteArrayStart()
 	stream.WriteInt(1)
 	stream.WriteMore()
