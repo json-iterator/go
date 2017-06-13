@@ -7,6 +7,7 @@ import (
 )
 
 type Config struct {
+	IndentionStep int
 	decoderCache unsafe.Pointer
 	encoderCache unsafe.Pointer
 }

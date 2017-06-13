@@ -11,7 +11,6 @@ type Stream struct {
 	n             int
 	Error         error
 	indention     int
-	IndentionStep int
 }
 
 func NewStream(cfg *Config, out io.Writer, bufSize int) *Stream {
@@ -22,7 +21,6 @@ func NewStream(cfg *Config, out io.Writer, bufSize int) *Stream {
 		n:             0,
 		Error:         nil,
 		indention:     0,
-		IndentionStep: 0,
 	}
 }
 
@@ -278,7 +276,7 @@ func (stream *Stream) WriteBool(val bool) {
 }
 
 func (stream *Stream) WriteObjectStart() {
-	stream.indention += stream.IndentionStep
+	stream.indention += stream.cfg.IndentionStep
 	stream.writeByte('{')
 	stream.writeIndention(0)
 }
@@ -289,8 +287,8 @@ func (stream *Stream) WriteObjectField(field string) {
 }
 
 func (stream *Stream) WriteObjectEnd() {
-	stream.writeIndention(stream.IndentionStep)
-	stream.indention -= stream.IndentionStep
+	stream.writeIndention(stream.cfg.IndentionStep)
+	stream.indention -= stream.cfg.IndentionStep
 	stream.writeByte('}')
 }
 
@@ -305,7 +303,7 @@ func (stream *Stream) WriteMore() {
 }
 
 func (stream *Stream) WriteArrayStart() {
-	stream.indention += stream.IndentionStep
+	stream.indention += stream.cfg.IndentionStep
 	stream.writeByte('[')
 	stream.writeIndention(0)
 }
@@ -316,8 +314,8 @@ func (stream *Stream) WriteEmptyArray() {
 }
 
 func (stream *Stream) WriteArrayEnd() {
-	stream.writeIndention(stream.IndentionStep)
-	stream.indention -= stream.IndentionStep
+	stream.writeIndention(stream.cfg.IndentionStep)
+	stream.indention -= stream.cfg.IndentionStep
 	stream.writeByte(']')
 }
 
