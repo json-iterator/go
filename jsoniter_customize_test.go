@@ -19,7 +19,7 @@ func Test_customize_type_decoder(t *testing.T) {
 		}
 		*((*time.Time)(ptr)) = t
 	})
-	defer CleanDecoders()
+	defer DEFAULT_CONFIG.CleanDecoders()
 	val := time.Time{}
 	err := Unmarshal([]byte(`"2016-12-05 08:43:28"`), &val)
 	if err != nil {
@@ -37,7 +37,7 @@ func Test_customize_type_encoder(t *testing.T) {
 		t := *((*time.Time)(ptr))
 		stream.WriteString(t.UTC().Format("2006-01-02 15:04:05"))
 	})
-	defer CleanEncoders()
+	defer DEFAULT_CONFIG.CleanEncoders()
 	val := time.Unix(0, 0)
 	str, err := MarshalToString(val)
 	should.Nil(err)
@@ -45,13 +45,13 @@ func Test_customize_type_encoder(t *testing.T) {
 }
 
 func Test_customize_byte_array_encoder(t *testing.T) {
-	CleanEncoders()
+	DEFAULT_CONFIG.CleanEncoders()
 	should := require.New(t)
 	RegisterTypeEncoder("[]uint8", func(ptr unsafe.Pointer, stream *Stream) {
 		t := *((*[]byte)(ptr))
 		stream.WriteString(string(t))
 	})
-	defer CleanEncoders()
+	defer DEFAULT_CONFIG.CleanEncoders()
 	val := []byte("abc")
 	str, err := MarshalToString(val)
 	should.Nil(err)
@@ -61,7 +61,7 @@ func Test_customize_byte_array_encoder(t *testing.T) {
 func Test_customize_float_marshal(t *testing.T) {
 	should := require.New(t)
 	EnableLossyFloatMarshalling()
-	defer CleanEncoders()
+	defer DEFAULT_CONFIG.CleanEncoders()
 	str, err := MarshalToString(float32(1.23456789))
 	should.Nil(err)
 	should.Equal("1.234568", str)
@@ -75,7 +75,7 @@ func Test_customize_field_decoder(t *testing.T) {
 	RegisterFieldDecoder("jsoniter.Tom", "field1", func(ptr unsafe.Pointer, iter *Iterator) {
 		*((*string)(ptr)) = strconv.Itoa(iter.ReadInt())
 	})
-	defer CleanDecoders()
+	defer DEFAULT_CONFIG.CleanDecoders()
 	tom := Tom{}
 	err := Unmarshal([]byte(`{"field1": 100}`), &tom)
 	if err != nil {

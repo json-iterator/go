@@ -11,7 +11,7 @@ import (
 
 func Test_read_big_float(t *testing.T) {
 	should := require.New(t)
-	iter := ParseString(`12.3`)
+	iter := ParseString(DEFAULT_CONFIG, `12.3`)
 	val := iter.ReadBigFloat()
 	val64, _ := val.Float64()
 	should.Equal(12.3, val64)
@@ -19,7 +19,7 @@ func Test_read_big_float(t *testing.T) {
 
 func Test_read_big_int(t *testing.T) {
 	should := require.New(t)
-	iter := ParseString(`92233720368547758079223372036854775807`)
+	iter := ParseString(DEFAULT_CONFIG, `92233720368547758079223372036854775807`)
 	val := iter.ReadBigInt()
 	should.NotNil(val)
 	should.Equal(`92233720368547758079223372036854775807`, val.String())
@@ -31,14 +31,14 @@ func Test_read_float(t *testing.T) {
 		// non-streaming
 		t.Run(fmt.Sprintf("%v", input), func(t *testing.T) {
 			should := require.New(t)
-			iter := ParseString(input + ",")
+			iter := ParseString(DEFAULT_CONFIG, input+",")
 			expected, err := strconv.ParseFloat(input, 32)
 			should.Nil(err)
 			should.Equal(float32(expected), iter.ReadFloat32())
 		})
 		t.Run(fmt.Sprintf("%v", input), func(t *testing.T) {
 			should := require.New(t)
-			iter := ParseString(input + ",")
+			iter := ParseString(DEFAULT_CONFIG, input+",")
 			expected, err := strconv.ParseFloat(input, 64)
 			should.Nil(err)
 			should.Equal(expected, iter.ReadFloat64())
@@ -46,14 +46,14 @@ func Test_read_float(t *testing.T) {
 		// streaming
 		t.Run(fmt.Sprintf("%v", input), func(t *testing.T) {
 			should := require.New(t)
-			iter := Parse(bytes.NewBufferString(input+","), 2)
+			iter := Parse(DEFAULT_CONFIG, bytes.NewBufferString(input+","), 2)
 			expected, err := strconv.ParseFloat(input, 32)
 			should.Nil(err)
 			should.Equal(float32(expected), iter.ReadFloat32())
 		})
 		t.Run(fmt.Sprintf("%v", input), func(t *testing.T) {
 			should := require.New(t)
-			iter := Parse(bytes.NewBufferString(input+","), 2)
+			iter := Parse(DEFAULT_CONFIG, bytes.NewBufferString(input+","), 2)
 			expected, err := strconv.ParseFloat(input, 64)
 			should.Nil(err)
 			should.Equal(expected, iter.ReadFloat64())
@@ -63,7 +63,7 @@ func Test_read_float(t *testing.T) {
 
 func Test_read_float_as_interface(t *testing.T) {
 	should := require.New(t)
-	iter := ParseString(`12.3`)
+	iter := ParseString(DEFAULT_CONFIG, `12.3`)
 	should.Equal(float64(12.3), iter.Read())
 }
 
@@ -90,7 +90,7 @@ func Test_write_float32(t *testing.T) {
 		t.Run(fmt.Sprintf("%v", val), func(t *testing.T) {
 			should := require.New(t)
 			buf := &bytes.Buffer{}
-			stream := NewStream(buf, 4096)
+			stream := NewStream(DEFAULT_CONFIG, buf, 4096)
 			stream.WriteFloat32Lossy(val)
 			stream.Flush()
 			should.Nil(stream.Error)
@@ -99,7 +99,7 @@ func Test_write_float32(t *testing.T) {
 		t.Run(fmt.Sprintf("%v", val), func(t *testing.T) {
 			should := require.New(t)
 			buf := &bytes.Buffer{}
-			stream := NewStream(buf, 4096)
+			stream := NewStream(DEFAULT_CONFIG, buf, 4096)
 			stream.WriteVal(val)
 			stream.Flush()
 			should.Nil(stream.Error)
@@ -108,7 +108,7 @@ func Test_write_float32(t *testing.T) {
 	}
 	should := require.New(t)
 	buf := &bytes.Buffer{}
-	stream := NewStream(buf, 10)
+	stream := NewStream(DEFAULT_CONFIG, buf, 10)
 	stream.WriteRaw("abcdefg")
 	stream.WriteFloat32Lossy(1.123456)
 	stream.Flush()
@@ -123,7 +123,7 @@ func Test_write_float64(t *testing.T) {
 		t.Run(fmt.Sprintf("%v", val), func(t *testing.T) {
 			should := require.New(t)
 			buf := &bytes.Buffer{}
-			stream := NewStream(buf, 4096)
+			stream := NewStream(DEFAULT_CONFIG, buf, 4096)
 			stream.WriteFloat64Lossy(val)
 			stream.Flush()
 			should.Nil(stream.Error)
@@ -132,7 +132,7 @@ func Test_write_float64(t *testing.T) {
 		t.Run(fmt.Sprintf("%v", val), func(t *testing.T) {
 			should := require.New(t)
 			buf := &bytes.Buffer{}
-			stream := NewStream(buf, 4096)
+			stream := NewStream(DEFAULT_CONFIG, buf, 4096)
 			stream.WriteVal(val)
 			stream.Flush()
 			should.Nil(stream.Error)
@@ -141,7 +141,7 @@ func Test_write_float64(t *testing.T) {
 	}
 	should := require.New(t)
 	buf := &bytes.Buffer{}
-	stream := NewStream(buf, 10)
+	stream := NewStream(DEFAULT_CONFIG, buf, 10)
 	stream.WriteRaw("abcdefg")
 	stream.WriteFloat64Lossy(1.123456)
 	stream.Flush()
@@ -151,7 +151,7 @@ func Test_write_float64(t *testing.T) {
 
 func Test_read_float64_cursor(t *testing.T) {
 	should := require.New(t)
-	iter := ParseString("[1.23456789\n,2,3]")
+	iter := ParseString(DEFAULT_CONFIG, "[1.23456789\n,2,3]")
 	should.True(iter.ReadArray())
 	should.Equal(1.23456789, iter.Read())
 	should.True(iter.ReadArray())
@@ -174,7 +174,7 @@ func Test_read_float_scientific(t *testing.T) {
 func Benchmark_jsoniter_float(b *testing.B) {
 	b.ReportAllocs()
 	input := []byte(`1.1123,`)
-	iter := NewIterator()
+	iter := NewIterator(DEFAULT_CONFIG)
 	for n := 0; n < b.N; n++ {
 		iter.ResetBytes(input)
 		iter.ReadFloat64()

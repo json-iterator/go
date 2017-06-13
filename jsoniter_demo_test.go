@@ -16,7 +16,7 @@ func Test_bind_api_demo(t *testing.T) {
 }
 
 func Test_iterator_api_demo(t *testing.T) {
-	iter := ParseString(`[0,1,2,3]`)
+	iter := ParseString(DEFAULT_CONFIG, `[0,1,2,3]`)
 	total := 0
 	for iter.ReadArray() {
 		total += iter.ReadInt()

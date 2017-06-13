@@ -1,15 +1,15 @@
 package jsoniter
 
 import (
+	"encoding/json"
 	"github.com/json-iterator/go/require"
 	"math/big"
 	"testing"
-	"encoding/json"
 )
 
 func Test_read_map(t *testing.T) {
 	should := require.New(t)
-	iter := ParseString(`{"hello": "world"}`)
+	iter := ParseString(DEFAULT_CONFIG, `{"hello": "world"}`)
 	m := map[string]string{"1": "2"}
 	iter.ReadVal(&m)
 	copy(iter.buf, []byte{0, 0, 0, 0, 0, 0})
@@ -18,11 +18,11 @@ func Test_read_map(t *testing.T) {
 
 func Test_read_map_of_interface(t *testing.T) {
 	should := require.New(t)
-	iter := ParseString(`{"hello": "world"}`)
+	iter := ParseString(DEFAULT_CONFIG, `{"hello": "world"}`)
 	m := map[string]interface{}{"1": "2"}
 	iter.ReadVal(&m)
 	should.Equal(map[string]interface{}{"1": "2", "hello": "world"}, m)
-	iter = ParseString(`{"hello": "world"}`)
+	iter = ParseString(DEFAULT_CONFIG, `{"hello": "world"}`)
 	should.Equal(map[string]interface{}{"hello": "world"}, iter.Read())
 }
 
@@ -117,11 +117,11 @@ func Test_map_key_with_escaped_char(t *testing.T) {
 	{
 		var obj Ttest
 		should.Nil(json.Unmarshal(jsonBytes, &obj))
-		should.Equal(map[string]string{"k\"ey":"val"}, obj.Map)
+		should.Equal(map[string]string{"k\"ey": "val"}, obj.Map)
 	}
 	{
 		var obj Ttest
 		should.Nil(Unmarshal(jsonBytes, &obj))
-		should.Equal(map[string]string{"k\"ey":"val"}, obj.Map)
+		should.Equal(map[string]string{"k\"ey": "val"}, obj.Map)
 	}
 }

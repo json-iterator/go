@@ -21,7 +21,7 @@ func (any *int64LazyAny) ValueType() ValueType {
 func (any *int64LazyAny) Parse() *Iterator {
 	iter := any.iter
 	if iter == nil {
-		iter = NewIterator()
+		iter = NewIterator(DEFAULT_CONFIG)
 	}
 	iter.ResetBytes(any.buf)
 	return iter

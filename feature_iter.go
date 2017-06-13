@@ -66,6 +66,7 @@ func init() {
 
 // Iterator is a fast and flexible JSON parser
 type Iterator struct {
+	cfg    *Config
 	reader io.Reader
 	buf    []byte
 	head   int
@@ -74,8 +75,9 @@ type Iterator struct {
 }
 
 // Create creates an empty Iterator instance
-func NewIterator() *Iterator {
+func NewIterator(cfg *Config) *Iterator {
 	return &Iterator{
+		cfg:    cfg,
 		reader: nil,
 		buf:    nil,
 		head:   0,
@@ -84,8 +86,9 @@ func NewIterator() *Iterator {
 }
 
 // Parse parses a json buffer in io.Reader into an Iterator instance
-func Parse(reader io.Reader, bufSize int) *Iterator {
+func Parse(cfg *Config, reader io.Reader, bufSize int) *Iterator {
 	return &Iterator{
+		cfg:    cfg,
 		reader: reader,
 		buf:    make([]byte, bufSize),
 		head:   0,
@@ -94,8 +97,9 @@ func Parse(reader io.Reader, bufSize int) *Iterator {
 }
 
 // ParseBytes parses a json byte slice into an Iterator instance
-func ParseBytes(input []byte) *Iterator {
+func ParseBytes(cfg *Config, input []byte) *Iterator {
 	return &Iterator{
+		cfg:    cfg,
 		reader: nil,
 		buf:    input,
 		head:   0,
@@ -104,8 +108,8 @@ func ParseBytes(input []byte) *Iterator {
 }
 
 // ParseString parses a json string into an Iterator instance
-func ParseString(input string) *Iterator {
-	return ParseBytes([]byte(input))
+func ParseString(cfg *Config, input string) *Iterator {
+	return ParseBytes(cfg, []byte(input))
 }
 
 // Reset can reset an Iterator instance for another json buffer in io.Reader

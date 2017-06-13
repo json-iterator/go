@@ -22,7 +22,7 @@ func (any *objectLazyAny) ValueType() ValueType {
 func (any *objectLazyAny) Parse() *Iterator {
 	iter := any.iter
 	if iter == nil {
-		iter = NewIterator()
+		iter = NewIterator(DEFAULT_CONFIG)
 		any.iter = iter
 	}
 	iter.ResetBytes(any.remaining)
@@ -308,7 +308,7 @@ func (any *objectLazyAny) IterateObject() (func() (string, Any, bool), bool) {
 			// read from buffer
 			iter := any.iter
 			if iter == nil {
-				iter = NewIterator()
+				iter = NewIterator(DEFAULT_CONFIG)
 				any.iter = iter
 			}
 			iter.ResetBytes(remaining)

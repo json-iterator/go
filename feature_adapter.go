@@ -26,7 +26,7 @@ import (
 // Refer to https://godoc.org/encoding/json#Unmarshal for more information
 func Unmarshal(data []byte, v interface{}) error {
 	data = data[:lastNotSpacePos(data)]
-	iter := ParseBytes(data)
+	iter := ParseBytes(DEFAULT_CONFIG, data)
 	typ := reflect.TypeOf(v)
 	if typ.Kind() != reflect.Ptr {
 		// return non-pointer error
@@ -48,7 +48,7 @@ func Unmarshal(data []byte, v interface{}) error {
 // UnmarshalAny adapts to
 func UnmarshalAny(data []byte) (Any, error) {
 	data = data[:lastNotSpacePos(data)]
-	iter := ParseBytes(data)
+	iter := ParseBytes(DEFAULT_CONFIG, data)
 	any := iter.ReadAny()
 	if iter.head == iter.tail {
 		iter.loadMore()
@@ -74,7 +74,7 @@ func lastNotSpacePos(data []byte) int {
 func UnmarshalFromString(str string, v interface{}) error {
 	data := []byte(str)
 	data = data[:lastNotSpacePos(data)]
-	iter := ParseBytes(data)
+	iter := ParseBytes(DEFAULT_CONFIG, data)
 	iter.ReadVal(v)
 	if iter.head == iter.tail {
 		iter.loadMore()
@@ -91,7 +91,7 @@ func UnmarshalFromString(str string, v interface{}) error {
 func UnmarshalAnyFromString(str string) (Any, error) {
 	data := []byte(str)
 	data = data[:lastNotSpacePos(data)]
-	iter := ParseBytes(data)
+	iter := ParseBytes(DEFAULT_CONFIG, data)
 	any := iter.ReadAny()
 	if iter.head == iter.tail {
 		iter.loadMore()
@@ -110,7 +110,7 @@ func UnmarshalAnyFromString(str string) (Any, error) {
 // Marshal returns the JSON encoding of v, adapts to json/encoding Marshal API
 // Refer to https://godoc.org/encoding/json#Marshal for more information
 func Marshal(v interface{}) ([]byte, error) {
-	stream := NewStream(nil, 256)
+	stream := NewStream(DEFAULT_CONFIG, nil, 256)
 	stream.WriteVal(v)
 	if stream.Error != nil {
 		return nil, stream.Error
@@ -133,7 +133,7 @@ func MarshalToString(v interface{}) (string, error) {
 // Instead of a json/encoding Decoder, an AdaptedDecoder is returned
 // Refer to https://godoc.org/encoding/json#NewDecoder for more information
 func NewDecoder(reader io.Reader) *AdaptedDecoder {
-	iter := Parse(reader, 512)
+	iter := Parse(DEFAULT_CONFIG, reader, 512)
 	return &AdaptedDecoder{iter}
 }
 
@@ -172,7 +172,7 @@ func (decoder *AdaptedDecoder) UseNumber() {
 }
 
 func NewEncoder(writer io.Writer) *AdaptedEncoder {
-	stream := NewStream(writer, 512)
+	stream := NewStream(DEFAULT_CONFIG, writer, 512)
 	return &AdaptedEncoder{stream}
 }
 

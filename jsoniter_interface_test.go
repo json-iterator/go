@@ -1,10 +1,10 @@
 package jsoniter
 
 import (
+	"encoding/json"
 	"github.com/json-iterator/go/require"
 	"testing"
 	"unsafe"
-	"encoding/json"
 )
 
 func Test_write_array_of_interface(t *testing.T) {
@@ -140,10 +140,9 @@ func Test_encode_object_contain_non_empty_interface(t *testing.T) {
 	should.Equal(`{"Field":"hello"}`, str)
 }
 
-
 func Test_nil_non_empty_interface(t *testing.T) {
-	CleanEncoders()
-	CleanDecoders()
+	DEFAULT_CONFIG.CleanEncoders()
+	DEFAULT_CONFIG.CleanDecoders()
 	type TestObject struct {
 		Field []MyInterface
 	}

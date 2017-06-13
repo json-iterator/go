@@ -9,7 +9,7 @@ import (
 	"unsafe"
 )
 
-func encoderOfStruct(typ reflect.Type) (Encoder, error) {
+func encoderOfStruct(cfg *Config, typ reflect.Type) (Encoder, error) {
 	structEncoder_ := &structEncoder{}
 	fields := map[string]*structFieldEncoder{}
 	for _, field := range listStructFields(typ) {
@@ -36,7 +36,7 @@ func encoderOfStruct(typ reflect.Type) (Encoder, error) {
 		encoder := fieldEncoders[fieldEncoderKey]
 		var err error
 		if encoder == nil && len(fieldNames) > 0 {
-			encoder, err = encoderOfType(field.Type)
+			encoder, err = encoderOfType(cfg, field.Type)
 			if err != nil {
 				return prefix(fmt.Sprintf("{%s}", field.Name)).addToEncoder(encoder, err)
 			}
@@ -71,7 +71,7 @@ func listStructFields(typ reflect.Type) []*reflect.StructField {
 	return fields
 }
 
-func decoderOfStruct(typ reflect.Type) (Decoder, error) {
+func decoderOfStruct(cfg *Config, typ reflect.Type) (Decoder, error) {
 	fields := map[string]*structFieldDecoder{}
 	for i := 0; i < typ.NumField(); i++ {
 		field := typ.Field(i)
@@ -91,7 +91,7 @@ func decoderOfStruct(typ reflect.Type) (Decoder, error) {
 		fieldNames := calcFieldNames(field.Name, tagParts[0], extensionProviedFieldNames)
 		if decoder == nil && len(fieldNames) > 0 {
 			var err error
-			decoder, err = decoderOfType(field.Type)
+			decoder, err = decoderOfType(cfg, field.Type)
 			if err != nil {
 				return prefix(fmt.Sprintf("{%s}", field.Name)).addToDecoder(decoder, err)
 			}

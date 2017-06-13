@@ -5,6 +5,7 @@ import (
 )
 
 type Stream struct {
+	cfg           *Config
 	out           io.Writer
 	buf           []byte
 	n             int
@@ -13,8 +14,16 @@ type Stream struct {
 	IndentionStep int
 }
 
-func NewStream(out io.Writer, bufSize int) *Stream {
-	return &Stream{out, make([]byte, bufSize), 0, nil, 0, 0}
+func NewStream(cfg *Config, out io.Writer, bufSize int) *Stream {
+	return &Stream{
+		cfg:           cfg,
+		out:           out,
+		buf:           make([]byte, bufSize),
+		n:             0,
+		Error:         nil,
+		indention:     0,
+		IndentionStep: 0,
+	}
 }
 
 func (b *Stream) Reset(out io.Writer) {

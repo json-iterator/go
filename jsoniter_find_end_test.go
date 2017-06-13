@@ -7,56 +7,56 @@ import (
 )
 
 func Test_string_end(t *testing.T) {
-	end, escaped := ParseString(`abc"`).findStringEnd()
+	end, escaped := ParseString(DEFAULT_CONFIG, `abc"`).findStringEnd()
 	if end != 4 {
 		t.Fatal(end)
 	}
 	if escaped != false {
 		t.Fatal(escaped)
 	}
-	end, escaped = ParseString(`abc\\"`).findStringEnd()
+	end, escaped = ParseString(DEFAULT_CONFIG, `abc\\"`).findStringEnd()
 	if end != 6 {
 		t.Fatal(end)
 	}
 	if escaped != true {
 		t.Fatal(escaped)
 	}
-	end, escaped = ParseString(`abc\\\\"`).findStringEnd()
+	end, escaped = ParseString(DEFAULT_CONFIG, `abc\\\\"`).findStringEnd()
 	if end != 8 {
 		t.Fatal(end)
 	}
 	if escaped != true {
 		t.Fatal(escaped)
 	}
-	end, escaped = ParseString(`abc\"`).findStringEnd()
+	end, escaped = ParseString(DEFAULT_CONFIG, `abc\"`).findStringEnd()
 	if end != -1 {
 		t.Fatal(end)
 	}
 	if escaped != false {
 		t.Fatal(escaped)
 	}
-	end, escaped = ParseString(`abc\`).findStringEnd()
+	end, escaped = ParseString(DEFAULT_CONFIG, `abc\`).findStringEnd()
 	if end != -1 {
 		t.Fatal(end)
 	}
 	if escaped != true {
 		t.Fatal(escaped)
 	}
-	end, escaped = ParseString(`abc\\`).findStringEnd()
+	end, escaped = ParseString(DEFAULT_CONFIG, `abc\\`).findStringEnd()
 	if end != -1 {
 		t.Fatal(end)
 	}
 	if escaped != false {
 		t.Fatal(escaped)
 	}
-	end, escaped = ParseString(`\\`).findStringEnd()
+	end, escaped = ParseString(DEFAULT_CONFIG, `\\`).findStringEnd()
 	if end != -1 {
 		t.Fatal(end)
 	}
 	if escaped != false {
 		t.Fatal(escaped)
 	}
-	end, escaped = ParseString(`\`).findStringEnd()
+	end, escaped = ParseString(DEFAULT_CONFIG, `\`).findStringEnd()
 	if end != -1 {
 		t.Fatal(end)
 	}
@@ -91,54 +91,54 @@ func (reader *StagedReader) Read(p []byte) (n int, err error) {
 
 func Test_skip_string(t *testing.T) {
 	should := require.New(t)
-	iter := ParseString(`"abc`)
+	iter := ParseString(DEFAULT_CONFIG, `"abc`)
 	iter.skipString()
 	should.Equal(1, iter.head)
-	iter = ParseString(`\""abc`)
+	iter = ParseString(DEFAULT_CONFIG, `\""abc`)
 	iter.skipString()
 	should.Equal(3, iter.head)
 	reader := &StagedReader{
 		r1: `abc`,
 		r2: `"`,
 	}
-	iter = Parse(reader, 4096)
+	iter = Parse(DEFAULT_CONFIG, reader, 4096)
 	iter.skipString()
 	should.Equal(1, iter.head)
 	reader = &StagedReader{
 		r1: `abc`,
 		r2: `1"`,
 	}
-	iter = Parse(reader, 4096)
+	iter = Parse(DEFAULT_CONFIG, reader, 4096)
 	iter.skipString()
 	should.Equal(2, iter.head)
 	reader = &StagedReader{
 		r1: `abc\`,
 		r2: `"`,
 	}
-	iter = Parse(reader, 4096)
+	iter = Parse(DEFAULT_CONFIG, reader, 4096)
 	iter.skipString()
 	should.NotNil(iter.Error)
 	reader = &StagedReader{
 		r1: `abc\`,
 		r2: `""`,
 	}
-	iter = Parse(reader, 4096)
+	iter = Parse(DEFAULT_CONFIG, reader, 4096)
 	iter.skipString()
 	should.Equal(2, iter.head)
 }
 
 func Test_skip_object(t *testing.T) {
-	iter := ParseString(`}`)
+	iter := ParseString(DEFAULT_CONFIG, `}`)
 	iter.skipObject()
 	if iter.head != 1 {
 		t.Fatal(iter.head)
 	}
-	iter = ParseString(`a}`)
+	iter = ParseString(DEFAULT_CONFIG, `a}`)
 	iter.skipObject()
 	if iter.head != 2 {
 		t.Fatal(iter.head)
 	}
-	iter = ParseString(`{}}a`)
+	iter = ParseString(DEFAULT_CONFIG, `{}}a`)
 	iter.skipObject()
 	if iter.head != 3 {
 		t.Fatal(iter.head)
@@ -147,12 +147,12 @@ func Test_skip_object(t *testing.T) {
 		r1: `{`,
 		r2: `}}a`,
 	}
-	iter = Parse(reader, 4096)
+	iter = Parse(DEFAULT_CONFIG, reader, 4096)
 	iter.skipObject()
 	if iter.head != 2 {
 		t.Fatal(iter.head)
 	}
-	iter = ParseString(`"}"}a`)
+	iter = ParseString(DEFAULT_CONFIG, `"}"}a`)
 	iter.skipObject()
 	if iter.head != 4 {
 		t.Fatal(iter.head)

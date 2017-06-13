@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
-	"sync/atomic"
 	"unsafe"
 )
 
@@ -73,9 +72,6 @@ func (encoder *funcEncoder) isEmpty(ptr unsafe.Pointer) bool {
 	return false
 }
 
-var DECODERS unsafe.Pointer
-var ENCODERS unsafe.Pointer
-
 var typeDecoders map[string]Decoder
 var fieldDecoders map[string]Decoder
 var typeEncoders map[string]Encoder
@@ -94,54 +90,12 @@ func init() {
 	typeEncoders = map[string]Encoder{}
 	fieldEncoders = map[string]Encoder{}
 	extensions = []ExtensionFunc{}
-	atomic.StorePointer(&DECODERS, unsafe.Pointer(&map[string]Decoder{}))
-	atomic.StorePointer(&ENCODERS, unsafe.Pointer(&map[string]Encoder{}))
 	jsonNumberType = reflect.TypeOf((*json.Number)(nil)).Elem()
 	jsonRawMessageType = reflect.TypeOf((*json.RawMessage)(nil)).Elem()
 	anyType = reflect.TypeOf((*Any)(nil)).Elem()
 	marshalerType = reflect.TypeOf((*json.Marshaler)(nil)).Elem()
 	unmarshalerType = reflect.TypeOf((*json.Unmarshaler)(nil)).Elem()
 	textUnmarshalerType = reflect.TypeOf((*encoding.TextUnmarshaler)(nil)).Elem()
-}
-
-func addDecoderToCache(cacheKey reflect.Type, decoder Decoder) {
-	done := false
-	for !done {
-		ptr := atomic.LoadPointer(&DECODERS)
-		cache := *(*map[reflect.Type]Decoder)(ptr)
-		copied := map[reflect.Type]Decoder{}
-		for k, v := range cache {
-			copied[k] = v
-		}
-		copied[cacheKey] = decoder
-		done = atomic.CompareAndSwapPointer(&DECODERS, ptr, unsafe.Pointer(&copied))
-	}
-}
-
-func addEncoderToCache(cacheKey reflect.Type, encoder Encoder) {
-	done := false
-	for !done {
-		ptr := atomic.LoadPointer(&ENCODERS)
-		cache := *(*map[reflect.Type]Encoder)(ptr)
-		copied := map[reflect.Type]Encoder{}
-		for k, v := range cache {
-			copied[k] = v
-		}
-		copied[cacheKey] = encoder
-		done = atomic.CompareAndSwapPointer(&ENCODERS, ptr, unsafe.Pointer(&copied))
-	}
-}
-
-func getDecoderFromCache(cacheKey reflect.Type) Decoder {
-	ptr := atomic.LoadPointer(&DECODERS)
-	cache := *(*map[reflect.Type]Decoder)(ptr)
-	return cache[cacheKey]
-}
-
-func getEncoderFromCache(cacheKey reflect.Type) Encoder {
-	ptr := atomic.LoadPointer(&ENCODERS)
-	cache := *(*map[reflect.Type]Encoder)(ptr)
-	return cache[cacheKey]
 }
 
 // RegisterTypeDecoder can register a type for json object
@@ -165,20 +119,6 @@ func RegisterFieldEncoder(typ string, field string, fun EncoderFunc) {
 // RegisterExtension can register a custom extension
 func RegisterExtension(extension ExtensionFunc) {
 	extensions = append(extensions, extension)
-}
-
-// CleanDecoders cleans decoders registered or cached
-func CleanDecoders() {
-	typeDecoders = map[string]Decoder{}
-	fieldDecoders = map[string]Decoder{}
-	atomic.StorePointer(&DECODERS, unsafe.Pointer(&map[string]Decoder{}))
-}
-
-// CleanEncoders cleans encoders registered or cached
-func CleanEncoders() {
-	typeEncoders = map[string]Encoder{}
-	fieldEncoders = map[string]Encoder{}
-	atomic.StorePointer(&ENCODERS, unsafe.Pointer(&map[string]Encoder{}))
 }
 
 type optionalDecoder struct {
@@ -274,15 +214,15 @@ type nonEmptyInterface struct {
 func (iter *Iterator) ReadVal(obj interface{}) {
 	typ := reflect.TypeOf(obj)
 	cacheKey := typ.Elem()
-	cachedDecoder := getDecoderFromCache(cacheKey)
+	cachedDecoder := iter.cfg.getDecoderFromCache(cacheKey)
 	if cachedDecoder == nil {
-		decoder, err := decoderOfType(cacheKey)
+		decoder, err := decoderOfType(iter.cfg, cacheKey)
 		if err != nil {
 			iter.Error = err
 			return
 		}
 		cachedDecoder = decoder
-		addDecoderToCache(cacheKey, decoder)
+		iter.cfg.addDecoderToCache(cacheKey, decoder)
 	}
 	e := (*emptyInterface)(unsafe.Pointer(&obj))
 	cachedDecoder.decode(e.word, iter)
@@ -295,15 +235,15 @@ func (stream *Stream) WriteVal(val interface{}) {
 	}
 	typ := reflect.TypeOf(val)
 	cacheKey := typ
-	cachedEncoder := getEncoderFromCache(cacheKey)
+	cachedEncoder := stream.cfg.getEncoderFromCache(cacheKey)
 	if cachedEncoder == nil {
-		encoder, err := encoderOfType(cacheKey)
+		encoder, err := encoderOfType(stream.cfg, cacheKey)
 		if err != nil {
 			stream.Error = err
 			return
 		}
 		cachedEncoder = encoder
-		addEncoderToCache(cacheKey, encoder)
+		stream.cfg.addEncoderToCache(cacheKey, encoder)
 	}
 	cachedEncoder.encodeInterface(val, stream)
 }
@@ -324,7 +264,7 @@ func (p prefix) addToEncoder(encoder Encoder, err error) (Encoder, error) {
 	return encoder, err
 }
 
-func decoderOfType(typ reflect.Type) (Decoder, error) {
+func decoderOfType(cfg *Config, typ reflect.Type) (Decoder, error) {
 	typeName := typ.String()
 	typeDecoder := typeDecoders[typeName]
 	if typeDecoder != nil {
@@ -337,19 +277,19 @@ func decoderOfType(typ reflect.Type) (Decoder, error) {
 		}
 	}
 	cacheKey := typ
-	cachedDecoder := getDecoderFromCache(cacheKey)
+	cachedDecoder := cfg.getDecoderFromCache(cacheKey)
 	if cachedDecoder != nil {
 		return cachedDecoder, nil
 	}
 	placeholder := &placeholderDecoder{}
-	addDecoderToCache(cacheKey, placeholder)
-	newDecoder, err := createDecoderOfType(typ)
+	cfg.addDecoderToCache(cacheKey, placeholder)
+	newDecoder, err := createDecoderOfType(cfg, typ)
 	placeholder.valueDecoder = newDecoder
-	addDecoderToCache(cacheKey, newDecoder)
+	cfg.addDecoderToCache(cacheKey, newDecoder)
 	return newDecoder, err
 }
 
-func createDecoderOfType(typ reflect.Type) (Decoder, error) {
+func createDecoderOfType(cfg *Config, typ reflect.Type) (Decoder, error) {
 	if typ.String() == "[]uint8" {
 		return &base64Codec{}, nil
 	}
@@ -402,19 +342,19 @@ func createDecoderOfType(typ reflect.Type) (Decoder, error) {
 			return &nonEmptyInterfaceCodec{}, nil
 		}
 	case reflect.Struct:
-		return prefix(fmt.Sprintf("[%s]", typ.String())).addToDecoder(decoderOfStruct(typ))
+		return prefix(fmt.Sprintf("[%s]", typ.String())).addToDecoder(decoderOfStruct(cfg, typ))
 	case reflect.Slice:
-		return prefix("[slice]").addToDecoder(decoderOfSlice(typ))
+		return prefix("[slice]").addToDecoder(decoderOfSlice(cfg, typ))
 	case reflect.Map:
-		return prefix("[map]").addToDecoder(decoderOfMap(typ))
+		return prefix("[map]").addToDecoder(decoderOfMap(cfg, typ))
 	case reflect.Ptr:
-		return prefix("[optional]").addToDecoder(decoderOfOptional(typ))
+		return prefix("[optional]").addToDecoder(decoderOfOptional(cfg, typ))
 	default:
 		return nil, fmt.Errorf("unsupported type: %v", typ)
 	}
 }
 
-func encoderOfType(typ reflect.Type) (Encoder, error) {
+func encoderOfType(cfg *Config, typ reflect.Type) (Encoder, error) {
 	typeName := typ.String()
 	typeEncoder := typeEncoders[typeName]
 	if typeEncoder != nil {
@@ -427,19 +367,19 @@ func encoderOfType(typ reflect.Type) (Encoder, error) {
 		}
 	}
 	cacheKey := typ
-	cachedEncoder := getEncoderFromCache(cacheKey)
+	cachedEncoder := cfg.getEncoderFromCache(cacheKey)
 	if cachedEncoder != nil {
 		return cachedEncoder, nil
 	}
 	placeholder := &placeholderEncoder{}
-	addEncoderToCache(cacheKey, placeholder)
-	newEncoder, err := createEncoderOfType(typ)
+	cfg.addEncoderToCache(cacheKey, placeholder)
+	newEncoder, err := createEncoderOfType(cfg, typ)
 	placeholder.valueEncoder = newEncoder
-	addEncoderToCache(cacheKey, newEncoder)
+	cfg.addEncoderToCache(cacheKey, newEncoder)
 	return newEncoder, err
 }
 
-func createEncoderOfType(typ reflect.Type) (Encoder, error) {
+func createEncoderOfType(cfg *Config, typ reflect.Type) (Encoder, error) {
 	if typ.String() == "[]uint8" {
 		return &base64Codec{}, nil
 	}
@@ -493,30 +433,30 @@ func createEncoderOfType(typ reflect.Type) (Encoder, error) {
 			return &nonEmptyInterfaceCodec{}, nil
 		}
 	case reflect.Struct:
-		return prefix(fmt.Sprintf("[%s]", typ.String())).addToEncoder(encoderOfStruct(typ))
+		return prefix(fmt.Sprintf("[%s]", typ.String())).addToEncoder(encoderOfStruct(cfg, typ))
 	case reflect.Slice:
-		return prefix("[slice]").addToEncoder(encoderOfSlice(typ))
+		return prefix("[slice]").addToEncoder(encoderOfSlice(cfg, typ))
 	case reflect.Map:
-		return prefix("[map]").addToEncoder(encoderOfMap(typ))
+		return prefix("[map]").addToEncoder(encoderOfMap(cfg, typ))
 	case reflect.Ptr:
-		return prefix("[optional]").addToEncoder(encoderOfOptional(typ))
+		return prefix("[optional]").addToEncoder(encoderOfOptional(cfg, typ))
 	default:
 		return nil, fmt.Errorf("unsupported type: %v", typ)
 	}
 }
 
-func decoderOfOptional(typ reflect.Type) (Decoder, error) {
+func decoderOfOptional(cfg *Config, typ reflect.Type) (Decoder, error) {
 	elemType := typ.Elem()
-	decoder, err := decoderOfType(elemType)
+	decoder, err := decoderOfType(cfg, elemType)
 	if err != nil {
 		return nil, err
 	}
 	return &optionalDecoder{elemType, decoder}, nil
 }
 
-func encoderOfOptional(typ reflect.Type) (Encoder, error) {
+func encoderOfOptional(cfg *Config, typ reflect.Type) (Encoder, error) {
 	elemType := typ.Elem()
-	elemEncoder, err := encoderOfType(elemType)
+	elemEncoder, err := encoderOfType(cfg, elemType)
 	if err != nil {
 		return nil, err
 	}
@@ -527,8 +467,8 @@ func encoderOfOptional(typ reflect.Type) (Encoder, error) {
 	return encoder, nil
 }
 
-func decoderOfMap(typ reflect.Type) (Decoder, error) {
-	decoder, err := decoderOfType(typ.Elem())
+func decoderOfMap(cfg *Config, typ reflect.Type) (Decoder, error) {
+	decoder, err := decoderOfType(cfg, typ.Elem())
 	if err != nil {
 		return nil, err
 	}
@@ -540,9 +480,9 @@ func extractInterface(val interface{}) emptyInterface {
 	return *((*emptyInterface)(unsafe.Pointer(&val)))
 }
 
-func encoderOfMap(typ reflect.Type) (Encoder, error) {
+func encoderOfMap(cfg *Config, typ reflect.Type) (Encoder, error) {
 	elemType := typ.Elem()
-	encoder, err := encoderOfType(elemType)
+	encoder, err := encoderOfType(cfg, elemType)
 	if err != nil {
 		return nil, err
 	}
