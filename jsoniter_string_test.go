@@ -112,6 +112,16 @@ func Test_decode_slash(t *testing.T) {
 	should.NotNil(UnmarshalFromString("\\", &obj))
 }
 
+//func Test_html_escape(t *testing.T) {
+//	should := require.New(t)
+//	output, err := json.Marshal(`>`)
+//	should.Nil(err)
+//	should.Equal(`"\u003e"`, string(output))
+//	output, err = Marshal(`>`)
+//	should.Nil(err)
+//	should.Equal(`"\u003e"`, string(output))
+//}
+
 func Benchmark_jsoniter_unicode(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		iter := ParseString(`"\ud83d\udc4a"`)

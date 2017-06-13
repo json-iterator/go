@@ -228,7 +228,7 @@ func Test_write_array(t *testing.T) {
 func Test_write_val_array(t *testing.T) {
 	should := require.New(t)
 	val := []int{1, 2, 3}
-	str, err := MarshalToString(val)
+	str, err := MarshalToString(&val)
 	should.Nil(err)
 	should.Equal("[1,2,3]", str)
 }

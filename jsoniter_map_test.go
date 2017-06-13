@@ -103,8 +103,6 @@ func Test_decode_TextMarshaler_key_map(t *testing.T) {
 	should.Equal(`{"1":"2"}`, str)
 }
 
-
-
 func Test_map_key_with_escaped_char(t *testing.T) {
 	type Ttest struct {
 		Map map[string]string

@@ -34,6 +34,10 @@ type sliceEncoder struct {
 
 func (encoder *sliceEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
 	slice := (*sliceHeader)(ptr)
+	if slice.Data == nil {
+		stream.WriteNil()
+		return
+	}
 	if slice.Len == 0 {
 		stream.WriteEmptyArray()
 		return

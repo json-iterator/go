@@ -34,6 +34,10 @@ type Encoder interface {
 
 func writeToStream(val interface{}, stream *Stream, encoder Encoder) {
 	e := (*emptyInterface)(unsafe.Pointer(&val))
+	if e.word == nil {
+		stream.WriteNil()
+		return
+	}
 	if reflect.TypeOf(val).Kind() == reflect.Ptr {
 		encoder.encode(unsafe.Pointer(&e.word), stream)
 	} else {
@@ -512,11 +516,15 @@ func decoderOfOptional(typ reflect.Type) (Decoder, error) {
 
 func encoderOfOptional(typ reflect.Type) (Encoder, error) {
 	elemType := typ.Elem()
-	decoder, err := encoderOfType(elemType)
+	elemEncoder, err := encoderOfType(elemType)
 	if err != nil {
 		return nil, err
 	}
-	return &optionalEncoder{decoder}, nil
+	encoder := &optionalEncoder{elemEncoder}
+	if elemType.Kind() == reflect.Map {
+		encoder = &optionalEncoder{encoder}
+	}
+	return encoder, nil
 }
 
 func decoderOfMap(typ reflect.Type) (Decoder, error) {
@@ -539,5 +547,6 @@ func encoderOfMap(typ reflect.Type) (Encoder, error) {
 		return nil, err
 	}
 	mapInterface := reflect.New(typ).Elem().Interface()
-	return &mapEncoder{typ, elemType, encoder, *((*emptyInterface)(unsafe.Pointer(&mapInterface)))}, nil
+	encoderForMap := &mapEncoder{typ, elemType, encoder, *((*emptyInterface)(unsafe.Pointer(&mapInterface)))}
+	return encoderForMap, nil
 }

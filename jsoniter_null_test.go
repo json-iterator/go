@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"github.com/json-iterator/go/require"
 	"testing"
+	"encoding/json"
 )
 
 func Test_read_null(t *testing.T) {
@@ -86,4 +87,40 @@ func Test_decode_null_skip(t *testing.T) {
 	if iter.ReadString() != "a" {
 		t.FailNow()
 	}
+}
+
+func Test_encode_nil_map(t *testing.T) {
+	should := require.New(t)
+	type Ttest map[string]string
+	var obj1 Ttest
+	output, err := json.Marshal(obj1)
+	should.Nil(err)
+	should.Equal("null", string(output))
+	output, err = json.Marshal(&obj1)
+	should.Nil(err)
+	should.Equal("null", string(output))
+	output, err = Marshal(obj1)
+	should.Nil(err)
+	should.Equal("null", string(output))
+	output, err = Marshal(&obj1)
+	should.Nil(err)
+	should.Equal("null", string(output))
+}
+
+func Test_encode_nil_array(t *testing.T) {
+	should := require.New(t)
+	type Ttest []string
+	var obj1 Ttest
+	output, err := json.Marshal(obj1)
+	should.Nil(err)
+	should.Equal("null", string(output))
+	output, err = json.Marshal(&obj1)
+	should.Nil(err)
+	should.Equal("null", string(output))
+	output, err = Marshal(obj1)
+	should.Nil(err)
+	should.Equal("null", string(output))
+	output, err = Marshal(&obj1)
+	should.Nil(err)
+	should.Equal("null", string(output))
 }
