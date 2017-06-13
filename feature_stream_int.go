@@ -1,15 +1,15 @@
 package jsoniter
 
-var DIGITS []uint32
+var _DIGITS []uint32
 
 func init() {
-	DIGITS = make([]uint32, 1000)
+	_DIGITS = make([]uint32, 1000)
 	for i := uint32(0); i < 1000; i++ {
-		DIGITS[i] = (((i / 100) + '0') << 16) + ((((i / 10) % 10) + '0') << 8) + i%10 + '0'
+		_DIGITS[i] = (((i / 100) + '0') << 16) + ((((i / 10) % 10) + '0') << 8) + i%10 + '0'
 		if i < 10 {
-			DIGITS[i] += 2 << 24
+			_DIGITS[i] += 2 << 24
 		} else if i < 100 {
-			DIGITS[i] += 1 << 24
+			_DIGITS[i] += 1 << 24
 		}
 	}
 }
@@ -38,7 +38,7 @@ func writeBuf(buf []byte, v uint32, n int) {
 
 func (stream *Stream) WriteUint8(val uint8) {
 	stream.ensure(3)
-	stream.n = writeFirstBuf(stream.buf, DIGITS[val], stream.n)
+	stream.n = writeFirstBuf(stream.buf, _DIGITS[val], stream.n)
 }
 
 func (stream *Stream) WriteInt8(nval int8) {
@@ -52,19 +52,19 @@ func (stream *Stream) WriteInt8(nval int8) {
 	} else {
 		val = uint8(nval)
 	}
-	stream.n = writeFirstBuf(stream.buf, DIGITS[val], n)
+	stream.n = writeFirstBuf(stream.buf, _DIGITS[val], n)
 }
 
 func (stream *Stream) WriteUint16(val uint16) {
 	stream.ensure(5)
 	q1 := val / 1000
 	if q1 == 0 {
-		stream.n = writeFirstBuf(stream.buf, DIGITS[val], stream.n)
+		stream.n = writeFirstBuf(stream.buf, _DIGITS[val], stream.n)
 		return
 	}
 	r1 := val - q1*1000
-	n := writeFirstBuf(stream.buf, DIGITS[q1], stream.n)
-	writeBuf(stream.buf, DIGITS[r1], n)
+	n := writeFirstBuf(stream.buf, _DIGITS[q1], stream.n)
+	writeBuf(stream.buf, _DIGITS[r1], n)
 	stream.n = n + 3
 	return
 }
@@ -82,12 +82,12 @@ func (stream *Stream) WriteInt16(nval int16) {
 	}
 	q1 := val / 1000
 	if q1 == 0 {
-		stream.n = writeFirstBuf(stream.buf, DIGITS[val], n)
+		stream.n = writeFirstBuf(stream.buf, _DIGITS[val], n)
 		return
 	}
 	r1 := val - q1*1000
-	n = writeFirstBuf(stream.buf, DIGITS[q1], n)
-	writeBuf(stream.buf, DIGITS[r1], n)
+	n = writeFirstBuf(stream.buf, _DIGITS[q1], n)
+	writeBuf(stream.buf, _DIGITS[r1], n)
 	stream.n = n + 3
 	return
 }
@@ -97,30 +97,30 @@ func (stream *Stream) WriteUint32(val uint32) {
 	n := stream.n
 	q1 := val / 1000
 	if q1 == 0 {
-		stream.n = writeFirstBuf(stream.buf, DIGITS[val], n)
+		stream.n = writeFirstBuf(stream.buf, _DIGITS[val], n)
 		return
 	}
 	r1 := val - q1*1000
 	q2 := q1 / 1000
 	if q2 == 0 {
-		n := writeFirstBuf(stream.buf, DIGITS[q1], n)
-		writeBuf(stream.buf, DIGITS[r1], n)
+		n := writeFirstBuf(stream.buf, _DIGITS[q1], n)
+		writeBuf(stream.buf, _DIGITS[r1], n)
 		stream.n = n + 3
 		return
 	}
 	r2 := q1 - q2*1000
 	q3 := q2 / 1000
 	if q3 == 0 {
-		n = writeFirstBuf(stream.buf, DIGITS[q2], n)
+		n = writeFirstBuf(stream.buf, _DIGITS[q2], n)
 	} else {
 		r3 := q2 - q3*1000
 		stream.buf[n] = byte(q3 + '0')
 		n++
-		writeBuf(stream.buf, DIGITS[r3], n)
+		writeBuf(stream.buf, _DIGITS[r3], n)
 		n += 3
 	}
-	writeBuf(stream.buf, DIGITS[r2], n)
-	writeBuf(stream.buf, DIGITS[r1], n+3)
+	writeBuf(stream.buf, _DIGITS[r2], n)
+	writeBuf(stream.buf, _DIGITS[r1], n+3)
 	stream.n = n + 6
 }
 
@@ -137,30 +137,30 @@ func (stream *Stream) WriteInt32(nval int32) {
 	}
 	q1 := val / 1000
 	if q1 == 0 {
-		stream.n = writeFirstBuf(stream.buf, DIGITS[val], n)
+		stream.n = writeFirstBuf(stream.buf, _DIGITS[val], n)
 		return
 	}
 	r1 := val - q1*1000
 	q2 := q1 / 1000
 	if q2 == 0 {
-		n := writeFirstBuf(stream.buf, DIGITS[q1], n)
-		writeBuf(stream.buf, DIGITS[r1], n)
+		n := writeFirstBuf(stream.buf, _DIGITS[q1], n)
+		writeBuf(stream.buf, _DIGITS[r1], n)
 		stream.n = n + 3
 		return
 	}
 	r2 := q1 - q2*1000
 	q3 := q2 / 1000
 	if q3 == 0 {
-		n = writeFirstBuf(stream.buf, DIGITS[q2], n)
+		n = writeFirstBuf(stream.buf, _DIGITS[q2], n)
 	} else {
 		r3 := q2 - q3*1000
 		stream.buf[n] = byte(q3 + '0')
 		n++
-		writeBuf(stream.buf, DIGITS[r3], n)
+		writeBuf(stream.buf, _DIGITS[r3], n)
 		n += 3
 	}
-	writeBuf(stream.buf, DIGITS[r2], n)
-	writeBuf(stream.buf, DIGITS[r1], n+3)
+	writeBuf(stream.buf, _DIGITS[r2], n)
+	writeBuf(stream.buf, _DIGITS[r1], n+3)
 	stream.n = n + 6
 }
 
@@ -169,62 +169,62 @@ func (stream *Stream) WriteUint64(val uint64) {
 	n := stream.n
 	q1 := val / 1000
 	if q1 == 0 {
-		stream.n = writeFirstBuf(stream.buf, DIGITS[val], n)
+		stream.n = writeFirstBuf(stream.buf, _DIGITS[val], n)
 		return
 	}
 	r1 := val - q1*1000
 	q2 := q1 / 1000
 	if q2 == 0 {
-		n := writeFirstBuf(stream.buf, DIGITS[q1], n)
-		writeBuf(stream.buf, DIGITS[r1], n)
+		n := writeFirstBuf(stream.buf, _DIGITS[q1], n)
+		writeBuf(stream.buf, _DIGITS[r1], n)
 		stream.n = n + 3
 		return
 	}
 	r2 := q1 - q2*1000
 	q3 := q2 / 1000
 	if q3 == 0 {
-		n = writeFirstBuf(stream.buf, DIGITS[q2], n)
-		writeBuf(stream.buf, DIGITS[r2], n)
-		writeBuf(stream.buf, DIGITS[r1], n+3)
+		n = writeFirstBuf(stream.buf, _DIGITS[q2], n)
+		writeBuf(stream.buf, _DIGITS[r2], n)
+		writeBuf(stream.buf, _DIGITS[r1], n+3)
 		stream.n = n + 6
 		return
 	}
 	r3 := q2 - q3*1000
 	q4 := q3 / 1000
 	if q4 == 0 {
-		n = writeFirstBuf(stream.buf, DIGITS[q3], n)
-		writeBuf(stream.buf, DIGITS[r3], n)
-		writeBuf(stream.buf, DIGITS[r2], n+3)
-		writeBuf(stream.buf, DIGITS[r1], n+6)
+		n = writeFirstBuf(stream.buf, _DIGITS[q3], n)
+		writeBuf(stream.buf, _DIGITS[r3], n)
+		writeBuf(stream.buf, _DIGITS[r2], n+3)
+		writeBuf(stream.buf, _DIGITS[r1], n+6)
 		stream.n = n + 9
 		return
 	}
 	r4 := q3 - q4*1000
 	q5 := q4 / 1000
 	if q5 == 0 {
-		n = writeFirstBuf(stream.buf, DIGITS[q4], n)
-		writeBuf(stream.buf, DIGITS[r4], n)
-		writeBuf(stream.buf, DIGITS[r3], n+3)
-		writeBuf(stream.buf, DIGITS[r2], n+6)
-		writeBuf(stream.buf, DIGITS[r1], n+9)
+		n = writeFirstBuf(stream.buf, _DIGITS[q4], n)
+		writeBuf(stream.buf, _DIGITS[r4], n)
+		writeBuf(stream.buf, _DIGITS[r3], n+3)
+		writeBuf(stream.buf, _DIGITS[r2], n+6)
+		writeBuf(stream.buf, _DIGITS[r1], n+9)
 		stream.n = n + 12
 		return
 	}
 	r5 := q4 - q5*1000
 	q6 := q5 / 1000
 	if q6 == 0 {
-		n = writeFirstBuf(stream.buf, DIGITS[q5], n)
+		n = writeFirstBuf(stream.buf, _DIGITS[q5], n)
 	} else {
-		n = writeFirstBuf(stream.buf, DIGITS[q6], n)
+		n = writeFirstBuf(stream.buf, _DIGITS[q6], n)
 		r6 := q5 - q6*1000
-		writeBuf(stream.buf, DIGITS[r6], n)
+		writeBuf(stream.buf, _DIGITS[r6], n)
 		n += 3
 	}
-	writeBuf(stream.buf, DIGITS[r5], n)
-	writeBuf(stream.buf, DIGITS[r4], n+3)
-	writeBuf(stream.buf, DIGITS[r3], n+6)
-	writeBuf(stream.buf, DIGITS[r2], n+9)
-	writeBuf(stream.buf, DIGITS[r1], n+12)
+	writeBuf(stream.buf, _DIGITS[r5], n)
+	writeBuf(stream.buf, _DIGITS[r4], n+3)
+	writeBuf(stream.buf, _DIGITS[r3], n+6)
+	writeBuf(stream.buf, _DIGITS[r2], n+9)
+	writeBuf(stream.buf, _DIGITS[r1], n+12)
 	stream.n = n + 15
 }
 
@@ -241,63 +241,63 @@ func (stream *Stream) WriteInt64(nval int64) {
 	}
 	q1 := val / 1000
 	if q1 == 0 {
-		stream.n = writeFirstBuf(stream.buf, DIGITS[val], n)
+		stream.n = writeFirstBuf(stream.buf, _DIGITS[val], n)
 		return
 	}
 	r1 := val - q1*1000
 	q2 := q1 / 1000
 	if q2 == 0 {
-		n := writeFirstBuf(stream.buf, DIGITS[q1], n)
-		writeBuf(stream.buf, DIGITS[r1], n)
+		n := writeFirstBuf(stream.buf, _DIGITS[q1], n)
+		writeBuf(stream.buf, _DIGITS[r1], n)
 		stream.n = n + 3
 		return
 	}
 	r2 := q1 - q2*1000
 	q3 := q2 / 1000
 	if q3 == 0 {
-		n = writeFirstBuf(stream.buf, DIGITS[q2], n)
-		writeBuf(stream.buf, DIGITS[r2], n)
-		writeBuf(stream.buf, DIGITS[r1], n+3)
+		n = writeFirstBuf(stream.buf, _DIGITS[q2], n)
+		writeBuf(stream.buf, _DIGITS[r2], n)
+		writeBuf(stream.buf, _DIGITS[r1], n+3)
 		stream.n = n + 6
 		return
 	}
 	r3 := q2 - q3*1000
 	q4 := q3 / 1000
 	if q4 == 0 {
-		n = writeFirstBuf(stream.buf, DIGITS[q3], n)
-		writeBuf(stream.buf, DIGITS[r3], n)
-		writeBuf(stream.buf, DIGITS[r2], n+3)
-		writeBuf(stream.buf, DIGITS[r1], n+6)
+		n = writeFirstBuf(stream.buf, _DIGITS[q3], n)
+		writeBuf(stream.buf, _DIGITS[r3], n)
+		writeBuf(stream.buf, _DIGITS[r2], n+3)
+		writeBuf(stream.buf, _DIGITS[r1], n+6)
 		stream.n = n + 9
 		return
 	}
 	r4 := q3 - q4*1000
 	q5 := q4 / 1000
 	if q5 == 0 {
-		n = writeFirstBuf(stream.buf, DIGITS[q4], n)
-		writeBuf(stream.buf, DIGITS[r4], n)
-		writeBuf(stream.buf, DIGITS[r3], n+3)
-		writeBuf(stream.buf, DIGITS[r2], n+6)
-		writeBuf(stream.buf, DIGITS[r1], n+9)
+		n = writeFirstBuf(stream.buf, _DIGITS[q4], n)
+		writeBuf(stream.buf, _DIGITS[r4], n)
+		writeBuf(stream.buf, _DIGITS[r3], n+3)
+		writeBuf(stream.buf, _DIGITS[r2], n+6)
+		writeBuf(stream.buf, _DIGITS[r1], n+9)
 		stream.n = n + 12
 		return
 	}
 	r5 := q4 - q5*1000
 	q6 := q5 / 1000
 	if q6 == 0 {
-		n = writeFirstBuf(stream.buf, DIGITS[q5], n)
+		n = writeFirstBuf(stream.buf, _DIGITS[q5], n)
 	} else {
 		stream.buf[n] = byte(q6 + '0')
 		n++
 		r6 := q5 - q6*1000
-		writeBuf(stream.buf, DIGITS[r6], n)
+		writeBuf(stream.buf, _DIGITS[r6], n)
 		n += 3
 	}
-	writeBuf(stream.buf, DIGITS[r5], n)
-	writeBuf(stream.buf, DIGITS[r4], n+3)
-	writeBuf(stream.buf, DIGITS[r3], n+6)
-	writeBuf(stream.buf, DIGITS[r2], n+9)
-	writeBuf(stream.buf, DIGITS[r1], n+12)
+	writeBuf(stream.buf, _DIGITS[r5], n)
+	writeBuf(stream.buf, _DIGITS[r4], n+3)
+	writeBuf(stream.buf, _DIGITS[r3], n+6)
+	writeBuf(stream.buf, _DIGITS[r2], n+9)
+	writeBuf(stream.buf, _DIGITS[r1], n+12)
 	stream.n = n + 15
 }
 

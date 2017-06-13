@@ -31,9 +31,7 @@ func Test_writeBytes_should_grow_buffer(t *testing.T) {
 
 func Test_writeIndention_should_grow_buffer(t *testing.T) {
 	should := require.New(t)
-	newCfg := &Config{IndentionStep: 2}
-	initConfig(newCfg)
-	stream := NewStream(newCfg, nil, 1)
+	stream := NewStream(&Config{IndentionStep: 2}, nil, 1)
 	stream.WriteVal([]int{1, 2, 3})
 	should.Equal("[\n  1,\n  2,\n  3\n]", string(stream.Buffer()))
 }

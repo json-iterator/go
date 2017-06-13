@@ -21,26 +21,26 @@ func Test_encode_optional_int_pointer(t *testing.T) {
 func Test_decode_struct_with_optional_field(t *testing.T) {
 	should := require.New(t)
 	type TestObject struct {
-		field1 *string
-		field2 *string
+		Field1 *string
+		Field2 *string
 	}
 	obj := TestObject{}
 	UnmarshalFromString(`{"field1": null, "field2": "world"}`, &obj)
-	should.Nil(obj.field1)
-	should.Equal("world", *obj.field2)
+	should.Nil(obj.Field1)
+	should.Equal("world", *obj.Field2)
 }
 
 func Test_encode_struct_with_optional_field(t *testing.T) {
 	should := require.New(t)
 	type TestObject struct {
-		field1 *string
-		field2 *string
+		Field1 *string
+		Field2 *string
 	}
 	obj := TestObject{}
 	world := "world"
-	obj.field2 = &world
+	obj.Field2 = &world
 	str, err := MarshalToString(obj)
 	should.Nil(err)
-	should.Contains(str, `"field1":null`)
-	should.Contains(str, `"field2":"world"`)
+	should.Contains(str, `"Field1":null`)
+	should.Contains(str, `"Field2":"world"`)
 }

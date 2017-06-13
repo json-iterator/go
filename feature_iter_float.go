@@ -102,9 +102,9 @@ non_decimal_loop:
 			ind := floatDigits[c]
 			switch ind {
 			case endOfNumber:
-				if decimalPlaces > 0 && decimalPlaces < len(POW10) {
+				if decimalPlaces > 0 && decimalPlaces < len(_POW10) {
 					iter.head = i
-					return float32(float64(value) / float64(POW10[decimalPlaces]))
+					return float32(float64(value) / float64(_POW10[decimalPlaces]))
 				}
 				// too many decimal places
 				return iter.readFloat32SlowPath()
@@ -205,9 +205,9 @@ non_decimal_loop:
 			ind := floatDigits[c]
 			switch ind {
 			case endOfNumber:
-				if decimalPlaces > 0 && decimalPlaces < len(POW10) {
+				if decimalPlaces > 0 && decimalPlaces < len(_POW10) {
 					iter.head = i
-					return float64(value) / float64(POW10[decimalPlaces])
+					return float64(value) / float64(_POW10[decimalPlaces])
 				}
 				// too many decimal places
 				return iter.readFloat64SlowPath()

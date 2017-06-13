@@ -76,6 +76,7 @@ type Iterator struct {
 
 // Create creates an empty Iterator instance
 func NewIterator(cfg *Config) *Iterator {
+	cfg.init()
 	return &Iterator{
 		cfg:    cfg,
 		reader: nil,
@@ -87,6 +88,7 @@ func NewIterator(cfg *Config) *Iterator {
 
 // Parse parses a json buffer in io.Reader into an Iterator instance
 func Parse(cfg *Config, reader io.Reader, bufSize int) *Iterator {
+	cfg.init()
 	return &Iterator{
 		cfg:    cfg,
 		reader: reader,
@@ -98,6 +100,7 @@ func Parse(cfg *Config, reader io.Reader, bufSize int) *Iterator {
 
 // ParseBytes parses a json byte slice into an Iterator instance
 func ParseBytes(cfg *Config, input []byte) *Iterator {
+	cfg.init()
 	return &Iterator{
 		cfg:    cfg,
 		reader: nil,

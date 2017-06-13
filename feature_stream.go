@@ -5,22 +5,23 @@ import (
 )
 
 type Stream struct {
-	cfg           *Config
-	out           io.Writer
-	buf           []byte
-	n             int
-	Error         error
-	indention     int
+	cfg       *Config
+	out       io.Writer
+	buf       []byte
+	n         int
+	Error     error
+	indention int
 }
 
 func NewStream(cfg *Config, out io.Writer, bufSize int) *Stream {
+	cfg.init()
 	return &Stream{
-		cfg:           cfg,
-		out:           out,
-		buf:           make([]byte, bufSize),
-		n:             0,
-		Error:         nil,
-		indention:     0,
+		cfg:       cfg,
+		out:       out,
+		buf:       make([]byte, bufSize),
+		n:         0,
+		Error:     nil,
+		indention: 0,
 	}
 }
 

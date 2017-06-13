@@ -172,9 +172,7 @@ func (decoder *AdaptedDecoder) UseNumber() {
 }
 
 func NewEncoder(writer io.Writer) *AdaptedEncoder {
-	newCfg := &Config{}
-	initConfig(newCfg)
-	stream := NewStream(newCfg, writer, 512)
+	stream := NewStream(&Config{}, writer, 512)
 	return &AdaptedEncoder{stream}
 }
 

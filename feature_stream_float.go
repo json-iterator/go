@@ -2,13 +2,12 @@ package jsoniter
 
 import (
 	"strconv"
-	"unsafe"
 )
 
-var POW10 []uint64
+var _POW10 []uint64
 
 func init() {
-	POW10 = []uint64{1, 10, 100, 1000, 10000, 100000, 1000000}
+	_POW10 = []uint64{1, 10, 100, 1000, 10000, 100000, 1000000}
 }
 
 func (stream *Stream) WriteFloat32(val float32) {
@@ -34,7 +33,7 @@ func (stream *Stream) WriteFloat32Lossy(val float32) {
 	}
 	stream.writeByte('.')
 	stream.ensure(10)
-	for p := precision - 1; p > 0 && fval < POW10[p]; p-- {
+	for p := precision - 1; p > 0 && fval < _POW10[p]; p-- {
 		stream.writeByte('0')
 	}
 	stream.WriteUint64(fval)
@@ -66,25 +65,11 @@ func (stream *Stream) WriteFloat64Lossy(val float64) {
 	}
 	stream.writeByte('.')
 	stream.ensure(10)
-	for p := precision - 1; p > 0 && fval < POW10[p]; p-- {
+	for p := precision - 1; p > 0 && fval < _POW10[p]; p-- {
 		stream.writeByte('0')
 	}
 	stream.WriteUint64(fval)
 	for stream.buf[stream.n-1] == '0' {
 		stream.n--
 	}
-}
-
-// EnableLossyFloatMarshalling keeps 10**(-6) precision
-// for float variables for better performance.
-func EnableLossyFloatMarshalling() {
-	// for better performance
-	RegisterTypeEncoder("float32", func(ptr unsafe.Pointer, stream *Stream) {
-		val := *((*float32)(ptr))
-		stream.WriteFloat32Lossy(val)
-	})
-	RegisterTypeEncoder("float64", func(ptr unsafe.Pointer, stream *Stream) {
-		val := *((*float64)(ptr))
-		stream.WriteFloat64Lossy(val)
-	})
 }

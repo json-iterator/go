@@ -60,9 +60,8 @@ func Test_customize_byte_array_encoder(t *testing.T) {
 
 func Test_customize_float_marshal(t *testing.T) {
 	should := require.New(t)
-	EnableLossyFloatMarshalling()
-	defer DEFAULT_CONFIG.CleanEncoders()
-	str, err := MarshalToString(float32(1.23456789))
+	json := Config{MarshalFloatWith6Digits: true}
+	str, err := json.MarshalToString(float32(1.23456789))
 	should.Nil(err)
 	should.Equal("1.234568", str)
 }
@@ -113,7 +112,7 @@ func Test_customize_field_by_extension(t *testing.T) {
 }
 
 func Test_unexported_fields(t *testing.T) {
-	EnableUnexportedStructFieldsSupport()
+	jsoniter := &Config{SupportUnexportedStructFields: true}
 	should := require.New(t)
 	type TestObject struct {
 		field1 string
@@ -121,12 +120,12 @@ func Test_unexported_fields(t *testing.T) {
 	}
 	obj := TestObject{}
 	obj.field1 = "hello"
-	should.Nil(UnmarshalFromString(`{}`, &obj))
+	should.Nil(jsoniter.UnmarshalFromString(`{}`, &obj))
 	should.Equal("hello", obj.field1)
-	should.Nil(UnmarshalFromString(`{"field1": "world", "field-2": "abc"}`, &obj))
+	should.Nil(jsoniter.UnmarshalFromString(`{"field1": "world", "field-2": "abc"}`, &obj))
 	should.Equal("world", obj.field1)
 	should.Equal("abc", obj.field2)
-	str, err := MarshalToString(obj)
+	str, err := jsoniter.MarshalToString(obj)
 	should.Nil(err)
 	should.Contains(str, `"field-2":"abc"`)
 }

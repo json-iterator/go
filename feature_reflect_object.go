@@ -24,6 +24,15 @@ func encoderOfStruct(cfg *Config, typ reflect.Type) (Encoder, error) {
 				fieldEncoders[fieldEncoderKey] = &funcEncoder{fun}
 			}
 		}
+		for _, extension := range cfg.extensions {
+			alternativeFieldNames, fun, _ := extension(typ, field)
+			if alternativeFieldNames != nil {
+				extensionProvidedFieldNames = alternativeFieldNames
+			}
+			if fun != nil {
+				fieldEncoders[fieldEncoderKey] = &funcEncoder{fun}
+			}
+		}
 		tagParts := strings.Split(field.Tag.Get("json"), ",")
 		// if fieldNames set by extension, use theirs, otherwise try tags
 		fieldNames := calcFieldNames(field.Name, tagParts[0], extensionProvidedFieldNames)
@@ -86,6 +95,15 @@ func decoderOfStruct(cfg *Config, typ reflect.Type) (Decoder, error) {
 				fieldDecoders[fieldDecoderKey] = &funcDecoder{fun}
 			}
 		}
+		for _, extension := range cfg.extensions {
+			alternativeFieldNames, _, fun := extension(typ, &field)
+			if alternativeFieldNames != nil {
+				extensionProviedFieldNames = alternativeFieldNames
+			}
+			if fun != nil {
+				fieldDecoders[fieldDecoderKey] = &funcDecoder{fun}
+			}
+		}
 		decoder := fieldDecoders[fieldDecoderKey]
 		tagParts := strings.Split(field.Tag.Get("json"), ",")
 		fieldNames := calcFieldNames(field.Name, tagParts[0], extensionProviedFieldNames)
@@ -128,12 +146,6 @@ func calcFieldNames(originalFieldName string, tagProvidedFieldName string, exten
 		fieldNames = []string{tagProvidedFieldName}
 	}
 	return fieldNames
-}
-
-func EnableUnexportedStructFieldsSupport() {
-	RegisterExtension(func(type_ reflect.Type, field *reflect.StructField) ([]string, EncoderFunc, DecoderFunc) {
-		return []string{field.Name}, nil, nil
-	})
 }
 
 func createStructDecoder(typ reflect.Type, fields map[string]*structFieldDecoder) (Decoder, error) {

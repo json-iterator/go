@@ -24,8 +24,8 @@ func Test_decode_large_slice(t *testing.T) {
 
 func Test_decode_nested(t *testing.T) {
 	type StructOfString struct {
-		field1 string
-		field2 string
+		Field1 string
+		Field2 string
 	}
 	iter := ParseString(DEFAULT_CONFIG, `[{"field1": "hello"}, null, {"field2": "world"}]`)
 	slice := []*StructOfString{}
@@ -34,7 +34,7 @@ func Test_decode_nested(t *testing.T) {
 		fmt.Println(iter.Error)
 		t.Fatal(len(slice))
 	}
-	if slice[0].field1 != "hello" {
+	if slice[0].Field1 != "hello" {
 		fmt.Println(iter.Error)
 		t.Fatal(slice[0])
 	}
@@ -42,7 +42,7 @@ func Test_decode_nested(t *testing.T) {
 		fmt.Println(iter.Error)
 		t.Fatal(slice[1])
 	}
-	if slice[2].field2 != "world" {
+	if slice[2].Field2 != "world" {
 		fmt.Println(iter.Error)
 		t.Fatal(slice[2])
 	}
