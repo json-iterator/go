@@ -37,10 +37,12 @@ func Test_new_encoder(t *testing.T) {
 	should := require.New(t)
 	buf1 := &bytes.Buffer{}
 	encoder1 := json.NewEncoder(buf1)
+	encoder1.SetEscapeHTML(false)
 	encoder1.Encode([]int{1})
 	should.Equal("[1]\n", buf1.String())
 	buf2 := &bytes.Buffer{}
 	encoder2 := NewEncoder(buf2)
+	encoder2.SetEscapeHTML(false)
 	encoder2.Encode([]int{1})
 	should.Equal("[1]", buf2.String())
 }

@@ -14,9 +14,7 @@ package jsoniter
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"io"
-	"reflect"
 	"unsafe"
 )
 
@@ -25,41 +23,12 @@ import (
 // Unmarshal parses the JSON-encoded data and stores the result in the value pointed to by v.
 // Refer to https://godoc.org/encoding/json#Unmarshal for more information
 func Unmarshal(data []byte, v interface{}) error {
-	data = data[:lastNotSpacePos(data)]
-	iter := ParseBytes(ConfigOfDefault, data)
-	typ := reflect.TypeOf(v)
-	if typ.Kind() != reflect.Ptr {
-		// return non-pointer error
-		return errors.New("the second param must be ptr type")
-	}
-	iter.ReadVal(v)
-	if iter.head == iter.tail {
-		iter.loadMore()
-	}
-	if iter.Error == io.EOF {
-		return nil
-	}
-	if iter.Error == nil {
-		iter.reportError("Unmarshal", "there are bytes left after unmarshal")
-	}
-	return iter.Error
+	return ConfigOfDefault.Unmarshal(data, v)
 }
 
 // UnmarshalAny adapts to
 func UnmarshalAny(data []byte) (Any, error) {
-	data = data[:lastNotSpacePos(data)]
-	iter := ParseBytes(ConfigOfDefault, data)
-	any := iter.ReadAny()
-	if iter.head == iter.tail {
-		iter.loadMore()
-	}
-	if iter.Error == io.EOF {
-		return any, nil
-	}
-	if iter.Error == nil {
-		iter.reportError("UnmarshalAny", "there are bytes left after unmarshal")
-	}
-	return any, iter.Error
+	return ConfigOfDefault.UnmarshalAny(data)
 }
 
 func lastNotSpacePos(data []byte) int {
@@ -72,37 +41,11 @@ func lastNotSpacePos(data []byte) int {
 }
 
 func UnmarshalFromString(str string, v interface{}) error {
-	data := []byte(str)
-	data = data[:lastNotSpacePos(data)]
-	iter := ParseBytes(ConfigOfDefault, data)
-	iter.ReadVal(v)
-	if iter.head == iter.tail {
-		iter.loadMore()
-	}
-	if iter.Error == io.EOF {
-		return nil
-	}
-	if iter.Error == nil {
-		iter.reportError("UnmarshalFromString", "there are bytes left after unmarshal")
-	}
-	return iter.Error
+	return ConfigOfDefault.UnmarshalFromString(str, v)
 }
 
 func UnmarshalAnyFromString(str string) (Any, error) {
-	data := []byte(str)
-	data = data[:lastNotSpacePos(data)]
-	iter := ParseBytes(ConfigOfDefault, data)
-	any := iter.ReadAny()
-	if iter.head == iter.tail {
-		iter.loadMore()
-	}
-	if iter.Error == io.EOF {
-		return any, nil
-	}
-	if iter.Error == nil {
-		iter.reportError("UnmarshalAnyFromString", "there are bytes left after unmarshal")
-	}
-	return nil, iter.Error
+	return ConfigOfDefault.UnmarshalAnyFromString(str)
 }
 
 // Marshal adapts to json/encoding Marshal API
@@ -110,20 +53,11 @@ func UnmarshalAnyFromString(str string) (Any, error) {
 // Marshal returns the JSON encoding of v, adapts to json/encoding Marshal API
 // Refer to https://godoc.org/encoding/json#Marshal for more information
 func Marshal(v interface{}) ([]byte, error) {
-	stream := NewStream(ConfigOfDefault, nil, 256)
-	stream.WriteVal(v)
-	if stream.Error != nil {
-		return nil, stream.Error
-	}
-	return stream.Buffer(), nil
+	return ConfigOfDefault.Marshal(v)
 }
 
 func MarshalToString(v interface{}) (string, error) {
-	buf, err := Marshal(v)
-	if err != nil {
-		return "", err
-	}
-	return string(buf), nil
+	return ConfigOfDefault.MarshalToString(v)
 }
 
 // NewDecoder adapts to json/stream NewDecoder API.
@@ -133,8 +67,7 @@ func MarshalToString(v interface{}) (string, error) {
 // Instead of a json/encoding Decoder, an AdaptedDecoder is returned
 // Refer to https://godoc.org/encoding/json#NewDecoder for more information
 func NewDecoder(reader io.Reader) *AdaptedDecoder {
-	iter := Parse(ConfigOfDefault, reader, 512)
-	return &AdaptedDecoder{iter}
+	return ConfigOfDefault.NewDecoder(reader)
 }
 
 // AdaptedDecoder reads and decodes JSON values from an input stream.
@@ -172,8 +105,7 @@ func (decoder *AdaptedDecoder) UseNumber() {
 }
 
 func NewEncoder(writer io.Writer) *AdaptedEncoder {
-	stream := NewStream(Config{}.Froze(), writer, 512)
-	return &AdaptedEncoder{stream}
+	return ConfigOfDefault.NewEncoder(writer)
 }
 
 type AdaptedEncoder struct {
@@ -188,4 +120,10 @@ func (adapter *AdaptedEncoder) Encode(val interface{}) error {
 
 func (adapter *AdaptedEncoder) SetIndent(prefix, indent string) {
 	adapter.stream.cfg.indentionStep = len(indent)
+}
+
+func (adapter *AdaptedEncoder) SetEscapeHTML(escapeHtml bool) {
+	config := adapter.stream.cfg.configBeforeFrozen
+	config.EscapeHtml = escapeHtml
+	adapter.stream.cfg = config.Froze()
 }

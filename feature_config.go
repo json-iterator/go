@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"sync/atomic"
 	"unsafe"
+	"errors"
 )
 
 type Config struct {
@@ -15,6 +16,7 @@ type Config struct {
 }
 
 type frozenConfig struct {
+	configBeforeFrozen	      Config
 	indentionStep                 int
 	decoderCache                  unsafe.Pointer
 	encoderCache                  unsafe.Pointer
@@ -43,6 +45,7 @@ func (cfg Config) Froze() *frozenConfig {
 	if cfg.EscapeHtml {
 		frozenConfig.escapeHtml()
 	}
+	frozenConfig.configBeforeFrozen = cfg
 	return frozenConfig
 }
 
@@ -163,6 +166,70 @@ func (cfg *frozenConfig) UnmarshalFromString(str string, v interface{}) error {
 	}
 	if iter.Error == nil {
 		iter.reportError("UnmarshalFromString", "there are bytes left after unmarshal")
+	}
+	return iter.Error
+}
+
+func (cfg *frozenConfig) NewEncoder(writer io.Writer) *AdaptedEncoder {
+	stream := NewStream(cfg, writer, 512)
+	return &AdaptedEncoder{stream}
+}
+
+func (cfg *frozenConfig) NewDecoder(reader io.Reader) *AdaptedDecoder {
+	iter := Parse(cfg, reader, 512)
+	return &AdaptedDecoder{iter}
+}
+
+func (cfg *frozenConfig) UnmarshalAnyFromString(str string) (Any, error) {
+	data := []byte(str)
+	data = data[:lastNotSpacePos(data)]
+	iter := ParseBytes(cfg, data)
+	any := iter.ReadAny()
+	if iter.head == iter.tail {
+		iter.loadMore()
+	}
+	if iter.Error == io.EOF {
+		return any, nil
+	}
+	if iter.Error == nil {
+		iter.reportError("UnmarshalAnyFromString", "there are bytes left after unmarshal")
+	}
+	return nil, iter.Error
+}
+
+func (cfg *frozenConfig) UnmarshalAny(data []byte) (Any, error) {
+	data = data[:lastNotSpacePos(data)]
+	iter := ParseBytes(cfg, data)
+	any := iter.ReadAny()
+	if iter.head == iter.tail {
+		iter.loadMore()
+	}
+	if iter.Error == io.EOF {
+		return any, nil
+	}
+	if iter.Error == nil {
+		iter.reportError("UnmarshalAny", "there are bytes left after unmarshal")
+	}
+	return any, iter.Error
+}
+
+func (cfg *frozenConfig) Unmarshal(data []byte, v interface{}) error {
+	data = data[:lastNotSpacePos(data)]
+	iter := ParseBytes(cfg, data)
+	typ := reflect.TypeOf(v)
+	if typ.Kind() != reflect.Ptr {
+		// return non-pointer error
+		return errors.New("the second param must be ptr type")
+	}
+	iter.ReadVal(v)
+	if iter.head == iter.tail {
+		iter.loadMore()
+	}
+	if iter.Error == io.EOF {
+		return nil
+	}
+	if iter.Error == nil {
+		iter.reportError("Unmarshal", "there are bytes left after unmarshal")
 	}
 	return iter.Error
 }
