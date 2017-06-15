@@ -9,10 +9,10 @@ import (
 
 func Test_empty_object(t *testing.T) {
 	should := require.New(t)
-	iter := ParseString(DEFAULT_CONFIG, `{}`)
+	iter := ParseString(ConfigOfDefault, `{}`)
 	field := iter.ReadObject()
 	should.Equal("", field)
-	iter = ParseString(DEFAULT_CONFIG, `{}`)
+	iter = ParseString(ConfigOfDefault, `{}`)
 	iter.ReadObjectCB(func(iter *Iterator, field string) bool {
 		should.FailNow("should not call")
 		return true
@@ -21,14 +21,14 @@ func Test_empty_object(t *testing.T) {
 
 func Test_one_field(t *testing.T) {
 	should := require.New(t)
-	iter := ParseString(DEFAULT_CONFIG, `{"a": "b"}`)
+	iter := ParseString(ConfigOfDefault, `{"a": "b"}`)
 	field := iter.ReadObject()
 	should.Equal("a", field)
 	value := iter.ReadString()
 	should.Equal("b", value)
 	field = iter.ReadObject()
 	should.Equal("", field)
-	iter = ParseString(DEFAULT_CONFIG, `{"a": "b"}`)
+	iter = ParseString(ConfigOfDefault, `{"a": "b"}`)
 	should.True(iter.ReadObjectCB(func(iter *Iterator, field string) bool {
 		should.Equal("a", field)
 		return true
@@ -37,7 +37,7 @@ func Test_one_field(t *testing.T) {
 
 func Test_two_field(t *testing.T) {
 	should := require.New(t)
-	iter := ParseString(DEFAULT_CONFIG, `{ "a": "b" , "c": "d" }`)
+	iter := ParseString(ConfigOfDefault, `{ "a": "b" , "c": "d" }`)
 	field := iter.ReadObject()
 	should.Equal("a", field)
 	value := iter.ReadString()
@@ -48,7 +48,7 @@ func Test_two_field(t *testing.T) {
 	should.Equal("d", value)
 	field = iter.ReadObject()
 	should.Equal("", field)
-	iter = ParseString(DEFAULT_CONFIG, `{"field1": "1", "field2": 2}`)
+	iter = ParseString(ConfigOfDefault, `{"field1": "1", "field2": 2}`)
 	for field := iter.ReadObject(); field != ""; field = iter.ReadObject() {
 		switch field {
 		case "field1":
@@ -229,7 +229,7 @@ func Benchmark_jsoniter_object(b *testing.B) {
 		Field2 uint64
 	}
 	for n := 0; n < b.N; n++ {
-		iter := ParseString(DEFAULT_CONFIG, `{"field1": "1", "field2": 2}`)
+		iter := ParseString(ConfigOfDefault, `{"field1": "1", "field2": 2}`)
 		obj := TestObj{}
 		for field := iter.ReadObject(); field != ""; field = iter.ReadObject() {
 			switch field {

@@ -6,7 +6,7 @@ import (
 )
 
 func Test_reflect_str(t *testing.T) {
-	iter := ParseString(DEFAULT_CONFIG, `"hello"`)
+	iter := ParseString(ConfigOfDefault, `"hello"`)
 	str := ""
 	iter.ReadVal(&str)
 	if str != "hello" {
@@ -16,7 +16,7 @@ func Test_reflect_str(t *testing.T) {
 }
 
 func Test_reflect_ptr_str(t *testing.T) {
-	iter := ParseString(DEFAULT_CONFIG, `"hello"`)
+	iter := ParseString(ConfigOfDefault, `"hello"`)
 	var str *string
 	iter.ReadVal(&str)
 	if *str != "hello" {
@@ -25,7 +25,7 @@ func Test_reflect_ptr_str(t *testing.T) {
 }
 
 func Test_reflect_int(t *testing.T) {
-	iter := ParseString(DEFAULT_CONFIG, `123`)
+	iter := ParseString(ConfigOfDefault, `123`)
 	val := int(0)
 	iter.ReadVal(&val)
 	if val != 123 {
@@ -34,7 +34,7 @@ func Test_reflect_int(t *testing.T) {
 }
 
 func Test_reflect_int8(t *testing.T) {
-	iter := ParseString(DEFAULT_CONFIG, `123`)
+	iter := ParseString(ConfigOfDefault, `123`)
 	val := int8(0)
 	iter.ReadVal(&val)
 	if val != 123 {
@@ -43,7 +43,7 @@ func Test_reflect_int8(t *testing.T) {
 }
 
 func Test_reflect_int16(t *testing.T) {
-	iter := ParseString(DEFAULT_CONFIG, `123`)
+	iter := ParseString(ConfigOfDefault, `123`)
 	val := int16(0)
 	iter.ReadVal(&val)
 	if val != 123 {
@@ -52,7 +52,7 @@ func Test_reflect_int16(t *testing.T) {
 }
 
 func Test_reflect_int32(t *testing.T) {
-	iter := ParseString(DEFAULT_CONFIG, `123`)
+	iter := ParseString(ConfigOfDefault, `123`)
 	val := int32(0)
 	iter.ReadVal(&val)
 	if val != 123 {
@@ -61,7 +61,7 @@ func Test_reflect_int32(t *testing.T) {
 }
 
 func Test_reflect_int64(t *testing.T) {
-	iter := ParseString(DEFAULT_CONFIG, `123`)
+	iter := ParseString(ConfigOfDefault, `123`)
 	val := int64(0)
 	iter.ReadVal(&val)
 	if val != 123 {
@@ -70,7 +70,7 @@ func Test_reflect_int64(t *testing.T) {
 }
 
 func Test_reflect_uint(t *testing.T) {
-	iter := ParseString(DEFAULT_CONFIG, `123`)
+	iter := ParseString(ConfigOfDefault, `123`)
 	val := uint(0)
 	iter.ReadVal(&val)
 	if val != 123 {
@@ -79,7 +79,7 @@ func Test_reflect_uint(t *testing.T) {
 }
 
 func Test_reflect_uint8(t *testing.T) {
-	iter := ParseString(DEFAULT_CONFIG, `123`)
+	iter := ParseString(ConfigOfDefault, `123`)
 	val := uint8(0)
 	iter.ReadVal(&val)
 	if val != 123 {
@@ -88,7 +88,7 @@ func Test_reflect_uint8(t *testing.T) {
 }
 
 func Test_reflect_uint16(t *testing.T) {
-	iter := ParseString(DEFAULT_CONFIG, `123`)
+	iter := ParseString(ConfigOfDefault, `123`)
 	val := uint16(0)
 	iter.ReadVal(&val)
 	if val != 123 {
@@ -97,7 +97,7 @@ func Test_reflect_uint16(t *testing.T) {
 }
 
 func Test_reflect_uint32(t *testing.T) {
-	iter := ParseString(DEFAULT_CONFIG, `123`)
+	iter := ParseString(ConfigOfDefault, `123`)
 	val := uint32(0)
 	iter.ReadVal(&val)
 	if val != 123 {
@@ -106,7 +106,7 @@ func Test_reflect_uint32(t *testing.T) {
 }
 
 func Test_reflect_uint64(t *testing.T) {
-	iter := ParseString(DEFAULT_CONFIG, `123`)
+	iter := ParseString(ConfigOfDefault, `123`)
 	val := uint64(0)
 	iter.ReadVal(&val)
 	if val != 123 {
@@ -115,7 +115,7 @@ func Test_reflect_uint64(t *testing.T) {
 }
 
 func Test_reflect_byte(t *testing.T) {
-	iter := ParseString(DEFAULT_CONFIG, `123`)
+	iter := ParseString(ConfigOfDefault, `123`)
 	val := byte(0)
 	iter.ReadVal(&val)
 	if val != 123 {
@@ -124,7 +124,7 @@ func Test_reflect_byte(t *testing.T) {
 }
 
 func Test_reflect_float32(t *testing.T) {
-	iter := ParseString(DEFAULT_CONFIG, `1.23`)
+	iter := ParseString(ConfigOfDefault, `1.23`)
 	val := float32(0)
 	iter.ReadVal(&val)
 	if val != 1.23 {
@@ -134,7 +134,7 @@ func Test_reflect_float32(t *testing.T) {
 }
 
 func Test_reflect_float64(t *testing.T) {
-	iter := ParseString(DEFAULT_CONFIG, `1.23`)
+	iter := ParseString(ConfigOfDefault, `1.23`)
 	val := float64(0)
 	iter.ReadVal(&val)
 	if val != 1.23 {
@@ -144,7 +144,7 @@ func Test_reflect_float64(t *testing.T) {
 }
 
 func Test_reflect_bool(t *testing.T) {
-	iter := ParseString(DEFAULT_CONFIG, `true`)
+	iter := ParseString(ConfigOfDefault, `true`)
 	val := false
 	iter.ReadVal(&val)
 	if val != true {

@@ -20,7 +20,7 @@ func (any *stringLazyAny) ValueType() ValueType {
 func (any *stringLazyAny) Parse() *Iterator {
 	iter := any.iter
 	if iter == nil {
-		iter = NewIterator(DEFAULT_CONFIG)
+		iter = NewIterator(ConfigOfDefault)
 		any.iter = iter
 	}
 	iter.ResetBytes(any.buf)

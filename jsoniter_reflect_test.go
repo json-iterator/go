@@ -27,7 +27,7 @@ func Test_decode_nested(t *testing.T) {
 		Field1 string
 		Field2 string
 	}
-	iter := ParseString(DEFAULT_CONFIG, `[{"field1": "hello"}, null, {"field2": "world"}]`)
+	iter := ParseString(ConfigOfDefault, `[{"field1": "hello"}, null, {"field2": "world"}]`)
 	slice := []*StructOfString{}
 	iter.ReadVal(&slice)
 	if len(slice) != 3 {
@@ -49,12 +49,12 @@ func Test_decode_nested(t *testing.T) {
 }
 
 func Test_decode_base64(t *testing.T) {
-	iter := ParseString(DEFAULT_CONFIG, `"YWJj"`)
+	iter := ParseString(ConfigOfDefault, `"YWJj"`)
 	val := []byte{}
 	RegisterTypeDecoder("[]uint8", func(ptr unsafe.Pointer, iter *Iterator) {
 		*((*[]byte)(ptr)) = iter.ReadBase64()
 	})
-	defer DEFAULT_CONFIG.CleanDecoders()
+	defer ConfigOfDefault.CleanDecoders()
 	iter.ReadVal(&val)
 	if "abc" != string(val) {
 		t.Fatal(string(val))
@@ -70,7 +70,7 @@ type StructOfTagOne struct {
 
 func Benchmark_jsoniter_reflect(b *testing.B) {
 	b.ReportAllocs()
-	iter := NewIterator(DEFAULT_CONFIG)
+	iter := NewIterator(ConfigOfDefault)
 	Struct := &StructOfTagOne{}
 	//var Struct *StructOfTagOne
 	input := []byte(`{"field3": "100", "field4": "100"}`)
@@ -96,7 +96,7 @@ func Benchmark_jsoniter_direct(b *testing.B) {
 		//		iter.Skip()
 		//	}
 		//}
-		iter := ParseString(DEFAULT_CONFIG, `["hello", "world"]`)
+		iter := ParseString(ConfigOfDefault, `["hello", "world"]`)
 		array := make([]string, 0, 2)
 		for iter.ReadArray() {
 			array = append(array, iter.ReadString())

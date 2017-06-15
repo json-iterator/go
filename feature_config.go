@@ -11,6 +11,7 @@ type Config struct {
 	IndentionStep                 int
 	MarshalFloatWith6Digits       bool
 	SupportUnexportedStructFields bool
+	EscapeHtml		      bool
 }
 
 type frozenConfig struct {
@@ -20,7 +21,12 @@ type frozenConfig struct {
 	extensions                    []ExtensionFunc
 }
 
-var DEFAULT_CONFIG = Config{}.Froze()
+var ConfigOfDefault = Config{}.Froze()
+
+// Trying to be 100% compatible with standard library behavior
+var ConfigCompatibleWithStandardLibrary = Config{
+	EscapeHtml: true,
+}.Froze()
 
 func (cfg Config) Froze() *frozenConfig {
 	frozenConfig := &frozenConfig{
@@ -34,16 +40,19 @@ func (cfg Config) Froze() *frozenConfig {
 	if cfg.SupportUnexportedStructFields {
 		frozenConfig.supportUnexportedStructFields()
 	}
+	if cfg.EscapeHtml {
+		frozenConfig.escapeHtml()
+	}
 	return frozenConfig
 }
 
 // RegisterExtension can register a custom extension
-func (cfg *frozenConfig) RegisterExtension(extension ExtensionFunc) {
+func (cfg *frozenConfig) registerExtension(extension ExtensionFunc) {
 	cfg.extensions = append(cfg.extensions, extension)
 }
 
 func (cfg *frozenConfig) supportUnexportedStructFields() {
-	cfg.RegisterExtension(func(type_ reflect.Type, field *reflect.StructField) ([]string, EncoderFunc, DecoderFunc) {
+	cfg.registerExtension(func(type_ reflect.Type, field *reflect.StructField) ([]string, EncoderFunc, DecoderFunc) {
 		return []string{field.Name}, nil, nil
 	})
 }
@@ -59,6 +68,14 @@ func (cfg *frozenConfig) marshalFloatWith6Digits() {
 	cfg.addEncoderToCache(reflect.TypeOf((*float64)(nil)).Elem(), &funcEncoder{func(ptr unsafe.Pointer, stream *Stream) {
 		val := *((*float64)(ptr))
 		stream.WriteFloat64Lossy(val)
+	}})
+}
+
+func (cfg *frozenConfig) escapeHtml() {
+	// for better performance
+	cfg.addEncoderToCache(reflect.TypeOf((*string)(nil)).Elem(), &funcEncoder{func(ptr unsafe.Pointer, stream *Stream) {
+		val := *((*string)(ptr))
+		stream.WriteStringWithHtmlEscaped(val)
 	}})
 }
 

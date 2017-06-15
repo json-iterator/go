@@ -27,7 +27,7 @@ func Benchmark_jsoniter_large_file(b *testing.B) {
 	b.ReportAllocs()
 	for n := 0; n < b.N; n++ {
 		file, _ := os.Open("/tmp/large-file.json")
-		iter := Parse(DEFAULT_CONFIG, file, 4096)
+		iter := Parse(ConfigOfDefault, file, 4096)
 		count := 0
 		for iter.ReadArray() {
 			iter.Skip()

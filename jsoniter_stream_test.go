@@ -7,7 +7,7 @@ import (
 
 func Test_writeByte_should_grow_buffer(t *testing.T) {
 	should := require.New(t)
-	stream := NewStream(DEFAULT_CONFIG, nil, 1)
+	stream := NewStream(ConfigOfDefault, nil, 1)
 	stream.writeByte('1')
 	should.Equal("1", string(stream.Buffer()))
 	should.Equal(1, len(stream.buf))
@@ -20,7 +20,7 @@ func Test_writeByte_should_grow_buffer(t *testing.T) {
 
 func Test_writeBytes_should_grow_buffer(t *testing.T) {
 	should := require.New(t)
-	stream := NewStream(DEFAULT_CONFIG, nil, 1)
+	stream := NewStream(ConfigOfDefault, nil, 1)
 	stream.Write([]byte{'1', '2'})
 	should.Equal("12", string(stream.Buffer()))
 	should.Equal(3, len(stream.buf))
@@ -38,7 +38,7 @@ func Test_writeIndention_should_grow_buffer(t *testing.T) {
 
 func Test_writeRaw_should_grow_buffer(t *testing.T) {
 	should := require.New(t)
-	stream := NewStream(DEFAULT_CONFIG, nil, 1)
+	stream := NewStream(ConfigOfDefault, nil, 1)
 	stream.WriteRaw("123")
 	should.Nil(stream.Error)
 	should.Equal("123", string(stream.Buffer()))
@@ -46,7 +46,7 @@ func Test_writeRaw_should_grow_buffer(t *testing.T) {
 
 func Test_writeString_should_grow_buffer(t *testing.T) {
 	should := require.New(t)
-	stream := NewStream(DEFAULT_CONFIG, nil, 0)
+	stream := NewStream(ConfigOfDefault, nil, 0)
 	stream.WriteString("123")
 	should.Nil(stream.Error)
 	should.Equal(`"123"`, string(stream.Buffer()))

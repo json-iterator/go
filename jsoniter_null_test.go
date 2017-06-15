@@ -9,11 +9,11 @@ import (
 
 func Test_read_null(t *testing.T) {
 	should := require.New(t)
-	iter := ParseString(DEFAULT_CONFIG, `null`)
+	iter := ParseString(ConfigOfDefault, `null`)
 	should.True(iter.ReadNil())
-	iter = ParseString(DEFAULT_CONFIG, `null`)
+	iter = ParseString(ConfigOfDefault, `null`)
 	should.Nil(iter.Read())
-	iter = ParseString(DEFAULT_CONFIG, `null`)
+	iter = ParseString(ConfigOfDefault, `null`)
 	any, err := UnmarshalAnyFromString(`null`)
 	should.Nil(err)
 	should.Equal(0, any.ToInt())
@@ -25,7 +25,7 @@ func Test_read_null(t *testing.T) {
 func Test_write_null(t *testing.T) {
 	should := require.New(t)
 	buf := &bytes.Buffer{}
-	stream := NewStream(DEFAULT_CONFIG, buf, 4096)
+	stream := NewStream(ConfigOfDefault, buf, 4096)
 	stream.WriteNil()
 	stream.Flush()
 	should.Nil(stream.Error)
@@ -41,7 +41,7 @@ func Test_encode_null(t *testing.T) {
 
 func Test_decode_null_object(t *testing.T) {
 	should := require.New(t)
-	iter := ParseString(DEFAULT_CONFIG, `[null,"a"]`)
+	iter := ParseString(ConfigOfDefault, `[null,"a"]`)
 	iter.ReadArray()
 	if iter.ReadObject() != "" {
 		t.FailNow()
@@ -59,7 +59,7 @@ func Test_decode_null_object(t *testing.T) {
 }
 
 func Test_decode_null_array(t *testing.T) {
-	iter := ParseString(DEFAULT_CONFIG, `[null,"a"]`)
+	iter := ParseString(ConfigOfDefault, `[null,"a"]`)
 	iter.ReadArray()
 	if iter.ReadArray() != false {
 		t.FailNow()
@@ -72,7 +72,7 @@ func Test_decode_null_array(t *testing.T) {
 
 func Test_decode_null_string(t *testing.T) {
 	should := require.New(t)
-	iter := ParseString(DEFAULT_CONFIG, `[null,"a"]`)
+	iter := ParseString(ConfigOfDefault, `[null,"a"]`)
 	should.True(iter.ReadArray())
 	should.Equal("", iter.ReadString())
 	should.True(iter.ReadArray())
@@ -80,7 +80,7 @@ func Test_decode_null_string(t *testing.T) {
 }
 
 func Test_decode_null_skip(t *testing.T) {
-	iter := ParseString(DEFAULT_CONFIG, `[null,"a"]`)
+	iter := ParseString(ConfigOfDefault, `[null,"a"]`)
 	iter.ReadArray()
 	iter.Skip()
 	iter.ReadArray()

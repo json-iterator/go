@@ -17,7 +17,7 @@ type float64LazyAny struct {
 func (any *float64LazyAny) Parse() *Iterator {
 	iter := any.iter
 	if iter == nil {
-		iter = NewIterator(DEFAULT_CONFIG)
+		iter = NewIterator(ConfigOfDefault)
 	}
 	iter.ResetBytes(any.buf)
 	return iter

@@ -7,7 +7,7 @@ import (
 )
 
 func Test_read_by_one(t *testing.T) {
-	iter := Parse(DEFAULT_CONFIG, bytes.NewBufferString("abc"), 1)
+	iter := Parse(ConfigOfDefault, bytes.NewBufferString("abc"), 1)
 	b := iter.readByte()
 	if iter.Error != nil {
 		t.Fatal(iter.Error)
@@ -34,7 +34,7 @@ func Test_read_by_one(t *testing.T) {
 }
 
 func Test_read_by_two(t *testing.T) {
-	iter := Parse(DEFAULT_CONFIG, bytes.NewBufferString("abc"), 2)
+	iter := Parse(ConfigOfDefault, bytes.NewBufferString("abc"), 2)
 	b := iter.readByte()
 	if iter.Error != nil {
 		t.Fatal(iter.Error)
@@ -67,7 +67,7 @@ func Test_read_by_two(t *testing.T) {
 }
 
 func Test_read_until_eof(t *testing.T) {
-	iter := Parse(DEFAULT_CONFIG, bytes.NewBufferString("abc"), 2)
+	iter := Parse(ConfigOfDefault, bytes.NewBufferString("abc"), 2)
 	iter.readByte()
 	iter.readByte()
 	b := iter.readByte()
