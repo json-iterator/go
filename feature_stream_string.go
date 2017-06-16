@@ -1,6 +1,8 @@
 package jsoniter
 
-import "unicode/utf8"
+import (
+	"unicode/utf8"
+)
 
 // htmlSafeSet holds the value true if the ASCII character with the given
 // array position can be safely represented inside a JSON string, embedded
@@ -230,7 +232,7 @@ func (stream *Stream) WriteStringWithHtmlEscaped(s string) {
 	i := 0
 	for ; i < toWriteLen; i++ {
 		c := s[i]
-		if c > 31 && htmlSafeSet[c] {
+		if c <= utf8.RuneSelf && htmlSafeSet[c] {
 			stream.buf[n] = c
 			n++
 		} else {
@@ -244,11 +246,47 @@ func (stream *Stream) WriteStringWithHtmlEscaped(s string) {
 		return
 	}
 	stream.n = n
-	start := 0
+	writeStringSlowPath(stream, htmlSafeSet, i, s, valLen)
+}
+
+func (stream *Stream) WriteString(s string) {
+	stream.ensure(32)
+	valLen := len(s)
+	toWriteLen := valLen
+	bufLengthMinusTwo := len(stream.buf) - 2 // make room for the quotes
+	if stream.n+toWriteLen > bufLengthMinusTwo {
+		toWriteLen = bufLengthMinusTwo - stream.n
+	}
+	n := stream.n
+	stream.buf[n] = '"'
+	n++
+	// write string, the fast path, without utf8 and escape support
+	i := 0
+	for ; i < toWriteLen; i++ {
+		c := s[i]
+		if c > 31 && c != '"' && c != '\\' {
+			stream.buf[n] = c
+			n++
+		} else {
+			break
+		}
+	}
+	if i == valLen {
+		stream.buf[n] = '"'
+		n++
+		stream.n = n
+		return
+	}
+	stream.n = n
+	writeStringSlowPath(stream, safeSet, i, s, valLen)
+}
+
+func writeStringSlowPath(stream *Stream, safeSet [utf8.RuneSelf]bool, i int, s string, valLen int) {
+	start := i
 	// for the remaining parts, we process them char by char
 	for ; i < valLen; i++ {
 		if b := s[i]; b < utf8.RuneSelf {
-			if htmlSafeSet[b] {
+			if safeSet[b] {
 				i++
 				continue
 			}
@@ -308,60 +346,6 @@ func (stream *Stream) WriteStringWithHtmlEscaped(s string) {
 	}
 	if start < len(s) {
 		stream.WriteRaw(s[start:])
-	}
-	stream.writeByte('"')
-}
-
-func (stream *Stream) WriteString(s string) {
-	stream.ensure(32)
-	valLen := len(s)
-	toWriteLen := valLen
-	bufLengthMinusTwo := len(stream.buf) - 2 // make room for the quotes
-	if stream.n+toWriteLen > bufLengthMinusTwo {
-		toWriteLen = bufLengthMinusTwo - stream.n
-	}
-	n := stream.n
-	stream.buf[n] = '"'
-	n++
-	// write string, the fast path, without utf8 and escape support
-	i := 0
-	for ; i < toWriteLen; i++ {
-		c := s[i]
-		if c > 31 && c != '"' && c != '\\' {
-			stream.buf[n] = c
-			n++
-		} else {
-			break
-		}
-	}
-	if i == valLen {
-		stream.buf[n] = '"'
-		n++
-		stream.n = n
-		return
-	}
-	stream.n = n
-	// for the remaining parts, we process them char by char
-	for ; i < valLen; i++ {
-		c := s[i]
-		switch c {
-		case '"':
-			stream.writeTwoBytes('\\', '"')
-		case '\\':
-			stream.writeTwoBytes('\\', '\\')
-		case '\b':
-			stream.writeTwoBytes('\\', 'b')
-		case '\f':
-			stream.writeTwoBytes('\\', 'f')
-		case '\n':
-			stream.writeTwoBytes('\\', 'n')
-		case '\r':
-			stream.writeTwoBytes('\\', 'r')
-		case '\t':
-			stream.writeTwoBytes('\\', 't')
-		default:
-			stream.writeByte(c)
-		}
 	}
 	stream.writeByte('"')
 }

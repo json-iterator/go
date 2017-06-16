@@ -137,6 +137,24 @@ func Test_string_encode_with_std(t *testing.T) {
 	}
 }
 
+func Test_string_encode_with_std_without_html_escape(t *testing.T) {
+	should := require.New(t)
+	for i := 0; i < utf8.RuneSelf; i++ {
+		input := string([]byte{byte(i)})
+		buf := &bytes.Buffer{}
+		encoder := json.NewEncoder(buf)
+		encoder.SetEscapeHTML(false)
+		err := encoder.Encode(input)
+		should.Nil(err)
+		stdOutput := buf.String()
+		stdOutput = stdOutput[:len(stdOutput) - 1]
+		jsoniterOutputBytes, err := Marshal(input)
+		should.Nil(err)
+		jsoniterOutput := string(jsoniterOutputBytes)
+		should.Equal(stdOutput, jsoniterOutput)
+	}
+}
+
 func Benchmark_jsoniter_unicode(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		iter := ParseString(ConfigOfDefault, `"\ud83d\udc4a"`)
