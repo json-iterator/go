@@ -125,3 +125,17 @@ func Test_map_key_with_escaped_char(t *testing.T) {
 		should.Equal(map[string]string{"k\"ey": "val"}, obj.Map)
 	}
 }
+
+func Test_encode_map_with_sorted_keys(t *testing.T) {
+	should := require.New(t)
+	m := map[string]interface{}{
+		"3": 3,
+		"1": 1,
+		"2": 2,
+	}
+	bytes, err := json.Marshal(m)
+	should.Nil(err)
+	output, err := ConfigCompatibleWithStandardLibrary.MarshalToString(m)
+	should.Nil(err)
+	should.Equal(string(bytes), output)
+}

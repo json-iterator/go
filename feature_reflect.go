@@ -487,6 +487,9 @@ func encoderOfMap(cfg *frozenConfig, typ reflect.Type) (Encoder, error) {
 		return nil, err
 	}
 	mapInterface := reflect.New(typ).Elem().Interface()
-	encoderForMap := &mapEncoder{typ, elemType, encoder, *((*emptyInterface)(unsafe.Pointer(&mapInterface)))}
-	return encoderForMap, nil
+	if cfg.sortMapKeys {
+		return &sortKeysMapEncoder{typ, elemType, encoder, *((*emptyInterface)(unsafe.Pointer(&mapInterface)))}, nil
+	} else {
+		return &mapEncoder{typ, elemType, encoder, *((*emptyInterface)(unsafe.Pointer(&mapInterface)))}, nil
+	}
 }

@@ -12,26 +12,30 @@ type Config struct {
 	IndentionStep                 int
 	MarshalFloatWith6Digits       bool
 	SupportUnexportedStructFields bool
-	EscapeHtml		      bool
+	EscapeHtml                    bool
+	SortMapKeys                   bool
 }
 
 type frozenConfig struct {
-	configBeforeFrozen	      Config
-	indentionStep                 int
-	decoderCache                  unsafe.Pointer
-	encoderCache                  unsafe.Pointer
-	extensions                    []ExtensionFunc
+	configBeforeFrozen Config
+	sortMapKeys        bool
+	indentionStep      int
+	decoderCache       unsafe.Pointer
+	encoderCache       unsafe.Pointer
+	extensions         []ExtensionFunc
 }
 
 var ConfigOfDefault = Config{}.Froze()
 
 // Trying to be 100% compatible with standard library behavior
 var ConfigCompatibleWithStandardLibrary = Config{
-	EscapeHtml: true,
+	EscapeHtml:  true,
+	SortMapKeys: true,
 }.Froze()
 
 func (cfg Config) Froze() *frozenConfig {
 	frozenConfig := &frozenConfig{
+		sortMapKeys: cfg.SortMapKeys,
 		indentionStep: cfg.IndentionStep,
 	}
 	atomic.StorePointer(&frozenConfig.decoderCache, unsafe.Pointer(&map[string]Decoder{}))

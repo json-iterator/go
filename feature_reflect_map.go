@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strconv"
 	"unsafe"
+	"sort"
 )
 
 type mapDecoder struct {
@@ -130,6 +131,84 @@ func (encoder *mapEncoder) encodeInterface(val interface{}, stream *Stream) {
 }
 
 func (encoder *mapEncoder) isEmpty(ptr unsafe.Pointer) bool {
+	mapInterface := encoder.mapInterface
+	mapInterface.word = ptr
+	realInterface := (*interface{})(unsafe.Pointer(&mapInterface))
+	realVal := reflect.ValueOf(*realInterface)
+	return realVal.Len() == 0
+}
+
+type sortKeysMapEncoder struct {
+	mapType      reflect.Type
+	elemType     reflect.Type
+	elemEncoder  Encoder
+	mapInterface emptyInterface
+}
+
+func (encoder *sortKeysMapEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
+	mapInterface := encoder.mapInterface
+	mapInterface.word = ptr
+	realInterface := (*interface{})(unsafe.Pointer(&mapInterface))
+	realVal := reflect.ValueOf(*realInterface)
+
+
+	// Extract and sort the keys.
+	keys := realVal.MapKeys()
+	sv := make([]reflectWithString, len(keys))
+	for i, v := range keys {
+		sv[i].v = v
+		if err := sv[i].resolve(); err != nil {
+			stream.Error = err
+			return
+		}
+	}
+	sort.Slice(sv, func(i, j int) bool { return sv[i].s < sv[j].s })
+
+	stream.WriteObjectStart()
+	for i, key := range sv {
+		if i != 0 {
+			stream.WriteMore()
+		}
+		encodeMapKey(key.v, stream)
+		stream.writeByte(':')
+		val := realVal.MapIndex(key.v).Interface()
+		encoder.elemEncoder.encodeInterface(val, stream)
+	}
+	stream.WriteObjectEnd()
+}
+
+
+type reflectWithString struct {
+	v reflect.Value
+	s string
+}
+
+func (w *reflectWithString) resolve() error {
+	if w.v.Kind() == reflect.String {
+		w.s = w.v.String()
+		return nil
+	}
+	if tm, ok := w.v.Interface().(encoding.TextMarshaler); ok {
+		buf, err := tm.MarshalText()
+		w.s = string(buf)
+		return err
+	}
+	switch w.v.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		w.s = strconv.FormatInt(w.v.Int(), 10)
+		return nil
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		w.s = strconv.FormatUint(w.v.Uint(), 10)
+		return nil
+	}
+	panic("unexpected map key type")
+}
+
+func (encoder *sortKeysMapEncoder) encodeInterface(val interface{}, stream *Stream) {
+	writeToStream(val, stream, encoder)
+}
+
+func (encoder *sortKeysMapEncoder) isEmpty(ptr unsafe.Pointer) bool {
 	mapInterface := encoder.mapInterface
 	mapInterface.word = ptr
 	realInterface := (*interface{})(unsafe.Pointer(&mapInterface))
