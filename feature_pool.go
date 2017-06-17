@@ -23,7 +23,7 @@ func (cfg *frozenConfig) ReturnStream(stream *Stream) {
 
 func (cfg *frozenConfig) BorrowIterator(data []byte) *Iterator {
 	select {
-	case iter := <- cfg.iteratorPool:
+	case iter := <-cfg.iteratorPool:
 		iter.ResetBytes(data)
 		return iter
 	default:

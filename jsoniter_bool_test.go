@@ -2,9 +2,9 @@ package jsoniter
 
 import (
 	"bytes"
+	"encoding/json"
 	"github.com/json-iterator/go/require"
 	"testing"
-	"encoding/json"
 )
 
 func Test_true(t *testing.T) {

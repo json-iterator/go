@@ -46,7 +46,6 @@ func ExampleUnmarshal() {
 	// [{Name:Platypus Order:Monotremata} {Name:Quoll Order:Dasyuromorphia}]
 }
 
-
 func ExampleMarshalWithBestPerformance() {
 	type ColorGroup struct {
 		ID     int

@@ -147,7 +147,7 @@ func Test_string_encode_with_std_without_html_escape(t *testing.T) {
 		err := encoder.Encode(input)
 		should.Nil(err)
 		stdOutput := buf.String()
-		stdOutput = stdOutput[:len(stdOutput) - 1]
+		stdOutput = stdOutput[:len(stdOutput)-1]
 		jsoniterOutputBytes, err := Marshal(input)
 		should.Nil(err)
 		jsoniterOutput := string(jsoniterOutputBytes)

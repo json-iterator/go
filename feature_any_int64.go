@@ -8,7 +8,7 @@ import (
 
 type int64LazyAny struct {
 	baseAny
-	cfg	*frozenConfig
+	cfg   *frozenConfig
 	buf   []byte
 	err   error
 	cache int64

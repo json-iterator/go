@@ -4,9 +4,9 @@ import (
 	"encoding"
 	"encoding/json"
 	"reflect"
+	"sort"
 	"strconv"
 	"unsafe"
-	"sort"
 )
 
 type mapDecoder struct {
@@ -150,7 +150,6 @@ func (encoder *sortKeysMapEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
 	mapInterface.word = ptr
 	realInterface := (*interface{})(unsafe.Pointer(&mapInterface))
 	realVal := reflect.ValueOf(*realInterface)
-
 
 	// Extract and sort the keys.
 	var sv stringValues = realVal.MapKeys()

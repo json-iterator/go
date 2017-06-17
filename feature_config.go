@@ -1,11 +1,11 @@
 package jsoniter
 
 import (
+	"errors"
 	"io"
 	"reflect"
 	"sync/atomic"
 	"unsafe"
-	"errors"
 )
 
 type Config struct {
