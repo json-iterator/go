@@ -37,9 +37,12 @@ func encoderOfStruct(cfg *frozenConfig, typ reflect.Type) (Encoder, error) {
 		// if fieldNames set by extension, use theirs, otherwise try tags
 		fieldNames := calcFieldNames(field.Name, tagParts[0], extensionProvidedFieldNames)
 		omitempty := false
-		for _, tagPart := range tagParts {
+		stringMode := false
+		for _, tagPart := range tagParts[1:] {
 			if tagPart == "omitempty" {
 				omitempty = true
+			} else if tagPart == "string" {
+				stringMode = true
 			}
 		}
 		encoder := fieldEncoders[fieldEncoderKey]
@@ -53,6 +56,9 @@ func encoderOfStruct(cfg *frozenConfig, typ reflect.Type) (Encoder, error) {
 			if field.Type.Kind() == reflect.Map {
 				encoder = &optionalEncoder{encoder}
 			}
+		}
+		if stringMode {
+			encoder = &stringModeEncoder{encoder}
 		}
 		for _, fieldName := range fieldNames {
 			fields[fieldName] = &structFieldEncoder{field, fieldName, encoder, omitempty}
@@ -114,8 +120,10 @@ func decoderOfStruct(cfg *frozenConfig, typ reflect.Type) (Decoder, error) {
 				return prefix(fmt.Sprintf("{%s}", field.Name)).addToDecoder(decoder, err)
 			}
 		}
-		if len(tagParts) > 1 && tagParts[1] == "string" {
-			decoder = &stringNumberDecoder{decoder}
+		for _, tagPart := range tagParts[1:] {
+			if tagPart == "string" {
+				decoder = &stringModeDecoder{decoder}
+			}
 		}
 		for _, fieldName := range fieldNames {
 			fields[fieldName] = &structFieldDecoder{&field, decoder}

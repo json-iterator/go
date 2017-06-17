@@ -427,14 +427,14 @@ func (encoder *base64Codec) isEmpty(ptr unsafe.Pointer) bool {
 	return len(*((*[]byte)(ptr))) == 0
 }
 
-type stringNumberDecoder struct {
+type stringModeDecoder struct {
 	elemDecoder Decoder
 }
 
-func (decoder *stringNumberDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (decoder *stringModeDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 	c := iter.nextToken()
 	if c != '"' {
-		iter.reportError("stringNumberDecoder", `expect "`)
+		iter.reportError("stringModeDecoder", `expect "`)
 		return
 	}
 	decoder.elemDecoder.decode(ptr, iter)
@@ -443,9 +443,27 @@ func (decoder *stringNumberDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 	}
 	c = iter.readByte()
 	if c != '"' {
-		iter.reportError("stringNumberDecoder", `expect "`)
+		iter.reportError("stringModeDecoder", `expect "`)
 		return
 	}
+}
+
+type stringModeEncoder struct {
+	elemEncoder Encoder
+}
+
+func (encoder *stringModeEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
+	stream.writeByte('"')
+	encoder.elemEncoder.encode(ptr, stream)
+	stream.writeByte('"')
+}
+
+func (encoder *stringModeEncoder) encodeInterface(val interface{}, stream *Stream) {
+	writeToStream(val, stream, encoder)
+}
+
+func (encoder *stringModeEncoder) isEmpty(ptr unsafe.Pointer) bool {
+	return encoder.elemEncoder.isEmpty(ptr)
 }
 
 type marshalerEncoder struct {
