@@ -196,7 +196,7 @@ func (any *objectLazyAny) ToString() string {
 		return *(*string)(unsafe.Pointer(&any.buf))
 	} else {
 		any.fillCache()
-		str, err := MarshalToString(any.cache)
+		str, err := any.cfg.MarshalToString(any.cache)
 		any.err = err
 		return str
 	}
