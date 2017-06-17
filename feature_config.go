@@ -153,7 +153,7 @@ func (cfg *frozenConfig) MarshalToString(v interface{}) (string, error) {
 	defer cfg.returnStream(stream)
 	stream.WriteVal(v)
 	if stream.Error != nil {
-		return nil, stream.Error
+		return "", stream.Error
 	}
 	return string(stream.Buffer()), nil
 }
