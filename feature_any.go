@@ -29,7 +29,6 @@ type Any interface {
 	SetObject(map[string]Any) bool
 	GetInterface() interface{}
 	WriteTo(stream *Stream)
-	Parse() *Iterator
 }
 
 type baseAny struct{}
@@ -147,14 +146,14 @@ func Wrap(val interface{}) Any {
 }
 
 func (iter *Iterator) ReadAny() Any {
-	return iter.readAny(nil)
+	return iter.readAny()
 }
 
-func (iter *Iterator) readAny(reusableIter *Iterator) Any {
+func (iter *Iterator) readAny() Any {
 	c := iter.nextToken()
 	switch c {
 	case '"':
-		return iter.readStringAny(reusableIter)
+		return iter.readStringAny()
 	case 'n':
 		iter.skipFixedBytes(3) // null
 		return &nilAny{}
@@ -165,15 +164,15 @@ func (iter *Iterator) readAny(reusableIter *Iterator) Any {
 		iter.skipFixedBytes(4) // false
 		return &falseAny{}
 	case '{':
-		return iter.readObjectAny(reusableIter)
+		return iter.readObjectAny()
 	case '[':
-		return iter.readArrayAny(reusableIter)
+		return iter.readArrayAny()
 	default:
-		return iter.readNumberAny(reusableIter, c)
+		return iter.readNumberAny(c)
 	}
 }
 
-func (iter *Iterator) readNumberAny(reusableIter *Iterator, firstByte byte) Any {
+func (iter *Iterator) readNumberAny(firstByte byte) Any {
 	dotFound := false
 	lazyBuf := make([]byte, 1, 8)
 	lazyBuf[0] = firstByte
@@ -189,12 +188,12 @@ func (iter *Iterator) readNumberAny(reusableIter *Iterator, firstByte byte) Any 
 				lazyBuf = append(lazyBuf, iter.buf[iter.head:i]...)
 				iter.head = i
 				if dotFound {
-					return &float64LazyAny{baseAny{}, lazyBuf, reusableIter, nil, 0}
+					return &float64LazyAny{baseAny{}, iter.cfg, lazyBuf, nil, 0}
 				} else {
 					if firstByte == '-' {
-						return &int64LazyAny{baseAny{}, lazyBuf, reusableIter, nil, 0}
+						return &int64LazyAny{baseAny{}, iter.cfg, lazyBuf, nil, 0}
 					} else {
-						return &uint64LazyAny{baseAny{}, lazyBuf, reusableIter, nil, 0}
+						return &uint64LazyAny{baseAny{}, iter.cfg, lazyBuf, nil, 0}
 					}
 				}
 			}
@@ -203,19 +202,19 @@ func (iter *Iterator) readNumberAny(reusableIter *Iterator, firstByte byte) Any 
 		if !iter.loadMore() {
 			iter.head = iter.tail
 			if dotFound {
-				return &float64LazyAny{baseAny{}, lazyBuf, reusableIter, nil, 0}
+				return &float64LazyAny{baseAny{}, iter.cfg, lazyBuf, nil, 0}
 			} else {
 				if firstByte == '-' {
-					return &int64LazyAny{baseAny{}, lazyBuf, reusableIter, nil, 0}
+					return &int64LazyAny{baseAny{}, iter.cfg, lazyBuf, nil, 0}
 				} else {
-					return &uint64LazyAny{baseAny{}, lazyBuf, reusableIter, nil, 0}
+					return &uint64LazyAny{baseAny{}, iter.cfg, lazyBuf, nil, 0}
 				}
 			}
 		}
 	}
 }
 
-func (iter *Iterator) readStringAny(reusableIter *Iterator) Any {
+func (iter *Iterator) readStringAny() Any {
 	lazyBuf := make([]byte, 1, 8)
 	lazyBuf[0] = '"'
 	for {
@@ -232,12 +231,12 @@ func (iter *Iterator) readStringAny(reusableIter *Iterator) Any {
 		} else {
 			lazyBuf = append(lazyBuf, iter.buf[iter.head:end]...)
 			iter.head = end
-			return &stringLazyAny{baseAny{}, lazyBuf, reusableIter, nil, ""}
+			return &stringLazyAny{baseAny{}, iter.cfg, lazyBuf, nil, ""}
 		}
 	}
 }
 
-func (iter *Iterator) readObjectAny(reusableIter *Iterator) Any {
+func (iter *Iterator) readObjectAny() Any {
 	level := 1
 	lazyBuf := make([]byte, 1, 32)
 	lazyBuf[0] = '{'
@@ -258,7 +257,7 @@ func (iter *Iterator) readObjectAny(reusableIter *Iterator) Any {
 				if level == 0 {
 					iter.head = i + 1
 					lazyBuf = append(lazyBuf, iter.buf[start:iter.head]...)
-					return &objectLazyAny{baseAny{}, lazyBuf, reusableIter, nil, nil, lazyBuf}
+					return &objectLazyAny{baseAny{}, iter.cfg, lazyBuf, nil, nil, lazyBuf}
 				}
 			}
 		}
@@ -270,7 +269,7 @@ func (iter *Iterator) readObjectAny(reusableIter *Iterator) Any {
 	}
 }
 
-func (iter *Iterator) readArrayAny(reusableIter *Iterator) Any {
+func (iter *Iterator) readArrayAny() Any {
 	level := 1
 	lazyBuf := make([]byte, 1, 32)
 	lazyBuf[0] = '['
@@ -291,7 +290,7 @@ func (iter *Iterator) readArrayAny(reusableIter *Iterator) Any {
 				if level == 0 {
 					iter.head = i + 1
 					lazyBuf = append(lazyBuf, iter.buf[start:iter.head]...)
-					return &arrayLazyAny{baseAny{}, lazyBuf, reusableIter, nil, nil, lazyBuf}
+					return &arrayLazyAny{baseAny{}, iter.cfg, lazyBuf, nil, nil, lazyBuf}
 				}
 			}
 		}

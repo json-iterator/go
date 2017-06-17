@@ -8,8 +8,8 @@ import (
 
 type arrayLazyAny struct {
 	baseAny
+	cfg	*frozenConfig
 	buf       []byte
-	iter      *Iterator
 	err       error
 	cache     []Any
 	remaining []byte
@@ -17,16 +17,6 @@ type arrayLazyAny struct {
 
 func (any *arrayLazyAny) ValueType() ValueType {
 	return Array
-}
-
-func (any *arrayLazyAny) Parse() *Iterator {
-	iter := any.iter
-	if iter == nil {
-		iter = NewIterator(ConfigDefault)
-		any.iter = iter
-	}
-	iter.ResetBytes(any.remaining)
-	return iter
 }
 
 func (any *arrayLazyAny) fillCacheUntil(target int) Any {
@@ -43,13 +33,14 @@ func (any *arrayLazyAny) fillCacheUntil(target int) Any {
 	if target < i {
 		return any.cache[target]
 	}
-	iter := any.Parse()
+	iter := any.cfg.BorrowIterator(any.remaining)
+	defer any.cfg.ReturnIterator(iter)
 	if len(any.remaining) == len(any.buf) {
 		iter.head++
 		c := iter.nextToken()
 		if c != ']' {
 			iter.unreadByte()
-			element := iter.readAny(iter)
+			element := iter.readAny()
 			any.cache = append(any.cache, element)
 			if target == 0 {
 				any.remaining = iter.buf[iter.head:]
@@ -64,7 +55,7 @@ func (any *arrayLazyAny) fillCacheUntil(target int) Any {
 		}
 	}
 	for iter.nextToken() == ',' {
-		element := iter.readAny(iter)
+		element := iter.readAny()
 		any.cache = append(any.cache, element)
 		if i == target {
 			any.remaining = iter.buf[iter.head:]
@@ -85,13 +76,14 @@ func (any *arrayLazyAny) fillCache() {
 	if any.cache == nil {
 		any.cache = make([]Any, 0, 8)
 	}
-	iter := any.Parse()
+	iter := any.cfg.BorrowIterator(any.remaining)
+	defer any.cfg.ReturnIterator(iter)
 	if len(any.remaining) == len(any.buf) {
 		iter.head++
 		c := iter.nextToken()
 		if c != ']' {
 			iter.unreadByte()
-			any.cache = append(any.cache, iter.readAny(iter))
+			any.cache = append(any.cache, iter.readAny())
 		} else {
 			any.remaining = nil
 			any.err = iter.Error
@@ -99,7 +91,7 @@ func (any *arrayLazyAny) fillCache() {
 		}
 	}
 	for iter.nextToken() == ',' {
-		any.cache = append(any.cache, iter.readAny(iter))
+		any.cache = append(any.cache, iter.readAny())
 	}
 	any.remaining = nil
 	any.err = iter.Error
@@ -254,12 +246,13 @@ func (any *arrayLazyAny) IterateArray() (func() (Any, bool), bool) {
 	}
 	remaining := any.remaining
 	if len(remaining) == len(any.buf) {
-		iter := any.Parse()
+		iter := any.cfg.BorrowIterator(any.remaining)
+		defer any.cfg.ReturnIterator(iter)
 		iter.head++
 		c := iter.nextToken()
 		if c != ']' {
 			iter.unreadByte()
-			v := iter.readAny(iter)
+			v := iter.readAny()
 			any.cache = append(any.cache, v)
 			remaining = iter.buf[iter.head:]
 			any.remaining = remaining
@@ -285,15 +278,11 @@ func (any *arrayLazyAny) IterateArray() (func() (Any, bool), bool) {
 			return value, true
 		} else {
 			// read from buffer
-			iter := any.iter
-			if iter == nil {
-				iter = NewIterator(ConfigDefault)
-				any.iter = iter
-			}
-			iter.ResetBytes(remaining)
+			iter := any.cfg.BorrowIterator(any.remaining)
+			defer any.cfg.ReturnIterator(iter)
 			c := iter.nextToken()
 			if c == ',' {
-				nextValue = iter.readAny(iter)
+				nextValue = iter.readAny()
 				any.cache = append(any.cache, nextValue)
 				remaining = iter.buf[iter.head:]
 				any.remaining = remaining

@@ -8,8 +8,8 @@ import (
 
 type objectLazyAny struct {
 	baseAny
+	cfg	*frozenConfig
 	buf       []byte
-	iter      *Iterator
 	err       error
 	cache     map[string]Any
 	remaining []byte
@@ -17,16 +17,6 @@ type objectLazyAny struct {
 
 func (any *objectLazyAny) ValueType() ValueType {
 	return Object
-}
-
-func (any *objectLazyAny) Parse() *Iterator {
-	iter := any.iter
-	if iter == nil {
-		iter = NewIterator(ConfigDefault)
-		any.iter = iter
-	}
-	iter.ResetBytes(any.remaining)
-	return iter
 }
 
 func (any *objectLazyAny) fillCacheUntil(target string) Any {
@@ -40,14 +30,15 @@ func (any *objectLazyAny) fillCacheUntil(target string) Any {
 	if val != nil {
 		return val
 	}
-	iter := any.Parse()
+	iter := any.cfg.BorrowIterator(any.remaining)
+	defer any.cfg.ReturnIterator(iter)
 	if len(any.remaining) == len(any.buf) {
 		iter.head++
 		c := iter.nextToken()
 		if c != '}' {
 			iter.unreadByte()
 			k := string(iter.readObjectFieldAsBytes())
-			v := iter.readAny(iter)
+			v := iter.readAny()
 			any.cache[k] = v
 			if target == k {
 				any.remaining = iter.buf[iter.head:]
@@ -62,7 +53,7 @@ func (any *objectLazyAny) fillCacheUntil(target string) Any {
 	}
 	for iter.nextToken() == ',' {
 		k := string(iter.readObjectFieldAsBytes())
-		v := iter.readAny(iter)
+		v := iter.readAny()
 		any.cache[k] = v
 		if target == k {
 			any.remaining = iter.buf[iter.head:]
@@ -82,14 +73,15 @@ func (any *objectLazyAny) fillCache() {
 	if any.cache == nil {
 		any.cache = map[string]Any{}
 	}
-	iter := any.Parse()
+	iter := any.cfg.BorrowIterator(any.remaining)
+	defer any.cfg.ReturnIterator(iter)
 	if len(any.remaining) == len(any.buf) {
 		iter.head++
 		c := iter.nextToken()
 		if c != '}' {
 			iter.unreadByte()
 			k := string(iter.readObjectFieldAsBytes())
-			v := iter.readAny(iter)
+			v := iter.readAny()
 			any.cache[k] = v
 		} else {
 			any.remaining = nil
@@ -99,7 +91,7 @@ func (any *objectLazyAny) fillCache() {
 	}
 	for iter.nextToken() == ',' {
 		k := string(iter.readObjectFieldAsBytes())
-		v := iter.readAny(iter)
+		v := iter.readAny()
 		any.cache[k] = v
 	}
 	any.remaining = nil
@@ -266,13 +258,14 @@ func (any *objectLazyAny) IterateObject() (func() (string, Any, bool), bool) {
 	}
 	remaining := any.remaining
 	if len(remaining) == len(any.buf) {
-		iter := any.Parse()
+		iter := any.cfg.BorrowIterator(any.remaining)
+		defer any.cfg.ReturnIterator(iter)
 		iter.head++
 		c := iter.nextToken()
 		if c != '}' {
 			iter.unreadByte()
 			k := string(iter.readObjectFieldAsBytes())
-			v := iter.readAny(iter)
+			v := iter.readAny()
 			any.cache[k] = v
 			remaining = iter.buf[iter.head:]
 			any.remaining = remaining
@@ -306,16 +299,12 @@ func (any *objectLazyAny) IterateObject() (func() (string, Any, bool), bool) {
 			return key, value, true
 		} else {
 			// read from buffer
-			iter := any.iter
-			if iter == nil {
-				iter = NewIterator(ConfigDefault)
-				any.iter = iter
-			}
-			iter.ResetBytes(remaining)
+			iter := any.cfg.BorrowIterator(any.remaining)
+			defer any.cfg.ReturnIterator(iter)
 			c := iter.nextToken()
 			if c == ',' {
 				nextKey = string(iter.readObjectFieldAsBytes())
-				nextValue = iter.readAny(iter)
+				nextValue = iter.readAny()
 				any.cache[nextKey] = nextValue
 				remaining = iter.buf[iter.head:]
 				any.remaining = remaining

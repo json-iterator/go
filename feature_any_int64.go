@@ -8,8 +8,8 @@ import (
 
 type int64LazyAny struct {
 	baseAny
+	cfg	*frozenConfig
 	buf   []byte
-	iter  *Iterator
 	err   error
 	cache int64
 }
@@ -19,7 +19,8 @@ func (any *int64LazyAny) ValueType() ValueType {
 }
 
 func (any *int64LazyAny) Parse() *Iterator {
-	iter := any.iter
+	iter := any.cfg.BorrowIterator(any.buf)
+	defer any.cfg.ReturnIterator(iter)
 	if iter == nil {
 		iter = NewIterator(ConfigDefault)
 	}

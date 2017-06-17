@@ -8,8 +8,8 @@ import (
 
 type uint64LazyAny struct {
 	baseAny
+	cfg   *frozenConfig
 	buf   []byte
-	iter  *Iterator
 	err   error
 	cache uint64
 }
@@ -18,20 +18,12 @@ func (any *uint64LazyAny) ValueType() ValueType {
 	return Number
 }
 
-func (any *uint64LazyAny) Parse() *Iterator {
-	iter := any.iter
-	if iter == nil {
-		iter = NewIterator(ConfigDefault)
-	}
-	iter.ResetBytes(any.buf)
-	return iter
-}
-
 func (any *uint64LazyAny) fillCache() {
 	if any.err != nil {
 		return
 	}
-	iter := any.Parse()
+	iter := any.cfg.BorrowIterator(any.buf)
+	defer any.cfg.ReturnIterator(iter)
 	any.cache = iter.ReadUint64()
 	if iter.Error != io.EOF {
 		iter.reportError("intLazyAny", "there are bytes left")

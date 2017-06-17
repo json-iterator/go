@@ -7,8 +7,8 @@ import (
 
 type stringLazyAny struct {
 	baseAny
+	cfg   *frozenConfig
 	buf   []byte
-	iter  *Iterator
 	err   error
 	cache string
 }
@@ -17,21 +17,12 @@ func (any *stringLazyAny) ValueType() ValueType {
 	return String
 }
 
-func (any *stringLazyAny) Parse() *Iterator {
-	iter := any.iter
-	if iter == nil {
-		iter = NewIterator(ConfigDefault)
-		any.iter = iter
-	}
-	iter.ResetBytes(any.buf)
-	return iter
-}
-
 func (any *stringLazyAny) fillCache() {
 	if any.err != nil {
 		return
 	}
-	iter := any.Parse()
+	iter := any.cfg.BorrowIterator(any.buf)
+	defer any.cfg.ReturnIterator(iter)
 	any.cache = iter.ReadString()
 	if iter.Error != io.EOF {
 		iter.reportError("stringLazyAny", "there are bytes left")
@@ -59,7 +50,8 @@ func (any *stringLazyAny) ToBool() bool {
 }
 
 func (any *stringLazyAny) ToInt() int {
-	iter := any.Parse()
+	iter := any.cfg.BorrowIterator(any.buf)
+	defer any.cfg.ReturnIterator(iter)
 	iter.head++
 	val := iter.ReadInt()
 	any.err = iter.Error
@@ -67,7 +59,8 @@ func (any *stringLazyAny) ToInt() int {
 }
 
 func (any *stringLazyAny) ToInt32() int32 {
-	iter := any.Parse()
+	iter := any.cfg.BorrowIterator(any.buf)
+	defer any.cfg.ReturnIterator(iter)
 	iter.head++
 	val := iter.ReadInt32()
 	any.err = iter.Error
@@ -75,7 +68,8 @@ func (any *stringLazyAny) ToInt32() int32 {
 }
 
 func (any *stringLazyAny) ToInt64() int64 {
-	iter := any.Parse()
+	iter := any.cfg.BorrowIterator(any.buf)
+	defer any.cfg.ReturnIterator(iter)
 	iter.head++
 	val := iter.ReadInt64()
 	any.err = iter.Error
@@ -83,7 +77,8 @@ func (any *stringLazyAny) ToInt64() int64 {
 }
 
 func (any *stringLazyAny) ToUint() uint {
-	iter := any.Parse()
+	iter := any.cfg.BorrowIterator(any.buf)
+	defer any.cfg.ReturnIterator(iter)
 	iter.head++
 	val := iter.ReadUint()
 	any.err = iter.Error
@@ -91,7 +86,8 @@ func (any *stringLazyAny) ToUint() uint {
 }
 
 func (any *stringLazyAny) ToUint32() uint32 {
-	iter := any.Parse()
+	iter := any.cfg.BorrowIterator(any.buf)
+	defer any.cfg.ReturnIterator(iter)
 	iter.head++
 	val := iter.ReadUint32()
 	any.err = iter.Error
@@ -99,7 +95,8 @@ func (any *stringLazyAny) ToUint32() uint32 {
 }
 
 func (any *stringLazyAny) ToUint64() uint64 {
-	iter := any.Parse()
+	iter := any.cfg.BorrowIterator(any.buf)
+	defer any.cfg.ReturnIterator(iter)
 	iter.head++
 	val := iter.ReadUint64()
 	any.err = iter.Error
@@ -107,7 +104,8 @@ func (any *stringLazyAny) ToUint64() uint64 {
 }
 
 func (any *stringLazyAny) ToFloat32() float32 {
-	iter := any.Parse()
+	iter := any.cfg.BorrowIterator(any.buf)
+	defer any.cfg.ReturnIterator(iter)
 	iter.head++
 	val := iter.ReadFloat32()
 	any.err = iter.Error
@@ -115,7 +113,8 @@ func (any *stringLazyAny) ToFloat32() float32 {
 }
 
 func (any *stringLazyAny) ToFloat64() float64 {
-	iter := any.Parse()
+	iter := any.cfg.BorrowIterator(any.buf)
+	defer any.cfg.ReturnIterator(iter)
 	iter.head++
 	val := iter.ReadFloat64()
 	any.err = iter.Error

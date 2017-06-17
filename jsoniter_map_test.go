@@ -128,11 +128,11 @@ func Test_map_key_with_escaped_char(t *testing.T) {
 
 func Test_encode_map_with_sorted_keys(t *testing.T) {
 	should := require.New(t)
-	m := map[string]interface{}{
-		"3": 3,
-		"1": 1,
-		"2": 2,
-	}
+m := map[string]interface{}{
+	"3": 3,
+	"1": 1,
+	"2": 2,
+}
 	bytes, err := json.Marshal(m)
 	should.Nil(err)
 	output, err := ConfigCompatibleWithStandardLibrary.MarshalToString(m)
