@@ -149,11 +149,13 @@ func (cfg *frozenConfig) CleanEncoders() {
 }
 
 func (cfg *frozenConfig) MarshalToString(v interface{}) (string, error) {
-	buf, err := cfg.Marshal(v)
-	if err != nil {
-		return "", err
+	stream := cfg.borrowStream()
+	defer cfg.returnStream(stream)
+	stream.WriteVal(v)
+	if stream.Error != nil {
+		return nil, stream.Error
 	}
-	return string(buf), nil
+	return string(stream.Buffer()), nil
 }
 
 func (cfg *frozenConfig) Marshal(v interface{}) ([]byte, error) {
@@ -163,7 +165,10 @@ func (cfg *frozenConfig) Marshal(v interface{}) ([]byte, error) {
 	if stream.Error != nil {
 		return nil, stream.Error
 	}
-	return stream.Buffer(), nil
+	result := stream.Buffer()
+	copied := make([]byte, len(result))
+	copy(copied, result)
+	return copied, nil
 }
 
 func (cfg *frozenConfig) UnmarshalFromString(str string, v interface{}) error {
