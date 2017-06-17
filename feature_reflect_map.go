@@ -153,56 +153,30 @@ func (encoder *sortKeysMapEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
 
 
 	// Extract and sort the keys.
-	keys := realVal.MapKeys()
-	sv := make([]reflectWithString, len(keys))
-	for i, v := range keys {
-		sv[i].v = v
-		if err := sv[i].resolve(); err != nil {
-			stream.Error = err
-			return
-		}
-	}
-	sort.Slice(sv, func(i, j int) bool { return sv[i].s < sv[j].s })
+	var sv stringValues = realVal.MapKeys()
+	sort.Sort(sv)
 
 	stream.WriteObjectStart()
 	for i, key := range sv {
 		if i != 0 {
 			stream.WriteMore()
 		}
-		encodeMapKey(key.v, stream)
+		encodeMapKey(key, stream)
 		stream.writeByte(':')
-		val := realVal.MapIndex(key.v).Interface()
+		val := realVal.MapIndex(key).Interface()
 		encoder.elemEncoder.encodeInterface(val, stream)
 	}
 	stream.WriteObjectEnd()
 }
 
+// stringValues is a slice of reflect.Value holding *reflect.StringValue.
+// It implements the methods to sort by string.
+type stringValues []reflect.Value
 
-type reflectWithString struct {
-	v reflect.Value
-	s string
-}
-
-func (w *reflectWithString) resolve() error {
-	if w.v.Kind() == reflect.String {
-		w.s = w.v.String()
-		return nil
-	}
-	if tm, ok := w.v.Interface().(encoding.TextMarshaler); ok {
-		buf, err := tm.MarshalText()
-		w.s = string(buf)
-		return err
-	}
-	switch w.v.Kind() {
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		w.s = strconv.FormatInt(w.v.Int(), 10)
-		return nil
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
-		w.s = strconv.FormatUint(w.v.Uint(), 10)
-		return nil
-	}
-	panic("unexpected map key type")
-}
+func (sv stringValues) Len() int           { return len(sv) }
+func (sv stringValues) Swap(i, j int)      { sv[i], sv[j] = sv[j], sv[i] }
+func (sv stringValues) Less(i, j int) bool { return sv.get(i) < sv.get(j) }
+func (sv stringValues) get(i int) string   { return sv[i].String() }
 
 func (encoder *sortKeysMapEncoder) encodeInterface(val interface{}, stream *Stream) {
 	writeToStream(val, stream, encoder)
