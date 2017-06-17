@@ -1,6 +1,8 @@
 package jsoniter
 
-import "io"
+import (
+	"io"
+)
 
 func (cfg *frozenConfig) BorrowStream(writer io.Writer) *Stream {
 	select {

@@ -3,6 +3,7 @@ package jsoniter
 import (
 	"fmt"
 	"unicode"
+	"unsafe"
 )
 
 func (iter *Iterator) ReadObject() (ret string) {
@@ -79,13 +80,13 @@ func (iter *Iterator) ReadObjectCB(callback func(*Iterator, string) bool) bool {
 		c = iter.nextToken()
 		if c == '"' {
 			iter.unreadByte()
-			field := string(iter.readObjectFieldAsBytes())
-			if !callback(iter, field) {
+			field := iter.readObjectFieldAsBytes()
+			if !callback(iter, *(*string)(unsafe.Pointer(&field))) {
 				return false
 			}
 			for iter.nextToken() == ',' {
-				field = string(iter.readObjectFieldAsBytes())
-				if !callback(iter, field) {
+				field = iter.readObjectFieldAsBytes()
+				if !callback(iter, *(*string)(unsafe.Pointer(&field))) {
 					return false
 				}
 			}
