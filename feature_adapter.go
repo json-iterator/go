@@ -23,12 +23,12 @@ import (
 // Unmarshal parses the JSON-encoded data and stores the result in the value pointed to by v.
 // Refer to https://godoc.org/encoding/json#Unmarshal for more information
 func Unmarshal(data []byte, v interface{}) error {
-	return ConfigOfDefault.Unmarshal(data, v)
+	return ConfigDefault.Unmarshal(data, v)
 }
 
 // UnmarshalAny adapts to
 func UnmarshalAny(data []byte) (Any, error) {
-	return ConfigOfDefault.UnmarshalAny(data)
+	return ConfigDefault.UnmarshalAny(data)
 }
 
 func lastNotSpacePos(data []byte) int {
@@ -41,11 +41,11 @@ func lastNotSpacePos(data []byte) int {
 }
 
 func UnmarshalFromString(str string, v interface{}) error {
-	return ConfigOfDefault.UnmarshalFromString(str, v)
+	return ConfigDefault.UnmarshalFromString(str, v)
 }
 
 func UnmarshalAnyFromString(str string) (Any, error) {
-	return ConfigOfDefault.UnmarshalAnyFromString(str)
+	return ConfigDefault.UnmarshalAnyFromString(str)
 }
 
 // Marshal adapts to json/encoding Marshal API
@@ -53,11 +53,11 @@ func UnmarshalAnyFromString(str string) (Any, error) {
 // Marshal returns the JSON encoding of v, adapts to json/encoding Marshal API
 // Refer to https://godoc.org/encoding/json#Marshal for more information
 func Marshal(v interface{}) ([]byte, error) {
-	return ConfigOfDefault.Marshal(v)
+	return ConfigDefault.Marshal(v)
 }
 
 func MarshalToString(v interface{}) (string, error) {
-	return ConfigOfDefault.MarshalToString(v)
+	return ConfigDefault.MarshalToString(v)
 }
 
 // NewDecoder adapts to json/stream NewDecoder API.
@@ -67,7 +67,7 @@ func MarshalToString(v interface{}) (string, error) {
 // Instead of a json/encoding Decoder, an AdaptedDecoder is returned
 // Refer to https://godoc.org/encoding/json#NewDecoder for more information
 func NewDecoder(reader io.Reader) *AdaptedDecoder {
-	return ConfigOfDefault.NewDecoder(reader)
+	return ConfigDefault.NewDecoder(reader)
 }
 
 // AdaptedDecoder reads and decodes JSON values from an input stream.
@@ -105,7 +105,7 @@ func (decoder *AdaptedDecoder) UseNumber() {
 }
 
 func NewEncoder(writer io.Writer) *AdaptedEncoder {
-	return ConfigOfDefault.NewEncoder(writer)
+	return ConfigDefault.NewEncoder(writer)
 }
 
 type AdaptedEncoder struct {

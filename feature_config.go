@@ -25,7 +25,7 @@ type frozenConfig struct {
 	extensions         []ExtensionFunc
 }
 
-var ConfigOfDefault = Config{}.Froze()
+var ConfigDefault = Config{}.Froze()
 
 // Trying to be 100% compatible with standard library behavior
 var ConfigCompatibleWithStandardLibrary = Config{
@@ -33,9 +33,13 @@ var ConfigCompatibleWithStandardLibrary = Config{
 	SortMapKeys: true,
 }.Froze()
 
+var ConfigFastest = Config{
+	MarshalFloatWith6Digits: true,
+}.Froze()
+
 func (cfg Config) Froze() *frozenConfig {
 	frozenConfig := &frozenConfig{
-		sortMapKeys: cfg.SortMapKeys,
+		sortMapKeys:   cfg.SortMapKeys,
 		indentionStep: cfg.IndentionStep,
 	}
 	atomic.StorePointer(&frozenConfig.decoderCache, unsafe.Pointer(&map[string]Decoder{}))

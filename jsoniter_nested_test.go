@@ -15,7 +15,7 @@ type Level2 struct {
 }
 
 func Test_nested(t *testing.T) {
-	iter := ParseString(ConfigOfDefault, `{"hello": [{"world": "value1"}, {"world": "value2"}]}`)
+	iter := ParseString(ConfigDefault, `{"hello": [{"world": "value1"}, {"world": "value2"}]}`)
 	l1 := Level1{}
 	for l1Field := iter.ReadObject(); l1Field != ""; l1Field = iter.ReadObject() {
 		switch l1Field {
@@ -50,7 +50,7 @@ func Test_nested(t *testing.T) {
 
 func Benchmark_jsoniter_nested(b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		iter := ParseString(ConfigOfDefault, `{"hello": [{"world": "value1"}, {"world": "value2"}]}`)
+		iter := ParseString(ConfigDefault, `{"hello": [{"world": "value1"}, {"world": "value2"}]}`)
 		l1 := Level1{}
 		for l1Field := iter.ReadObject(); l1Field != ""; l1Field = iter.ReadObject() {
 			switch l1Field {

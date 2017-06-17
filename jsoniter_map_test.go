@@ -9,7 +9,7 @@ import (
 
 func Test_read_map(t *testing.T) {
 	should := require.New(t)
-	iter := ParseString(ConfigOfDefault, `{"hello": "world"}`)
+	iter := ParseString(ConfigDefault, `{"hello": "world"}`)
 	m := map[string]string{"1": "2"}
 	iter.ReadVal(&m)
 	copy(iter.buf, []byte{0, 0, 0, 0, 0, 0})
@@ -18,11 +18,11 @@ func Test_read_map(t *testing.T) {
 
 func Test_read_map_of_interface(t *testing.T) {
 	should := require.New(t)
-	iter := ParseString(ConfigOfDefault, `{"hello": "world"}`)
+	iter := ParseString(ConfigDefault, `{"hello": "world"}`)
 	m := map[string]interface{}{"1": "2"}
 	iter.ReadVal(&m)
 	should.Equal(map[string]interface{}{"1": "2", "hello": "world"}, m)
-	iter = ParseString(ConfigOfDefault, `{"hello": "world"}`)
+	iter = ParseString(ConfigDefault, `{"hello": "world"}`)
 	should.Equal(map[string]interface{}{"hello": "world"}, iter.Read())
 }
 

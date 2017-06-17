@@ -6,7 +6,7 @@ import (
 )
 
 func Test_skip_number(t *testing.T) {
-	iter := ParseString(ConfigOfDefault, `[-0.12, "b"]`)
+	iter := ParseString(ConfigDefault, `[-0.12, "b"]`)
 	iter.ReadArray()
 	iter.Skip()
 	iter.ReadArray()
@@ -16,7 +16,7 @@ func Test_skip_number(t *testing.T) {
 }
 
 func Test_skip_null(t *testing.T) {
-	iter := ParseString(ConfigOfDefault, `[null , "b"]`)
+	iter := ParseString(ConfigDefault, `[null , "b"]`)
 	iter.ReadArray()
 	iter.Skip()
 	iter.ReadArray()
@@ -26,7 +26,7 @@ func Test_skip_null(t *testing.T) {
 }
 
 func Test_skip_true(t *testing.T) {
-	iter := ParseString(ConfigOfDefault, `[true , "b"]`)
+	iter := ParseString(ConfigDefault, `[true , "b"]`)
 	iter.ReadArray()
 	iter.Skip()
 	iter.ReadArray()
@@ -36,7 +36,7 @@ func Test_skip_true(t *testing.T) {
 }
 
 func Test_skip_false(t *testing.T) {
-	iter := ParseString(ConfigOfDefault, `[false , "b"]`)
+	iter := ParseString(ConfigDefault, `[false , "b"]`)
 	iter.ReadArray()
 	iter.Skip()
 	iter.ReadArray()
@@ -46,7 +46,7 @@ func Test_skip_false(t *testing.T) {
 }
 
 func Test_skip_array(t *testing.T) {
-	iter := ParseString(ConfigOfDefault, `[[1, [2, [3], 4]], "b"]`)
+	iter := ParseString(ConfigDefault, `[[1, [2, [3], 4]], "b"]`)
 	iter.ReadArray()
 	iter.Skip()
 	iter.ReadArray()
@@ -56,7 +56,7 @@ func Test_skip_array(t *testing.T) {
 }
 
 func Test_skip_empty_array(t *testing.T) {
-	iter := ParseString(ConfigOfDefault, `[ [ ], "b"]`)
+	iter := ParseString(ConfigDefault, `[ [ ], "b"]`)
 	iter.ReadArray()
 	iter.Skip()
 	iter.ReadArray()
@@ -66,7 +66,7 @@ func Test_skip_empty_array(t *testing.T) {
 }
 
 func Test_skip_nested(t *testing.T) {
-	iter := ParseString(ConfigOfDefault, `[ {"a" : [{"b": "c"}], "d": 102 }, "b"]`)
+	iter := ParseString(ConfigDefault, `[ {"a" : [{"b": "c"}], "d": 102 }, "b"]`)
 	iter.ReadArray()
 	iter.Skip()
 	iter.ReadArray()
@@ -106,7 +106,7 @@ func Benchmark_jsoniter_skip(b *testing.B) {
 }`)
 	for n := 0; n < b.N; n++ {
 		result := TestResp{}
-		iter := ParseBytes(ConfigOfDefault, input)
+		iter := ParseBytes(ConfigDefault, input)
 		for field := iter.ReadObject(); field != ""; field = iter.ReadObject() {
 			switch field {
 			case "code":

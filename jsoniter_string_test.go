@@ -18,22 +18,22 @@ func Test_read_normal_string(t *testing.T) {
 	for input, output := range cases {
 		t.Run(fmt.Sprintf("%v:%v", input, output), func(t *testing.T) {
 			should := require.New(t)
-			iter := ParseString(ConfigOfDefault, input)
+			iter := ParseString(ConfigDefault, input)
 			should.Equal(output, iter.ReadString())
 		})
 		t.Run(fmt.Sprintf("%v:%v", input, output), func(t *testing.T) {
 			should := require.New(t)
-			iter := Parse(ConfigOfDefault, bytes.NewBufferString(input), 2)
+			iter := Parse(ConfigDefault, bytes.NewBufferString(input), 2)
 			should.Equal(output, iter.ReadString())
 		})
 		t.Run(fmt.Sprintf("%v:%v", input, output), func(t *testing.T) {
 			should := require.New(t)
-			iter := ParseString(ConfigOfDefault, input)
+			iter := ParseString(ConfigDefault, input)
 			should.Equal(output, string(iter.ReadStringAsSlice()))
 		})
 		t.Run(fmt.Sprintf("%v:%v", input, output), func(t *testing.T) {
 			should := require.New(t)
-			iter := Parse(ConfigOfDefault, bytes.NewBufferString(input), 2)
+			iter := Parse(ConfigDefault, bytes.NewBufferString(input), 2)
 			should.Equal(output, string(iter.ReadStringAsSlice()))
 		})
 	}
@@ -49,12 +49,12 @@ func Test_read_exotic_string(t *testing.T) {
 	for input, output := range cases {
 		t.Run(fmt.Sprintf("%v:%v", input, output), func(t *testing.T) {
 			should := require.New(t)
-			iter := ParseString(ConfigOfDefault, input)
+			iter := ParseString(ConfigDefault, input)
 			should.Equal(output, iter.ReadString())
 		})
 		t.Run(fmt.Sprintf("%v:%v", input, output), func(t *testing.T) {
 			should := require.New(t)
-			iter := Parse(ConfigOfDefault, bytes.NewBufferString(input), 2)
+			iter := Parse(ConfigDefault, bytes.NewBufferString(input), 2)
 			should.Equal(output, iter.ReadString())
 		})
 	}
@@ -62,7 +62,7 @@ func Test_read_exotic_string(t *testing.T) {
 
 func Test_read_string_as_interface(t *testing.T) {
 	should := require.New(t)
-	iter := ParseString(ConfigOfDefault, `"hello"`)
+	iter := ParseString(ConfigDefault, `"hello"`)
 	should.Equal("hello", iter.Read())
 }
 
@@ -99,7 +99,7 @@ func Test_write_string(t *testing.T) {
 func Test_write_val_string(t *testing.T) {
 	should := require.New(t)
 	buf := &bytes.Buffer{}
-	stream := NewStream(ConfigOfDefault, buf, 4096)
+	stream := NewStream(ConfigDefault, buf, 4096)
 	stream.WriteVal("hello")
 	stream.Flush()
 	should.Nil(stream.Error)
@@ -157,13 +157,13 @@ func Test_string_encode_with_std_without_html_escape(t *testing.T) {
 
 func Benchmark_jsoniter_unicode(b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		iter := ParseString(ConfigOfDefault, `"\ud83d\udc4a"`)
+		iter := ParseString(ConfigDefault, `"\ud83d\udc4a"`)
 		iter.ReadString()
 	}
 }
 
 func Benchmark_jsoniter_ascii(b *testing.B) {
-	iter := NewIterator(ConfigOfDefault)
+	iter := NewIterator(ConfigDefault)
 	input := []byte(`"hello, world! hello, world!"`)
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
@@ -173,7 +173,7 @@ func Benchmark_jsoniter_ascii(b *testing.B) {
 }
 
 func Benchmark_jsoniter_string_as_bytes(b *testing.B) {
-	iter := ParseString(ConfigOfDefault, `"hello, world!"`)
+	iter := ParseString(ConfigDefault, `"hello, world!"`)
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		iter.ResetBytes(iter.buf)

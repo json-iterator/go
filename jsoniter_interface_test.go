@@ -141,8 +141,8 @@ func Test_encode_object_contain_non_empty_interface(t *testing.T) {
 }
 
 func Test_nil_non_empty_interface(t *testing.T) {
-	ConfigOfDefault.CleanEncoders()
-	ConfigOfDefault.CleanDecoders()
+	ConfigDefault.CleanEncoders()
+	ConfigDefault.CleanDecoders()
 	type TestObject struct {
 		Field []MyInterface
 	}

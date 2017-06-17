@@ -10,10 +10,10 @@ import (
 
 func Test_empty_array(t *testing.T) {
 	should := require.New(t)
-	iter := ParseString(ConfigOfDefault, `[]`)
+	iter := ParseString(ConfigDefault, `[]`)
 	cont := iter.ReadArray()
 	should.False(cont)
-	iter = ParseString(ConfigOfDefault, `[]`)
+	iter = ParseString(ConfigDefault, `[]`)
 	iter.ReadArrayCB(func(iter *Iterator) bool {
 		should.FailNow("should not call")
 		return true
@@ -22,11 +22,11 @@ func Test_empty_array(t *testing.T) {
 
 func Test_one_element(t *testing.T) {
 	should := require.New(t)
-	iter := ParseString(ConfigOfDefault, `[1]`)
+	iter := ParseString(ConfigDefault, `[1]`)
 	should.True(iter.ReadArray())
 	should.Equal(1, iter.ReadInt())
 	should.False(iter.ReadArray())
-	iter = ParseString(ConfigOfDefault, `[1]`)
+	iter = ParseString(ConfigDefault, `[1]`)
 	iter.ReadArrayCB(func(iter *Iterator) bool {
 		should.Equal(1, iter.ReadInt())
 		return true
@@ -35,13 +35,13 @@ func Test_one_element(t *testing.T) {
 
 func Test_two_elements(t *testing.T) {
 	should := require.New(t)
-	iter := ParseString(ConfigOfDefault, `[1,2]`)
+	iter := ParseString(ConfigDefault, `[1,2]`)
 	should.True(iter.ReadArray())
 	should.Equal(int64(1), iter.ReadInt64())
 	should.True(iter.ReadArray())
 	should.Equal(int64(2), iter.ReadInt64())
 	should.False(iter.ReadArray())
-	iter = ParseString(ConfigOfDefault, `[1,2]`)
+	iter = ParseString(ConfigDefault, `[1,2]`)
 	should.Equal([]interface{}{float64(1), float64(2)}, iter.Read())
 }
 
@@ -152,7 +152,7 @@ func Test_invalid_array(t *testing.T) {
 }
 
 func Test_whitespace_in_head(t *testing.T) {
-	iter := ParseString(ConfigOfDefault, ` [1]`)
+	iter := ParseString(ConfigDefault, ` [1]`)
 	cont := iter.ReadArray()
 	if cont != true {
 		t.FailNow()
@@ -163,7 +163,7 @@ func Test_whitespace_in_head(t *testing.T) {
 }
 
 func Test_whitespace_after_array_start(t *testing.T) {
-	iter := ParseString(ConfigOfDefault, `[ 1]`)
+	iter := ParseString(ConfigDefault, `[ 1]`)
 	cont := iter.ReadArray()
 	if cont != true {
 		t.FailNow()
@@ -174,7 +174,7 @@ func Test_whitespace_after_array_start(t *testing.T) {
 }
 
 func Test_whitespace_before_array_end(t *testing.T) {
-	iter := ParseString(ConfigOfDefault, `[1 ]`)
+	iter := ParseString(ConfigDefault, `[1 ]`)
 	cont := iter.ReadArray()
 	if cont != true {
 		t.FailNow()
@@ -189,7 +189,7 @@ func Test_whitespace_before_array_end(t *testing.T) {
 }
 
 func Test_whitespace_before_comma(t *testing.T) {
-	iter := ParseString(ConfigOfDefault, `[1 ,2]`)
+	iter := ParseString(ConfigDefault, `[1 ,2]`)
 	cont := iter.ReadArray()
 	if cont != true {
 		t.FailNow()
@@ -287,7 +287,7 @@ func Test_decode_byte_array(t *testing.T) {
 func Benchmark_jsoniter_array(b *testing.B) {
 	b.ReportAllocs()
 	input := []byte(`[1,2,3,4,5,6,7,8,9]`)
-	iter := ParseBytes(ConfigOfDefault, input)
+	iter := ParseBytes(ConfigDefault, input)
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		iter.ResetBytes(input)

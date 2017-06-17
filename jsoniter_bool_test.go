@@ -8,15 +8,15 @@ import (
 
 func Test_true(t *testing.T) {
 	should := require.New(t)
-	iter := ParseString(ConfigOfDefault, `true`)
+	iter := ParseString(ConfigDefault, `true`)
 	should.True(iter.ReadBool())
-	iter = ParseString(ConfigOfDefault, `true`)
+	iter = ParseString(ConfigDefault, `true`)
 	should.Equal(true, iter.Read())
 }
 
 func Test_false(t *testing.T) {
 	should := require.New(t)
-	iter := ParseString(ConfigOfDefault, `false`)
+	iter := ParseString(ConfigDefault, `false`)
 	should.False(iter.ReadBool())
 }
 
@@ -30,7 +30,7 @@ func Test_read_bool_as_any(t *testing.T) {
 func Test_write_true_false(t *testing.T) {
 	should := require.New(t)
 	buf := &bytes.Buffer{}
-	stream := NewStream(ConfigOfDefault, buf, 4096)
+	stream := NewStream(ConfigDefault, buf, 4096)
 	stream.WriteTrue()
 	stream.WriteFalse()
 	stream.Flush()
@@ -41,7 +41,7 @@ func Test_write_true_false(t *testing.T) {
 func Test_write_val_bool(t *testing.T) {
 	should := require.New(t)
 	buf := &bytes.Buffer{}
-	stream := NewStream(ConfigOfDefault, buf, 4096)
+	stream := NewStream(ConfigDefault, buf, 4096)
 	stream.WriteVal(true)
 	stream.Flush()
 	should.Nil(stream.Error)
