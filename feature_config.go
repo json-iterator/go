@@ -23,6 +23,8 @@ type frozenConfig struct {
 	decoderCache       unsafe.Pointer
 	encoderCache       unsafe.Pointer
 	extensions         []ExtensionFunc
+	streamPool         chan *Stream
+	iteratorPool       chan *Iterator
 }
 
 var ConfigDefault = Config{}.Froze()
@@ -41,6 +43,8 @@ func (cfg Config) Froze() *frozenConfig {
 	frozenConfig := &frozenConfig{
 		sortMapKeys:   cfg.SortMapKeys,
 		indentionStep: cfg.IndentionStep,
+		streamPool:    make(chan *Stream, 16),
+		iteratorPool:  make(chan *Iterator, 16),
 	}
 	atomic.StorePointer(&frozenConfig.decoderCache, unsafe.Pointer(&map[string]Decoder{}))
 	atomic.StorePointer(&frozenConfig.encoderCache, unsafe.Pointer(&map[string]Encoder{}))
@@ -153,7 +157,8 @@ func (cfg *frozenConfig) MarshalToString(v interface{}) (string, error) {
 }
 
 func (cfg *frozenConfig) Marshal(v interface{}) ([]byte, error) {
-	stream := NewStream(cfg, nil, 256)
+	stream := cfg.borrowStream()
+	defer cfg.returnStream(stream)
 	stream.WriteVal(v)
 	if stream.Error != nil {
 		return nil, stream.Error
@@ -164,7 +169,8 @@ func (cfg *frozenConfig) Marshal(v interface{}) ([]byte, error) {
 func (cfg *frozenConfig) UnmarshalFromString(str string, v interface{}) error {
 	data := []byte(str)
 	data = data[:lastNotSpacePos(data)]
-	iter := ParseBytes(cfg, data)
+	iter := cfg.borrowIterator(data)
+	defer cfg.returnIterator(iter)
 	iter.ReadVal(v)
 	if iter.head == iter.tail {
 		iter.loadMore()
@@ -178,20 +184,11 @@ func (cfg *frozenConfig) UnmarshalFromString(str string, v interface{}) error {
 	return iter.Error
 }
 
-func (cfg *frozenConfig) NewEncoder(writer io.Writer) *AdaptedEncoder {
-	stream := NewStream(cfg, writer, 512)
-	return &AdaptedEncoder{stream}
-}
-
-func (cfg *frozenConfig) NewDecoder(reader io.Reader) *AdaptedDecoder {
-	iter := Parse(cfg, reader, 512)
-	return &AdaptedDecoder{iter}
-}
-
 func (cfg *frozenConfig) UnmarshalAnyFromString(str string) (Any, error) {
 	data := []byte(str)
 	data = data[:lastNotSpacePos(data)]
-	iter := ParseBytes(cfg, data)
+	iter := cfg.borrowIterator(data)
+	defer cfg.returnIterator(iter)
 	any := iter.ReadAny()
 	if iter.head == iter.tail {
 		iter.loadMore()
@@ -207,7 +204,8 @@ func (cfg *frozenConfig) UnmarshalAnyFromString(str string) (Any, error) {
 
 func (cfg *frozenConfig) UnmarshalAny(data []byte) (Any, error) {
 	data = data[:lastNotSpacePos(data)]
-	iter := ParseBytes(cfg, data)
+	iter := cfg.borrowIterator(data)
+	defer cfg.returnIterator(iter)
 	any := iter.ReadAny()
 	if iter.head == iter.tail {
 		iter.loadMore()
@@ -223,7 +221,8 @@ func (cfg *frozenConfig) UnmarshalAny(data []byte) (Any, error) {
 
 func (cfg *frozenConfig) Unmarshal(data []byte, v interface{}) error {
 	data = data[:lastNotSpacePos(data)]
-	iter := ParseBytes(cfg, data)
+	iter := cfg.borrowIterator(data)
+	defer cfg.returnIterator(iter)
 	typ := reflect.TypeOf(v)
 	if typ.Kind() != reflect.Ptr {
 		// return non-pointer error
@@ -240,4 +239,14 @@ func (cfg *frozenConfig) Unmarshal(data []byte, v interface{}) error {
 		iter.reportError("Unmarshal", "there are bytes left after unmarshal")
 	}
 	return iter.Error
+}
+
+func (cfg *frozenConfig) NewEncoder(writer io.Writer) *AdaptedEncoder {
+	stream := NewStream(cfg, writer, 512)
+	return &AdaptedEncoder{stream}
+}
+
+func (cfg *frozenConfig) NewDecoder(reader io.Reader) *AdaptedDecoder {
+	iter := Parse(cfg, reader, 512)
+	return &AdaptedDecoder{iter}
 }
