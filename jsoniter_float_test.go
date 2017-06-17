@@ -67,15 +67,6 @@ func Test_read_float_as_interface(t *testing.T) {
 	should.Equal(float64(12.3), iter.Read())
 }
 
-func Test_read_float_as_any(t *testing.T) {
-	should := require.New(t)
-	any, err := UnmarshalAnyFromString("12.3")
-	should.Nil(err)
-	should.Equal(float64(12.3), any.ToFloat64())
-	should.Equal("12.3", any.ToString())
-	should.True(any.ToBool())
-}
-
 func Test_wrap_float(t *testing.T) {
 	should := require.New(t)
 	str, err := MarshalToString(WrapFloat64(12.3))

@@ -21,13 +21,6 @@ func Test_false(t *testing.T) {
 	should.False(iter.ReadBool())
 }
 
-func Test_read_bool_as_any(t *testing.T) {
-	should := require.New(t)
-	any, err := UnmarshalAnyFromString("true")
-	should.Nil(err)
-	should.True(any.ToBool())
-}
-
 func Test_write_true_false(t *testing.T) {
 	should := require.New(t)
 	buf := &bytes.Buffer{}

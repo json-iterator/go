@@ -7,7 +7,6 @@
 package jsoniter
 
 import (
-	"encoding/base64"
 	"fmt"
 	"io"
 )
@@ -269,20 +268,4 @@ func (iter *Iterator) Read() interface{} {
 		iter.reportError("Read", fmt.Sprintf("unexpected value type: %v", valueType))
 		return nil
 	}
-}
-
-// ReadBase64 reads a json object as Base64 in byte slice
-func (iter *Iterator) ReadBase64() (ret []byte) {
-	src := iter.ReadStringAsSlice()
-	if iter.Error != nil {
-		return
-	}
-	b64 := base64.StdEncoding
-	ret = make([]byte, b64.DecodedLen(len(src)))
-	n, err := b64.Decode(ret, src)
-	if err != nil {
-		iter.Error = err
-		return
-	}
-	return ret[:n]
 }

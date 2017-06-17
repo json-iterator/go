@@ -5,13 +5,6 @@ import (
 	"testing"
 )
 
-func Test_read_base64(t *testing.T) {
-	iter := ParseString(ConfigDefault, `"YWJj"`)
-	if !bytes.Equal(iter.ReadBase64(), []byte("abc")) {
-		t.FailNow()
-	}
-}
-
 func Test_bad_case(t *testing.T) {
 	// field := *(*string)(unsafe.Pointer(&str))
 	// caused this issue
@@ -22,7 +15,7 @@ func Test_bad_case(t *testing.T) {
 			for iter.ReadArray() {
 				for field := iter.ReadObject(); field != ""; field = iter.ReadObject() {
 					if field == "Bit" {
-						iter.ReadBase64()
+						iter.ReadStringAsSlice()
 					} else {
 						if field != "Size" && field != "EndIndex" && field != "EndMask" && field != "Good" && field != "Flush" {
 							t.Fatal(field)
