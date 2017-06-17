@@ -149,8 +149,8 @@ func (cfg *frozenConfig) CleanEncoders() {
 }
 
 func (cfg *frozenConfig) MarshalToString(v interface{}) (string, error) {
-	stream := cfg.borrowStream()
-	defer cfg.returnStream(stream)
+	stream := cfg.BorrowStream(nil)
+	defer cfg.ReturnStream(stream)
 	stream.WriteVal(v)
 	if stream.Error != nil {
 		return "", stream.Error
@@ -159,8 +159,8 @@ func (cfg *frozenConfig) MarshalToString(v interface{}) (string, error) {
 }
 
 func (cfg *frozenConfig) Marshal(v interface{}) ([]byte, error) {
-	stream := cfg.borrowStream()
-	defer cfg.returnStream(stream)
+	stream := cfg.BorrowStream(nil)
+	defer cfg.ReturnStream(stream)
 	stream.WriteVal(v)
 	if stream.Error != nil {
 		return nil, stream.Error
@@ -174,8 +174,8 @@ func (cfg *frozenConfig) Marshal(v interface{}) ([]byte, error) {
 func (cfg *frozenConfig) UnmarshalFromString(str string, v interface{}) error {
 	data := []byte(str)
 	data = data[:lastNotSpacePos(data)]
-	iter := cfg.borrowIterator(data)
-	defer cfg.returnIterator(iter)
+	iter := cfg.BorrowIterator(data)
+	defer cfg.ReturnIterator(iter)
 	iter.ReadVal(v)
 	if iter.head == iter.tail {
 		iter.loadMore()
@@ -192,8 +192,8 @@ func (cfg *frozenConfig) UnmarshalFromString(str string, v interface{}) error {
 func (cfg *frozenConfig) UnmarshalAnyFromString(str string) (Any, error) {
 	data := []byte(str)
 	data = data[:lastNotSpacePos(data)]
-	iter := cfg.borrowIterator(data)
-	defer cfg.returnIterator(iter)
+	iter := cfg.BorrowIterator(data)
+	defer cfg.ReturnIterator(iter)
 	any := iter.ReadAny()
 	if iter.head == iter.tail {
 		iter.loadMore()
@@ -209,8 +209,8 @@ func (cfg *frozenConfig) UnmarshalAnyFromString(str string) (Any, error) {
 
 func (cfg *frozenConfig) UnmarshalAny(data []byte) (Any, error) {
 	data = data[:lastNotSpacePos(data)]
-	iter := cfg.borrowIterator(data)
-	defer cfg.returnIterator(iter)
+	iter := cfg.BorrowIterator(data)
+	defer cfg.ReturnIterator(iter)
 	any := iter.ReadAny()
 	if iter.head == iter.tail {
 		iter.loadMore()
@@ -226,8 +226,8 @@ func (cfg *frozenConfig) UnmarshalAny(data []byte) (Any, error) {
 
 func (cfg *frozenConfig) Unmarshal(data []byte, v interface{}) error {
 	data = data[:lastNotSpacePos(data)]
-	iter := cfg.borrowIterator(data)
-	defer cfg.returnIterator(iter)
+	iter := cfg.BorrowIterator(data)
+	defer cfg.ReturnIterator(iter)
 	typ := reflect.TypeOf(v)
 	if typ.Kind() != reflect.Ptr {
 		// return non-pointer error

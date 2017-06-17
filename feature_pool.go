@@ -1,16 +1,18 @@
 package jsoniter
 
-func (cfg *frozenConfig) borrowStream() *Stream {
+import "io"
+
+func (cfg *frozenConfig) BorrowStream(writer io.Writer) *Stream {
 	select {
 	case stream := <-cfg.streamPool:
-		stream.Reset(nil)
+		stream.Reset(writer)
 		return stream
 	default:
-		return NewStream(cfg, nil, 512)
+		return NewStream(cfg, writer, 512)
 	}
 }
 
-func (cfg *frozenConfig) returnStream(stream *Stream) {
+func (cfg *frozenConfig) ReturnStream(stream *Stream) {
 	select {
 	case cfg.streamPool <- stream:
 		return
@@ -19,7 +21,7 @@ func (cfg *frozenConfig) returnStream(stream *Stream) {
 	}
 }
 
-func (cfg *frozenConfig) borrowIterator(data []byte) *Iterator {
+func (cfg *frozenConfig) BorrowIterator(data []byte) *Iterator {
 	select {
 	case iter := <- cfg.iteratorPool:
 		iter.ResetBytes(data)
@@ -29,7 +31,7 @@ func (cfg *frozenConfig) borrowIterator(data []byte) *Iterator {
 	}
 }
 
-func (cfg *frozenConfig) returnIterator(iter *Iterator) {
+func (cfg *frozenConfig) ReturnIterator(iter *Iterator) {
 	select {
 	case cfg.iteratorPool <- iter:
 		return
