@@ -88,3 +88,10 @@ func ExampleUnmarshalWithBestPerformance() {
 	// Output:
 	// [{Name:Platypus Order:Monotremata} {Name:Quoll Order:Dasyuromorphia}]
 }
+
+func ExampleOneLine() {
+	val := []byte(`{"ID":1,"Name":"Reds","Colors":["Crimson","Red","Ruby","Maroon"]}`)
+	fmt.Printf(jsoniter.Get(val, "Colors", 0).ToString())
+	// Output:
+	// Crimson
+}

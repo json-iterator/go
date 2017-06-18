@@ -51,6 +51,8 @@ import "github.com/json-iterator/go"
 jsoniter.Unmarshal(input, &data)
 ```
 
+[More documentation](http://jsoniter.com/migrate-from-go-std.html)
+
 # How to get
 
 ```
