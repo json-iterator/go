@@ -7,15 +7,14 @@ import (
 
 func Test_read_string_as_any(t *testing.T) {
 	should := require.New(t)
-	any, err := UnmarshalAnyFromString(`"hello"`)
-	should.Nil(err)
+	any := Get([]byte(`"hello"`))
 	should.Equal("hello", any.ToString())
 	should.True(any.ToBool())
-	any, err = UnmarshalAnyFromString(`" "`)
+	any = Get([]byte(`" "`))
 	should.False(any.ToBool())
-	any, err = UnmarshalAnyFromString(`"false"`)
+	any = Get([]byte(`"false"`))
 	should.False(any.ToBool())
-	any, err = UnmarshalAnyFromString(`"123"`)
+	any = Get([]byte(`"123"`))
 	should.Equal(123, any.ToInt())
 }
 

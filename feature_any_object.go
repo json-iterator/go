@@ -8,95 +8,13 @@ import (
 
 type objectLazyAny struct {
 	baseAny
-	cfg       *frozenConfig
-	buf       []byte
-	err       error
-	cache     map[string]Any
-	remaining []byte
+	cfg *frozenConfig
+	buf []byte
+	err error
 }
 
 func (any *objectLazyAny) ValueType() ValueType {
 	return Object
-}
-
-func (any *objectLazyAny) fillCacheUntil(target string) Any {
-	if any.remaining == nil {
-		return any.cache[target]
-	}
-	if any.cache == nil {
-		any.cache = map[string]Any{}
-	}
-	val := any.cache[target]
-	if val != nil {
-		return val
-	}
-	iter := any.cfg.BorrowIterator(any.remaining)
-	defer any.cfg.ReturnIterator(iter)
-	if len(any.remaining) == len(any.buf) {
-		iter.head++
-		c := iter.nextToken()
-		if c != '}' {
-			iter.unreadByte()
-			k := string(iter.readObjectFieldAsBytes())
-			v := iter.readAny()
-			any.cache[k] = v
-			if target == k {
-				any.remaining = iter.buf[iter.head:]
-				any.err = iter.Error
-				return v
-			}
-		} else {
-			any.remaining = nil
-			any.err = iter.Error
-			return nil
-		}
-	}
-	for iter.nextToken() == ',' {
-		k := string(iter.readObjectFieldAsBytes())
-		v := iter.readAny()
-		any.cache[k] = v
-		if target == k {
-			any.remaining = iter.buf[iter.head:]
-			any.err = iter.Error
-			return v
-		}
-	}
-	any.remaining = nil
-	any.err = iter.Error
-	return nil
-}
-
-func (any *objectLazyAny) fillCache() {
-	if any.remaining == nil {
-		return
-	}
-	if any.cache == nil {
-		any.cache = map[string]Any{}
-	}
-	iter := any.cfg.BorrowIterator(any.remaining)
-	defer any.cfg.ReturnIterator(iter)
-	if len(any.remaining) == len(any.buf) {
-		iter.head++
-		c := iter.nextToken()
-		if c != '}' {
-			iter.unreadByte()
-			k := string(iter.readObjectFieldAsBytes())
-			v := iter.readAny()
-			any.cache[k] = v
-		} else {
-			any.remaining = nil
-			any.err = iter.Error
-			return
-		}
-	}
-	for iter.nextToken() == ',' {
-		k := string(iter.readObjectFieldAsBytes())
-		v := iter.readAny()
-		any.cache[k] = v
-	}
-	any.remaining = nil
-	any.err = iter.Error
-	return
 }
 
 func (any *objectLazyAny) LastError() error {
@@ -104,247 +22,158 @@ func (any *objectLazyAny) LastError() error {
 }
 
 func (any *objectLazyAny) ToBool() bool {
-	if any.cache == nil {
-		any.IterateObject() // trigger first value read
-	}
-	return len(any.cache) != 0
+	iter := any.cfg.BorrowIterator(any.buf)
+	defer any.cfg.ReturnIterator(iter)
+	return iter.ReadObject() != ""
 }
 
 func (any *objectLazyAny) ToInt() int {
-	if any.cache == nil {
-		any.IterateObject() // trigger first value read
-	}
-	if len(any.cache) == 0 {
+	if any.ToBool() {
+		return 1
+	} else {
 		return 0
 	}
-	return 1
 }
 
 func (any *objectLazyAny) ToInt32() int32 {
-	if any.cache == nil {
-		any.IterateObject() // trigger first value read
-	}
-	if len(any.cache) == 0 {
+	if any.ToBool() {
+		return 1
+	} else {
 		return 0
 	}
-	return 1
 }
 
 func (any *objectLazyAny) ToInt64() int64 {
-	if any.cache == nil {
-		any.IterateObject() // trigger first value read
-	}
-	if len(any.cache) == 0 {
+	if any.ToBool() {
+		return 1
+	} else {
 		return 0
 	}
-	return 1
 }
 
 func (any *objectLazyAny) ToUint() uint {
-	if any.cache == nil {
-		any.IterateObject() // trigger first value read
-	}
-	if len(any.cache) == 0 {
+	if any.ToBool() {
+		return 1
+	} else {
 		return 0
 	}
-	return 1
 }
 
 func (any *objectLazyAny) ToUint32() uint32 {
-	if any.cache == nil {
-		any.IterateObject() // trigger first value read
-	}
-	if len(any.cache) == 0 {
+	if any.ToBool() {
+		return 1
+	} else {
 		return 0
 	}
-	return 1
 }
 
 func (any *objectLazyAny) ToUint64() uint64 {
-	if any.cache == nil {
-		any.IterateObject() // trigger first value read
-	}
-	if len(any.cache) == 0 {
+	if any.ToBool() {
+		return 1
+	} else {
 		return 0
 	}
-	return 1
 }
 
 func (any *objectLazyAny) ToFloat32() float32 {
-	if any.cache == nil {
-		any.IterateObject() // trigger first value read
-	}
-	if len(any.cache) == 0 {
+	if any.ToBool() {
+		return 1
+	} else {
 		return 0
 	}
-	return 1
 }
 
 func (any *objectLazyAny) ToFloat64() float64 {
-	if any.cache == nil {
-		any.IterateObject() // trigger first value read
-	}
-	if len(any.cache) == 0 {
+	if any.ToBool() {
+		return 1
+	} else {
 		return 0
 	}
-	return 1
 }
 
 func (any *objectLazyAny) ToString() string {
-	if len(any.remaining) == len(any.buf) {
-		// nothing has been parsed yet
-		return *(*string)(unsafe.Pointer(&any.buf))
-	} else {
-		any.fillCache()
-		str, err := any.cfg.MarshalToString(any.cache)
-		any.err = err
-		return str
-	}
+	return *(*string)(unsafe.Pointer(&any.buf))
 }
 
 func (any *objectLazyAny) Get(path ...interface{}) Any {
 	if len(path) == 0 {
 		return any
 	}
-	var element Any
-
 	switch firstPath := path[0].(type) {
 	case string:
-		element = any.fillCacheUntil(firstPath)
-		if element == nil {
-			element = &invalidAny{baseAny{}, fmt.Errorf("%v not found in %v", firstPath, any.cache)}
+		iter := any.cfg.BorrowIterator(any.buf)
+		defer any.cfg.ReturnIterator(iter)
+		valueBytes := locateObjectField(iter, firstPath)
+		if valueBytes == nil {
+			return newInvalidAny(path)
+		} else {
+			iter.ResetBytes(valueBytes)
+			return locatePath(iter, path[1:])
 		}
 	case int32:
 		if '*' == firstPath {
-			any.fillCache()
 			mappedAll := map[string]Any{}
-			for key, value := range any.cache {
-				mapped := value.Get(path[1:]...)
+			iter := any.cfg.BorrowIterator(any.buf)
+			defer any.cfg.ReturnIterator(iter)
+			iter.ReadObjectCB(func(iter *Iterator, field string) bool {
+				mapped := locatePath(iter, path[1:])
 				if mapped.ValueType() != Invalid {
-					mappedAll[key] = mapped
+					mappedAll[field] = mapped
 				}
-			}
+				return true
+			})
 			return wrapMap(mappedAll)
 		} else {
-			element = &invalidAny{baseAny{}, fmt.Errorf("%v not found in %v", firstPath, any.cache)}
+			return newInvalidAny(path)
 		}
 	default:
-		element = &invalidAny{baseAny{}, fmt.Errorf("%v not found in %v", firstPath, any.cache)}
-	}
-	if len(path) == 1 {
-		return element
-	} else {
-		return element.Get(path[1:]...)
+		return newInvalidAny(path)
 	}
 }
 
 func (any *objectLazyAny) Keys() []string {
-	any.fillCache()
-	keys := make([]string, 0, len(any.cache))
-	for key := range any.cache {
-		keys = append(keys, key)
-	}
+	keys := []string{}
+	iter := any.cfg.BorrowIterator(any.buf)
+	defer any.cfg.ReturnIterator(iter)
+	iter.ReadObjectCB(func(iter *Iterator, field string) bool {
+		iter.Skip()
+		keys = append(keys, field)
+		return true
+	})
 	return keys
 }
 
 func (any *objectLazyAny) Size() int {
-	any.fillCache()
-	return len(any.cache)
-}
-
-func (any *objectLazyAny) IterateObject() (func() (string, Any, bool), bool) {
-	if any.cache == nil {
-		any.cache = map[string]Any{}
-	}
-	remaining := any.remaining
-	if len(remaining) == len(any.buf) {
-		iter := any.cfg.BorrowIterator(any.remaining)
-		defer any.cfg.ReturnIterator(iter)
-		iter.head++
-		c := iter.nextToken()
-		if c != '}' {
-			iter.unreadByte()
-			k := string(iter.readObjectFieldAsBytes())
-			v := iter.readAny()
-			any.cache[k] = v
-			remaining = iter.buf[iter.head:]
-			any.remaining = remaining
-		} else {
-			remaining = nil
-			any.remaining = nil
-			any.err = iter.Error
-			return nil, false
-		}
-	}
-	if len(any.cache) == 0 {
-		return nil, false
-	}
-	keys := make([]string, 0, len(any.cache))
-	values := make([]Any, 0, len(any.cache))
-	for key, value := range any.cache {
-		keys = append(keys, key)
-		values = append(values, value)
-	}
-	nextKey := keys[0]
-	nextValue := values[0]
-	i := 1
-	return func() (string, Any, bool) {
-		key := nextKey
-		value := nextValue
-		if i < len(keys) {
-			// read from cache
-			nextKey = keys[i]
-			nextValue = values[i]
-			i++
-			return key, value, true
-		} else {
-			// read from buffer
-			iter := any.cfg.BorrowIterator(any.remaining)
-			defer any.cfg.ReturnIterator(iter)
-			c := iter.nextToken()
-			if c == ',' {
-				nextKey = string(iter.readObjectFieldAsBytes())
-				nextValue = iter.readAny()
-				any.cache[nextKey] = nextValue
-				remaining = iter.buf[iter.head:]
-				any.remaining = remaining
-				any.err = iter.Error
-				return key, value, true
-			} else {
-				nextKey = ""
-				remaining = nil
-				any.remaining = nil
-				any.err = iter.Error
-				return key, value, false
-			}
-		}
-	}, true
+	size := 0
+	iter := any.cfg.BorrowIterator(any.buf)
+	defer any.cfg.ReturnIterator(iter)
+	iter.ReadObjectCB(func(iter *Iterator, field string) bool {
+		iter.Skip()
+		size ++
+		return true
+	})
+	return size
 }
 
 func (any *objectLazyAny) GetObject() map[string]Any {
-	any.fillCache()
-	return any.cache
-}
-
-func (any *objectLazyAny) SetObject(val map[string]Any) bool {
-	any.fillCache()
-	any.cache = val
-	return true
+	asMap := map[string]Any{}
+	iter := any.cfg.BorrowIterator(any.buf)
+	defer any.cfg.ReturnIterator(iter)
+	iter.ReadObjectCB(func(iter *Iterator, field string) bool {
+		asMap[field] = iter.ReadAny()
+		return true
+	})
+	return asMap
 }
 
 func (any *objectLazyAny) WriteTo(stream *Stream) {
-	if len(any.remaining) == len(any.buf) {
-		// nothing has been parsed yet
-		stream.Write(any.buf)
-	} else {
-		any.fillCache()
-		stream.WriteVal(any.cache)
-	}
+	stream.Write(any.buf)
 }
 
 func (any *objectLazyAny) GetInterface() interface{} {
-	any.fillCache()
-	return any.cache
+	iter := any.cfg.BorrowIterator(any.buf)
+	defer any.cfg.ReturnIterator(iter)
+	return iter.Read()
 }
 
 type objectAny struct {
@@ -537,55 +366,9 @@ func (any *objectAny) Size() int {
 	return len(any.cache)
 }
 
-func (any *objectAny) IterateObject() (func() (string, Any, bool), bool) {
-	if any.cache == nil {
-		any.cache = map[string]Any{}
-	}
-	if any.val.NumField() == 0 {
-		return nil, false
-	}
-	cacheKeys := make([]string, len(any.cache))
-	i := 0
-	for key := range any.cache {
-		cacheKeys[i] = key
-		i++
-	}
-	i = 0
-	return func() (string, Any, bool) {
-		if i == any.val.NumField() {
-			return "", nil, false
-		}
-		var fieldName string
-		var fieldValueAsAny Any
-		if i == len(cacheKeys) {
-			fieldName = any.val.Type().Field(i).Name
-			cacheKeys = append(cacheKeys, fieldName)
-			fieldValue := any.val.Field(i)
-			if fieldValue.CanInterface() {
-				fieldValueAsAny = Wrap(fieldValue.Interface())
-				any.cache[fieldName] = fieldValueAsAny
-			} else {
-				fieldValueAsAny = &invalidAny{baseAny{}, fmt.Errorf("%v not found in %v", fieldName, any.cache)}
-				any.cache[fieldName] = fieldValueAsAny
-			}
-		} else {
-			fieldName = cacheKeys[i]
-			fieldValueAsAny = any.cache[fieldName]
-		}
-		i++
-		return fieldName, fieldValueAsAny, i != any.val.NumField()
-	}, true
-}
-
 func (any *objectAny) GetObject() map[string]Any {
 	any.fillCache()
 	return any.cache
-}
-
-func (any *objectAny) SetObject(val map[string]Any) bool {
-	any.fillCache()
-	any.cache = val
-	return true
 }
 
 func (any *objectAny) WriteTo(stream *Stream) {
@@ -785,40 +568,9 @@ func (any *mapAny) Size() int {
 	return len(any.cache)
 }
 
-func (any *mapAny) IterateObject() (func() (string, Any, bool), bool) {
-	any.fillCache()
-	if len(any.cache) == 0 {
-		return nil, false
-	}
-	keys := make([]string, len(any.cache))
-	values := make([]Any, len(any.cache))
-	i := 0
-	for k, v := range any.cache {
-		keys[i] = k
-		values[i] = v
-		i++
-	}
-	i = 0
-	return func() (string, Any, bool) {
-		if i == len(keys) {
-			return "", nil, false
-		}
-		k := keys[i]
-		v := values[i]
-		i++
-		return k, v, i != len(keys)
-	}, true
-}
-
 func (any *mapAny) GetObject() map[string]Any {
 	any.fillCache()
 	return any.cache
-}
-
-func (any *mapAny) SetObject(val map[string]Any) bool {
-	any.fillCache()
-	any.cache = val
-	return true
 }
 
 func (any *mapAny) WriteTo(stream *Stream) {

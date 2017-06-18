@@ -206,39 +206,10 @@ func (cfg *frozenConfig) UnmarshalFromString(str string, v interface{}) error {
 	return iter.Error
 }
 
-func (cfg *frozenConfig) UnmarshalAnyFromString(str string) (Any, error) {
-	data := []byte(str)
-	data = data[:lastNotSpacePos(data)]
+func (cfg *frozenConfig) Get(data []byte, path ...interface{}) Any {
 	iter := cfg.BorrowIterator(data)
 	defer cfg.ReturnIterator(iter)
-	any := iter.ReadAny()
-	if iter.head == iter.tail {
-		iter.loadMore()
-	}
-	if iter.Error == io.EOF {
-		return any, nil
-	}
-	if iter.Error == nil {
-		iter.reportError("UnmarshalAnyFromString", "there are bytes left after unmarshal")
-	}
-	return nil, iter.Error
-}
-
-func (cfg *frozenConfig) UnmarshalAny(data []byte) (Any, error) {
-	data = data[:lastNotSpacePos(data)]
-	iter := cfg.BorrowIterator(data)
-	defer cfg.ReturnIterator(iter)
-	any := iter.ReadAny()
-	if iter.head == iter.tail {
-		iter.loadMore()
-	}
-	if iter.Error == io.EOF {
-		return any, nil
-	}
-	if iter.Error == nil {
-		iter.reportError("UnmarshalAny", "there are bytes left after unmarshal")
-	}
-	return any, iter.Error
+	return locatePath(iter, path)
 }
 
 func (cfg *frozenConfig) Unmarshal(data []byte, v interface{}) error {

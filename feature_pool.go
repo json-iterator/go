@@ -15,6 +15,7 @@ func (cfg *frozenConfig) BorrowStream(writer io.Writer) *Stream {
 }
 
 func (cfg *frozenConfig) ReturnStream(stream *Stream) {
+	stream.Error = nil
 	select {
 	case cfg.streamPool <- stream:
 		return
@@ -34,6 +35,7 @@ func (cfg *frozenConfig) BorrowIterator(data []byte) *Iterator {
 }
 
 func (cfg *frozenConfig) ReturnIterator(iter *Iterator) {
+	iter.Error = nil
 	select {
 	case cfg.iteratorPool <- iter:
 		return

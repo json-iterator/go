@@ -11,90 +11,10 @@ type arrayLazyAny struct {
 	cfg       *frozenConfig
 	buf       []byte
 	err       error
-	cache     []Any
-	remaining []byte
 }
 
 func (any *arrayLazyAny) ValueType() ValueType {
 	return Array
-}
-
-func (any *arrayLazyAny) fillCacheUntil(target int) Any {
-	if any.remaining == nil {
-		if target >= len(any.cache) {
-			return nil
-		}
-		return any.cache[target]
-	}
-	if any.cache == nil {
-		any.cache = make([]Any, 0, 8)
-	}
-	i := len(any.cache)
-	if target < i {
-		return any.cache[target]
-	}
-	iter := any.cfg.BorrowIterator(any.remaining)
-	defer any.cfg.ReturnIterator(iter)
-	if len(any.remaining) == len(any.buf) {
-		iter.head++
-		c := iter.nextToken()
-		if c != ']' {
-			iter.unreadByte()
-			element := iter.readAny()
-			any.cache = append(any.cache, element)
-			if target == 0 {
-				any.remaining = iter.buf[iter.head:]
-				any.err = iter.Error
-				return element
-			}
-			i = 1
-		} else {
-			any.remaining = nil
-			any.err = iter.Error
-			return nil
-		}
-	}
-	for iter.nextToken() == ',' {
-		element := iter.readAny()
-		any.cache = append(any.cache, element)
-		if i == target {
-			any.remaining = iter.buf[iter.head:]
-			any.err = iter.Error
-			return element
-		}
-		i++
-	}
-	any.remaining = nil
-	any.err = iter.Error
-	return nil
-}
-
-func (any *arrayLazyAny) fillCache() {
-	if any.remaining == nil {
-		return
-	}
-	if any.cache == nil {
-		any.cache = make([]Any, 0, 8)
-	}
-	iter := any.cfg.BorrowIterator(any.remaining)
-	defer any.cfg.ReturnIterator(iter)
-	if len(any.remaining) == len(any.buf) {
-		iter.head++
-		c := iter.nextToken()
-		if c != ']' {
-			iter.unreadByte()
-			any.cache = append(any.cache, iter.readAny())
-		} else {
-			any.remaining = nil
-			any.err = iter.Error
-			return
-		}
-	}
-	for iter.nextToken() == ',' {
-		any.cache = append(any.cache, iter.readAny())
-	}
-	any.remaining = nil
-	any.err = iter.Error
 }
 
 func (any *arrayLazyAny) LastError() error {
@@ -102,226 +22,146 @@ func (any *arrayLazyAny) LastError() error {
 }
 
 func (any *arrayLazyAny) ToBool() bool {
-	if any.cache == nil {
-		any.IterateArray() // trigger first element read
-	}
-	return len(any.cache) != 0
+	iter := any.cfg.BorrowIterator(any.buf)
+	defer any.cfg.ReturnIterator(iter)
+	return iter.ReadArray()
 }
 
 func (any *arrayLazyAny) ToInt() int {
-	if any.cache == nil {
-		any.IterateArray() // trigger first element read
-	}
-	if len(any.cache) == 0 {
+	if any.ToBool() {
+		return 1
+	} else {
 		return 0
 	}
-	return 1
 }
 
 func (any *arrayLazyAny) ToInt32() int32 {
-	if any.cache == nil {
-		any.IterateArray() // trigger first element read
-	}
-	if len(any.cache) == 0 {
+	if any.ToBool() {
+		return 1
+	} else {
 		return 0
 	}
-	return 1
 }
 
 func (any *arrayLazyAny) ToInt64() int64 {
-	if any.cache == nil {
-		any.IterateArray() // trigger first element read
-	}
-	if len(any.cache) == 0 {
+	if any.ToBool() {
+		return 1
+	} else {
 		return 0
 	}
-	return 1
 }
 
 func (any *arrayLazyAny) ToUint() uint {
-	if any.cache == nil {
-		any.IterateArray() // trigger first element read
-	}
-	if len(any.cache) == 0 {
+	if any.ToBool() {
+		return 1
+	} else {
 		return 0
 	}
-	return 1
 }
 
 func (any *arrayLazyAny) ToUint32() uint32 {
-	if any.cache == nil {
-		any.IterateArray() // trigger first element read
-	}
-	if len(any.cache) == 0 {
+	if any.ToBool() {
+		return 1
+	} else {
 		return 0
 	}
-	return 1
 }
 
 func (any *arrayLazyAny) ToUint64() uint64 {
-	if any.cache == nil {
-		any.IterateArray() // trigger first element read
-	}
-	if len(any.cache) == 0 {
+	if any.ToBool() {
+		return 1
+	} else {
 		return 0
 	}
-	return 1
 }
 
 func (any *arrayLazyAny) ToFloat32() float32 {
-	if any.cache == nil {
-		any.IterateArray() // trigger first element read
-	}
-	if len(any.cache) == 0 {
+	if any.ToBool() {
+		return 1
+	} else {
 		return 0
 	}
-	return 1
 }
 
 func (any *arrayLazyAny) ToFloat64() float64 {
-	if any.cache == nil {
-		any.IterateArray() // trigger first element read
-	}
-	if len(any.cache) == 0 {
+	if any.ToBool() {
+		return 1
+	} else {
 		return 0
 	}
-	return 1
 }
 
 func (any *arrayLazyAny) ToString() string {
-	if len(any.remaining) == len(any.buf) {
-		// nothing has been parsed yet
-		return *(*string)(unsafe.Pointer(&any.buf))
-	} else {
-		any.fillCache()
-		str, err := any.cfg.MarshalToString(any.cache)
-		any.err = err
-		return str
-	}
+	return *(*string)(unsafe.Pointer(&any.buf))
 }
 
 func (any *arrayLazyAny) Get(path ...interface{}) Any {
 	if len(path) == 0 {
 		return any
 	}
-	var element Any
 	switch firstPath := path[0].(type) {
 	case int:
-		element = any.fillCacheUntil(firstPath)
-		if element == nil {
-			element = &invalidAny{baseAny{}, fmt.Errorf("%v not found in %v", firstPath, any.cache)}
+		iter := any.cfg.BorrowIterator(any.buf)
+		defer any.cfg.ReturnIterator(iter)
+		valueBytes := locateArrayElement(iter, firstPath)
+		if valueBytes == nil {
+			return newInvalidAny(path)
+		} else {
+			iter.ResetBytes(valueBytes)
+			return locatePath(iter, path[1:])
 		}
 	case int32:
 		if '*' == firstPath {
-			any.fillCache()
-			arr := make([]Any, 0, len(any.cache))
-			for _, element := range any.cache {
-				found := element.Get(path[1:]...)
+			iter := any.cfg.BorrowIterator(any.buf)
+			defer any.cfg.ReturnIterator(iter)
+			arr := make([]Any, 0)
+			iter.ReadArrayCB(func(iter *Iterator) bool {
+				found := iter.readAny().Get(path[1:]...)
 				if found.ValueType() != Invalid {
 					arr = append(arr, found)
 				}
-			}
+				return true
+			})
 			return wrapArray(arr)
 		} else {
-			element = &invalidAny{baseAny{}, fmt.Errorf("%v not found in %v", path[0], any.cache)}
+			return newInvalidAny(path)
 		}
 	default:
-		element = &invalidAny{baseAny{}, fmt.Errorf("%v not found in %v", path[0], any.cache)}
-	}
-	if len(path) == 1 {
-		return element
-	} else {
-		return element.Get(path[1:]...)
+		return newInvalidAny(path)
 	}
 }
 
 func (any *arrayLazyAny) Size() int {
-	any.fillCache()
-	return len(any.cache)
-}
-
-func (any *arrayLazyAny) IterateArray() (func() (Any, bool), bool) {
-	if any.cache == nil {
-		any.cache = make([]Any, 0, 8)
-	}
-	remaining := any.remaining
-	if len(remaining) == len(any.buf) {
-		iter := any.cfg.BorrowIterator(any.remaining)
-		defer any.cfg.ReturnIterator(iter)
-		iter.head++
-		c := iter.nextToken()
-		if c != ']' {
-			iter.unreadByte()
-			v := iter.readAny()
-			any.cache = append(any.cache, v)
-			remaining = iter.buf[iter.head:]
-			any.remaining = remaining
-		} else {
-			remaining = nil
-			any.remaining = nil
-			any.err = iter.Error
-			return nil, false
-		}
-	}
-	if len(any.cache) == 0 {
-		return nil, false
-	}
-	arr := any.cache
-	nextValue := arr[0]
-	i := 1
-	return func() (Any, bool) {
-		value := nextValue
-		if i < len(arr) {
-			// read from cache
-			nextValue = arr[i]
-			i++
-			return value, true
-		} else {
-			// read from buffer
-			iter := any.cfg.BorrowIterator(any.remaining)
-			defer any.cfg.ReturnIterator(iter)
-			c := iter.nextToken()
-			if c == ',' {
-				nextValue = iter.readAny()
-				any.cache = append(any.cache, nextValue)
-				remaining = iter.buf[iter.head:]
-				any.remaining = remaining
-				any.err = iter.Error
-				return value, true
-			} else {
-				remaining = nil
-				any.remaining = nil
-				any.err = iter.Error
-				return value, false
-			}
-		}
-	}, true
+	size := 0
+	iter := any.cfg.BorrowIterator(any.buf)
+	defer any.cfg.ReturnIterator(iter)
+	iter.ReadArrayCB(func(iter *Iterator) bool {
+		size++
+		iter.Skip()
+		return true
+	})
+	return size
 }
 
 func (any *arrayLazyAny) GetArray() []Any {
-	any.fillCache()
-	return any.cache
-}
-
-func (any *arrayLazyAny) SetArray(newList []Any) bool {
-	any.fillCache()
-	any.cache = newList
-	return true
+	elements := make([]Any, 0)
+	iter := any.cfg.BorrowIterator(any.buf)
+	defer any.cfg.ReturnIterator(iter)
+	iter.ReadArrayCB(func(iter *Iterator) bool {
+		elements = append(elements, iter.ReadAny())
+		return true
+	})
+	return elements
 }
 
 func (any *arrayLazyAny) WriteTo(stream *Stream) {
-	if len(any.remaining) == len(any.buf) {
-		// nothing has been parsed yet
-		stream.Write(any.buf)
-	} else {
-		any.fillCache()
-		stream.WriteVal(any.cache)
-	}
+	stream.Write(any.buf)
 }
 
 func (any *arrayLazyAny) GetInterface() interface{} {
-	any.fillCache()
-	return any.cache
+	iter := any.cfg.BorrowIterator(any.buf)
+	defer any.cfg.ReturnIterator(iter)
+	return iter.Read()
 }
 
 type arrayAny struct {
@@ -504,12 +344,6 @@ func (any *arrayAny) IterateArray() (func() (Any, bool), bool) {
 func (any *arrayAny) GetArray() []Any {
 	any.fillCache()
 	return any.cache
-}
-
-func (any *arrayAny) SetArray(newList []Any) bool {
-	any.fillCache()
-	any.cache = newList
-	return true
 }
 
 func (any *arrayAny) WriteTo(stream *Stream) {

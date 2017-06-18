@@ -122,8 +122,9 @@ func (any *stringLazyAny) ToFloat64() float64 {
 }
 
 func (any *stringLazyAny) ToString() string {
-	any.fillCache()
-	return any.cache
+	var val string
+	any.err = any.cfg.Unmarshal(any.buf, &val)
+	return val
 }
 
 func (any *stringLazyAny) WriteTo(stream *Stream) {

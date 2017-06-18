@@ -3,6 +3,7 @@ package jsoniter
 import (
 	"fmt"
 	"reflect"
+	"io"
 )
 
 type Any interface {
@@ -21,12 +22,8 @@ type Any interface {
 	Get(path ...interface{}) Any
 	Size() int
 	Keys() []string
-	IterateObject() (func() (string, Any, bool), bool)
-	IterateArray() (func() (Any, bool), bool)
 	GetArray() []Any
-	SetArray(newList []Any) bool
 	GetObject() map[string]Any
-	SetObject(map[string]Any) bool
 	GetInterface() interface{}
 	WriteTo(stream *Stream)
 }
@@ -45,28 +42,12 @@ func (any *baseAny) Keys() []string {
 	return []string{}
 }
 
-func (any *baseAny) IterateObject() (func() (string, Any, bool), bool) {
-	return nil, false
-}
-
-func (any *baseAny) IterateArray() (func() (Any, bool), bool) {
-	return nil, false
-}
-
 func (any *baseAny) GetArray() []Any {
 	return []Any{}
 }
 
-func (any *baseAny) SetArray(newList []Any) bool {
-	return false
-}
-
 func (any *baseAny) GetObject() map[string]Any {
 	return map[string]Any{}
-}
-
-func (any *baseAny) SetObject(map[string]Any) bool {
-	return false
 }
 
 func WrapInt32(val int32) Any {
@@ -153,7 +134,8 @@ func (iter *Iterator) readAny() Any {
 	c := iter.nextToken()
 	switch c {
 	case '"':
-		return iter.readStringAny()
+		iter.unreadByte()
+		return &stringAny{baseAny{}, nil, iter.ReadString()}
 	case 'n':
 		iter.skipFixedBytes(3) // null
 		return &nilAny{}
@@ -200,12 +182,59 @@ func (iter *Iterator) readObjectAny() Any {
 	iter.startCapture(iter.head - 1)
 	iter.skipObject()
 	lazyBuf := iter.stopCapture()
-	return &objectLazyAny{baseAny{}, iter.cfg, lazyBuf, nil, nil, lazyBuf}
+	return &objectLazyAny{baseAny{}, iter.cfg, lazyBuf, nil}
 }
 
 func (iter *Iterator) readArrayAny() Any {
 	iter.startCapture(iter.head - 1)
 	iter.skipArray()
 	lazyBuf := iter.stopCapture()
-	return &arrayLazyAny{baseAny{}, iter.cfg, lazyBuf, nil, nil, lazyBuf}
+	return &arrayLazyAny{baseAny{}, iter.cfg, lazyBuf, nil}
+}
+
+func locateObjectField(iter *Iterator, target string) []byte {
+	var found []byte
+	iter.ReadObjectCB(func(iter *Iterator, field string) bool {
+		if field == target {
+			found = iter.SkipAndReturnBytes()
+			return false
+		}
+		iter.Skip()
+		return true
+	})
+	return found
+}
+
+func locateArrayElement(iter *Iterator, target int) []byte {
+	var found []byte
+	n := 0
+	iter.ReadArrayCB(func(iter *Iterator) bool {
+		if n == target {
+			found = iter.SkipAndReturnBytes()
+			return false
+		}
+		iter.Skip()
+		n++
+		return true
+	})
+	return found
+}
+
+func locatePath(iter *Iterator, path []interface{}) Any {
+	for i, pathKeyObj := range path {
+		switch pathKey := pathKeyObj.(type) {
+		case string:
+			valueBytes := locateObjectField(iter, pathKey)
+			iter.ResetBytes(valueBytes)
+		case int:
+			valueBytes := locateArrayElement(iter, pathKey)
+			iter.ResetBytes(valueBytes)
+		default:
+			return newInvalidAny(path[i:])
+		}
+	}
+	if iter.Error != nil && iter.Error != io.EOF {
+		return &invalidAny{baseAny{}, iter.Error}
+	}
+	return iter.readAny()
 }

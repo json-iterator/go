@@ -124,7 +124,6 @@ func (iter *Iterator) Reset(reader io.Reader) *Iterator {
 // ResetBytes can reset an Iterator instance for another json byte slice
 func (iter *Iterator) ResetBytes(input []byte) *Iterator {
 	iter.reader = nil
-	iter.Error = nil
 	iter.buf = input
 	iter.head = 0
 	iter.tail = len(input)

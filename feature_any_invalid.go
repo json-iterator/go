@@ -7,6 +7,10 @@ type invalidAny struct {
 	err error
 }
 
+func newInvalidAny(path []interface{}) *invalidAny {
+	return &invalidAny{baseAny{}, fmt.Errorf("%v not found", path)}
+}
+
 func (any *invalidAny) LastError() error {
 	return any.err
 }

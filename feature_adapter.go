@@ -24,11 +24,6 @@ func Unmarshal(data []byte, v interface{}) error {
 	return ConfigDefault.Unmarshal(data, v)
 }
 
-// UnmarshalAny adapts to
-func UnmarshalAny(data []byte) (Any, error) {
-	return ConfigDefault.UnmarshalAny(data)
-}
-
 func lastNotSpacePos(data []byte) int {
 	for i := len(data) - 1; i >= 0; i-- {
 		if data[i] != ' ' && data[i] != '\t' && data[i] != '\r' && data[i] != '\n' {
@@ -42,9 +37,10 @@ func UnmarshalFromString(str string, v interface{}) error {
 	return ConfigDefault.UnmarshalFromString(str, v)
 }
 
-func UnmarshalAnyFromString(str string) (Any, error) {
-	return ConfigDefault.UnmarshalAnyFromString(str)
+func Get(data []byte, path ...interface{}) Any {
+	return ConfigDefault.Get(data, path...)
 }
+
 
 // Marshal adapts to json/encoding Marshal API
 //
