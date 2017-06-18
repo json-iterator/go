@@ -53,6 +53,7 @@ func Test_wrap_object(t *testing.T) {
 	should.Equal("hello", any.Get("Field1").ToString())
 	any = Wrap(TestObject{"hello", "world"})
 	should.Equal(2, any.Size())
+	should.Equal(`{"Field1":"hello"}`, any.Get('*').ToString())
 }
 
 func Test_any_within_struct(t *testing.T) {

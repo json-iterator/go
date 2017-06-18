@@ -179,12 +179,11 @@ func (any *objectLazyAny) GetInterface() interface{} {
 type objectAny struct {
 	baseAny
 	err   error
-	cache map[string]Any
 	val   reflect.Value
 }
 
 func wrapStruct(val interface{}) *objectAny {
-	return &objectAny{baseAny{}, nil, nil, reflect.ValueOf(val)}
+	return &objectAny{baseAny{}, nil, reflect.ValueOf(val)}
 }
 
 func (any *objectAny) ValueType() ValueType {
@@ -194,51 +193,51 @@ func (any *objectAny) ValueType() ValueType {
 func (any *objectAny) Parse() *Iterator {
 	return nil
 }
-
-func (any *objectAny) fillCacheUntil(target string) Any {
-	if any.cache == nil {
-		any.cache = map[string]Any{}
-	}
-	element, found := any.cache[target]
-	if found {
-		return element
-	}
-	for i := len(any.cache); i < any.val.NumField(); i++ {
-		field := any.val.Field(i)
-		fieldName := any.val.Type().Field(i).Name
-		var element Any
-		if field.CanInterface() {
-			element = Wrap(field.Interface())
-		} else {
-			element = &invalidAny{baseAny{}, fmt.Errorf("%v not found in %v", fieldName, any.cache)}
-		}
-		any.cache[fieldName] = element
-		if fieldName == target {
-			return element
-		}
-	}
-	return nil
-}
-
-func (any *objectAny) fillCache() {
-	if any.cache == nil {
-		any.cache = map[string]Any{}
-	}
-	if len(any.cache) == any.val.NumField() {
-		return
-	}
-	for i := 0; i < any.val.NumField(); i++ {
-		field := any.val.Field(i)
-		fieldName := any.val.Type().Field(i).Name
-		var element Any
-		if field.CanInterface() {
-			element = Wrap(field.Interface())
-		} else {
-			element = &invalidAny{baseAny{}, fmt.Errorf("%v not found in %v", fieldName, any.cache)}
-		}
-		any.cache[fieldName] = element
-	}
-}
+//
+//func (any *objectAny) fillCacheUntil(target string) Any {
+//	if any.cache == nil {
+//		any.cache = map[string]Any{}
+//	}
+//	element, found := any.cache[target]
+//	if found {
+//		return element
+//	}
+//	for i := len(any.cache); i < any.val.NumField(); i++ {
+//		field := any.val.Field(i)
+//		fieldName := any.val.Type().Field(i).Name
+//		var element Any
+//		if field.CanInterface() {
+//			element = Wrap(field.Interface())
+//		} else {
+//			element = &invalidAny{baseAny{}, fmt.Errorf("%v not found in %v", fieldName, any.cache)}
+//		}
+//		any.cache[fieldName] = element
+//		if fieldName == target {
+//			return element
+//		}
+//	}
+//	return nil
+//}
+//
+//func (any *objectAny) fillCache() {
+//	if any.cache == nil {
+//		any.cache = map[string]Any{}
+//	}
+//	if len(any.cache) == any.val.NumField() {
+//		return
+//	}
+//	for i := 0; i < any.val.NumField(); i++ {
+//		field := any.val.Field(i)
+//		fieldName := any.val.Type().Field(i).Name
+//		var element Any
+//		if field.CanInterface() {
+//			element = Wrap(field.Interface())
+//		} else {
+//			element = &invalidAny{baseAny{}, fmt.Errorf("%v not found in %v", fieldName, any.cache)}
+//		}
+//		any.cache[fieldName] = element
+//	}
+//}
 
 func (any *objectAny) LastError() error {
 	return any.err
@@ -305,85 +304,72 @@ func (any *objectAny) ToFloat64() float64 {
 }
 
 func (any *objectAny) ToString() string {
-	if len(any.cache) == 0 {
-		str, err := MarshalToString(any.val.Interface())
-		any.err = err
-		return str
-	} else {
-		any.fillCache()
-		str, err := MarshalToString(any.cache)
-		any.err = err
-		return str
-	}
+	str, err := MarshalToString(any.val.Interface())
+	any.err = err
+	return str
 }
 
 func (any *objectAny) Get(path ...interface{}) Any {
 	if len(path) == 0 {
 		return any
 	}
-	var element Any
 	switch firstPath := path[0].(type) {
 	case string:
-		element = any.fillCacheUntil(firstPath)
-		if element == nil {
-			element = &invalidAny{baseAny{}, fmt.Errorf("%v not found in %v", firstPath, any.cache)}
+		field := any.val.FieldByName(firstPath)
+		if !field.IsValid() {
+			return newInvalidAny(path)
 		}
+		return Wrap(field.Interface())
 	case int32:
 		if '*' == firstPath {
-			any.fillCache()
 			mappedAll := map[string]Any{}
-			for key, value := range any.cache {
-				mapped := value.Get(path[1:]...)
-				if mapped.ValueType() != Invalid {
-					mappedAll[key] = mapped
+			for i := 0; i < any.val.NumField(); i++ {
+				field := any.val.Field(i)
+				if field.CanInterface() {
+					mapped := Wrap(field.Interface()).Get(path[1:]...)
+					if mapped.ValueType() != Invalid {
+						mappedAll[any.val.Type().Field(i).Name] = mapped
+					}
 				}
 			}
 			return wrapMap(mappedAll)
 		} else {
-			element = &invalidAny{baseAny{}, fmt.Errorf("%v not found in %v", firstPath, any.cache)}
+			return newInvalidAny(path)
 		}
 	default:
-		element = &invalidAny{baseAny{}, fmt.Errorf("%v not found in %v", firstPath, any.cache)}
-	}
-	if len(path) == 1 {
-		return element
-	} else {
-		return element.Get(path[1:]...)
+		return newInvalidAny(path)
 	}
 }
 
 func (any *objectAny) Keys() []string {
-	any.fillCache()
-	keys := make([]string, 0, len(any.cache))
-	for key := range any.cache {
-		keys = append(keys, key)
+	keys := make([]string, 0, any.val.NumField())
+	for i := 0; i < any.val.NumField(); i++ {
+		keys = append(keys, any.val.Type().Field(i).Name)
 	}
 	return keys
 }
 
 func (any *objectAny) Size() int {
-	any.fillCache()
-	return len(any.cache)
+	return any.val.NumField()
 }
 
 func (any *objectAny) GetObject() map[string]Any {
-	any.fillCache()
-	return any.cache
+	object := map[string]Any{}
+	for i := 0; i < any.val.NumField(); i++ {
+		field := any.val.Field(i)
+		if field.CanInterface() {
+			object[any.val.Type().Field(i).Name] = Wrap(field.Interface())
+		}
+	}
+	return object
 }
 
 func (any *objectAny) WriteTo(stream *Stream) {
-	if len(any.cache) == 0 {
-		// nothing has been parsed yet
-		stream.WriteVal(any.val)
-	} else {
-		any.fillCache()
-		stream.WriteVal(any.cache)
-	}
+	stream.WriteVal(any.val)
 }
 
 func (any *objectAny) GetInterface() interface{} {
-	any.fillCache()
-	return any.cache
+	return any.val.Interface()
 }
 
 type mapAny struct {
