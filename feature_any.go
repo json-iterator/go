@@ -167,137 +167,45 @@ func (iter *Iterator) readAny() Any {
 		return iter.readObjectAny()
 	case '[':
 		return iter.readArrayAny()
+	case '-':
+		return iter.readNumberAny(false)
 	default:
-		return iter.readNumberAny(c)
+		return iter.readNumberAny(true)
 	}
 }
 
-func (iter *Iterator) readNumberAny(firstByte byte) Any {
-	dotFound := false
-	lazyBuf := make([]byte, 1, 8)
-	lazyBuf[0] = firstByte
-	for {
-		for i := iter.head; i < iter.tail; i++ {
-			c := iter.buf[i]
-			if c == '.' {
-				dotFound = true
-				continue
-			}
-			switch c {
-			case ' ', '\n', '\r', '\t', ',', '}', ']':
-				lazyBuf = append(lazyBuf, iter.buf[iter.head:i]...)
-				iter.head = i
-				if dotFound {
-					return &float64LazyAny{baseAny{}, iter.cfg, lazyBuf, nil, 0}
-				} else {
-					if firstByte == '-' {
-						return &int64LazyAny{baseAny{}, iter.cfg, lazyBuf, nil, 0}
-					} else {
-						return &uint64LazyAny{baseAny{}, iter.cfg, lazyBuf, nil, 0}
-					}
-				}
-			}
-		}
-		lazyBuf = append(lazyBuf, iter.buf[iter.head:iter.tail]...)
-		if !iter.loadMore() {
-			iter.head = iter.tail
-			if dotFound {
-				return &float64LazyAny{baseAny{}, iter.cfg, lazyBuf, nil, 0}
-			} else {
-				if firstByte == '-' {
-					return &int64LazyAny{baseAny{}, iter.cfg, lazyBuf, nil, 0}
-				} else {
-					return &uint64LazyAny{baseAny{}, iter.cfg, lazyBuf, nil, 0}
-				}
-			}
+func (iter *Iterator) readNumberAny(positive bool) Any {
+	iter.startCapture(iter.head - 1)
+	dotFound := iter.skipNumberAndTellDotFoundOrNot()
+	lazyBuf := iter.stopCapture()
+	if dotFound {
+		return &float64LazyAny{baseAny{}, iter.cfg, lazyBuf, nil, 0}
+	} else {
+		if positive {
+			return &uint64LazyAny{baseAny{}, iter.cfg, lazyBuf, nil, 0}
+		} else {
+			return &int64LazyAny{baseAny{}, iter.cfg, lazyBuf, nil, 0}
 		}
 	}
 }
 
 func (iter *Iterator) readStringAny() Any {
-	lazyBuf := make([]byte, 1, 8)
-	lazyBuf[0] = '"'
-	for {
-		end, escaped := iter.findStringEnd()
-		if end == -1 {
-			lazyBuf = append(lazyBuf, iter.buf[iter.head:iter.tail]...)
-			if !iter.loadMore() {
-				iter.reportError("readStringAny", "incomplete string")
-				return &invalidAny{}
-			}
-			if escaped {
-				iter.head = 1 // skip the first char as last char read is \
-			}
-		} else {
-			lazyBuf = append(lazyBuf, iter.buf[iter.head:end]...)
-			iter.head = end
-			return &stringLazyAny{baseAny{}, iter.cfg, lazyBuf, nil, ""}
-		}
-	}
+	iter.startCapture(iter.head - 1)
+	iter.skipString()
+	lazyBuf := iter.stopCapture()
+	return &stringLazyAny{baseAny{}, iter.cfg, lazyBuf, nil, ""}
 }
 
 func (iter *Iterator) readObjectAny() Any {
-	level := 1
-	lazyBuf := make([]byte, 1, 32)
-	lazyBuf[0] = '{'
-	for {
-		start := iter.head
-		for i := iter.head; i < iter.tail; i++ {
-			switch iter.buf[i] {
-			case '"': // If inside string, skip it
-				iter.head = i + 1
-				iter.skipString()
-				i = iter.head - 1 // it will be i++ soon
-			case '{': // If open symbol, increase level
-				level++
-			case '}': // If close symbol, increase level
-				level--
-
-				// If we have returned to the original level, we're done
-				if level == 0 {
-					iter.head = i + 1
-					lazyBuf = append(lazyBuf, iter.buf[start:iter.head]...)
-					return &objectLazyAny{baseAny{}, iter.cfg, lazyBuf, nil, nil, lazyBuf}
-				}
-			}
-		}
-		lazyBuf = append(lazyBuf, iter.buf[iter.head:iter.tail]...)
-		if !iter.loadMore() {
-			iter.reportError("skipObject", "incomplete object")
-			return &invalidAny{}
-		}
-	}
+	iter.startCapture(iter.head - 1)
+	iter.skipObject()
+	lazyBuf := iter.stopCapture()
+	return &objectLazyAny{baseAny{}, iter.cfg, lazyBuf, nil, nil, lazyBuf}
 }
 
 func (iter *Iterator) readArrayAny() Any {
-	level := 1
-	lazyBuf := make([]byte, 1, 32)
-	lazyBuf[0] = '['
-	for {
-		start := iter.head
-		for i := iter.head; i < iter.tail; i++ {
-			switch iter.buf[i] {
-			case '"': // If inside string, skip it
-				iter.head = i + 1
-				iter.skipString()
-				i = iter.head - 1 // it will be i++ soon
-			case '[': // If open symbol, increase level
-				level++
-			case ']': // If close symbol, increase level
-				level--
-
-				// If we have returned to the original level, we're done
-				if level == 0 {
-					iter.head = i + 1
-					lazyBuf = append(lazyBuf, iter.buf[start:iter.head]...)
-					return &arrayLazyAny{baseAny{}, iter.cfg, lazyBuf, nil, nil, lazyBuf}
-				}
-			}
-		}
-		lazyBuf = append(lazyBuf, iter.buf[iter.head:iter.tail]...)
-		if !iter.loadMore() {
-			iter.reportError("skipArray", "incomplete array")
-			return &invalidAny{}
-		}
-	}
+	iter.startCapture(iter.head - 1)
+	iter.skipArray()
+	lazyBuf := iter.stopCapture()
+	return &arrayLazyAny{baseAny{}, iter.cfg, lazyBuf, nil, nil, lazyBuf}
 }

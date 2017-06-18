@@ -210,6 +210,7 @@ func (iter *Iterator) readByte() (ret byte) {
 func (iter *Iterator) loadMore() bool {
 	if iter.reader == nil {
 		if iter.Error == nil {
+			iter.head = iter.tail
 			iter.Error = io.EOF
 		}
 		return false

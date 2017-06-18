@@ -30,7 +30,7 @@ func (iter *Iterator) ReadBool() (ret bool) {
 }
 
 func (iter *Iterator) SkipAndReturnBytes() []byte {
-	iter.startCapture()
+	iter.startCapture(iter.head)
 	iter.Skip()
 	return iter.stopCapture()
 }
@@ -40,11 +40,11 @@ type captureBuffer struct {
 	captured  []byte
 }
 
-func (iter *Iterator) startCapture() {
+func (iter *Iterator) startCapture(captureStartedAt int) {
 	if iter.captured != nil {
 		panic("already in capture mode")
 	}
-	iter.captureStartedAt = iter.head
+	iter.captureStartedAt = captureStartedAt
 	iter.captured = make([]byte, 0, 32)
 }
 
@@ -75,7 +75,7 @@ func (iter *Iterator) Skip() {
 	case 'f':
 		iter.skipFixedBytes(4) // false
 	case '-', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
-		iter.skipUntilBreak()
+		iter.skipNumber()
 	case '[':
 		iter.skipArray()
 	case '{':
@@ -209,8 +209,7 @@ func (iter *Iterator) skipObject() {
 	}
 }
 
-func (iter *Iterator) skipUntilBreak() {
-	// true, false, null, number
+func (iter *Iterator) skipNumber() {
 	for {
 		for i := iter.head; i < iter.tail; i++ {
 			c := iter.buf[i]
@@ -222,6 +221,25 @@ func (iter *Iterator) skipUntilBreak() {
 		}
 		if !iter.loadMore() {
 			return
+		}
+	}
+}
+
+func (iter *Iterator) skipNumberAndTellDotFoundOrNot() bool {
+	dotFound := false
+	for {
+		for i := iter.head; i < iter.tail; i++ {
+			c := iter.buf[i]
+			switch c {
+			case ' ', '\n', '\r', '\t', ',', '}', ']':
+				iter.head = i
+				return dotFound
+			case '.':
+				dotFound = true
+			}
+		}
+		if !iter.loadMore() {
+			return dotFound
 		}
 	}
 }
