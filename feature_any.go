@@ -171,13 +171,6 @@ func (iter *Iterator) readNumberAny(positive bool) Any {
 	}
 }
 
-func (iter *Iterator) readStringAny() Any {
-	iter.startCapture(iter.head - 1)
-	iter.skipString()
-	lazyBuf := iter.stopCapture()
-	return &stringLazyAny{baseAny{}, iter.cfg, lazyBuf, nil, ""}
-}
-
 func (iter *Iterator) readObjectAny() Any {
 	iter.startCapture(iter.head - 1)
 	iter.skipObject()
