@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"sync/atomic"
 	"unsafe"
+	"encoding/json"
 )
 
 type Config struct {
@@ -14,6 +15,7 @@ type Config struct {
 	SupportUnexportedStructFields bool
 	EscapeHtml                    bool
 	SortMapKeys                   bool
+	UseNumber                     bool
 }
 
 type frozenConfig struct {
@@ -27,7 +29,9 @@ type frozenConfig struct {
 	iteratorPool       chan *Iterator
 }
 
-var ConfigDefault = Config{}.Froze()
+var ConfigDefault = Config{
+	EscapeHtml: true,
+}.Froze()
 
 // Trying to be 100% compatible with standard library behavior
 var ConfigCompatibleWithStandardLibrary = Config{
@@ -57,8 +61,21 @@ func (cfg Config) Froze() *frozenConfig {
 	if cfg.EscapeHtml {
 		frozenConfig.escapeHtml()
 	}
+	if cfg.UseNumber {
+		frozenConfig.useNumber()
+	}
 	frozenConfig.configBeforeFrozen = cfg
 	return frozenConfig
+}
+
+func (cfg *frozenConfig) useNumber() {
+	cfg.addDecoderToCache(reflect.TypeOf((*interface{})(nil)).Elem(), &funcDecoder{func(ptr unsafe.Pointer, iter *Iterator) {
+		if iter.WhatIsNext() == Number {
+			*((*interface{})(ptr)) = json.Number(iter.readNumberAsString())
+		} else {
+			*((*interface{})(ptr)) = iter.Read()
+		}
+	}})
 }
 
 // RegisterExtension can register a custom extension

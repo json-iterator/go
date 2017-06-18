@@ -13,9 +13,7 @@ package jsoniter
 
 import (
 	"bytes"
-	"encoding/json"
 	"io"
-	"unsafe"
 )
 
 // Unmarshal adapts to json/encoding Unmarshal API
@@ -95,13 +93,9 @@ func (adapter *AdaptedDecoder) Buffered() io.Reader {
 }
 
 func (decoder *AdaptedDecoder) UseNumber() {
-	RegisterTypeDecoder("interface {}", func(ptr unsafe.Pointer, iter *Iterator) {
-		if iter.WhatIsNext() == Number {
-			*((*interface{})(ptr)) = json.Number(iter.readNumberAsString())
-		} else {
-			*((*interface{})(ptr)) = iter.Read()
-		}
-	})
+	origCfg := decoder.iter.cfg.configBeforeFrozen
+	origCfg.UseNumber = true
+	decoder.iter.cfg = origCfg.Froze()
 }
 
 func NewEncoder(writer io.Writer) *AdaptedEncoder {

@@ -152,3 +152,13 @@ func Test_nil_non_empty_interface(t *testing.T) {
 	should.NotNil(json.Unmarshal(b, &obj))
 	should.NotNil(Unmarshal(b, &obj))
 }
+
+func Test_read_large_number_as_interface(t *testing.T) {
+	should := require.New(t)
+	var val interface{}
+	err := Config{UseNumber: true}.Froze().UnmarshalFromString(`123456789123456789123456789`, &val)
+	should.Nil(err)
+	output, err := MarshalToString(val)
+	should.Nil(err)
+	should.Equal(`123456789123456789123456789`, output)
+}
