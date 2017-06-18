@@ -3,6 +3,8 @@ package jsoniter
 import (
 	"encoding/json"
 	"testing"
+	"github.com/json-iterator/go/require"
+	"bytes"
 )
 
 func Test_skip_number(t *testing.T) {
@@ -73,6 +75,22 @@ func Test_skip_nested(t *testing.T) {
 	if iter.ReadString() != "b" {
 		t.FailNow()
 	}
+}
+
+func Test_skip_and_return_bytes(t *testing.T) {
+	should := require.New(t)
+	iter := ParseString(ConfigDefault, `[ {"a" : [{"b": "c"}], "d": 102 }, "b"]`)
+	iter.ReadArray()
+	skipped := iter.SkipAndReturnBytes()
+	should.Equal(`{"a" : [{"b": "c"}], "d": 102 }`, string(skipped))
+}
+
+func Test_skip_and_return_bytes_with_reader(t *testing.T) {
+	should := require.New(t)
+	iter := Parse(ConfigDefault, bytes.NewBufferString(`[ {"a" : [{"b": "c"}], "d": 102 }, "b"]`), 4)
+	iter.ReadArray()
+	skipped := iter.SkipAndReturnBytes()
+	should.Equal(`{"a" : [{"b": "c"}], "d": 102 }`, string(skipped))
 }
 
 type TestResp struct {

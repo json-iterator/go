@@ -70,6 +70,8 @@ type Iterator struct {
 	buf    []byte
 	head   int
 	tail   int
+	captureStartedAt int
+	captured	[]byte
 	Error  error
 }
 
@@ -211,6 +213,11 @@ func (iter *Iterator) loadMore() bool {
 			iter.Error = io.EOF
 		}
 		return false
+	}
+	if iter.captureStartedAt != -1 {
+		iter.captured = append(iter.captured,
+			iter.buf[iter.captureStartedAt:iter.tail]...)
+		iter.captureStartedAt = 0
 	}
 	for {
 		n, err := iter.reader.Read(iter.buf)

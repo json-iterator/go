@@ -30,13 +30,38 @@ func (iter *Iterator) ReadBool() (ret bool) {
 }
 
 func (iter *Iterator) SkipAndReturnBytes() []byte {
-	if iter.reader != nil {
-		panic("reader input does not support this api")
-	}
-	before := iter.head
+	iter.startCapture()
 	iter.Skip()
-	after := iter.head
-	return iter.buf[before:after]
+	return iter.stopCapture()
+}
+
+type captureBuffer struct {
+	startedAt int
+	captured  []byte
+}
+
+func (iter *Iterator) startCapture() {
+	if iter.captured != nil {
+		panic("already in capture mode")
+	}
+	iter.captureStartedAt = iter.head
+	iter.captured = make([]byte, 0, 32)
+}
+
+func (iter *Iterator) stopCapture() []byte {
+	if iter.captured == nil {
+		panic("not in capture mode")
+	}
+	captured := iter.captured
+	remaining := iter.buf[iter.captureStartedAt: iter.head]
+	iter.captureStartedAt = -1
+	iter.captured = nil
+	if len(captured) == 0 {
+		return remaining
+	} else {
+		captured = append(captured, remaining...)
+		return captured
+	}
 }
 
 // Skip skips a json object and positions to relatively the next json object
