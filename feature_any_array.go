@@ -1,7 +1,6 @@
 package jsoniter
 
 import (
-	"fmt"
 	"reflect"
 	"unsafe"
 )
@@ -166,25 +165,19 @@ func (any *arrayLazyAny) GetInterface() interface{} {
 
 type arrayAny struct {
 	baseAny
-	err   error
-	cache []Any
 	val   reflect.Value
 }
 
 func wrapArray(val interface{}) *arrayAny {
-	return &arrayAny{baseAny{}, nil, nil, reflect.ValueOf(val)}
+	return &arrayAny{baseAny{}, reflect.ValueOf(val)}
 }
 
 func (any *arrayAny) ValueType() ValueType {
 	return Array
 }
 
-func (any *arrayAny) Parse() *Iterator {
-	return nil
-}
-
 func (any *arrayAny) LastError() error {
-	return any.err
+	return nil
 }
 
 func (any *arrayAny) ToBool() bool {
@@ -248,115 +241,54 @@ func (any *arrayAny) ToFloat64() float64 {
 }
 
 func (any *arrayAny) ToString() string {
-	if len(any.cache) == 0 {
-		// nothing has been parsed yet
-		str, err := MarshalToString(any.val.Interface())
-		any.err = err
-		return str
-	} else {
-		any.fillCache()
-		str, err := MarshalToString(any.cache)
-		any.err = err
-		return str
-	}
-}
-
-func (any *arrayAny) fillCacheUntil(idx int) Any {
-	if idx < len(any.cache) {
-		return any.cache[idx]
-	} else {
-		for i := len(any.cache); i < any.val.Len(); i++ {
-			element := Wrap(any.val.Index(i).Interface())
-			any.cache = append(any.cache, element)
-			if idx == i {
-				return element
-			}
-		}
-		return nil
-	}
-}
-
-func (any *arrayAny) fillCache() {
-	any.cache = make([]Any, any.val.Len())
-	for i := 0; i < any.val.Len(); i++ {
-		any.cache[i] = Wrap(any.val.Index(i).Interface())
-	}
+	str, _ := MarshalToString(any.val.Interface())
+	return str
 }
 
 func (any *arrayAny) Get(path ...interface{}) Any {
 	if len(path) == 0 {
 		return any
 	}
-	var element Any
 	switch firstPath := path[0].(type) {
 	case int:
-		element = any.fillCacheUntil(firstPath)
-		if element == nil {
-			element = &invalidAny{baseAny{}, fmt.Errorf("%v not found in %v", firstPath, any.cache)}
+		if firstPath < 0 || firstPath >= any.val.Len() {
+			return newInvalidAny(path)
 		}
+		return Wrap(any.val.Index(firstPath).Interface())
 	case int32:
 		if '*' == firstPath {
-			any.fillCache()
-			mappedAll := make([]Any, 0, len(any.cache))
-			for _, element := range any.cache {
-				mapped := element.Get(path[1:]...)
+			mappedAll := make([]Any, 0)
+			for i := 0; i < any.val.Len(); i++ {
+				mapped := Wrap(any.val.Index(i).Interface()).Get(path[1:]...)
 				if mapped.ValueType() != Invalid {
 					mappedAll = append(mappedAll, mapped)
 				}
 			}
 			return wrapArray(mappedAll)
 		} else {
-			element = &invalidAny{baseAny{}, fmt.Errorf("%v not found in %v", path[0], any.cache)}
+			return newInvalidAny(path)
 		}
 	default:
-		element = &invalidAny{baseAny{}, fmt.Errorf("%v not found in %v", path[0], any.cache)}
-	}
-	if len(path) == 1 {
-		return element
-	} else {
-		return element.Get(path[1:]...)
+		return newInvalidAny(path)
 	}
 }
 
 func (any *arrayAny) Size() int {
-	any.fillCache()
-	return len(any.cache)
-}
-
-func (any *arrayAny) IterateArray() (func() (Any, bool), bool) {
-	if any.val.Len() == 0 {
-		return nil, false
-	}
-	i := 0
-	return func() (Any, bool) {
-		if i == any.val.Len() {
-			return nil, false
-		}
-		if i == len(any.cache) {
-			any.cache = append(any.cache, Wrap(any.val.Index(i).Interface()))
-		}
-		val := any.cache[i]
-		i++
-		return val, i != any.val.Len()
-	}, true
+	return any.val.Len()
 }
 
 func (any *arrayAny) GetArray() []Any {
-	any.fillCache()
-	return any.cache
+	elements := make([]Any, any.val.Len())
+	for i := 0; i < any.val.Len(); i++ {
+		elements[i] = Wrap(any.val.Index(i).Interface())
+	}
+	return elements
 }
 
 func (any *arrayAny) WriteTo(stream *Stream) {
-	if len(any.cache) == 0 {
-		// nothing has been parsed yet
-		stream.WriteVal(any.val)
-	} else {
-		any.fillCache()
-		stream.WriteVal(any.cache)
-	}
+	stream.WriteVal(any.val)
 }
 
 func (any *arrayAny) GetInterface() interface{} {
-	any.fillCache()
-	return any.cache
+	return any.val.Interface()
 }

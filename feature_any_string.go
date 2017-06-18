@@ -6,7 +6,6 @@ import (
 
 type stringAny struct {
 	baseAny
-	err error
 	val string
 }
 
@@ -19,7 +18,7 @@ func (any *stringAny) ValueType() ValueType {
 }
 
 func (any *stringAny) LastError() error {
-	return any.err
+	return nil
 }
 
 func (any *stringAny) ToBool() bool {
@@ -38,50 +37,42 @@ func (any *stringAny) ToBool() bool {
 }
 
 func (any *stringAny) ToInt() int {
-	parsed, err := strconv.ParseInt(any.val, 10, 64)
-	any.err = err
+	parsed, _ := strconv.ParseInt(any.val, 10, 64)
 	return int(parsed)
 }
 
 func (any *stringAny) ToInt32() int32 {
-	parsed, err := strconv.ParseInt(any.val, 10, 32)
-	any.err = err
+	parsed, _ := strconv.ParseInt(any.val, 10, 32)
 	return int32(parsed)
 }
 
 func (any *stringAny) ToInt64() int64 {
-	parsed, err := strconv.ParseInt(any.val, 10, 64)
-	any.err = err
+	parsed, _ := strconv.ParseInt(any.val, 10, 64)
 	return parsed
 }
 
 func (any *stringAny) ToUint() uint {
-	parsed, err := strconv.ParseUint(any.val, 10, 64)
-	any.err = err
+	parsed, _ := strconv.ParseUint(any.val, 10, 64)
 	return uint(parsed)
 }
 
 func (any *stringAny) ToUint32() uint32 {
-	parsed, err := strconv.ParseUint(any.val, 10, 32)
-	any.err = err
+	parsed, _ := strconv.ParseUint(any.val, 10, 32)
 	return uint32(parsed)
 }
 
 func (any *stringAny) ToUint64() uint64 {
-	parsed, err := strconv.ParseUint(any.val, 10, 64)
-	any.err = err
+	parsed, _ := strconv.ParseUint(any.val, 10, 64)
 	return parsed
 }
 
 func (any *stringAny) ToFloat32() float32 {
-	parsed, err := strconv.ParseFloat(any.val, 32)
-	any.err = err
+	parsed, _ := strconv.ParseFloat(any.val, 32)
 	return float32(parsed)
 }
 
 func (any *stringAny) ToFloat64() float64 {
-	parsed, err := strconv.ParseFloat(any.val, 64)
-	any.err = err
+	parsed, _ := strconv.ParseFloat(any.val, 64)
 	return parsed
 }
 

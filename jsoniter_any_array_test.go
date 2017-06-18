@@ -60,6 +60,8 @@ func Test_array_lazy_any_get_all(t *testing.T) {
 	should := require.New(t)
 	any := Get([]byte("[[1],[2],[3,4]]"))
 	should.Equal("[1,2,3]", any.Get('*', 0).ToString())
+	any = Get([]byte("[[[1],[2],[3,4]]]"), 0, '*', 0)
+	should.Equal("[1,2,3]", any.ToString())
 }
 
 func Test_array_wrapper_any_get_all(t *testing.T) {
@@ -70,6 +72,9 @@ func Test_array_wrapper_any_get_all(t *testing.T) {
 		{5, 6},
 	})
 	should.Equal("[1,3,5]", any.Get('*', 0).ToString())
+	should.Equal(Array, any.ValueType())
+	should.True(any.ToBool())
+	should.Equal(1, any.Get(0, 0).ToInt())
 }
 
 func Test_array_lazy_any_get_invalid(t *testing.T) {

@@ -71,7 +71,7 @@ func WrapFloat64(val float64) Any {
 }
 
 func WrapString(val string) Any {
-	return &stringAny{baseAny{}, nil, val}
+	return &stringAny{baseAny{}, val}
 }
 
 func Wrap(val interface{}) Any {
@@ -135,7 +135,7 @@ func (iter *Iterator) readAny() Any {
 	switch c {
 	case '"':
 		iter.unreadByte()
-		return &stringAny{baseAny{}, nil, iter.ReadString()}
+		return &stringAny{baseAny{}, iter.ReadString()}
 	case 'n':
 		iter.skipFixedBytes(3) // null
 		return &nilAny{}
@@ -222,6 +222,12 @@ func locatePath(iter *Iterator, path []interface{}) Any {
 		case int:
 			valueBytes := locateArrayElement(iter, pathKey)
 			iter.ResetBytes(valueBytes)
+		case int32:
+			if '*' == pathKey {
+				return iter.readAny().Get(path[i:]...)
+			} else {
+				return newInvalidAny(path)
+			}
 		default:
 			return newInvalidAny(path[i:])
 		}
