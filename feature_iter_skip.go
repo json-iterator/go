@@ -225,25 +225,6 @@ func (iter *Iterator) skipNumber() {
 	}
 }
 
-func (iter *Iterator) skipNumberAndTellDotFoundOrNot() bool {
-	dotFound := false
-	for {
-		for i := iter.head; i < iter.tail; i++ {
-			c := iter.buf[i]
-			switch c {
-			case ' ', '\n', '\r', '\t', ',', '}', ']':
-				iter.head = i
-				return dotFound
-			case '.':
-				dotFound = true
-			}
-		}
-		if !iter.loadMore() {
-			return dotFound
-		}
-	}
-}
-
 func (iter *Iterator) skipFixedBytes(n int) {
 	iter.head += n
 	if iter.head >= iter.tail {

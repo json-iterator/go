@@ -1,96 +1,9 @@
 package jsoniter
 
 import (
-	"io"
 	"strconv"
-	"unsafe"
 )
 
-type float64LazyAny struct {
-	baseAny
-	cfg   *frozenConfig
-	buf   []byte
-	err   error
-	cache float64
-}
-
-func (any *float64LazyAny) ValueType() ValueType {
-	return Number
-}
-
-func (any *float64LazyAny) fillCache() {
-	if any.err != nil {
-		return
-	}
-	iter := any.cfg.BorrowIterator(any.buf)
-	defer any.cfg.ReturnIterator(iter)
-	any.cache = iter.ReadFloat64()
-	if iter.Error != io.EOF {
-		iter.reportError("floatLazyAny", "there are bytes left")
-	}
-	any.err = iter.Error
-}
-
-func (any *float64LazyAny) LastError() error {
-	return any.err
-}
-
-func (any *float64LazyAny) ToBool() bool {
-	return any.ToFloat64() != 0
-}
-
-func (any *float64LazyAny) ToInt() int {
-	any.fillCache()
-	return int(any.cache)
-}
-
-func (any *float64LazyAny) ToInt32() int32 {
-	any.fillCache()
-	return int32(any.cache)
-}
-
-func (any *float64LazyAny) ToInt64() int64 {
-	any.fillCache()
-	return int64(any.cache)
-}
-
-func (any *float64LazyAny) ToUint() uint {
-	any.fillCache()
-	return uint(any.cache)
-}
-
-func (any *float64LazyAny) ToUint32() uint32 {
-	any.fillCache()
-	return uint32(any.cache)
-}
-
-func (any *float64LazyAny) ToUint64() uint64 {
-	any.fillCache()
-	return uint64(any.cache)
-}
-
-func (any *float64LazyAny) ToFloat32() float32 {
-	any.fillCache()
-	return float32(any.cache)
-}
-
-func (any *float64LazyAny) ToFloat64() float64 {
-	any.fillCache()
-	return any.cache
-}
-
-func (any *float64LazyAny) ToString() string {
-	return *(*string)(unsafe.Pointer(&any.buf))
-}
-
-func (any *float64LazyAny) WriteTo(stream *Stream) {
-	stream.Write(any.buf)
-}
-
-func (any *float64LazyAny) GetInterface() interface{} {
-	any.fillCache()
-	return any.cache
-}
 
 type floatAny struct {
 	baseAny

@@ -158,17 +158,9 @@ func (iter *Iterator) readAny() Any {
 
 func (iter *Iterator) readNumberAny(positive bool) Any {
 	iter.startCapture(iter.head - 1)
-	dotFound := iter.skipNumberAndTellDotFoundOrNot()
+	iter.skipNumber()
 	lazyBuf := iter.stopCapture()
-	if dotFound {
-		return &float64LazyAny{baseAny{}, iter.cfg, lazyBuf, nil, 0}
-	} else {
-		if positive {
-			return &uint64LazyAny{baseAny{}, iter.cfg, lazyBuf, nil, 0}
-		} else {
-			return &int64LazyAny{baseAny{}, iter.cfg, lazyBuf, nil, 0}
-		}
-	}
+	return &numberLazyAny{baseAny{}, iter.cfg, lazyBuf, nil}
 }
 
 func (iter *Iterator) readObjectAny() Any {
