@@ -29,6 +29,16 @@ type frozenConfig struct {
 	iteratorPool       chan *Iterator
 }
 
+type Api interface {
+	MarshalToString(v interface{}) (string, error)
+	Marshal(v interface{}) ([]byte, error)
+	UnmarshalFromString(str string, v interface{}) error
+	Unmarshal(data []byte, v interface{}) error
+	Get(data []byte, path ...interface{}) Any
+	NewEncoder(writer io.Writer) *AdaptedEncoder
+	NewDecoder(reader io.Reader) *AdaptedDecoder
+}
+
 var ConfigDefault = Config{
 	EscapeHtml: true,
 }.Froze()
@@ -151,15 +161,15 @@ func (cfg *frozenConfig) getEncoderFromCache(cacheKey reflect.Type) Encoder {
 	return cache[cacheKey]
 }
 
-// CleanDecoders cleans decoders registered or cached
-func (cfg *frozenConfig) CleanDecoders() {
+// cleanDecoders cleans decoders registered or cached
+func (cfg *frozenConfig) cleanDecoders() {
 	typeDecoders = map[string]Decoder{}
 	fieldDecoders = map[string]Decoder{}
 	atomic.StorePointer(&cfg.decoderCache, unsafe.Pointer(&map[string]Decoder{}))
 }
 
-// CleanEncoders cleans encoders registered or cached
-func (cfg *frozenConfig) CleanEncoders() {
+// cleanEncoders cleans encoders registered or cached
+func (cfg *frozenConfig) cleanEncoders() {
 	typeEncoders = map[string]Encoder{}
 	fieldEncoders = map[string]Encoder{}
 	atomic.StorePointer(&cfg.encoderCache, unsafe.Pointer(&map[string]Encoder{}))
