@@ -120,4 +120,3 @@ func Test_encode_map_with_sorted_keys(t *testing.T) {
 	should.Nil(err)
 	should.Equal(string(bytes), output)
 }
-

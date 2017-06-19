@@ -53,7 +53,7 @@ func (iter *Iterator) stopCapture() []byte {
 		panic("not in capture mode")
 	}
 	captured := iter.captured
-	remaining := iter.buf[iter.captureStartedAt: iter.head]
+	remaining := iter.buf[iter.captureStartedAt:iter.head]
 	iter.captureStartedAt = -1
 	iter.captured = nil
 	if len(captured) == 0 {

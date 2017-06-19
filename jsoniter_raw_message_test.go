@@ -1,9 +1,9 @@
 package jsoniter
 
 import (
-	"testing"
 	"encoding/json"
 	"github.com/json-iterator/go/require"
+	"testing"
 )
 
 func Test_json_RawMessage(t *testing.T) {
@@ -37,7 +37,6 @@ func Test_json_RawMessage_in_struct(t *testing.T) {
 	should.Equal(` [1,2,3]`, string(data.Field2))
 	should.Equal(`hello`, data.Field1)
 }
-
 
 func Test_decode_map_of_raw_message(t *testing.T) {
 	should := require.New(t)

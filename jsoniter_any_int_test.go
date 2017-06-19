@@ -1,9 +1,9 @@
 package jsoniter
 
 import (
-	"testing"
 	"github.com/json-iterator/go/require"
 	"io"
+	"testing"
 )
 
 func Test_read_int64_as_any(t *testing.T) {

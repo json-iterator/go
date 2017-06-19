@@ -158,7 +158,7 @@ func (any *objectLazyAny) Size() int {
 	defer any.cfg.ReturnIterator(iter)
 	iter.ReadObjectCB(func(iter *Iterator, field string) bool {
 		iter.Skip()
-		size ++
+		size++
 		return true
 	})
 	return size
@@ -187,8 +187,8 @@ func (any *objectLazyAny) GetInterface() interface{} {
 
 type objectAny struct {
 	baseAny
-	err   error
-	val   reflect.Value
+	err error
+	val reflect.Value
 }
 
 func wrapStruct(val interface{}) *objectAny {
@@ -342,8 +342,8 @@ func (any *objectAny) GetInterface() interface{} {
 
 type mapAny struct {
 	baseAny
-	err   error
-	val   reflect.Value
+	err error
+	val reflect.Value
 }
 
 func wrapMap(val interface{}) *mapAny {

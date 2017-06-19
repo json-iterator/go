@@ -2,9 +2,9 @@ package jsoniter
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/json-iterator/go/require"
 	"testing"
-	"fmt"
 )
 
 func Test_empty_object(t *testing.T) {

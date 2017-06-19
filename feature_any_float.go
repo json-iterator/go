@@ -4,7 +4,6 @@ import (
 	"strconv"
 )
 
-
 type floatAny struct {
 	baseAny
 	val float64

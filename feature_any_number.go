@@ -6,9 +6,9 @@ import (
 
 type numberLazyAny struct {
 	baseAny
-	cfg   *frozenConfig
-	buf   []byte
-	err   error
+	cfg *frozenConfig
+	buf []byte
+	err error
 }
 
 func (any *numberLazyAny) ValueType() ValueType {

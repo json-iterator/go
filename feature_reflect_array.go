@@ -1,10 +1,10 @@
 package jsoniter
 
 import (
+	"fmt"
+	"io"
 	"reflect"
 	"unsafe"
-	"io"
-	"fmt"
 )
 
 func decoderOfArray(cfg *frozenConfig, typ reflect.Type) (Decoder, error) {

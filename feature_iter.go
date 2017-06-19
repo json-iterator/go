@@ -65,14 +65,14 @@ func init() {
 
 // Iterator is a fast and flexible JSON parser
 type Iterator struct {
-	cfg    *frozenConfig
-	reader io.Reader
-	buf    []byte
-	head   int
-	tail   int
+	cfg              *frozenConfig
+	reader           io.Reader
+	buf              []byte
+	head             int
+	tail             int
 	captureStartedAt int
-	captured	[]byte
-	Error  error
+	captured         []byte
+	Error            error
 }
 
 // Create creates an empty Iterator instance

@@ -1,9 +1,9 @@
 package jsoniter
 
 import (
-	"testing"
-	"github.com/json-iterator/go/require"
 	"encoding/json"
+	"github.com/json-iterator/go/require"
+	"testing"
 )
 
 func Test_encode_fixed_array(t *testing.T) {

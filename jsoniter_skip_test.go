@@ -1,10 +1,10 @@
 package jsoniter
 
 import (
-	"encoding/json"
-	"testing"
-	"github.com/json-iterator/go/require"
 	"bytes"
+	"encoding/json"
+	"github.com/json-iterator/go/require"
+	"testing"
 )
 
 func Test_skip_number(t *testing.T) {

@@ -7,9 +7,9 @@ import (
 
 type arrayLazyAny struct {
 	baseAny
-	cfg       *frozenConfig
-	buf       []byte
-	err       error
+	cfg *frozenConfig
+	buf []byte
+	err error
 }
 
 func (any *arrayLazyAny) ValueType() ValueType {
@@ -175,7 +175,7 @@ func (any *arrayLazyAny) GetInterface() interface{} {
 
 type arrayAny struct {
 	baseAny
-	val   reflect.Value
+	val reflect.Value
 }
 
 func wrapArray(val interface{}) *arrayAny {

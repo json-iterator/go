@@ -2,8 +2,8 @@ package jsoniter
 
 import (
 	"fmt"
-	"reflect"
 	"io"
+	"reflect"
 )
 
 type Any interface {
