@@ -18,8 +18,8 @@ func (codec *stringCodec) encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteString(str)
 }
 
-func (encoder *stringCodec) encodeInterface(val interface{}, stream *Stream) {
-	writeToStream(val, stream, encoder)
+func (codec *stringCodec) encodeInterface(val interface{}, stream *Stream) {
+	writeToStream(val, stream, codec)
 }
 
 func (codec *stringCodec) isEmpty(ptr unsafe.Pointer) bool {

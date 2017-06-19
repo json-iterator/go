@@ -113,12 +113,25 @@ func (cfg *frozenConfig) marshalFloatWith6Digits() {
 	}})
 }
 
+type htmlEscapedStringEncoder struct {
+}
+
+func (encoder *htmlEscapedStringEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
+	str := *((*string)(ptr))
+	stream.WriteStringWithHtmlEscaped(str)
+}
+
+func (encoder *htmlEscapedStringEncoder) encodeInterface(val interface{}, stream *Stream) {
+	writeToStream(val, stream, encoder)
+}
+
+func (encoder *htmlEscapedStringEncoder) isEmpty(ptr unsafe.Pointer) bool {
+	return *((*string)(ptr)) == ""
+}
+
 func (cfg *frozenConfig) escapeHtml() {
 	// for better performance
-	cfg.addEncoderToCache(reflect.TypeOf((*string)(nil)).Elem(), &funcEncoder{func(ptr unsafe.Pointer, stream *Stream) {
-		val := *((*string)(ptr))
-		stream.WriteStringWithHtmlEscaped(val)
-	}})
+	cfg.addEncoderToCache(reflect.TypeOf((*string)(nil)).Elem(), &htmlEscapedStringEncoder{})
 }
 
 func (cfg *frozenConfig) addDecoderToCache(cacheKey reflect.Type, decoder Decoder) {
