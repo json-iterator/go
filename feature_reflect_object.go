@@ -88,12 +88,11 @@ func listStructFields(typ reflect.Type) []*reflect.StructField {
 
 func decoderOfStruct(cfg *frozenConfig, typ reflect.Type) (Decoder, error) {
 	fields := map[string]*structFieldDecoder{}
-	for i := 0; i < typ.NumField(); i++ {
-		field := typ.Field(i)
+	for _, field := range listStructFields(typ) {
 		fieldDecoderKey := fmt.Sprintf("%s/%s", typ.String(), field.Name)
 		var extensionProviedFieldNames []string
 		for _, extension := range extensions {
-			alternativeFieldNames, _, fun := extension(typ, &field)
+			alternativeFieldNames, _, fun := extension(typ, field)
 			if alternativeFieldNames != nil {
 				extensionProviedFieldNames = alternativeFieldNames
 			}
@@ -102,7 +101,7 @@ func decoderOfStruct(cfg *frozenConfig, typ reflect.Type) (Decoder, error) {
 			}
 		}
 		for _, extension := range cfg.extensions {
-			alternativeFieldNames, _, fun := extension(typ, &field)
+			alternativeFieldNames, _, fun := extension(typ, field)
 			if alternativeFieldNames != nil {
 				extensionProviedFieldNames = alternativeFieldNames
 			}
@@ -126,7 +125,7 @@ func decoderOfStruct(cfg *frozenConfig, typ reflect.Type) (Decoder, error) {
 			}
 		}
 		for _, fieldName := range fieldNames {
-			fields[fieldName] = &structFieldDecoder{&field, decoder}
+			fields[fieldName] = &structFieldDecoder{field, decoder}
 		}
 	}
 	return createStructDecoder(typ, fields)

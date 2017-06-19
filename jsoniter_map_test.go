@@ -128,6 +128,12 @@ func Test_decode_map_of_raw_message(t *testing.T) {
 	var rawMap RawMap
 	should.Nil(Unmarshal(b, &rawMap))
 	should.Equal(`[{"key":"value"}]`, string(*rawMap["test"]))
+	type Inner struct {
+		Key string `json:"key"`
+	}
+	var inner []Inner
+	Unmarshal(*rawMap["test"], &inner)
+	should.Equal("value", inner[0].Key)
 }
 
 func Test_encode_map_of_raw_message(t *testing.T) {

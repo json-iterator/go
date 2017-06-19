@@ -293,7 +293,7 @@ func Test_one_field_struct(t *testing.T) {
 	should.Equal(`{"Me":{"Field":{"Field":{"Field":"abc"}}}}`, str)
 }
 
-func Test_anonymous_struct_marshal(t *testing.T) {
+func Test_encode_anonymous_struct(t *testing.T) {
 	should := require.New(t)
 	type TestObject struct {
 		Field string
@@ -306,6 +306,21 @@ func Test_anonymous_struct_marshal(t *testing.T) {
 	})
 	should.Nil(err)
 	should.Equal(`{"Field":100}`, str)
+}
+
+func Test_decode_anonymous_struct(t *testing.T) {
+	should := require.New(t)
+	type Inner struct {
+		Key string `json:"key"`
+	}
+
+	type Outer struct {
+		Inner
+	}
+	var outer Outer
+	j := []byte("{\"key\":\"value\"}")
+	should.Nil(Unmarshal(j, &outer))
+	should.Equal("value", outer.Key)
 }
 
 func Test_decode_nested(t *testing.T) {
