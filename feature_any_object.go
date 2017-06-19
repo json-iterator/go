@@ -16,6 +16,10 @@ func (any *objectLazyAny) ValueType() ValueType {
 	return Object
 }
 
+func (any *objectLazyAny) MustBeValid() Any {
+	return any
+}
+
 func (any *objectLazyAny) LastError() error {
 	return any.err
 }
@@ -195,6 +199,10 @@ func (any *objectAny) ValueType() ValueType {
 	return Object
 }
 
+func (any *objectAny) MustBeValid() Any {
+	return any
+}
+
 func (any *objectAny) Parse() *Iterator {
 	return nil
 }
@@ -344,6 +352,10 @@ func wrapMap(val interface{}) *mapAny {
 
 func (any *mapAny) ValueType() ValueType {
 	return Object
+}
+
+func (any *mapAny) MustBeValid() Any {
+	return any
 }
 
 func (any *mapAny) Parse() *Iterator {

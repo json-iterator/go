@@ -15,6 +15,10 @@ func (any *numberLazyAny) ValueType() ValueType {
 	return Number
 }
 
+func (any *numberLazyAny) MustBeValid() Any {
+	return any
+}
+
 func (any *numberLazyAny) LastError() error {
 	return any.err
 }

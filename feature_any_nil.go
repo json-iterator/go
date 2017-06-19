@@ -12,6 +12,10 @@ func (any *nilAny) ValueType() ValueType {
 	return Nil
 }
 
+func (any *nilAny) MustBeValid() Any {
+	return any
+}
+
 func (any *nilAny) ToBool() bool {
 	return false
 }

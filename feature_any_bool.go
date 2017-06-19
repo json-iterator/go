@@ -64,6 +64,10 @@ func (any *trueAny) ValueType() ValueType {
 	return Bool
 }
 
+func (any *trueAny) MustBeValid() Any {
+	return any
+}
+
 type falseAny struct {
 	baseAny
 }
@@ -126,4 +130,8 @@ func (any *falseAny) GetInterface() interface{} {
 
 func (any *falseAny) ValueType() ValueType {
 	return Bool
+}
+
+func (any *falseAny) MustBeValid() Any {
+	return any
 }

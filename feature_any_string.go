@@ -25,6 +25,10 @@ func (any *stringAny) ValueType() ValueType {
 	return String
 }
 
+func (any *stringAny) MustBeValid() Any {
+	return any
+}
+
 func (any *stringAny) LastError() error {
 	return nil
 }

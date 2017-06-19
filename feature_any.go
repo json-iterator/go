@@ -9,6 +9,7 @@ import (
 type Any interface {
 	LastError() error
 	ValueType() ValueType
+	MustBeValid() Any
 	ToBool() bool
 	ToInt() int
 	ToInt32() int32
@@ -218,15 +219,21 @@ func locatePath(iter *Iterator, path []interface{}) Any {
 		switch pathKey := pathKeyObj.(type) {
 		case string:
 			valueBytes := locateObjectField(iter, pathKey)
+			if valueBytes == nil {
+				return newInvalidAny(path[i:])
+			}
 			iter.ResetBytes(valueBytes)
 		case int:
 			valueBytes := locateArrayElement(iter, pathKey)
+			if valueBytes == nil {
+				return newInvalidAny(path[i:])
+			}
 			iter.ResetBytes(valueBytes)
 		case int32:
 			if '*' == pathKey {
 				return iter.readAny().Get(path[i:]...)
 			} else {
-				return newInvalidAny(path)
+				return newInvalidAny(path[i:])
 			}
 		default:
 			return newInvalidAny(path[i:])

@@ -17,6 +17,10 @@ func (any *uint32Any) ValueType() ValueType {
 	return Number
 }
 
+func (any *uint32Any) MustBeValid() Any {
+	return any
+}
+
 func (any *uint32Any) ToBool() bool {
 	return any.val != 0
 }

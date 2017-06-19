@@ -16,6 +16,10 @@ func (any *arrayLazyAny) ValueType() ValueType {
 	return Array
 }
 
+func (any *arrayLazyAny) MustBeValid() Any {
+	return any
+}
+
 func (any *arrayLazyAny) LastError() error {
 	return any.err
 }
@@ -180,6 +184,10 @@ func wrapArray(val interface{}) *arrayAny {
 
 func (any *arrayAny) ValueType() ValueType {
 	return Array
+}
+
+func (any *arrayAny) MustBeValid() Any {
+	return any
 }
 
 func (any *arrayAny) LastError() error {

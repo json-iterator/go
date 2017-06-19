@@ -18,6 +18,10 @@ func (any *floatAny) ValueType() ValueType {
 	return Number
 }
 
+func (any *floatAny) MustBeValid() Any {
+	return any
+}
+
 func (any *floatAny) LastError() error {
 	return nil
 }

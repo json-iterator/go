@@ -19,6 +19,11 @@ func (any *invalidAny) ValueType() ValueType {
 	return Invalid
 }
 
+func (any *invalidAny) MustBeValid() Any {
+	panic(any.err)
+	return any
+}
+
 func (any *invalidAny) ToBool() bool {
 	return false
 }
