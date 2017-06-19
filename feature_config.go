@@ -99,18 +99,42 @@ func (cfg *frozenConfig) supportUnexportedStructFields() {
 	})
 }
 
+type lossyFloat32Encoder struct {
+}
+
+func (encoder *lossyFloat32Encoder) encode(ptr unsafe.Pointer, stream *Stream) {
+	stream.WriteFloat32Lossy(*((*float32)(ptr)))
+}
+
+func (encoder *lossyFloat32Encoder) encodeInterface(val interface{}, stream *Stream) {
+	writeToStream(val, stream, encoder)
+}
+
+func (encoder *lossyFloat32Encoder) isEmpty(ptr unsafe.Pointer) bool {
+	return *((*float32)(ptr)) == 0
+}
+
+type lossyFloat64Encoder struct {
+}
+
+func (encoder *lossyFloat64Encoder) encode(ptr unsafe.Pointer, stream *Stream) {
+	stream.WriteFloat64Lossy(*((*float64)(ptr)))
+}
+
+func (encoder *lossyFloat64Encoder) encodeInterface(val interface{}, stream *Stream) {
+	writeToStream(val, stream, encoder)
+}
+
+func (encoder *lossyFloat64Encoder) isEmpty(ptr unsafe.Pointer) bool {
+	return *((*float64)(ptr)) == 0
+}
+
 // EnableLossyFloatMarshalling keeps 10**(-6) precision
 // for float variables for better performance.
 func (cfg *frozenConfig) marshalFloatWith6Digits() {
 	// for better performance
-	cfg.addEncoderToCache(reflect.TypeOf((*float32)(nil)).Elem(), &funcEncoder{func(ptr unsafe.Pointer, stream *Stream) {
-		val := *((*float32)(ptr))
-		stream.WriteFloat32Lossy(val)
-	}})
-	cfg.addEncoderToCache(reflect.TypeOf((*float64)(nil)).Elem(), &funcEncoder{func(ptr unsafe.Pointer, stream *Stream) {
-		val := *((*float64)(ptr))
-		stream.WriteFloat64Lossy(val)
-	}})
+	cfg.addEncoderToCache(reflect.TypeOf((*float32)(nil)).Elem(), &lossyFloat32Encoder{})
+	cfg.addEncoderToCache(reflect.TypeOf((*float64)(nil)).Elem(), &lossyFloat64Encoder{})
 }
 
 type htmlEscapedStringEncoder struct {

@@ -162,6 +162,17 @@ func Test_read_float_scientific(t *testing.T) {
 	should.Equal(float64(10), obj)
 }
 
+func Test_lossy_float_marshal(t *testing.T) {
+	should := require.New(t)
+	api := Config{MarshalFloatWith6Digits: true}.Froze()
+	output, err := api.MarshalToString(float64(0.1234567))
+	should.Nil(err)
+	should.Equal("0.123457", output)
+	output, err = api.MarshalToString(float32(0.1234567))
+	should.Nil(err)
+	should.Equal("0.123457", output)
+}
+
 func Benchmark_jsoniter_float(b *testing.B) {
 	b.ReportAllocs()
 	input := []byte(`1.1123,`)
