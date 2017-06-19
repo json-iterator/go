@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
-	"unsafe"
 	"time"
+	"unsafe"
 )
 
 // Decoder is an internal type registered to cache as needed.
@@ -170,7 +170,7 @@ func (encoder *optionalEncoder) isEmpty(ptr unsafe.Pointer) bool {
 }
 
 type placeholderEncoder struct {
-	cfg *frozenConfig
+	cfg      *frozenConfig
 	cacheKey reflect.Type
 }
 
@@ -200,7 +200,7 @@ func (encoder *placeholderEncoder) getRealEncoder() Encoder {
 }
 
 type placeholderDecoder struct {
-	cfg *frozenConfig
+	cfg      *frozenConfig
 	cacheKey reflect.Type
 }
 
