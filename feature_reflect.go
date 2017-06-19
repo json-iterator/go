@@ -391,7 +391,7 @@ func createEncoderOfType(cfg *frozenConfig, typ reflect.Type) (Encoder, error) {
 	}
 	if typ.ConvertibleTo(marshalerType) {
 		templateInterface := reflect.New(typ).Elem().Interface()
-		return &marshalerEncoder{extractInterface(templateInterface)}, nil
+		return &optionalEncoder{&marshalerEncoder{extractInterface(templateInterface)}}, nil
 	}
 	if typ.ConvertibleTo(anyType) {
 		return &anyCodec{}, nil
