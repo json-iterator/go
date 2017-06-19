@@ -13,7 +13,7 @@ type mapDecoder struct {
 	mapType      reflect.Type
 	keyType      reflect.Type
 	elemType     reflect.Type
-	elemDecoder  Decoder
+	elemDecoder  ValDecoder
 	mapInterface emptyInterface
 }
 
@@ -72,7 +72,7 @@ func (decoder *mapDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 type mapEncoder struct {
 	mapType      reflect.Type
 	elemType     reflect.Type
-	elemEncoder  Encoder
+	elemEncoder  ValEncoder
 	mapInterface emptyInterface
 }
 
@@ -141,7 +141,7 @@ func (encoder *mapEncoder) isEmpty(ptr unsafe.Pointer) bool {
 type sortKeysMapEncoder struct {
 	mapType      reflect.Type
 	elemType     reflect.Type
-	elemEncoder  Encoder
+	elemEncoder  ValEncoder
 	mapInterface emptyInterface
 }
 

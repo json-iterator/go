@@ -60,8 +60,8 @@ func (cfg Config) Froze() *frozenConfig {
 		streamPool:    make(chan *Stream, 16),
 		iteratorPool:  make(chan *Iterator, 16),
 	}
-	atomic.StorePointer(&frozenConfig.decoderCache, unsafe.Pointer(&map[string]Decoder{}))
-	atomic.StorePointer(&frozenConfig.encoderCache, unsafe.Pointer(&map[string]Encoder{}))
+	atomic.StorePointer(&frozenConfig.decoderCache, unsafe.Pointer(&map[string]ValDecoder{}))
+	atomic.StorePointer(&frozenConfig.encoderCache, unsafe.Pointer(&map[string]ValEncoder{}))
 	if cfg.MarshalFloatWith6Digits {
 		frozenConfig.marshalFloatWith6Digits()
 	}
@@ -158,12 +158,12 @@ func (cfg *frozenConfig) escapeHtml() {
 	cfg.addEncoderToCache(reflect.TypeOf((*string)(nil)).Elem(), &htmlEscapedStringEncoder{})
 }
 
-func (cfg *frozenConfig) addDecoderToCache(cacheKey reflect.Type, decoder Decoder) {
+func (cfg *frozenConfig) addDecoderToCache(cacheKey reflect.Type, decoder ValDecoder) {
 	done := false
 	for !done {
 		ptr := atomic.LoadPointer(&cfg.decoderCache)
-		cache := *(*map[reflect.Type]Decoder)(ptr)
-		copied := map[reflect.Type]Decoder{}
+		cache := *(*map[reflect.Type]ValDecoder)(ptr)
+		copied := map[reflect.Type]ValDecoder{}
 		for k, v := range cache {
 			copied[k] = v
 		}
@@ -172,12 +172,12 @@ func (cfg *frozenConfig) addDecoderToCache(cacheKey reflect.Type, decoder Decode
 	}
 }
 
-func (cfg *frozenConfig) addEncoderToCache(cacheKey reflect.Type, encoder Encoder) {
+func (cfg *frozenConfig) addEncoderToCache(cacheKey reflect.Type, encoder ValEncoder) {
 	done := false
 	for !done {
 		ptr := atomic.LoadPointer(&cfg.encoderCache)
-		cache := *(*map[reflect.Type]Encoder)(ptr)
-		copied := map[reflect.Type]Encoder{}
+		cache := *(*map[reflect.Type]ValEncoder)(ptr)
+		copied := map[reflect.Type]ValEncoder{}
 		for k, v := range cache {
 			copied[k] = v
 		}
@@ -186,30 +186,30 @@ func (cfg *frozenConfig) addEncoderToCache(cacheKey reflect.Type, encoder Encode
 	}
 }
 
-func (cfg *frozenConfig) getDecoderFromCache(cacheKey reflect.Type) Decoder {
+func (cfg *frozenConfig) getDecoderFromCache(cacheKey reflect.Type) ValDecoder {
 	ptr := atomic.LoadPointer(&cfg.decoderCache)
-	cache := *(*map[reflect.Type]Decoder)(ptr)
+	cache := *(*map[reflect.Type]ValDecoder)(ptr)
 	return cache[cacheKey]
 }
 
-func (cfg *frozenConfig) getEncoderFromCache(cacheKey reflect.Type) Encoder {
+func (cfg *frozenConfig) getEncoderFromCache(cacheKey reflect.Type) ValEncoder {
 	ptr := atomic.LoadPointer(&cfg.encoderCache)
-	cache := *(*map[reflect.Type]Encoder)(ptr)
+	cache := *(*map[reflect.Type]ValEncoder)(ptr)
 	return cache[cacheKey]
 }
 
 // cleanDecoders cleans decoders registered or cached
 func (cfg *frozenConfig) cleanDecoders() {
-	typeDecoders = map[string]Decoder{}
-	fieldDecoders = map[string]Decoder{}
-	atomic.StorePointer(&cfg.decoderCache, unsafe.Pointer(&map[string]Decoder{}))
+	typeDecoders = map[string]ValDecoder{}
+	fieldDecoders = map[string]ValDecoder{}
+	atomic.StorePointer(&cfg.decoderCache, unsafe.Pointer(&map[string]ValDecoder{}))
 }
 
 // cleanEncoders cleans encoders registered or cached
 func (cfg *frozenConfig) cleanEncoders() {
-	typeEncoders = map[string]Encoder{}
-	fieldEncoders = map[string]Encoder{}
-	atomic.StorePointer(&cfg.encoderCache, unsafe.Pointer(&map[string]Encoder{}))
+	typeEncoders = map[string]ValEncoder{}
+	fieldEncoders = map[string]ValEncoder{}
+	atomic.StorePointer(&cfg.encoderCache, unsafe.Pointer(&map[string]ValEncoder{}))
 }
 
 func (cfg *frozenConfig) MarshalToString(v interface{}) (string, error) {

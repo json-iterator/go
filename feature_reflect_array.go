@@ -7,7 +7,7 @@ import (
 	"unsafe"
 )
 
-func decoderOfArray(cfg *frozenConfig, typ reflect.Type) (Decoder, error) {
+func decoderOfArray(cfg *frozenConfig, typ reflect.Type) (ValDecoder, error) {
 	decoder, err := decoderOfType(cfg, typ.Elem())
 	if err != nil {
 		return nil, err
@@ -15,7 +15,7 @@ func decoderOfArray(cfg *frozenConfig, typ reflect.Type) (Decoder, error) {
 	return &arrayDecoder{typ, typ.Elem(), decoder}, nil
 }
 
-func encoderOfArray(cfg *frozenConfig, typ reflect.Type) (Encoder, error) {
+func encoderOfArray(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error) {
 	encoder, err := encoderOfType(cfg, typ.Elem())
 	if err != nil {
 		return nil, err
@@ -29,7 +29,7 @@ func encoderOfArray(cfg *frozenConfig, typ reflect.Type) (Encoder, error) {
 type arrayEncoder struct {
 	arrayType   reflect.Type
 	elemType    reflect.Type
-	elemEncoder Encoder
+	elemEncoder ValEncoder
 }
 
 func (encoder *arrayEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
@@ -62,7 +62,7 @@ func (encoder *arrayEncoder) isEmpty(ptr unsafe.Pointer) bool {
 type arrayDecoder struct {
 	arrayType   reflect.Type
 	elemType    reflect.Type
-	elemDecoder Decoder
+	elemDecoder ValDecoder
 }
 
 func (decoder *arrayDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {

@@ -7,7 +7,7 @@ import (
 	"unsafe"
 )
 
-func decoderOfSlice(cfg *frozenConfig, typ reflect.Type) (Decoder, error) {
+func decoderOfSlice(cfg *frozenConfig, typ reflect.Type) (ValDecoder, error) {
 	decoder, err := decoderOfType(cfg, typ.Elem())
 	if err != nil {
 		return nil, err
@@ -15,7 +15,7 @@ func decoderOfSlice(cfg *frozenConfig, typ reflect.Type) (Decoder, error) {
 	return &sliceDecoder{typ, typ.Elem(), decoder}, nil
 }
 
-func encoderOfSlice(cfg *frozenConfig, typ reflect.Type) (Encoder, error) {
+func encoderOfSlice(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error) {
 	encoder, err := encoderOfType(cfg, typ.Elem())
 	if err != nil {
 		return nil, err
@@ -29,7 +29,7 @@ func encoderOfSlice(cfg *frozenConfig, typ reflect.Type) (Encoder, error) {
 type sliceEncoder struct {
 	sliceType   reflect.Type
 	elemType    reflect.Type
-	elemEncoder Encoder
+	elemEncoder ValEncoder
 }
 
 func (encoder *sliceEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
@@ -68,7 +68,7 @@ func (encoder *sliceEncoder) isEmpty(ptr unsafe.Pointer) bool {
 type sliceDecoder struct {
 	sliceType   reflect.Type
 	elemType    reflect.Type
-	elemDecoder Decoder
+	elemDecoder ValDecoder
 }
 
 // sliceHeader is a safe version of SliceHeader used within this package.

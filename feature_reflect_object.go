@@ -9,7 +9,7 @@ import (
 	"unsafe"
 )
 
-func encoderOfStruct(cfg *frozenConfig, typ reflect.Type) (Encoder, error) {
+func encoderOfStruct(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error) {
 	structEncoder_ := &structEncoder{}
 	fields := map[string]*structFieldEncoder{}
 	for _, field := range listStructFields(typ) {
@@ -86,7 +86,7 @@ func listStructFields(typ reflect.Type) []*reflect.StructField {
 	return fields
 }
 
-func decoderOfStruct(cfg *frozenConfig, typ reflect.Type) (Decoder, error) {
+func decoderOfStruct(cfg *frozenConfig, typ reflect.Type) (ValDecoder, error) {
 	fields := map[string]*structFieldDecoder{}
 	for _, field := range listStructFields(typ) {
 		fieldDecoderKey := fmt.Sprintf("%s/%s", typ.String(), field.Name)
@@ -155,7 +155,7 @@ func calcFieldNames(originalFieldName string, tagProvidedFieldName string, exten
 	return fieldNames
 }
 
-func createStructDecoder(typ reflect.Type, fields map[string]*structFieldDecoder) (Decoder, error) {
+func createStructDecoder(typ reflect.Type, fields map[string]*structFieldDecoder) (ValDecoder, error) {
 	knownHash := map[int32]struct{}{
 		0: {},
 	}
@@ -1059,7 +1059,7 @@ func (decoder *tenFieldsStructDecoder) decode(ptr unsafe.Pointer, iter *Iterator
 
 type structFieldDecoder struct {
 	field        *reflect.StructField
-	fieldDecoder Decoder
+	fieldDecoder ValDecoder
 }
 
 func (decoder *structFieldDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
@@ -1073,7 +1073,7 @@ func (decoder *structFieldDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 type structFieldEncoder struct {
 	field        *reflect.StructField
 	fieldName    string
-	fieldEncoder Encoder
+	fieldEncoder ValEncoder
 	omitempty    bool
 }
 
@@ -1116,7 +1116,7 @@ func (encoder *structEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
 }
 
 func (encoder *structEncoder) encodeInterface(val interface{}, stream *Stream) {
-	var encoderToUse Encoder
+	var encoderToUse ValEncoder
 	encoderToUse = encoder
 	if len(encoder.fields) == 1 {
 		firstEncoder := encoder.fields[0].fieldEncoder

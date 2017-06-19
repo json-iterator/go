@@ -447,7 +447,7 @@ func (encoder *base64Codec) isEmpty(ptr unsafe.Pointer) bool {
 }
 
 type stringModeDecoder struct {
-	elemDecoder Decoder
+	elemDecoder ValDecoder
 }
 
 func (decoder *stringModeDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
@@ -468,7 +468,7 @@ func (decoder *stringModeDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 }
 
 type stringModeEncoder struct {
-	elemEncoder Encoder
+	elemEncoder ValEncoder
 }
 
 func (encoder *stringModeEncoder) encode(ptr unsafe.Pointer, stream *Stream) {

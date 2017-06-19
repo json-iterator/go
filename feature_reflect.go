@@ -9,8 +9,8 @@ import (
 	"unsafe"
 )
 
-// Decoder is an internal type registered to cache as needed.
-// Don't confuse jsoniter.Decoder with json.Decoder.
+// ValDecoder is an internal type registered to cache as needed.
+// Don't confuse jsoniter.ValDecoder with json.Decoder.
 // For json.Decoder's adapter, refer to jsoniter.AdapterDecoder(todo link).
 //
 // Reflection on type to create decoders, which is then cached
@@ -19,20 +19,20 @@ import (
 // 2. append to slice, if the existing cap is not enough, allocate will be done using Reflect.New
 // 3. assignment to map, both key and value will be reflect.Value
 // For a simple struct binding, it will be reflect.Value free and allocation free
-type Decoder interface {
+type ValDecoder interface {
 	decode(ptr unsafe.Pointer, iter *Iterator)
 }
 
-// Encoder is an internal type registered to cache as needed.
-// Don't confuse jsoniter.Encoder with json.Encoder.
+// ValEncoder is an internal type registered to cache as needed.
+// Don't confuse jsoniter.ValEncoder with json.Encoder.
 // For json.Encoder's adapter, refer to jsoniter.AdapterEncoder(todo godoc link).
-type Encoder interface {
+type ValEncoder interface {
 	isEmpty(ptr unsafe.Pointer) bool
 	encode(ptr unsafe.Pointer, stream *Stream)
 	encodeInterface(val interface{}, stream *Stream)
 }
 
-func writeToStream(val interface{}, stream *Stream, encoder Encoder) {
+func writeToStream(val interface{}, stream *Stream, encoder ValEncoder) {
 	e := (*emptyInterface)(unsafe.Pointer(&val))
 	if e.word == nil {
 		stream.WriteNil()
@@ -58,7 +58,7 @@ func (decoder *funcDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 }
 
 type funcEncoder struct {
-	fun EncoderFunc
+	fun         EncoderFunc
 	isEmptyFunc func(ptr unsafe.Pointer) bool
 }
 
@@ -77,10 +77,10 @@ func (encoder *funcEncoder) isEmpty(ptr unsafe.Pointer) bool {
 	return encoder.isEmptyFunc(ptr)
 }
 
-var typeDecoders map[string]Decoder
-var fieldDecoders map[string]Decoder
-var typeEncoders map[string]Encoder
-var fieldEncoders map[string]Encoder
+var typeDecoders map[string]ValDecoder
+var fieldDecoders map[string]ValDecoder
+var typeEncoders map[string]ValEncoder
+var fieldEncoders map[string]ValEncoder
 var extensions []ExtensionFunc
 var jsonNumberType reflect.Type
 var jsonRawMessageType reflect.Type
@@ -91,10 +91,10 @@ var unmarshalerType reflect.Type
 var textUnmarshalerType reflect.Type
 
 func init() {
-	typeDecoders = map[string]Decoder{}
-	fieldDecoders = map[string]Decoder{}
-	typeEncoders = map[string]Encoder{}
-	fieldEncoders = map[string]Encoder{}
+	typeDecoders = map[string]ValDecoder{}
+	fieldDecoders = map[string]ValDecoder{}
+	typeEncoders = map[string]ValEncoder{}
+	fieldEncoders = map[string]ValEncoder{}
 	extensions = []ExtensionFunc{}
 	jsonNumberType = reflect.TypeOf((*json.Number)(nil)).Elem()
 	jsonRawMessageType = reflect.TypeOf((*json.RawMessage)(nil)).Elem()
@@ -130,7 +130,7 @@ func RegisterExtension(extension ExtensionFunc) {
 
 type optionalDecoder struct {
 	valueType    reflect.Type
-	valueDecoder Decoder
+	valueDecoder ValDecoder
 }
 
 func (decoder *optionalDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
@@ -150,7 +150,7 @@ func (decoder *optionalDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 }
 
 type optionalEncoder struct {
-	valueEncoder Encoder
+	valueEncoder ValEncoder
 }
 
 func (encoder *optionalEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
@@ -190,7 +190,7 @@ func (encoder *placeholderEncoder) isEmpty(ptr unsafe.Pointer) bool {
 	return encoder.getRealEncoder().isEmpty(ptr)
 }
 
-func (encoder *placeholderEncoder) getRealEncoder() Encoder {
+func (encoder *placeholderEncoder) getRealEncoder() ValEncoder {
 	for i := 0; i < 30; i++ {
 		realDecoder := encoder.cfg.getEncoderFromCache(encoder.cacheKey)
 		_, isPlaceholder := realDecoder.(*placeholderEncoder)
@@ -282,21 +282,21 @@ func (stream *Stream) WriteVal(val interface{}) {
 
 type prefix string
 
-func (p prefix) addToDecoder(decoder Decoder, err error) (Decoder, error) {
+func (p prefix) addToDecoder(decoder ValDecoder, err error) (ValDecoder, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%s: %s", p, err.Error())
 	}
 	return decoder, err
 }
 
-func (p prefix) addToEncoder(encoder Encoder, err error) (Encoder, error) {
+func (p prefix) addToEncoder(encoder ValEncoder, err error) (ValEncoder, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%s: %s", p, err.Error())
 	}
 	return encoder, err
 }
 
-func decoderOfType(cfg *frozenConfig, typ reflect.Type) (Decoder, error) {
+func decoderOfType(cfg *frozenConfig, typ reflect.Type) (ValDecoder, error) {
 	typeName := typ.String()
 	typeDecoder := typeDecoders[typeName]
 	if typeDecoder != nil {
@@ -320,7 +320,7 @@ func decoderOfType(cfg *frozenConfig, typ reflect.Type) (Decoder, error) {
 	return newDecoder, err
 }
 
-func createDecoderOfType(cfg *frozenConfig, typ reflect.Type) (Decoder, error) {
+func createDecoderOfType(cfg *frozenConfig, typ reflect.Type) (ValDecoder, error) {
 	if typ.String() == "[]uint8" {
 		return &base64Codec{}, nil
 	}
@@ -335,7 +335,7 @@ func createDecoderOfType(cfg *frozenConfig, typ reflect.Type) (Decoder, error) {
 	}
 	if typ.ConvertibleTo(unmarshalerType) {
 		templateInterface := reflect.New(typ).Elem().Interface()
-		var decoder Decoder = &unmarshalerDecoder{extractInterface(templateInterface)}
+		var decoder ValDecoder = &unmarshalerDecoder{extractInterface(templateInterface)}
 		if typ.Kind() != reflect.Struct {
 			decoder = &optionalDecoder{typ, decoder}
 		}
@@ -394,7 +394,7 @@ func createDecoderOfType(cfg *frozenConfig, typ reflect.Type) (Decoder, error) {
 	}
 }
 
-func encoderOfType(cfg *frozenConfig, typ reflect.Type) (Encoder, error) {
+func encoderOfType(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error) {
 	typeName := typ.String()
 	typeEncoder := typeEncoders[typeName]
 	if typeEncoder != nil {
@@ -418,7 +418,7 @@ func encoderOfType(cfg *frozenConfig, typ reflect.Type) (Encoder, error) {
 	return newEncoder, err
 }
 
-func createEncoderOfType(cfg *frozenConfig, typ reflect.Type) (Encoder, error) {
+func createEncoderOfType(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error) {
 	if typ.String() == "[]uint8" {
 		return &base64Codec{}, nil
 	}
@@ -433,7 +433,7 @@ func createEncoderOfType(cfg *frozenConfig, typ reflect.Type) (Encoder, error) {
 	}
 	if typ.ConvertibleTo(marshalerType) {
 		templateInterface := reflect.New(typ).Elem().Interface()
-		var encoder Encoder = &marshalerEncoder{extractInterface(templateInterface)}
+		var encoder ValEncoder = &marshalerEncoder{extractInterface(templateInterface)}
 		if typ.Kind() != reflect.Struct {
 			encoder = &optionalEncoder{encoder}
 		}
@@ -493,7 +493,7 @@ func createEncoderOfType(cfg *frozenConfig, typ reflect.Type) (Encoder, error) {
 	}
 }
 
-func decoderOfOptional(cfg *frozenConfig, typ reflect.Type) (Decoder, error) {
+func decoderOfOptional(cfg *frozenConfig, typ reflect.Type) (ValDecoder, error) {
 	elemType := typ.Elem()
 	decoder, err := decoderOfType(cfg, elemType)
 	if err != nil {
@@ -502,7 +502,7 @@ func decoderOfOptional(cfg *frozenConfig, typ reflect.Type) (Decoder, error) {
 	return &optionalDecoder{elemType, decoder}, nil
 }
 
-func encoderOfOptional(cfg *frozenConfig, typ reflect.Type) (Encoder, error) {
+func encoderOfOptional(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error) {
 	elemType := typ.Elem()
 	elemEncoder, err := encoderOfType(cfg, elemType)
 	if err != nil {
@@ -515,7 +515,7 @@ func encoderOfOptional(cfg *frozenConfig, typ reflect.Type) (Encoder, error) {
 	return encoder, nil
 }
 
-func decoderOfMap(cfg *frozenConfig, typ reflect.Type) (Decoder, error) {
+func decoderOfMap(cfg *frozenConfig, typ reflect.Type) (ValDecoder, error) {
 	decoder, err := decoderOfType(cfg, typ.Elem())
 	if err != nil {
 		return nil, err
@@ -528,7 +528,7 @@ func extractInterface(val interface{}) emptyInterface {
 	return *((*emptyInterface)(unsafe.Pointer(&val)))
 }
 
-func encoderOfMap(cfg *frozenConfig, typ reflect.Type) (Encoder, error) {
+func encoderOfMap(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error) {
 	elemType := typ.Elem()
 	encoder, err := encoderOfType(cfg, elemType)
 	if err != nil {
