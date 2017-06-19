@@ -59,6 +59,7 @@ func (decoder *funcDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 
 type funcEncoder struct {
 	fun EncoderFunc
+	isEmptyFunc func(ptr unsafe.Pointer) bool
 }
 
 func (encoder *funcEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
@@ -70,7 +71,10 @@ func (encoder *funcEncoder) encodeInterface(val interface{}, stream *Stream) {
 }
 
 func (encoder *funcEncoder) isEmpty(ptr unsafe.Pointer) bool {
-	return false
+	if encoder.isEmptyFunc == nil {
+		return false
+	}
+	return encoder.isEmptyFunc(ptr)
 }
 
 var typeDecoders map[string]Decoder
@@ -111,12 +115,12 @@ func RegisterFieldDecoder(typ string, field string, fun DecoderFunc) {
 	fieldDecoders[fmt.Sprintf("%s/%s", typ, field)] = &funcDecoder{fun}
 }
 
-func RegisterTypeEncoder(typ string, fun EncoderFunc) {
-	typeEncoders[typ] = &funcEncoder{fun}
+func RegisterTypeEncoder(typ string, fun EncoderFunc, isEmptyFunc func(unsafe.Pointer) bool) {
+	typeEncoders[typ] = &funcEncoder{fun, isEmptyFunc}
 }
 
-func RegisterFieldEncoder(typ string, field string, fun EncoderFunc) {
-	fieldEncoders[fmt.Sprintf("%s/%s", typ, field)] = &funcEncoder{fun}
+func RegisterFieldEncoder(typ string, field string, fun EncoderFunc, isEmptyFunc func(unsafe.Pointer) bool) {
+	fieldEncoders[fmt.Sprintf("%s/%s", typ, field)] = &funcEncoder{fun, isEmptyFunc}
 }
 
 // RegisterExtension can register a custom extension

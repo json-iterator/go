@@ -21,7 +21,7 @@ func encoderOfStruct(cfg *frozenConfig, typ reflect.Type) (Encoder, error) {
 				extensionProvidedFieldNames = alternativeFieldNames
 			}
 			if fun != nil {
-				fieldEncoders[fieldEncoderKey] = &funcEncoder{fun}
+				fieldEncoders[fieldEncoderKey] = &funcEncoder{fun, nil}
 			}
 		}
 		for _, extension := range cfg.extensions {
@@ -30,7 +30,7 @@ func encoderOfStruct(cfg *frozenConfig, typ reflect.Type) (Encoder, error) {
 				extensionProvidedFieldNames = alternativeFieldNames
 			}
 			if fun != nil {
-				fieldEncoders[fieldEncoderKey] = &funcEncoder{fun}
+				fieldEncoders[fieldEncoderKey] = &funcEncoder{fun, nil}
 			}
 		}
 		tagParts := strings.Split(field.Tag.Get("json"), ",")

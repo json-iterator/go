@@ -36,7 +36,7 @@ func Test_customize_type_encoder(t *testing.T) {
 	RegisterTypeEncoder("time.Time", func(ptr unsafe.Pointer, stream *Stream) {
 		t := *((*time.Time)(ptr))
 		stream.WriteString(t.UTC().Format("2006-01-02 15:04:05"))
-	})
+	}, nil)
 	defer ConfigDefault.cleanEncoders()
 	val := time.Unix(0, 0)
 	str, err := MarshalToString(val)
@@ -50,7 +50,7 @@ func Test_customize_byte_array_encoder(t *testing.T) {
 	RegisterTypeEncoder("[]uint8", func(ptr unsafe.Pointer, stream *Stream) {
 		t := *((*[]byte)(ptr))
 		stream.WriteString(string(t))
-	})
+	}, nil)
 	defer ConfigDefault.cleanEncoders()
 	val := []byte("abc")
 	str, err := MarshalToString(val)
@@ -158,7 +158,7 @@ func Test_marshaler_and_encoder(t *testing.T) {
 	should := require.New(t)
 	RegisterTypeEncoder("jsoniter.ObjectImplementedMarshaler", func(ptr unsafe.Pointer, stream *Stream) {
 		stream.WriteString("hello from encoder")
-	})
+	}, nil)
 	val := ObjectImplementedMarshaler(100)
 	obj := TestObject{&val}
 	bytes, err := json.Marshal(obj)
