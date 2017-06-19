@@ -121,28 +121,3 @@ func Test_encode_map_with_sorted_keys(t *testing.T) {
 	should.Equal(string(bytes), output)
 }
 
-func Test_decode_map_of_raw_message(t *testing.T) {
-	should := require.New(t)
-	type RawMap map[string]*json.RawMessage
-	b := []byte("{\"test\":[{\"key\":\"value\"}]}")
-	var rawMap RawMap
-	should.Nil(Unmarshal(b, &rawMap))
-	should.Equal(`[{"key":"value"}]`, string(*rawMap["test"]))
-	type Inner struct {
-		Key string `json:"key"`
-	}
-	var inner []Inner
-	Unmarshal(*rawMap["test"], &inner)
-	should.Equal("value", inner[0].Key)
-}
-
-func Test_encode_map_of_raw_message(t *testing.T) {
-	should := require.New(t)
-	type RawMap map[string]*json.RawMessage
-	value := json.RawMessage("[]")
-	rawMap := RawMap{"hello": &value}
-	output, err := MarshalToString(rawMap)
-	should.Nil(err)
-	should.Equal(`{"hello":[]}`, output)
-}
-

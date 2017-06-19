@@ -16,6 +16,8 @@ import (
 	"io"
 )
 
+type RawMessage []byte
+
 // Unmarshal adapts to json/encoding Unmarshal API
 //
 // Unmarshal parses the JSON-encoded data and stores the result in the value pointed to by v.

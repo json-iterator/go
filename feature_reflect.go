@@ -79,6 +79,7 @@ var fieldEncoders map[string]Encoder
 var extensions []ExtensionFunc
 var jsonNumberType reflect.Type
 var jsonRawMessageType reflect.Type
+var jsoniterRawMessageType reflect.Type
 var anyType reflect.Type
 var marshalerType reflect.Type
 var unmarshalerType reflect.Type
@@ -92,6 +93,7 @@ func init() {
 	extensions = []ExtensionFunc{}
 	jsonNumberType = reflect.TypeOf((*json.Number)(nil)).Elem()
 	jsonRawMessageType = reflect.TypeOf((*json.RawMessage)(nil)).Elem()
+	jsoniterRawMessageType = reflect.TypeOf((*RawMessage)(nil)).Elem()
 	anyType = reflect.TypeOf((*Any)(nil)).Elem()
 	marshalerType = reflect.TypeOf((*json.Marshaler)(nil)).Elem()
 	unmarshalerType = reflect.TypeOf((*json.Unmarshaler)(nil)).Elem()
@@ -296,6 +298,9 @@ func createDecoderOfType(cfg *frozenConfig, typ reflect.Type) (Decoder, error) {
 	if typ.AssignableTo(jsonRawMessageType) {
 		return &jsonRawMessageCodec{}, nil
 	}
+	if typ.AssignableTo(jsoniterRawMessageType) {
+		return &jsoniterRawMessageCodec{}, nil
+	}
 	if typ.AssignableTo(jsonNumberType) {
 		return &jsonNumberCodec{}, nil
 	}
@@ -385,6 +390,9 @@ func createEncoderOfType(cfg *frozenConfig, typ reflect.Type) (Encoder, error) {
 	}
 	if typ.AssignableTo(jsonRawMessageType) {
 		return &jsonRawMessageCodec{}, nil
+	}
+	if typ.AssignableTo(jsoniterRawMessageType) {
+		return &jsoniterRawMessageCodec{}, nil
 	}
 	if typ.AssignableTo(jsonNumberType) {
 		return &jsonNumberCodec{}, nil

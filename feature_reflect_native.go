@@ -384,6 +384,25 @@ func (encoder *jsonRawMessageCodec) isEmpty(ptr unsafe.Pointer) bool {
 	return len(*((*json.RawMessage)(ptr))) == 0
 }
 
+type jsoniterRawMessageCodec struct {
+}
+
+func (codec *jsoniterRawMessageCodec) decode(ptr unsafe.Pointer, iter *Iterator) {
+	*((*RawMessage)(ptr)) = RawMessage(iter.SkipAndReturnBytes())
+}
+
+func (codec *jsoniterRawMessageCodec) encode(ptr unsafe.Pointer, stream *Stream) {
+	stream.WriteRaw(string(*((*RawMessage)(ptr))))
+}
+
+func (encoder *jsoniterRawMessageCodec) encodeInterface(val interface{}, stream *Stream) {
+	stream.WriteRaw(string(val.(RawMessage)))
+}
+
+func (encoder *jsoniterRawMessageCodec) isEmpty(ptr unsafe.Pointer) bool {
+	return len(*((*RawMessage)(ptr))) == 0
+}
+
 type base64Codec struct {
 }
 
