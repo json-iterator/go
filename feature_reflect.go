@@ -348,6 +348,8 @@ func createDecoderOfType(cfg *frozenConfig, typ reflect.Type) (Decoder, error) {
 		}
 	case reflect.Struct:
 		return prefix(fmt.Sprintf("[%s]", typ.String())).addToDecoder(decoderOfStruct(cfg, typ))
+	case reflect.Array:
+		return prefix("[array]").addToDecoder(decoderOfArray(cfg, typ))
 	case reflect.Slice:
 		return prefix("[slice]").addToDecoder(decoderOfSlice(cfg, typ))
 	case reflect.Map:
@@ -442,6 +444,8 @@ func createEncoderOfType(cfg *frozenConfig, typ reflect.Type) (Encoder, error) {
 		}
 	case reflect.Struct:
 		return prefix(fmt.Sprintf("[%s]", typ.String())).addToEncoder(encoderOfStruct(cfg, typ))
+	case reflect.Array:
+		return prefix("[array]").addToEncoder(encoderOfArray(cfg, typ))
 	case reflect.Slice:
 		return prefix("[slice]").addToEncoder(encoderOfSlice(cfg, typ))
 	case reflect.Map:
