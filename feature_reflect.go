@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"reflect"
 	"unsafe"
+	"time"
 )
 
 // Decoder is an internal type registered to cache as needed.
@@ -169,11 +170,12 @@ func (encoder *optionalEncoder) isEmpty(ptr unsafe.Pointer) bool {
 }
 
 type placeholderEncoder struct {
-	valueEncoder Encoder
+	cfg *frozenConfig
+	cacheKey reflect.Type
 }
 
 func (encoder *placeholderEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
-	encoder.valueEncoder.encode(ptr, stream)
+	encoder.getRealEncoder().encode(ptr, stream)
 }
 
 func (encoder *placeholderEncoder) encodeInterface(val interface{}, stream *Stream) {
@@ -181,15 +183,39 @@ func (encoder *placeholderEncoder) encodeInterface(val interface{}, stream *Stre
 }
 
 func (encoder *placeholderEncoder) isEmpty(ptr unsafe.Pointer) bool {
-	return encoder.valueEncoder.isEmpty(ptr)
+	return encoder.getRealEncoder().isEmpty(ptr)
+}
+
+func (encoder *placeholderEncoder) getRealEncoder() Encoder {
+	for i := 0; i < 30; i++ {
+		realDecoder := encoder.cfg.getEncoderFromCache(encoder.cacheKey)
+		_, isPlaceholder := realDecoder.(*placeholderEncoder)
+		if isPlaceholder {
+			time.Sleep(time.Second)
+		} else {
+			return realDecoder
+		}
+	}
+	panic(fmt.Sprintf("real encoder not found for cache key: %v", encoder.cacheKey))
 }
 
 type placeholderDecoder struct {
-	valueDecoder Decoder
+	cfg *frozenConfig
+	cacheKey reflect.Type
 }
 
 func (decoder *placeholderDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
-	decoder.valueDecoder.decode(ptr, iter)
+	for i := 0; i < 30; i++ {
+		realDecoder := decoder.cfg.getDecoderFromCache(decoder.cacheKey)
+		_, isPlaceholder := realDecoder.(*placeholderDecoder)
+		if isPlaceholder {
+			time.Sleep(time.Second)
+		} else {
+			realDecoder.decode(ptr, iter)
+			return
+		}
+	}
+	panic(fmt.Sprintf("real decoder not found for cache key: %v", decoder.cacheKey))
 }
 
 // emptyInterface is the header for an interface{} value.
@@ -283,10 +309,9 @@ func decoderOfType(cfg *frozenConfig, typ reflect.Type) (Decoder, error) {
 	if cachedDecoder != nil {
 		return cachedDecoder, nil
 	}
-	placeholder := &placeholderDecoder{}
+	placeholder := &placeholderDecoder{cfg: cfg, cacheKey: cacheKey}
 	cfg.addDecoderToCache(cacheKey, placeholder)
 	newDecoder, err := createDecoderOfType(cfg, typ)
-	placeholder.valueDecoder = newDecoder
 	cfg.addDecoderToCache(cacheKey, newDecoder)
 	return newDecoder, err
 }
@@ -382,10 +407,9 @@ func encoderOfType(cfg *frozenConfig, typ reflect.Type) (Encoder, error) {
 	if cachedEncoder != nil {
 		return cachedEncoder, nil
 	}
-	placeholder := &placeholderEncoder{}
+	placeholder := &placeholderEncoder{cfg: cfg, cacheKey: cacheKey}
 	cfg.addEncoderToCache(cacheKey, placeholder)
 	newEncoder, err := createEncoderOfType(cfg, typ)
-	placeholder.valueEncoder = newEncoder
 	cfg.addEncoderToCache(cacheKey, newEncoder)
 	return newEncoder, err
 }
