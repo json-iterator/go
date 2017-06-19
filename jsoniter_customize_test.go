@@ -213,3 +213,22 @@ func Test_unmarshaler_and_decoder(t *testing.T) {
 	should.Nil(err)
 	should.Equal(10, int(*obj.Field))
 }
+
+type tmString string
+type tmStruct struct {
+	String tmString
+}
+
+func (s tmStruct) MarshalJSON() ([]byte, error) {
+	var b []byte
+	b = append(b, '"')
+	b = append(b, s.String...)
+	b = append(b, '"')
+	return b, nil
+}
+
+func Test_marshaler_on_struct(t *testing.T) {
+	fixed := tmStruct{"hello"}
+	//json.Marshal(fixed)
+	Marshal(fixed)
+}

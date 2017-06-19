@@ -306,7 +306,11 @@ func createDecoderOfType(cfg *frozenConfig, typ reflect.Type) (Decoder, error) {
 	}
 	if typ.ConvertibleTo(unmarshalerType) {
 		templateInterface := reflect.New(typ).Elem().Interface()
-		return &optionalDecoder{typ, &unmarshalerDecoder{extractInterface(templateInterface)}}, nil
+		var decoder Decoder = &unmarshalerDecoder{extractInterface(templateInterface)}
+		if typ.Kind() != reflect.Struct {
+			decoder = &optionalDecoder{typ, decoder}
+		}
+		return decoder, nil
 	}
 	if typ.ConvertibleTo(anyType) {
 		return &anyCodec{}, nil
@@ -401,7 +405,11 @@ func createEncoderOfType(cfg *frozenConfig, typ reflect.Type) (Encoder, error) {
 	}
 	if typ.ConvertibleTo(marshalerType) {
 		templateInterface := reflect.New(typ).Elem().Interface()
-		return &optionalEncoder{&marshalerEncoder{extractInterface(templateInterface)}}, nil
+		var encoder Encoder = &marshalerEncoder{extractInterface(templateInterface)}
+		if typ.Kind() != reflect.Struct {
+			encoder = &optionalEncoder{encoder}
+		}
+		return encoder, nil
 	}
 	if typ.ConvertibleTo(anyType) {
 		return &anyCodec{}, nil
