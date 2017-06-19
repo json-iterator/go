@@ -94,6 +94,12 @@ func (any *arrayLazyAny) ToString() string {
 	return *(*string)(unsafe.Pointer(&any.buf))
 }
 
+func (any *arrayLazyAny) ToVal(val interface{}) {
+	iter := any.cfg.BorrowIterator(any.buf)
+	defer any.cfg.ReturnIterator(iter)
+	iter.ReadVal(val)
+}
+
 func (any *arrayLazyAny) Get(path ...interface{}) Any {
 	if len(path) == 0 {
 		return any

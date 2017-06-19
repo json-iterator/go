@@ -22,6 +22,11 @@ func Test_read_object_as_any(t *testing.T) {
 	should.Equal(Object, any.ValueType())
 	should.Nil(any.LastError())
 	should.Equal("b", any.GetObject()["a"].ToString())
+	obj := struct {
+		A string
+	}{}
+	any.ToVal(&obj)
+	should.Equal("b", obj.A)
 }
 
 func Test_object_lazy_any_get(t *testing.T) {

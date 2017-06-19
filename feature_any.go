@@ -19,10 +19,14 @@ type Any interface {
 	ToFloat32() float32
 	ToFloat64() float64
 	ToString() string
+	ToVal(val interface{})
 	Get(path ...interface{}) Any
+	// TODO: add Set
 	Size() int
 	Keys() []string
+	// TODO: remove me
 	GetArray() []Any
+	// TODO: remove me
 	GetObject() map[string]Any
 	GetInterface() interface{}
 	WriteTo(stream *Stream)
@@ -48,6 +52,10 @@ func (any *baseAny) GetArray() []Any {
 
 func (any *baseAny) GetObject() map[string]Any {
 	return map[string]Any{}
+}
+
+func (any *baseAny) ToVal(obj interface{}) {
+	panic("not implemented")
 }
 
 func WrapInt32(val int32) Any {

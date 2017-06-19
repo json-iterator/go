@@ -41,6 +41,9 @@ func Test_read_two_element_array_as_any(t *testing.T) {
 	stream := NewStream(ConfigDefault, nil, 32)
 	any.WriteTo(stream)
 	should.Equal("[1,2]", string(stream.Buffer()))
+	arr := []int{}
+	any.ToVal(&arr)
+	should.Equal([]int{1, 2}, arr)
 }
 
 func Test_wrap_array(t *testing.T) {
