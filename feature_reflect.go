@@ -48,12 +48,6 @@ func writeToStream(val interface{}, stream *Stream, encoder ValEncoder) {
 type DecoderFunc func(ptr unsafe.Pointer, iter *Iterator)
 type EncoderFunc func(ptr unsafe.Pointer, stream *Stream)
 
-type ExtensionFunc func(typ reflect.Type, field *reflect.StructField) ([]string, EncoderFunc, DecoderFunc)
-
-type funcDecoder struct {
-	fun DecoderFunc
-}
-
 func (decoder *funcDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 	decoder.fun(ptr, iter)
 }
@@ -78,11 +72,6 @@ func (encoder *funcEncoder) isEmpty(ptr unsafe.Pointer) bool {
 	return encoder.isEmptyFunc(ptr)
 }
 
-var typeDecoders map[string]ValDecoder
-var fieldDecoders map[string]ValDecoder
-var typeEncoders map[string]ValEncoder
-var fieldEncoders map[string]ValEncoder
-var extensions []ExtensionFunc
 var jsonNumberType reflect.Type
 var jsonRawMessageType reflect.Type
 var jsoniterRawMessageType reflect.Type
@@ -92,11 +81,6 @@ var unmarshalerType reflect.Type
 var textUnmarshalerType reflect.Type
 
 func init() {
-	typeDecoders = map[string]ValDecoder{}
-	fieldDecoders = map[string]ValDecoder{}
-	typeEncoders = map[string]ValEncoder{}
-	fieldEncoders = map[string]ValEncoder{}
-	extensions = []ExtensionFunc{}
 	jsonNumberType = reflect.TypeOf((*json.Number)(nil)).Elem()
 	jsonRawMessageType = reflect.TypeOf((*json.RawMessage)(nil)).Elem()
 	jsoniterRawMessageType = reflect.TypeOf((*RawMessage)(nil)).Elem()
@@ -104,42 +88,6 @@ func init() {
 	marshalerType = reflect.TypeOf((*json.Marshaler)(nil)).Elem()
 	unmarshalerType = reflect.TypeOf((*json.Unmarshaler)(nil)).Elem()
 	textUnmarshalerType = reflect.TypeOf((*encoding.TextUnmarshaler)(nil)).Elem()
-}
-
-func RegisterTypeDecoderFunc(typ string, fun DecoderFunc) {
-	typeDecoders[typ] = &funcDecoder{fun}
-}
-
-func RegisterTypeDecoder(typ string, decoder ValDecoder) {
-	typeDecoders[typ] = decoder
-}
-
-func RegisterFieldDecoderFunc(typ string, field string, fun DecoderFunc) {
-	RegisterFieldDecoder(typ, field, &funcDecoder{fun})
-}
-
-func RegisterFieldDecoder(typ string, field string, decoder ValDecoder) {
-	fieldDecoders[fmt.Sprintf("%s/%s", typ, field)] = decoder
-}
-
-func RegisterTypeEncoderFunc(typ string, fun EncoderFunc, isEmptyFunc func(unsafe.Pointer) bool) {
-	typeEncoders[typ] = &funcEncoder{fun, isEmptyFunc}
-}
-
-func RegisterTypeEncoder(typ string, encoder ValEncoder) {
-	typeEncoders[typ] = encoder
-}
-
-func RegisterFieldEncoderFunc(typ string, field string, fun EncoderFunc, isEmptyFunc func(unsafe.Pointer) bool) {
-	RegisterFieldEncoder(typ, field, &funcEncoder{fun, isEmptyFunc})
-}
-
-func RegisterFieldEncoder(typ string, field string, encoder ValEncoder) {
-	fieldEncoders[fmt.Sprintf("%s/%s", typ, field)] = encoder
-}
-
-func RegisterExtension(extension ExtensionFunc) {
-	extensions = append(extensions, extension)
 }
 
 type optionalDecoder struct {
@@ -260,18 +208,13 @@ type nonEmptyInterface struct {
 func (iter *Iterator) ReadVal(obj interface{}) {
 	typ := reflect.TypeOf(obj)
 	cacheKey := typ.Elem()
-	cachedDecoder := iter.cfg.getDecoderFromCache(cacheKey)
-	if cachedDecoder == nil {
-		decoder, err := decoderOfType(iter.cfg, cacheKey)
-		if err != nil {
-			iter.Error = err
-			return
-		}
-		cachedDecoder = decoder
-		iter.cfg.addDecoderToCache(cacheKey, decoder)
+	decoder, err := decoderOfType(iter.cfg, cacheKey)
+	if err != nil {
+		iter.Error = err
+		return
 	}
 	e := (*emptyInterface)(unsafe.Pointer(&obj))
-	cachedDecoder.decode(e.word, iter)
+	decoder.decode(e.word, iter)
 }
 
 func (stream *Stream) WriteVal(val interface{}) {
@@ -281,17 +224,12 @@ func (stream *Stream) WriteVal(val interface{}) {
 	}
 	typ := reflect.TypeOf(val)
 	cacheKey := typ
-	cachedEncoder := stream.cfg.getEncoderFromCache(cacheKey)
-	if cachedEncoder == nil {
-		encoder, err := encoderOfType(stream.cfg, cacheKey)
-		if err != nil {
-			stream.Error = err
-			return
-		}
-		cachedEncoder = encoder
-		stream.cfg.addEncoderToCache(cacheKey, encoder)
+	encoder, err := encoderOfType(stream.cfg, cacheKey)
+	if err != nil {
+		stream.Error = err
+		return
 	}
-	cachedEncoder.encodeInterface(val, stream)
+	encoder.encodeInterface(val, stream)
 }
 
 type prefix string
@@ -311,27 +249,21 @@ func (p prefix) addToEncoder(encoder ValEncoder, err error) (ValEncoder, error) 
 }
 
 func decoderOfType(cfg *frozenConfig, typ reflect.Type) (ValDecoder, error) {
-	typeName := typ.String()
-	typeDecoder := typeDecoders[typeName]
-	if typeDecoder != nil {
-		return typeDecoder, nil
-	}
-	if typ.Kind() == reflect.Ptr {
-		typeDecoder := typeDecoders[typ.Elem().String()]
-		if typeDecoder != nil {
-			return &optionalDecoder{typ.Elem(), typeDecoder}, nil
-		}
-	}
 	cacheKey := typ
-	cachedDecoder := cfg.getDecoderFromCache(cacheKey)
-	if cachedDecoder != nil {
-		return cachedDecoder, nil
+	decoder := cfg.getDecoderFromCache(cacheKey)
+	if decoder != nil {
+		return decoder, nil
 	}
-	placeholder := &placeholderDecoder{cfg: cfg, cacheKey: cacheKey}
-	cfg.addDecoderToCache(cacheKey, placeholder)
-	newDecoder, err := createDecoderOfType(cfg, typ)
-	cfg.addDecoderToCache(cacheKey, newDecoder)
-	return newDecoder, err
+	decoder = getTypeDecoderFromExtension(typ)
+	if decoder != nil {
+		cfg.addDecoderToCache(cacheKey, decoder)
+		return decoder, nil
+	}
+	decoder = &placeholderDecoder{cfg: cfg, cacheKey: cacheKey}
+	cfg.addDecoderToCache(cacheKey, decoder)
+	decoder, err := createDecoderOfType(cfg, typ)
+	cfg.addDecoderToCache(cacheKey, decoder)
+	return decoder, err
 }
 
 func createDecoderOfType(cfg *frozenConfig, typ reflect.Type) (ValDecoder, error) {
@@ -409,27 +341,21 @@ func createDecoderOfType(cfg *frozenConfig, typ reflect.Type) (ValDecoder, error
 }
 
 func encoderOfType(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error) {
-	typeName := typ.String()
-	typeEncoder := typeEncoders[typeName]
-	if typeEncoder != nil {
-		return typeEncoder, nil
-	}
-	if typ.Kind() == reflect.Ptr {
-		typeEncoder := typeEncoders[typ.Elem().String()]
-		if typeEncoder != nil {
-			return &optionalEncoder{typeEncoder}, nil
-		}
-	}
 	cacheKey := typ
-	cachedEncoder := cfg.getEncoderFromCache(cacheKey)
-	if cachedEncoder != nil {
-		return cachedEncoder, nil
+	encoder := cfg.getEncoderFromCache(cacheKey)
+	if encoder != nil {
+		return encoder, nil
 	}
-	placeholder := &placeholderEncoder{cfg: cfg, cacheKey: cacheKey}
-	cfg.addEncoderToCache(cacheKey, placeholder)
-	newEncoder, err := createEncoderOfType(cfg, typ)
-	cfg.addEncoderToCache(cacheKey, newEncoder)
-	return newEncoder, err
+	encoder = getTypeEncoderFromExtension(typ)
+	if encoder != nil {
+		cfg.addEncoderToCache(cacheKey, encoder)
+		return encoder, nil
+	}
+	encoder = &placeholderEncoder{cfg: cfg, cacheKey: cacheKey}
+	cfg.addEncoderToCache(cacheKey, encoder)
+	encoder, err := createEncoderOfType(cfg, typ)
+	cfg.addEncoderToCache(cacheKey, encoder)
+	return encoder, err
 }
 
 func createEncoderOfType(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error) {
