@@ -57,3 +57,17 @@ func Test_large_float_to_int(t *testing.T) {
 	var val int
 	should.NotNil(jsoniter.UnmarshalFromString(`1234512345123451234512345.0`, &val))
 }
+
+func Test_string_to_float32(t *testing.T) {
+	should := require.New(t)
+	var val float32
+	should.Nil(jsoniter.UnmarshalFromString(`"100"`, &val))
+	should.Equal(float32(100), val)
+}
+
+func Test_float_to_float32(t *testing.T) {
+	should := require.New(t)
+	var val float32
+	should.Nil(jsoniter.UnmarshalFromString(`1.23`, &val))
+	should.Equal(float32(1.23), val)
+}
