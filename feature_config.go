@@ -12,7 +12,6 @@ import (
 type Config struct {
 	IndentionStep                 int
 	MarshalFloatWith6Digits       bool
-	SupportUnexportedStructFields bool
 	EscapeHtml                    bool
 	SortMapKeys                   bool
 	UseNumber                     bool
@@ -24,7 +23,7 @@ type frozenConfig struct {
 	indentionStep      int
 	decoderCache       unsafe.Pointer
 	encoderCache       unsafe.Pointer
-	extensions         []ExtensionFunc
+	extensions         []Extension
 	streamPool         chan *Stream
 	iteratorPool       chan *Iterator
 }
@@ -65,9 +64,6 @@ func (cfg Config) Froze() *frozenConfig {
 	if cfg.MarshalFloatWith6Digits {
 		frozenConfig.marshalFloatWith6Digits()
 	}
-	if cfg.SupportUnexportedStructFields {
-		frozenConfig.supportUnexportedStructFields()
-	}
 	if cfg.EscapeHtml {
 		frozenConfig.escapeHtml()
 	}
@@ -88,15 +84,8 @@ func (cfg *frozenConfig) useNumber() {
 	}})
 }
 
-// RegisterExtension can register a custom extension
-func (cfg *frozenConfig) registerExtension(extension ExtensionFunc) {
+func (cfg *frozenConfig) registerExtension(extension Extension) {
 	cfg.extensions = append(cfg.extensions, extension)
-}
-
-func (cfg *frozenConfig) supportUnexportedStructFields() {
-	cfg.registerExtension(func(type_ reflect.Type, field *reflect.StructField) ([]string, EncoderFunc, DecoderFunc) {
-		return []string{field.Name}, nil, nil
-	})
 }
 
 type lossyFloat32Encoder struct {

@@ -4,26 +4,52 @@ import (
 	"reflect"
 	"fmt"
 	"unsafe"
+	"strings"
+	"unicode"
 )
 
-var typeDecoders map[string]ValDecoder
-var fieldDecoders map[string]ValDecoder
-var typeEncoders map[string]ValEncoder
-var fieldEncoders map[string]ValEncoder
-var extensions []ExtensionFunc
+var typeDecoders = map[string]ValDecoder{}
+var fieldDecoders = map[string]ValDecoder{}
+var typeEncoders = map[string]ValEncoder{}
+var fieldEncoders = map[string]ValEncoder{}
+var extensions = []Extension{}
 
-type ExtensionFunc func(typ reflect.Type, field *reflect.StructField) ([]string, EncoderFunc, DecoderFunc)
+type StructDescriptor struct {
+	Type   reflect.Type
+	Fields map[string]*Binding
+}
+
+type Binding struct {
+	Field           *reflect.StructField
+	FromNames       []string
+	ToNames         []string
+	ShouldOmitEmpty bool
+	Encoder         ValEncoder
+	Decoder         ValDecoder
+}
+
+type Extension interface {
+	UpdateStructDescriptor(structDescriptor *StructDescriptor)
+	CreateDecoder(typ reflect.Type) ValDecoder
+	CreateEncoder(typ reflect.Type) ValEncoder
+}
+
+type DummyExtension struct {
+}
+
+func (extension *DummyExtension) UpdateStructDescriptor(structDescriptor *StructDescriptor) {
+}
+
+func (extension *DummyExtension) CreateDecoder(typ reflect.Type) ValDecoder {
+	return nil
+}
+
+func (extension *DummyExtension) CreateEncoder(typ reflect.Type) ValEncoder {
+	return nil
+}
 
 type funcDecoder struct {
 	fun DecoderFunc
-}
-
-func init() {
-	typeDecoders = map[string]ValDecoder{}
-	fieldDecoders = map[string]ValDecoder{}
-	typeEncoders = map[string]ValEncoder{}
-	fieldEncoders = map[string]ValEncoder{}
-	extensions = []ExtensionFunc{}
 }
 
 func RegisterTypeDecoderFunc(typ string, fun DecoderFunc) {
@@ -58,36 +84,134 @@ func RegisterFieldEncoder(typ string, field string, encoder ValEncoder) {
 	fieldEncoders[fmt.Sprintf("%s/%s", typ, field)] = encoder
 }
 
-func RegisterExtension(extension ExtensionFunc) {
+func RegisterExtension(extension Extension) {
 	extensions = append(extensions, extension)
 }
 
 func getTypeDecoderFromExtension(typ reflect.Type) ValDecoder {
+	for _, extension := range extensions {
+		decoder := extension.CreateDecoder(typ)
+		if decoder != nil {
+			return decoder
+		}
+	}
 	typeName := typ.String()
-	typeDecoder := typeDecoders[typeName]
-	if typeDecoder != nil {
-		return typeDecoder
+	decoder := typeDecoders[typeName]
+	if decoder != nil {
+		return decoder
 	}
 	if typ.Kind() == reflect.Ptr {
-		typeDecoder := typeDecoders[typ.Elem().String()]
-		if typeDecoder != nil {
-			return &optionalDecoder{typ.Elem(), typeDecoder}
+		decoder := typeDecoders[typ.Elem().String()]
+		if decoder != nil {
+			return &optionalDecoder{typ.Elem(), decoder}
 		}
 	}
 	return nil
 }
 
 func getTypeEncoderFromExtension(typ reflect.Type) ValEncoder {
+	for _, extension := range extensions {
+		encoder := extension.CreateEncoder(typ)
+		if encoder != nil {
+			return encoder
+		}
+	}
 	typeName := typ.String()
-	typeEncoder := typeEncoders[typeName]
-	if typeEncoder != nil {
-		return typeEncoder
+	encoder := typeEncoders[typeName]
+	if encoder != nil {
+		return encoder
 	}
 	if typ.Kind() == reflect.Ptr {
-		typeEncoder := typeEncoders[typ.Elem().String()]
-		if typeEncoder != nil {
-			return &optionalEncoder{typeEncoder}
+		encoder := typeEncoders[typ.Elem().String()]
+		if encoder != nil {
+			return &optionalEncoder{encoder}
 		}
 	}
 	return nil
+}
+
+func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, error) {
+	bindings := map[string]*Binding{}
+	for _, field := range listStructFields(typ) {
+		tagParts := strings.Split(field.Tag.Get("json"), ",")
+		fieldNames := calcFieldNames(field.Name, tagParts[0])
+		fieldCacheKey := fmt.Sprintf("%s/%s", typ.String(), field.Name)
+		decoder := fieldDecoders[fieldCacheKey]
+		if decoder == nil && len(fieldNames) > 0 {
+			var err error
+			decoder, err = decoderOfType(cfg, field.Type)
+			if err != nil {
+				return nil, err
+			}
+		}
+		encoder := fieldEncoders[fieldCacheKey]
+		if encoder == nil && len(fieldNames) > 0 {
+			var err error
+			encoder, err = encoderOfType(cfg, field.Type)
+			if err != nil {
+				return nil, err
+			}
+			// map is stored as pointer in the struct
+			if field.Type.Kind() == reflect.Map {
+				encoder = &optionalEncoder{encoder}
+			}
+		}
+		binding := &Binding{
+			Field:     field,
+			FromNames: fieldNames,
+			ToNames:   fieldNames,
+			Decoder:   decoder,
+			Encoder:   encoder,
+		}
+		for _, tagPart := range tagParts[1:] {
+			if tagPart == "omitempty" {
+				binding.ShouldOmitEmpty = true
+			} else if tagPart == "string" {
+				binding.Decoder = &stringModeDecoder{binding.Decoder}
+				binding.Encoder = &stringModeEncoder{binding.Encoder}
+			}
+		}
+		bindings[field.Name] = binding
+	}
+	structDescriptor := &StructDescriptor{
+		Type:   typ,
+		Fields: bindings,
+	}
+	for _, extension := range extensions {
+		extension.UpdateStructDescriptor(structDescriptor)
+	}
+	return structDescriptor, nil
+}
+
+func listStructFields(typ reflect.Type) []*reflect.StructField {
+	fields := []*reflect.StructField{}
+	for i := 0; i < typ.NumField(); i++ {
+		field := typ.Field(i)
+		if field.Anonymous {
+			fields = append(fields, listStructFields(field.Type)...)
+		} else {
+			fields = append(fields, &field)
+		}
+	}
+	return fields
+}
+
+func calcFieldNames(originalFieldName string, tagProvidedFieldName string) []string {
+	// tag => exported? => original
+	isNotExported := unicode.IsLower(rune(originalFieldName[0]))
+	var fieldNames []string
+	/// tagParts[0] always present, even if no tags
+	switch tagProvidedFieldName {
+	case "":
+		if isNotExported {
+			fieldNames = []string{}
+		} else {
+			fieldNames = []string{originalFieldName}
+		}
+	case "-":
+		fieldNames = []string{}
+	default:
+		fieldNames = []string{tagProvidedFieldName}
+	}
+	return fieldNames
 }

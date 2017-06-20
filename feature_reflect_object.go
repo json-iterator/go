@@ -4,64 +4,19 @@ import (
 	"fmt"
 	"io"
 	"reflect"
-	"strings"
-	"unicode"
 	"unsafe"
 )
 
 func encoderOfStruct(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error) {
 	structEncoder_ := &structEncoder{}
 	fields := map[string]*structFieldEncoder{}
-	for _, field := range listStructFields(typ) {
-		fieldEncoderKey := fmt.Sprintf("%s/%s", typ.String(), field.Name)
-		var extensionProvidedFieldNames []string
-		for _, extension := range extensions {
-			alternativeFieldNames, fun, _ := extension(typ, field)
-			if alternativeFieldNames != nil {
-				extensionProvidedFieldNames = alternativeFieldNames
-			}
-			if fun != nil {
-				fieldEncoders[fieldEncoderKey] = &funcEncoder{fun, nil}
-			}
-		}
-		for _, extension := range cfg.extensions {
-			alternativeFieldNames, fun, _ := extension(typ, field)
-			if alternativeFieldNames != nil {
-				extensionProvidedFieldNames = alternativeFieldNames
-			}
-			if fun != nil {
-				fieldEncoders[fieldEncoderKey] = &funcEncoder{fun, nil}
-			}
-		}
-		tagParts := strings.Split(field.Tag.Get("json"), ",")
-		// if fieldNames set by extension, use theirs, otherwise try tags
-		fieldNames := calcFieldNames(field.Name, tagParts[0], extensionProvidedFieldNames)
-		omitempty := false
-		stringMode := false
-		for _, tagPart := range tagParts[1:] {
-			if tagPart == "omitempty" {
-				omitempty = true
-			} else if tagPart == "string" {
-				stringMode = true
-			}
-		}
-		encoder := fieldEncoders[fieldEncoderKey]
-		var err error
-		if encoder == nil && len(fieldNames) > 0 {
-			encoder, err = encoderOfType(cfg, field.Type)
-			if err != nil {
-				return prefix(fmt.Sprintf("{%s}", field.Name)).addToEncoder(encoder, err)
-			}
-			// map is stored as pointer in the struct
-			if field.Type.Kind() == reflect.Map {
-				encoder = &optionalEncoder{encoder}
-			}
-		}
-		if stringMode {
-			encoder = &stringModeEncoder{encoder}
-		}
-		for _, fieldName := range fieldNames {
-			fields[fieldName] = &structFieldEncoder{field, fieldName, encoder, omitempty}
+	structDescriptor, err := describeStruct(cfg, typ)
+	if err != nil {
+		return nil, err
+	}
+	for _, binding := range structDescriptor.Fields {
+		for _, fieldName := range binding.ToNames {
+			fields[fieldName] = &structFieldEncoder{binding.Field, fieldName, binding.Encoder, binding.ShouldOmitEmpty}
 		}
 	}
 	if len(fields) == 0 {
@@ -73,86 +28,18 @@ func encoderOfStruct(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error) {
 	return structEncoder_, nil
 }
 
-func listStructFields(typ reflect.Type) []*reflect.StructField {
-	fields := []*reflect.StructField{}
-	for i := 0; i < typ.NumField(); i++ {
-		field := typ.Field(i)
-		if field.Anonymous {
-			fields = append(fields, listStructFields(field.Type)...)
-		} else {
-			fields = append(fields, &field)
-		}
-	}
-	return fields
-}
-
 func decoderOfStruct(cfg *frozenConfig, typ reflect.Type) (ValDecoder, error) {
 	fields := map[string]*structFieldDecoder{}
-	for _, field := range listStructFields(typ) {
-		fieldDecoderKey := fmt.Sprintf("%s/%s", typ.String(), field.Name)
-		var extensionProviedFieldNames []string
-		for _, extension := range extensions {
-			alternativeFieldNames, _, fun := extension(typ, field)
-			if alternativeFieldNames != nil {
-				extensionProviedFieldNames = alternativeFieldNames
-			}
-			if fun != nil {
-				fieldDecoders[fieldDecoderKey] = &funcDecoder{fun}
-			}
-		}
-		for _, extension := range cfg.extensions {
-			alternativeFieldNames, _, fun := extension(typ, field)
-			if alternativeFieldNames != nil {
-				extensionProviedFieldNames = alternativeFieldNames
-			}
-			if fun != nil {
-				fieldDecoders[fieldDecoderKey] = &funcDecoder{fun}
-			}
-		}
-		decoder := fieldDecoders[fieldDecoderKey]
-		tagParts := strings.Split(field.Tag.Get("json"), ",")
-		fieldNames := calcFieldNames(field.Name, tagParts[0], extensionProviedFieldNames)
-		if decoder == nil && len(fieldNames) > 0 {
-			var err error
-			decoder, err = decoderOfType(cfg, field.Type)
-			if err != nil {
-				return prefix(fmt.Sprintf("{%s}", field.Name)).addToDecoder(decoder, err)
-			}
-		}
-		for _, tagPart := range tagParts[1:] {
-			if tagPart == "string" {
-				decoder = &stringModeDecoder{decoder}
-			}
-		}
-		for _, fieldName := range fieldNames {
-			fields[fieldName] = &structFieldDecoder{field, decoder}
+	structDescriptor, err := describeStruct(cfg, typ)
+	if err != nil {
+		return nil, err
+	}
+	for _, binding := range structDescriptor.Fields {
+		for _, fieldName := range binding.FromNames {
+			fields[fieldName] = &structFieldDecoder{binding.Field, binding.Decoder}
 		}
 	}
 	return createStructDecoder(typ, fields)
-}
-
-func calcFieldNames(originalFieldName string, tagProvidedFieldName string, extensionProvidedFieldNames []string) []string {
-	// tag => extension => exported? => original
-	isNotExported := unicode.IsLower(rune(originalFieldName[0]))
-	var fieldNames []string
-	/// tagParts[0] always present, even if no tags
-	switch tagProvidedFieldName {
-	case "":
-		if extensionProvidedFieldNames != nil {
-			fieldNames = extensionProvidedFieldNames
-		} else {
-			if isNotExported {
-				fieldNames = []string{}
-			} else {
-				fieldNames = []string{originalFieldName}
-			}
-		}
-	case "-":
-		fieldNames = []string{}
-	default:
-		fieldNames = []string{tagProvidedFieldName}
-	}
-	return fieldNames
 }
 
 func createStructDecoder(typ reflect.Type, fields map[string]*structFieldDecoder) (ValDecoder, error) {
@@ -222,7 +109,7 @@ func createStructDecoder(typ reflect.Type, fields map[string]*structFieldDecoder
 			}
 		}
 		return &threeFieldsStructDecoder{typ,
-			fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3}, nil
+										 fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3}, nil
 	case 4:
 		var fieldName1 int32
 		var fieldName2 int32
@@ -255,8 +142,8 @@ func createStructDecoder(typ reflect.Type, fields map[string]*structFieldDecoder
 			}
 		}
 		return &fourFieldsStructDecoder{typ,
-			fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3,
-			fieldName4, fieldDecoder4}, nil
+										fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3,
+										fieldName4, fieldDecoder4}, nil
 	case 5:
 		var fieldName1 int32
 		var fieldName2 int32
@@ -294,8 +181,8 @@ func createStructDecoder(typ reflect.Type, fields map[string]*structFieldDecoder
 			}
 		}
 		return &fiveFieldsStructDecoder{typ,
-			fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3,
-			fieldName4, fieldDecoder4, fieldName5, fieldDecoder5}, nil
+										fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3,
+										fieldName4, fieldDecoder4, fieldName5, fieldDecoder5}, nil
 	case 6:
 		var fieldName1 int32
 		var fieldName2 int32
@@ -338,8 +225,8 @@ func createStructDecoder(typ reflect.Type, fields map[string]*structFieldDecoder
 			}
 		}
 		return &sixFieldsStructDecoder{typ,
-			fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3,
-			fieldName4, fieldDecoder4, fieldName5, fieldDecoder5, fieldName6, fieldDecoder6}, nil
+									   fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3,
+									   fieldName4, fieldDecoder4, fieldName5, fieldDecoder5, fieldName6, fieldDecoder6}, nil
 	case 7:
 		var fieldName1 int32
 		var fieldName2 int32
@@ -387,9 +274,9 @@ func createStructDecoder(typ reflect.Type, fields map[string]*structFieldDecoder
 			}
 		}
 		return &sevenFieldsStructDecoder{typ,
-			fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3,
-			fieldName4, fieldDecoder4, fieldName5, fieldDecoder5, fieldName6, fieldDecoder6,
-			fieldName7, fieldDecoder7}, nil
+										 fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3,
+										 fieldName4, fieldDecoder4, fieldName5, fieldDecoder5, fieldName6, fieldDecoder6,
+										 fieldName7, fieldDecoder7}, nil
 	case 8:
 		var fieldName1 int32
 		var fieldName2 int32
@@ -442,9 +329,9 @@ func createStructDecoder(typ reflect.Type, fields map[string]*structFieldDecoder
 			}
 		}
 		return &eightFieldsStructDecoder{typ,
-			fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3,
-			fieldName4, fieldDecoder4, fieldName5, fieldDecoder5, fieldName6, fieldDecoder6,
-			fieldName7, fieldDecoder7, fieldName8, fieldDecoder8}, nil
+										 fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3,
+										 fieldName4, fieldDecoder4, fieldName5, fieldDecoder5, fieldName6, fieldDecoder6,
+										 fieldName7, fieldDecoder7, fieldName8, fieldDecoder8}, nil
 	case 9:
 		var fieldName1 int32
 		var fieldName2 int32
@@ -502,9 +389,9 @@ func createStructDecoder(typ reflect.Type, fields map[string]*structFieldDecoder
 			}
 		}
 		return &nineFieldsStructDecoder{typ,
-			fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3,
-			fieldName4, fieldDecoder4, fieldName5, fieldDecoder5, fieldName6, fieldDecoder6,
-			fieldName7, fieldDecoder7, fieldName8, fieldDecoder8, fieldName9, fieldDecoder9}, nil
+										fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3,
+										fieldName4, fieldDecoder4, fieldName5, fieldDecoder5, fieldName6, fieldDecoder6,
+										fieldName7, fieldDecoder7, fieldName8, fieldDecoder8, fieldName9, fieldDecoder9}, nil
 	case 10:
 		var fieldName1 int32
 		var fieldName2 int32
@@ -567,10 +454,10 @@ func createStructDecoder(typ reflect.Type, fields map[string]*structFieldDecoder
 			}
 		}
 		return &tenFieldsStructDecoder{typ,
-			fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3,
-			fieldName4, fieldDecoder4, fieldName5, fieldDecoder5, fieldName6, fieldDecoder6,
-			fieldName7, fieldDecoder7, fieldName8, fieldDecoder8, fieldName9, fieldDecoder9,
-			fieldName10, fieldDecoder10}, nil
+									   fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3,
+									   fieldName4, fieldDecoder4, fieldName5, fieldDecoder5, fieldName6, fieldDecoder6,
+									   fieldName7, fieldDecoder7, fieldName8, fieldDecoder8, fieldName9, fieldDecoder9,
+									   fieldName10, fieldDecoder10}, nil
 	}
 	return &generalStructDecoder{typ, fields}, nil
 }
