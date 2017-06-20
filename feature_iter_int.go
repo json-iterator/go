@@ -2,18 +2,13 @@ package jsoniter
 
 import (
 	"strconv"
+	"math"
 )
 
 var intDigits []int8
 
 const uint32SafeToMultiply10 = uint32(0xffffffff)/10 - 1
 const uint64SafeToMultiple10 = uint64(0xffffffffffffffff)/10 - 1
-const int64Max = uint64(0x7fffffffffffffff)
-const int32Max = uint32(0x7fffffff)
-const int16Max = uint32(0x7fff)
-const uint16Max = uint32(0xffff)
-const int8Max = uint32(0x7fff)
-const uint8Max = uint32(0xffff)
 
 func init() {
 	intDigits = make([]int8, 256)
@@ -37,14 +32,14 @@ func (iter *Iterator) ReadInt8() (ret int8) {
 	c := iter.nextToken()
 	if c == '-' {
 		val := iter.readUint32(iter.readByte())
-		if val > int8Max+1 {
+		if val > math.MaxInt8+1 {
 			iter.ReportError("ReadInt8", "overflow: "+strconv.FormatInt(int64(val), 10))
 			return
 		}
 		return -int8(val)
 	} else {
 		val := iter.readUint32(c)
-		if val > int8Max {
+		if val > math.MaxInt8 {
 			iter.ReportError("ReadInt8", "overflow: "+strconv.FormatInt(int64(val), 10))
 			return
 		}
@@ -54,7 +49,7 @@ func (iter *Iterator) ReadInt8() (ret int8) {
 
 func (iter *Iterator) ReadUint8() (ret uint8) {
 	val := iter.readUint32(iter.nextToken())
-	if val > uint8Max {
+	if val > math.MaxUint8 {
 		iter.ReportError("ReadUint8", "overflow: "+strconv.FormatInt(int64(val), 10))
 		return
 	}
@@ -65,14 +60,14 @@ func (iter *Iterator) ReadInt16() (ret int16) {
 	c := iter.nextToken()
 	if c == '-' {
 		val := iter.readUint32(iter.readByte())
-		if val > int16Max+1 {
+		if val > math.MaxInt16+1 {
 			iter.ReportError("ReadInt16", "overflow: "+strconv.FormatInt(int64(val), 10))
 			return
 		}
 		return -int16(val)
 	} else {
 		val := iter.readUint32(c)
-		if val > int16Max {
+		if val > math.MaxInt16 {
 			iter.ReportError("ReadInt16", "overflow: "+strconv.FormatInt(int64(val), 10))
 			return
 		}
@@ -82,7 +77,7 @@ func (iter *Iterator) ReadInt16() (ret int16) {
 
 func (iter *Iterator) ReadUint16() (ret uint16) {
 	val := iter.readUint32(iter.nextToken())
-	if val > uint16Max {
+	if val > math.MaxUint16 {
 		iter.ReportError("ReadUint16", "overflow: "+strconv.FormatInt(int64(val), 10))
 		return
 	}
@@ -93,14 +88,14 @@ func (iter *Iterator) ReadInt32() (ret int32) {
 	c := iter.nextToken()
 	if c == '-' {
 		val := iter.readUint32(iter.readByte())
-		if val > int32Max+1 {
+		if val > math.MaxInt32+1 {
 			iter.ReportError("ReadInt32", "overflow: "+strconv.FormatInt(int64(val), 10))
 			return
 		}
 		return -int32(val)
 	} else {
 		val := iter.readUint32(c)
-		if val > int32Max {
+		if val > math.MaxInt32 {
 			iter.ReportError("ReadInt32", "overflow: "+strconv.FormatInt(int64(val), 10))
 			return
 		}
@@ -204,14 +199,14 @@ func (iter *Iterator) ReadInt64() (ret int64) {
 	c := iter.nextToken()
 	if c == '-' {
 		val := iter.readUint64(iter.readByte())
-		if val > int64Max+1 {
+		if val > math.MaxInt64+1 {
 			iter.ReportError("ReadInt64", "overflow: "+strconv.FormatUint(uint64(val), 10))
 			return
 		}
 		return -int64(val)
 	} else {
 		val := iter.readUint64(c)
-		if val > int64Max {
+		if val > math.MaxInt64 {
 			iter.ReportError("ReadInt64", "overflow: "+strconv.FormatUint(uint64(val), 10))
 			return
 		}
