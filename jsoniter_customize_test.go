@@ -93,7 +93,7 @@ func (extension *testExtension) UpdateStructDescriptor(structDescriptor *StructD
 	if structDescriptor.Type.String() != "jsoniter.TestObject1" {
 		return
 	}
-	binding := structDescriptor.Fields["field1"]
+	binding := structDescriptor.GetField("field1")
 	binding.Encoder = &funcEncoder{fun: func(ptr unsafe.Pointer, stream *Stream) {
 		str := *((*string)(ptr))
 		val, _ := strconv.Atoi(str)

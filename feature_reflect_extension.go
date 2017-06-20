@@ -16,14 +16,22 @@ var extensions = []Extension{}
 
 type StructDescriptor struct {
 	Type   reflect.Type
-	Fields map[string]*Binding
+	Fields []*Binding
+}
+
+func (structDescriptor *StructDescriptor) GetField(fieldName string) *Binding {
+	for _, binding := range structDescriptor.Fields {
+		if binding.Field.Name == fieldName {
+			return binding
+		}
+	}
+	return nil
 }
 
 type Binding struct {
 	Field           *reflect.StructField
 	FromNames       []string
 	ToNames         []string
-	ShouldOmitEmpty bool
 	Encoder         ValEncoder
 	Decoder         ValDecoder
 }
@@ -131,47 +139,75 @@ func getTypeEncoderFromExtension(typ reflect.Type) ValEncoder {
 }
 
 func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, error) {
-	bindings := map[string]*Binding{}
-	for _, field := range listStructFields(typ) {
-		tagParts := strings.Split(field.Tag.Get("json"), ",")
-		fieldNames := calcFieldNames(field.Name, tagParts[0])
-		fieldCacheKey := fmt.Sprintf("%s/%s", typ.String(), field.Name)
-		decoder := fieldDecoders[fieldCacheKey]
-		if decoder == nil && len(fieldNames) > 0 {
-			var err error
-			decoder, err = decoderOfType(cfg, field.Type)
-			if err != nil {
-				return nil, err
+	bindings := []*Binding{}
+	for i := 0; i < typ.NumField(); i++ {
+		field := typ.Field(i)
+		if field.Anonymous {
+			if field.Type.Kind() == reflect.Struct {
+				structDescriptor, err := describeStruct(cfg, field.Type)
+				if err != nil {
+					return nil, err
+				}
+				for _, binding := range structDescriptor.Fields {
+					bindings = append(bindings, binding)
+				}
+			} else if field.Type.Kind() == reflect.Ptr && field.Type.Elem().Kind() == reflect.Struct {
+				structDescriptor, err := describeStruct(cfg, field.Type.Elem())
+				if err != nil {
+					return nil, err
+				}
+				for _, binding := range structDescriptor.Fields {
+					binding.Encoder = &optionalEncoder{binding.Encoder}
+					binding.Encoder = &structFieldEncoder{&field, binding.Encoder, false}
+					binding.Decoder = &optionalDecoder{field.Type, binding.Decoder}
+					binding.Decoder = &structFieldDecoder{&field, binding.Decoder}
+					bindings = append(bindings, binding)
+				}
 			}
-		}
-		encoder := fieldEncoders[fieldCacheKey]
-		if encoder == nil && len(fieldNames) > 0 {
-			var err error
-			encoder, err = encoderOfType(cfg, field.Type)
-			if err != nil {
-				return nil, err
+		} else {
+			tagParts := strings.Split(field.Tag.Get("json"), ",")
+			fieldNames := calcFieldNames(field.Name, tagParts[0])
+			fieldCacheKey := fmt.Sprintf("%s/%s", typ.String(), field.Name)
+			decoder := fieldDecoders[fieldCacheKey]
+			if decoder == nil && len(fieldNames) > 0 {
+				var err error
+				decoder, err = decoderOfType(cfg, field.Type)
+				if err != nil {
+					return nil, err
+				}
 			}
-			// map is stored as pointer in the struct
-			if field.Type.Kind() == reflect.Map {
-				encoder = &optionalEncoder{encoder}
+			encoder := fieldEncoders[fieldCacheKey]
+			if encoder == nil && len(fieldNames) > 0 {
+				var err error
+				encoder, err = encoderOfType(cfg, field.Type)
+				if err != nil {
+					return nil, err
+				}
+				// map is stored as pointer in the struct
+				if field.Type.Kind() == reflect.Map {
+					encoder = &optionalEncoder{encoder}
+				}
 			}
-		}
-		binding := &Binding{
-			Field:     field,
-			FromNames: fieldNames,
-			ToNames:   fieldNames,
-			Decoder:   decoder,
-			Encoder:   encoder,
-		}
-		for _, tagPart := range tagParts[1:] {
-			if tagPart == "omitempty" {
-				binding.ShouldOmitEmpty = true
-			} else if tagPart == "string" {
-				binding.Decoder = &stringModeDecoder{binding.Decoder}
-				binding.Encoder = &stringModeEncoder{binding.Encoder}
+			binding := &Binding{
+				Field:     &field,
+				FromNames: fieldNames,
+				ToNames:   fieldNames,
+				Decoder:   decoder,
+				Encoder:   encoder,
 			}
+			shouldOmitEmpty := false
+			for _, tagPart := range tagParts[1:] {
+				if tagPart == "omitempty" {
+					shouldOmitEmpty = true
+				} else if tagPart == "string" {
+					binding.Decoder = &stringModeDecoder{binding.Decoder}
+					binding.Encoder = &stringModeEncoder{binding.Encoder}
+				}
+			}
+			binding.Decoder = &structFieldDecoder{&field, binding.Decoder}
+			binding.Encoder = &structFieldEncoder{&field, binding.Encoder, shouldOmitEmpty}
+			bindings = append(bindings, binding)
 		}
-		bindings[field.Name] = binding
 	}
 	structDescriptor := &StructDescriptor{
 		Type:   typ,
@@ -185,14 +221,6 @@ func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, err
 
 func listStructFields(typ reflect.Type) []*reflect.StructField {
 	fields := []*reflect.StructField{}
-	for i := 0; i < typ.NumField(); i++ {
-		field := typ.Field(i)
-		if field.Anonymous {
-			fields = append(fields, listStructFields(field.Type)...)
-		} else {
-			fields = append(fields, &field)
-		}
-	}
 	return fields
 }
 

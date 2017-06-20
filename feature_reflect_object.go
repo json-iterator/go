@@ -8,24 +8,20 @@ import (
 )
 
 func encoderOfStruct(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error) {
-	structEncoder_ := &structEncoder{}
 	fields := map[string]*structFieldEncoder{}
 	structDescriptor, err := describeStruct(cfg, typ)
 	if err != nil {
 		return nil, err
 	}
 	for _, binding := range structDescriptor.Fields {
-		for _, fieldName := range binding.ToNames {
-			fields[fieldName] = &structFieldEncoder{binding.Field, fieldName, binding.Encoder, binding.ShouldOmitEmpty}
+		for _, toName := range binding.ToNames {
+			fields[toName] = binding.Encoder.(*structFieldEncoder)
 		}
 	}
 	if len(fields) == 0 {
 		return &emptyStructEncoder{}, nil
 	}
-	for _, field := range fields {
-		structEncoder_.fields = append(structEncoder_.fields, field)
-	}
-	return structEncoder_, nil
+	return &structEncoder{fields}, nil
 }
 
 func decoderOfStruct(cfg *frozenConfig, typ reflect.Type) (ValDecoder, error) {
@@ -35,8 +31,8 @@ func decoderOfStruct(cfg *frozenConfig, typ reflect.Type) (ValDecoder, error) {
 		return nil, err
 	}
 	for _, binding := range structDescriptor.Fields {
-		for _, fieldName := range binding.FromNames {
-			fields[fieldName] = &structFieldDecoder{binding.Field, binding.Decoder}
+		for _, fromName := range binding.FromNames {
+			fields[fromName] = binding.Decoder.(*structFieldDecoder)
 		}
 	}
 	return createStructDecoder(typ, fields)
@@ -959,14 +955,12 @@ func (decoder *structFieldDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 
 type structFieldEncoder struct {
 	field        *reflect.StructField
-	fieldName    string
 	fieldEncoder ValEncoder
 	omitempty    bool
 }
 
 func (encoder *structFieldEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
 	fieldPtr := uintptr(ptr) + encoder.field.Offset
-	stream.WriteObjectField(encoder.fieldName)
 	encoder.fieldEncoder.encode(unsafe.Pointer(fieldPtr), stream)
 	if stream.Error != nil && stream.Error != io.EOF {
 		stream.Error = fmt.Errorf("%s: %s", encoder.field.Name, stream.Error.Error())
@@ -983,19 +977,20 @@ func (encoder *structFieldEncoder) isEmpty(ptr unsafe.Pointer) bool {
 }
 
 type structEncoder struct {
-	fields []*structFieldEncoder
+	fields map[string]*structFieldEncoder
 }
 
 func (encoder *structEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteObjectStart()
 	isNotFirst := false
-	for _, field := range encoder.fields {
+	for fieldName, field := range encoder.fields {
 		if field.omitempty && field.isEmpty(ptr) {
 			continue
 		}
 		if isNotFirst {
 			stream.WriteMore()
 		}
+		stream.WriteObjectField(fieldName)
 		field.encode(ptr, stream)
 		isNotFirst = true
 	}
@@ -1006,17 +1001,23 @@ func (encoder *structEncoder) encodeInterface(val interface{}, stream *Stream) {
 	var encoderToUse ValEncoder
 	encoderToUse = encoder
 	if len(encoder.fields) == 1 {
-		firstEncoder := encoder.fields[0].fieldEncoder
+		var firstField *structFieldEncoder
+		var firstFieldName string
+		for fieldName, field := range encoder.fields {
+			firstFieldName = fieldName
+			firstField = field
+		}
+		firstEncoder := firstField.fieldEncoder
 		firstEncoderName := reflect.TypeOf(firstEncoder).String()
 		// interface{} has inline optimization for this case
 		if firstEncoderName == "*jsoniter.optionalEncoder" {
 			encoderToUse = &structEncoder{
-				fields: []*structFieldEncoder{{
-					field:        encoder.fields[0].field,
-					fieldName:    encoder.fields[0].fieldName,
-					fieldEncoder: firstEncoder.(*optionalEncoder).valueEncoder,
-					omitempty:    encoder.fields[0].omitempty,
-				}},
+				fields: map[string]*structFieldEncoder{
+					firstFieldName: {
+						field:        firstField.field,
+						fieldEncoder: firstEncoder.(*optionalEncoder).valueEncoder,
+						omitempty:    firstField.omitempty,
+					}},
 			}
 		}
 	}

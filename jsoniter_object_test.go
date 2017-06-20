@@ -323,6 +323,79 @@ func Test_decode_anonymous_struct(t *testing.T) {
 	should.Equal("value", outer.Key)
 }
 
+func Test_multiple_level_anonymous_struct(t *testing.T) {
+	type Level1 struct {
+		Field1 string
+	}
+	type Level2 struct {
+		Level1
+		Field2 string
+	}
+	type Level3 struct {
+		Level2
+		Field3 string
+	}
+	should := require.New(t)
+	output, err := MarshalToString(Level3{Level2{Level1{"1"}, "2"}, "3"})
+	should.Nil(err)
+	should.Contains(output, `"Field1":"1"`)
+	should.Contains(output, `"Field2":"2"`)
+	should.Contains(output, `"Field3":"3"`)
+}
+
+func Test_multiple_level_anonymous_struct_with_ptr(t *testing.T) {
+	type Level1 struct {
+		Field1 string
+		Field2 string
+		Field4 string
+	}
+	type Level2 struct {
+		*Level1
+		Field2 string
+		Field3 string
+	}
+	type Level3 struct {
+		*Level2
+		Field3 string
+	}
+	should := require.New(t)
+	output, err := MarshalToString(Level3{&Level2{&Level1{"1", "", "4"}, "2", ""}, "3"})
+	should.Nil(err)
+	should.Contains(output, `"Field1":"1"`)
+	should.Contains(output, `"Field2":"2"`)
+	should.Contains(output, `"Field3":"3"`)
+	should.Contains(output, `"Field4":"4"`)
+}
+
+
+
+func Test_shadow_struct_field(t *testing.T) {
+	should := require.New(t)
+	type omit *struct{}
+	type CacheItem struct {
+		Key    string `json:"key"`
+		MaxAge int    `json:"cacheAge"`
+	}
+	output, err := MarshalToString(struct {
+		*CacheItem
+
+		// Omit bad keys
+		OmitMaxAge omit `json:"cacheAge,omitempty"`
+
+		// Add nice keys
+		MaxAge int    `json:"max_age"`
+	}{
+		CacheItem: &CacheItem{
+			Key:    "value",
+			MaxAge: 100,
+		},
+		MaxAge: 20,
+	})
+	should.Nil(err)
+	should.Contains(output, `"key":"value"`)
+	should.Contains(output, `"max_age":20`)
+}
+
 func Test_decode_nested(t *testing.T) {
 	type StructOfString struct {
 		Field1 string
