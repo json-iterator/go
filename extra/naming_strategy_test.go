@@ -11,13 +11,13 @@ func Test_lower_case_with_underscores(t *testing.T) {
 	should.Equal("hello_world", LowerCaseWithUnderscores("helloWorld"))
 	should.Equal("hello_world", LowerCaseWithUnderscores("HelloWorld"))
 	SetNamingStrategy(LowerCaseWithUnderscores)
-	output, err := jsoniter.MarshalToString(struct {
-		HelloWorld string
+	output, err := jsoniter.Marshal(struct {
+		UserName      string
+		FirstLanguage string
 	}{
-		HelloWorld: "hi",
+		UserName:      "taowen",
+		FirstLanguage: "Chinese",
 	})
 	should.Nil(err)
-	should.Equal(`{"hello_world":"hi"}`, output)
+	should.Equal(`{"user_name":"taowen","first_language":"Chinese"}`, string(output))
 }
-
-

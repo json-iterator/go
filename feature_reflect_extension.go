@@ -222,7 +222,7 @@ func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, err
 			fieldNames := calcFieldNames(field.Name, tagParts[0])
 			fieldCacheKey := fmt.Sprintf("%s/%s", typ.String(), field.Name)
 			decoder := fieldDecoders[fieldCacheKey]
-			if decoder == nil && len(fieldNames) > 0 {
+			if decoder == nil {
 				var err error
 				decoder, err = decoderOfType(cfg, field.Type)
 				if err != nil {
@@ -230,7 +230,7 @@ func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, err
 				}
 			}
 			encoder := fieldEncoders[fieldCacheKey]
-			if encoder == nil && len(fieldNames) > 0 {
+			if encoder == nil {
 				var err error
 				encoder, err = encoderOfType(cfg, field.Type)
 				if err != nil {
@@ -273,11 +273,6 @@ func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, err
 		binding.Encoder = &structFieldEncoder{binding.Field, binding.Encoder, shouldOmitEmpty}
 	}
 	return structDescriptor, nil
-}
-
-func listStructFields(typ reflect.Type) []*reflect.StructField {
-	fields := []*reflect.StructField{}
-	return fields
 }
 
 func calcFieldNames(originalFieldName string, tagProvidedFieldName string) []string {
