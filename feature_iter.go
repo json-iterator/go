@@ -168,7 +168,7 @@ func (iter *Iterator) nextToken() byte {
 	}
 }
 
-func (iter *Iterator) reportError(operation string, msg string) {
+func (iter *Iterator) ReportError(operation string, msg string) {
 	if iter.Error != nil {
 		if iter.Error != io.EOF {
 			return
@@ -238,7 +238,7 @@ func (iter *Iterator) loadMore() bool {
 
 func (iter *Iterator) unreadByte() {
 	if iter.head == 0 {
-		iter.reportError("unreadByte", "unread too many bytes")
+		iter.ReportError("unreadByte", "unread too many bytes")
 		return
 	}
 	iter.head--
@@ -272,7 +272,7 @@ func (iter *Iterator) Read() interface{} {
 		})
 		return obj
 	default:
-		iter.reportError("Read", fmt.Sprintf("unexpected value type: %v", valueType))
+		iter.ReportError("Read", fmt.Sprintf("unexpected value type: %v", valueType))
 		return nil
 	}
 }

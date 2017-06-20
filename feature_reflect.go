@@ -20,16 +20,16 @@ import (
 // 3. assignment to map, both key and value will be reflect.Value
 // For a simple struct binding, it will be reflect.Value free and allocation free
 type ValDecoder interface {
-	decode(ptr unsafe.Pointer, iter *Iterator)
+	Decode(ptr unsafe.Pointer, iter *Iterator)
 }
 
 // ValEncoder is an internal type registered to cache as needed.
 // Don't confuse jsoniter.ValEncoder with json.Encoder.
 // For json.Encoder's adapter, refer to jsoniter.AdapterEncoder(todo godoc link).
 type ValEncoder interface {
-	isEmpty(ptr unsafe.Pointer) bool
-	encode(ptr unsafe.Pointer, stream *Stream)
-	encodeInterface(val interface{}, stream *Stream)
+	IsEmpty(ptr unsafe.Pointer) bool
+	Encode(ptr unsafe.Pointer, stream *Stream)
+	EncodeInterface(val interface{}, stream *Stream)
 }
 
 func writeToStream(val interface{}, stream *Stream, encoder ValEncoder) {
@@ -39,38 +39,14 @@ func writeToStream(val interface{}, stream *Stream, encoder ValEncoder) {
 		return
 	}
 	if reflect.TypeOf(val).Kind() == reflect.Ptr {
-		encoder.encode(unsafe.Pointer(&e.word), stream)
+		encoder.Encode(unsafe.Pointer(&e.word), stream)
 	} else {
-		encoder.encode(e.word, stream)
+		encoder.Encode(e.word, stream)
 	}
 }
 
 type DecoderFunc func(ptr unsafe.Pointer, iter *Iterator)
 type EncoderFunc func(ptr unsafe.Pointer, stream *Stream)
-
-func (decoder *funcDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
-	decoder.fun(ptr, iter)
-}
-
-type funcEncoder struct {
-	fun         EncoderFunc
-	isEmptyFunc func(ptr unsafe.Pointer) bool
-}
-
-func (encoder *funcEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
-	encoder.fun(ptr, stream)
-}
-
-func (encoder *funcEncoder) encodeInterface(val interface{}, stream *Stream) {
-	writeToStream(val, stream, encoder)
-}
-
-func (encoder *funcEncoder) isEmpty(ptr unsafe.Pointer) bool {
-	if encoder.isEmptyFunc == nil {
-		return false
-	}
-	return encoder.isEmptyFunc(ptr)
-}
 
 var jsonNumberType reflect.Type
 var jsonRawMessageType reflect.Type
@@ -95,18 +71,18 @@ type optionalDecoder struct {
 	valueDecoder ValDecoder
 }
 
-func (decoder *optionalDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (decoder *optionalDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	if iter.ReadNil() {
 		*((*unsafe.Pointer)(ptr)) = nil
 	} else {
 		if *((*unsafe.Pointer)(ptr)) == nil {
 			// pointer to null, we have to allocate memory to hold the value
 			value := reflect.New(decoder.valueType)
-			decoder.valueDecoder.decode(unsafe.Pointer(value.Pointer()), iter)
+			decoder.valueDecoder.Decode(unsafe.Pointer(value.Pointer()), iter)
 			*((*uintptr)(ptr)) = value.Pointer()
 		} else {
 			// reuse existing instance
-			decoder.valueDecoder.decode(*((*unsafe.Pointer)(ptr)), iter)
+			decoder.valueDecoder.Decode(*((*unsafe.Pointer)(ptr)), iter)
 		}
 	}
 }
@@ -115,23 +91,23 @@ type optionalEncoder struct {
 	valueEncoder ValEncoder
 }
 
-func (encoder *optionalEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
+func (encoder *optionalEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	if *((*unsafe.Pointer)(ptr)) == nil {
 		stream.WriteNil()
 	} else {
-		encoder.valueEncoder.encode(*((*unsafe.Pointer)(ptr)), stream)
+		encoder.valueEncoder.Encode(*((*unsafe.Pointer)(ptr)), stream)
 	}
 }
 
-func (encoder *optionalEncoder) encodeInterface(val interface{}, stream *Stream) {
+func (encoder *optionalEncoder) EncodeInterface(val interface{}, stream *Stream) {
 	writeToStream(val, stream, encoder)
 }
 
-func (encoder *optionalEncoder) isEmpty(ptr unsafe.Pointer) bool {
+func (encoder *optionalEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	if *((*unsafe.Pointer)(ptr)) == nil {
 		return true
 	} else {
-		return encoder.valueEncoder.isEmpty(*((*unsafe.Pointer)(ptr)))
+		return encoder.valueEncoder.IsEmpty(*((*unsafe.Pointer)(ptr)))
 	}
 }
 
@@ -140,16 +116,16 @@ type placeholderEncoder struct {
 	cacheKey reflect.Type
 }
 
-func (encoder *placeholderEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
-	encoder.getRealEncoder().encode(ptr, stream)
+func (encoder *placeholderEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
+	encoder.getRealEncoder().Encode(ptr, stream)
 }
 
-func (encoder *placeholderEncoder) encodeInterface(val interface{}, stream *Stream) {
+func (encoder *placeholderEncoder) EncodeInterface(val interface{}, stream *Stream) {
 	writeToStream(val, stream, encoder)
 }
 
-func (encoder *placeholderEncoder) isEmpty(ptr unsafe.Pointer) bool {
-	return encoder.getRealEncoder().isEmpty(ptr)
+func (encoder *placeholderEncoder) IsEmpty(ptr unsafe.Pointer) bool {
+	return encoder.getRealEncoder().IsEmpty(ptr)
 }
 
 func (encoder *placeholderEncoder) getRealEncoder() ValEncoder {
@@ -170,14 +146,14 @@ type placeholderDecoder struct {
 	cacheKey reflect.Type
 }
 
-func (decoder *placeholderDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (decoder *placeholderDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	for i := 0; i < 30; i++ {
 		realDecoder := decoder.cfg.getDecoderFromCache(decoder.cacheKey)
 		_, isPlaceholder := realDecoder.(*placeholderDecoder)
 		if isPlaceholder {
 			time.Sleep(time.Second)
 		} else {
-			realDecoder.decode(ptr, iter)
+			realDecoder.Decode(ptr, iter)
 			return
 		}
 	}
@@ -214,7 +190,7 @@ func (iter *Iterator) ReadVal(obj interface{}) {
 		return
 	}
 	e := (*emptyInterface)(unsafe.Pointer(&obj))
-	decoder.decode(e.word, iter)
+	decoder.Decode(e.word, iter)
 }
 
 func (stream *Stream) WriteVal(val interface{}) {
@@ -229,7 +205,7 @@ func (stream *Stream) WriteVal(val interface{}) {
 		stream.Error = err
 		return
 	}
-	encoder.encodeInterface(val, stream)
+	encoder.EncodeInterface(val, stream)
 }
 
 type prefix string

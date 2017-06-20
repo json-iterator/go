@@ -17,7 +17,7 @@ type mapDecoder struct {
 	mapInterface emptyInterface
 }
 
-func (decoder *mapDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (decoder *mapDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	// dark magic to cast unsafe.Pointer back to interface{} using reflect.Type
 	mapInterface := decoder.mapInterface
 	mapInterface.word = ptr
@@ -28,7 +28,7 @@ func (decoder *mapDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 	}
 	iter.ReadMapCB(func(iter *Iterator, keyStr string) bool {
 		elem := reflect.New(decoder.elemType)
-		decoder.elemDecoder.decode(unsafe.Pointer(elem.Pointer()), iter)
+		decoder.elemDecoder.Decode(unsafe.Pointer(elem.Pointer()), iter)
 		// to put into map, we have to use reflection
 		keyType := decoder.keyType
 		switch {
@@ -39,7 +39,7 @@ func (decoder *mapDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 			textUnmarshaler := reflect.New(keyType.Elem()).Interface().(encoding.TextUnmarshaler)
 			err := textUnmarshaler.UnmarshalText([]byte(keyStr))
 			if err != nil {
-				iter.reportError("read map key as TextUnmarshaler", err.Error())
+				iter.ReportError("read map key as TextUnmarshaler", err.Error())
 				return false
 			}
 			realVal.SetMapIndex(reflect.ValueOf(textUnmarshaler), elem.Elem())
@@ -49,7 +49,7 @@ func (decoder *mapDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 				n, err := strconv.ParseInt(keyStr, 10, 64)
 				if err != nil || reflect.Zero(keyType).OverflowInt(n) {
-					iter.reportError("read map key as int64", "read int64 failed")
+					iter.ReportError("read map key as int64", "read int64 failed")
 					return false
 				}
 				realVal.SetMapIndex(reflect.ValueOf(n).Convert(keyType), elem.Elem())
@@ -57,14 +57,14 @@ func (decoder *mapDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 			case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
 				n, err := strconv.ParseUint(keyStr, 10, 64)
 				if err != nil || reflect.Zero(keyType).OverflowUint(n) {
-					iter.reportError("read map key as uint64", "read uint64 failed")
+					iter.ReportError("read map key as uint64", "read uint64 failed")
 					return false
 				}
 				realVal.SetMapIndex(reflect.ValueOf(n).Convert(keyType), elem.Elem())
 				return true
 			}
 		}
-		iter.reportError("read map key", "unexpected map key type "+keyType.String())
+		iter.ReportError("read map key", "unexpected map key type "+keyType.String())
 		return true
 	})
 }
@@ -76,7 +76,7 @@ type mapEncoder struct {
 	mapInterface emptyInterface
 }
 
-func (encoder *mapEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
+func (encoder *mapEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	mapInterface := encoder.mapInterface
 	mapInterface.word = ptr
 	realInterface := (*interface{})(unsafe.Pointer(&mapInterface))
@@ -90,7 +90,7 @@ func (encoder *mapEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
 		encodeMapKey(key, stream)
 		stream.writeByte(':')
 		val := realVal.MapIndex(key).Interface()
-		encoder.elemEncoder.encodeInterface(val, stream)
+		encoder.elemEncoder.EncodeInterface(val, stream)
 	}
 	stream.WriteObjectEnd()
 }
@@ -126,11 +126,11 @@ func encodeMapKey(key reflect.Value, stream *Stream) {
 	stream.Error = &json.UnsupportedTypeError{key.Type()}
 }
 
-func (encoder *mapEncoder) encodeInterface(val interface{}, stream *Stream) {
+func (encoder *mapEncoder) EncodeInterface(val interface{}, stream *Stream) {
 	writeToStream(val, stream, encoder)
 }
 
-func (encoder *mapEncoder) isEmpty(ptr unsafe.Pointer) bool {
+func (encoder *mapEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	mapInterface := encoder.mapInterface
 	mapInterface.word = ptr
 	realInterface := (*interface{})(unsafe.Pointer(&mapInterface))
@@ -145,7 +145,7 @@ type sortKeysMapEncoder struct {
 	mapInterface emptyInterface
 }
 
-func (encoder *sortKeysMapEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
+func (encoder *sortKeysMapEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	mapInterface := encoder.mapInterface
 	mapInterface.word = ptr
 	realInterface := (*interface{})(unsafe.Pointer(&mapInterface))
@@ -163,7 +163,7 @@ func (encoder *sortKeysMapEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
 		encodeMapKey(key, stream)
 		stream.writeByte(':')
 		val := realVal.MapIndex(key).Interface()
-		encoder.elemEncoder.encodeInterface(val, stream)
+		encoder.elemEncoder.EncodeInterface(val, stream)
 	}
 	stream.WriteObjectEnd()
 }
@@ -177,11 +177,11 @@ func (sv stringValues) Swap(i, j int)      { sv[i], sv[j] = sv[j], sv[i] }
 func (sv stringValues) Less(i, j int) bool { return sv.get(i) < sv.get(j) }
 func (sv stringValues) get(i int) string   { return sv[i].String() }
 
-func (encoder *sortKeysMapEncoder) encodeInterface(val interface{}, stream *Stream) {
+func (encoder *sortKeysMapEncoder) EncodeInterface(val interface{}, stream *Stream) {
 	writeToStream(val, stream, encoder)
 }
 
-func (encoder *sortKeysMapEncoder) isEmpty(ptr unsafe.Pointer) bool {
+func (encoder *sortKeysMapEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	mapInterface := encoder.mapInterface
 	mapInterface.word = ptr
 	realInterface := (*interface{})(unsafe.Pointer(&mapInterface))

@@ -59,6 +59,29 @@ func (extension *DummyExtension) CreateEncoder(typ reflect.Type) ValEncoder {
 type funcDecoder struct {
 	fun DecoderFunc
 }
+func (decoder *funcDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
+	decoder.fun(ptr, iter)
+}
+
+type funcEncoder struct {
+	fun         EncoderFunc
+	isEmptyFunc func(ptr unsafe.Pointer) bool
+}
+
+func (encoder *funcEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
+	encoder.fun(ptr, stream)
+}
+
+func (encoder *funcEncoder) EncodeInterface(val interface{}, stream *Stream) {
+	writeToStream(val, stream, encoder)
+}
+
+func (encoder *funcEncoder) IsEmpty(ptr unsafe.Pointer) bool {
+	if encoder.isEmptyFunc == nil {
+		return false
+	}
+	return encoder.isEmptyFunc(ptr)
+}
 
 func RegisterTypeDecoderFunc(typ string, fun DecoderFunc) {
 	typeDecoders[typ] = &funcDecoder{fun}

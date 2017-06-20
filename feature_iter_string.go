@@ -22,7 +22,7 @@ func (iter *Iterator) ReadString() (ret string) {
 		iter.skipFixedBytes(3)
 		return ""
 	}
-	iter.reportError("ReadString", `expects " or n`)
+	iter.ReportError("ReadString", `expects " or n`)
 	return
 }
 
@@ -45,7 +45,7 @@ func (iter *Iterator) readStringSlowPath() (ret string) {
 						return
 					}
 					if c != '\\' {
-						iter.reportError("ReadString",
+						iter.ReportError("ReadString",
 							`expects \u after utf16 surrogate, but \ not found`)
 						return
 					}
@@ -54,7 +54,7 @@ func (iter *Iterator) readStringSlowPath() (ret string) {
 						return
 					}
 					if c != 'u' && c != 'U' {
-						iter.reportError("ReadString",
+						iter.ReportError("ReadString",
 							`expects \u after utf16 surrogate, but \u not found`)
 						return
 					}
@@ -84,7 +84,7 @@ func (iter *Iterator) readStringSlowPath() (ret string) {
 			case 't':
 				str = append(str, '\t')
 			default:
-				iter.reportError("ReadString",
+				iter.ReportError("ReadString",
 					`invalid escape char after \`)
 				return
 			}
@@ -92,7 +92,7 @@ func (iter *Iterator) readStringSlowPath() (ret string) {
 			str = append(str, c)
 		}
 	}
-	iter.reportError("ReadString", "unexpected end of input")
+	iter.ReportError("ReadString", "unexpected end of input")
 	return
 }
 
@@ -122,7 +122,7 @@ func (iter *Iterator) ReadStringAsSlice() (ret []byte) {
 		}
 		return copied
 	}
-	iter.reportError("ReadString", `expects " or n`)
+	iter.ReportError("ReadString", `expects " or n`)
 	return
 }
 
@@ -139,7 +139,7 @@ func (iter *Iterator) readU4() (ret rune) {
 		} else if c >= 'A' && c <= 'F' {
 			ret = ret*16 + rune(c-'A'+10)
 		} else {
-			iter.reportError("readU4", "expects 0~9 or a~f")
+			iter.ReportError("readU4", "expects 0~9 or a~f")
 			return
 		}
 	}

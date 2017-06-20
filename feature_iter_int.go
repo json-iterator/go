@@ -38,14 +38,14 @@ func (iter *Iterator) ReadInt8() (ret int8) {
 	if c == '-' {
 		val := iter.readUint32(iter.readByte())
 		if val > int8Max+1 {
-			iter.reportError("ReadInt8", "overflow: "+strconv.FormatInt(int64(val), 10))
+			iter.ReportError("ReadInt8", "overflow: "+strconv.FormatInt(int64(val), 10))
 			return
 		}
 		return -int8(val)
 	} else {
 		val := iter.readUint32(c)
 		if val > int8Max {
-			iter.reportError("ReadInt8", "overflow: "+strconv.FormatInt(int64(val), 10))
+			iter.ReportError("ReadInt8", "overflow: "+strconv.FormatInt(int64(val), 10))
 			return
 		}
 		return int8(val)
@@ -55,7 +55,7 @@ func (iter *Iterator) ReadInt8() (ret int8) {
 func (iter *Iterator) ReadUint8() (ret uint8) {
 	val := iter.readUint32(iter.nextToken())
 	if val > uint8Max {
-		iter.reportError("ReadUint8", "overflow: "+strconv.FormatInt(int64(val), 10))
+		iter.ReportError("ReadUint8", "overflow: "+strconv.FormatInt(int64(val), 10))
 		return
 	}
 	return uint8(val)
@@ -66,14 +66,14 @@ func (iter *Iterator) ReadInt16() (ret int16) {
 	if c == '-' {
 		val := iter.readUint32(iter.readByte())
 		if val > int16Max+1 {
-			iter.reportError("ReadInt16", "overflow: "+strconv.FormatInt(int64(val), 10))
+			iter.ReportError("ReadInt16", "overflow: "+strconv.FormatInt(int64(val), 10))
 			return
 		}
 		return -int16(val)
 	} else {
 		val := iter.readUint32(c)
 		if val > int16Max {
-			iter.reportError("ReadInt16", "overflow: "+strconv.FormatInt(int64(val), 10))
+			iter.ReportError("ReadInt16", "overflow: "+strconv.FormatInt(int64(val), 10))
 			return
 		}
 		return int16(val)
@@ -83,7 +83,7 @@ func (iter *Iterator) ReadInt16() (ret int16) {
 func (iter *Iterator) ReadUint16() (ret uint16) {
 	val := iter.readUint32(iter.nextToken())
 	if val > uint16Max {
-		iter.reportError("ReadUint16", "overflow: "+strconv.FormatInt(int64(val), 10))
+		iter.ReportError("ReadUint16", "overflow: "+strconv.FormatInt(int64(val), 10))
 		return
 	}
 	return uint16(val)
@@ -94,14 +94,14 @@ func (iter *Iterator) ReadInt32() (ret int32) {
 	if c == '-' {
 		val := iter.readUint32(iter.readByte())
 		if val > int32Max+1 {
-			iter.reportError("ReadInt32", "overflow: "+strconv.FormatInt(int64(val), 10))
+			iter.ReportError("ReadInt32", "overflow: "+strconv.FormatInt(int64(val), 10))
 			return
 		}
 		return -int32(val)
 	} else {
 		val := iter.readUint32(c)
 		if val > int32Max {
-			iter.reportError("ReadInt32", "overflow: "+strconv.FormatInt(int64(val), 10))
+			iter.ReportError("ReadInt32", "overflow: "+strconv.FormatInt(int64(val), 10))
 			return
 		}
 		return int32(val)
@@ -118,7 +118,7 @@ func (iter *Iterator) readUint32(c byte) (ret uint32) {
 		return 0 // single zero
 	}
 	if ind == invalidCharForNumber {
-		iter.reportError("readUint32", "unexpected character: "+string([]byte{byte(ind)}))
+		iter.ReportError("readUint32", "unexpected character: "+string([]byte{byte(ind)}))
 		return
 	}
 	value := uint32(ind)
@@ -185,7 +185,7 @@ func (iter *Iterator) readUint32(c byte) (ret uint32) {
 			if value > uint32SafeToMultiply10 {
 				value2 := (value << 3) + (value << 1) + uint32(ind)
 				if value2 < value {
-					iter.reportError("readUint32", "overflow")
+					iter.ReportError("readUint32", "overflow")
 					return
 				} else {
 					value = value2
@@ -205,14 +205,14 @@ func (iter *Iterator) ReadInt64() (ret int64) {
 	if c == '-' {
 		val := iter.readUint64(iter.readByte())
 		if val > int64Max+1 {
-			iter.reportError("ReadInt64", "overflow: "+strconv.FormatUint(uint64(val), 10))
+			iter.ReportError("ReadInt64", "overflow: "+strconv.FormatUint(uint64(val), 10))
 			return
 		}
 		return -int64(val)
 	} else {
 		val := iter.readUint64(c)
 		if val > int64Max {
-			iter.reportError("ReadInt64", "overflow: "+strconv.FormatUint(uint64(val), 10))
+			iter.ReportError("ReadInt64", "overflow: "+strconv.FormatUint(uint64(val), 10))
 			return
 		}
 		return int64(val)
@@ -229,7 +229,7 @@ func (iter *Iterator) readUint64(c byte) (ret uint64) {
 		return 0 // single zero
 	}
 	if ind == invalidCharForNumber {
-		iter.reportError("readUint64", "unexpected character: "+string([]byte{byte(ind)}))
+		iter.ReportError("readUint64", "unexpected character: "+string([]byte{byte(ind)}))
 		return
 	}
 	value := uint64(ind)
@@ -243,7 +243,7 @@ func (iter *Iterator) readUint64(c byte) (ret uint64) {
 			if value > uint64SafeToMultiple10 {
 				value2 := (value << 3) + (value << 1) + uint64(ind)
 				if value2 < value {
-					iter.reportError("readUint64", "overflow")
+					iter.ReportError("readUint64", "overflow")
 					return
 				} else {
 					value = value2

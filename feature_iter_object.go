@@ -21,14 +21,14 @@ func (iter *Iterator) ReadObject() (ret string) {
 		if c == '}' {
 			return "" // end of object
 		}
-		iter.reportError("ReadObject", `expect " after {`)
+		iter.ReportError("ReadObject", `expect " after {`)
 		return
 	case ',':
 		return string(iter.readObjectFieldAsBytes())
 	case '}':
 		return "" // end of object
 	default:
-		iter.reportError("ReadObject", fmt.Sprintf(`expect { or , or } or n, but found %s`, string([]byte{c})))
+		iter.ReportError("ReadObject", fmt.Sprintf(`expect { or , or } or n, but found %s`, string([]byte{c})))
 		return
 	}
 }
@@ -48,7 +48,7 @@ func (iter *Iterator) readFieldHash() int32 {
 					iter.head = i + 1
 					c = iter.nextToken()
 					if c != ':' {
-						iter.reportError("readFieldHash", `expect :, but found `+string([]byte{c}))
+						iter.ReportError("readFieldHash", `expect :, but found `+string([]byte{c}))
 					}
 					return int32(hash)
 				}
@@ -56,12 +56,12 @@ func (iter *Iterator) readFieldHash() int32 {
 				hash *= 0x1000193
 			}
 			if !iter.loadMore() {
-				iter.reportError("readFieldHash", `incomplete field name`)
+				iter.ReportError("readFieldHash", `incomplete field name`)
 				return 0
 			}
 		}
 	}
-	iter.reportError("readFieldHash", `expect ", but found `+string([]byte{c}))
+	iter.ReportError("readFieldHash", `expect ", but found `+string([]byte{c}))
 	return 0
 }
 
@@ -95,14 +95,14 @@ func (iter *Iterator) ReadObjectCB(callback func(*Iterator, string) bool) bool {
 		if c == '}' {
 			return true
 		}
-		iter.reportError("ReadObjectCB", `expect " after }`)
+		iter.ReportError("ReadObjectCB", `expect " after }`)
 		return false
 	}
 	if c == 'n' {
 		iter.skipFixedBytes(3)
 		return true // null
 	}
-	iter.reportError("ReadObjectCB", `expect { or n`)
+	iter.ReportError("ReadObjectCB", `expect { or n`)
 	return false
 }
 
@@ -114,7 +114,7 @@ func (iter *Iterator) ReadMapCB(callback func(*Iterator, string) bool) bool {
 			iter.unreadByte()
 			field := iter.ReadString()
 			if iter.nextToken() != ':' {
-				iter.reportError("ReadMapCB", "expect : after object field")
+				iter.ReportError("ReadMapCB", "expect : after object field")
 				return false
 			}
 			if !callback(iter, field) {
@@ -123,7 +123,7 @@ func (iter *Iterator) ReadMapCB(callback func(*Iterator, string) bool) bool {
 			for iter.nextToken() == ',' {
 				field = iter.ReadString()
 				if iter.nextToken() != ':' {
-					iter.reportError("ReadMapCB", "expect : after object field")
+					iter.ReportError("ReadMapCB", "expect : after object field")
 					return false
 				}
 				if !callback(iter, field) {
@@ -135,14 +135,14 @@ func (iter *Iterator) ReadMapCB(callback func(*Iterator, string) bool) bool {
 		if c == '}' {
 			return true
 		}
-		iter.reportError("ReadMapCB", `expect " after }`)
+		iter.ReportError("ReadMapCB", `expect " after }`)
 		return false
 	}
 	if c == 'n' {
 		iter.skipFixedBytes(3)
 		return true // null
 	}
-	iter.reportError("ReadMapCB", `expect { or n`)
+	iter.ReportError("ReadMapCB", `expect { or n`)
 	return false
 }
 
@@ -159,7 +159,7 @@ func (iter *Iterator) readObjectStart() bool {
 		iter.skipFixedBytes(3)
 		return false
 	}
-	iter.reportError("readObjectStart", "expect { or n")
+	iter.ReportError("readObjectStart", "expect { or n")
 	return false
 }
 
@@ -175,7 +175,7 @@ func (iter *Iterator) readObjectFieldAsBytes() (ret []byte) {
 		}
 	}
 	if iter.buf[iter.head] != ':' {
-		iter.reportError("readObjectFieldAsBytes", "expect : after object field")
+		iter.ReportError("readObjectFieldAsBytes", "expect : after object field")
 		return
 	}
 	iter.head++

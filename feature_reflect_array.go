@@ -32,18 +32,18 @@ type arrayEncoder struct {
 	elemEncoder ValEncoder
 }
 
-func (encoder *arrayEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
+func (encoder *arrayEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	if ptr == nil {
 		stream.WriteNil()
 		return
 	}
 	stream.WriteArrayStart()
 	elemPtr := uintptr(ptr)
-	encoder.elemEncoder.encode(unsafe.Pointer(elemPtr), stream)
+	encoder.elemEncoder.Encode(unsafe.Pointer(elemPtr), stream)
 	for i := 1; i < encoder.arrayType.Len(); i++ {
 		stream.WriteMore()
 		elemPtr += encoder.elemType.Size()
-		encoder.elemEncoder.encode(unsafe.Pointer(elemPtr), stream)
+		encoder.elemEncoder.Encode(unsafe.Pointer(elemPtr), stream)
 	}
 	stream.WriteArrayEnd()
 	if stream.Error != nil && stream.Error != io.EOF {
@@ -51,11 +51,11 @@ func (encoder *arrayEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
 	}
 }
 
-func (encoder *arrayEncoder) encodeInterface(val interface{}, stream *Stream) {
+func (encoder *arrayEncoder) EncodeInterface(val interface{}, stream *Stream) {
 	writeToStream(val, stream, encoder)
 }
 
-func (encoder *arrayEncoder) isEmpty(ptr unsafe.Pointer) bool {
+func (encoder *arrayEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	return false
 }
 
@@ -65,7 +65,7 @@ type arrayDecoder struct {
 	elemDecoder ValDecoder
 }
 
-func (decoder *arrayDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (decoder *arrayDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	decoder.doDecode(ptr, iter)
 	if iter.Error != nil && iter.Error != io.EOF {
 		iter.Error = fmt.Errorf("%v: %s", decoder.arrayType, iter.Error.Error())
@@ -76,7 +76,7 @@ func (decoder *arrayDecoder) doDecode(ptr unsafe.Pointer, iter *Iterator) {
 	offset := uintptr(0)
 	for ; iter.ReadArray(); offset += decoder.elemType.Size() {
 		if offset < decoder.arrayType.Size() {
-			decoder.elemDecoder.decode(unsafe.Pointer(uintptr(ptr)+offset), iter)
+			decoder.elemDecoder.Decode(unsafe.Pointer(uintptr(ptr)+offset), iter)
 		} else {
 			iter.Skip()
 		}

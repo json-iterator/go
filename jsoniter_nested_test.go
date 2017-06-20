@@ -28,14 +28,14 @@ func Test_nested(t *testing.T) {
 					case "world":
 						l2.World = iter.ReadString()
 					default:
-						iter.reportError("bind l2", "unexpected field: "+l2Field)
+						iter.ReportError("bind l2", "unexpected field: "+l2Field)
 					}
 				}
 				l2Array = append(l2Array, l2)
 			}
 			l1.Hello = l2Array
 		default:
-			iter.reportError("bind l1", "unexpected field: "+l1Field)
+			iter.ReportError("bind l1", "unexpected field: "+l1Field)
 		}
 	}
 	if !reflect.DeepEqual(l1, Level1{

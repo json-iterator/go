@@ -56,7 +56,7 @@ func (iter *Iterator) ReadBigInt() (ret *big.Int) {
 	var success bool
 	ret, success = ret.SetString(str, 10)
 	if !success {
-		iter.reportError("ReadBigInt", "invalid big int")
+		iter.ReportError("ReadBigInt", "invalid big int")
 		return nil
 	}
 	return ret
@@ -147,7 +147,7 @@ load_loop:
 		return
 	}
 	if len(str) == 0 {
-		iter.reportError("readNumberAsString", "invalid number")
+		iter.ReportError("readNumberAsString", "invalid number")
 	}
 	return *(*string)(unsafe.Pointer(&str))
 }

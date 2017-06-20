@@ -32,7 +32,7 @@ type sliceEncoder struct {
 	elemEncoder ValEncoder
 }
 
-func (encoder *sliceEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
+func (encoder *sliceEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	slice := (*sliceHeader)(ptr)
 	if slice.Data == nil {
 		stream.WriteNil()
@@ -44,11 +44,11 @@ func (encoder *sliceEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
 	}
 	stream.WriteArrayStart()
 	elemPtr := uintptr(slice.Data)
-	encoder.elemEncoder.encode(unsafe.Pointer(elemPtr), stream)
+	encoder.elemEncoder.Encode(unsafe.Pointer(elemPtr), stream)
 	for i := 1; i < slice.Len; i++ {
 		stream.WriteMore()
 		elemPtr += encoder.elemType.Size()
-		encoder.elemEncoder.encode(unsafe.Pointer(elemPtr), stream)
+		encoder.elemEncoder.Encode(unsafe.Pointer(elemPtr), stream)
 	}
 	stream.WriteArrayEnd()
 	if stream.Error != nil && stream.Error != io.EOF {
@@ -56,11 +56,11 @@ func (encoder *sliceEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
 	}
 }
 
-func (encoder *sliceEncoder) encodeInterface(val interface{}, stream *Stream) {
+func (encoder *sliceEncoder) EncodeInterface(val interface{}, stream *Stream) {
 	writeToStream(val, stream, encoder)
 }
 
-func (encoder *sliceEncoder) isEmpty(ptr unsafe.Pointer) bool {
+func (encoder *sliceEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	slice := (*sliceHeader)(ptr)
 	return slice.Len == 0
 }
@@ -78,7 +78,7 @@ type sliceHeader struct {
 	Cap  int
 }
 
-func (decoder *sliceDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (decoder *sliceDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	decoder.doDecode(ptr, iter)
 	if iter.Error != nil && iter.Error != io.EOF {
 		iter.Error = fmt.Errorf("%v: %s", decoder.sliceType, iter.Error.Error())
@@ -92,30 +92,30 @@ func (decoder *sliceDecoder) doDecode(ptr unsafe.Pointer, iter *Iterator) {
 		return
 	}
 	offset := uintptr(0)
-	decoder.elemDecoder.decode(unsafe.Pointer(uintptr(slice.Data)+offset), iter)
+	decoder.elemDecoder.Decode(unsafe.Pointer(uintptr(slice.Data)+offset), iter)
 	if !iter.ReadArray() {
 		slice.Len = 1
 		return
 	}
 	offset += decoder.elemType.Size()
-	decoder.elemDecoder.decode(unsafe.Pointer(uintptr(slice.Data)+offset), iter)
+	decoder.elemDecoder.Decode(unsafe.Pointer(uintptr(slice.Data)+offset), iter)
 	if !iter.ReadArray() {
 		slice.Len = 2
 		return
 	}
 	offset += decoder.elemType.Size()
-	decoder.elemDecoder.decode(unsafe.Pointer(uintptr(slice.Data)+offset), iter)
+	decoder.elemDecoder.Decode(unsafe.Pointer(uintptr(slice.Data)+offset), iter)
 	if !iter.ReadArray() {
 		slice.Len = 3
 		return
 	}
 	offset += decoder.elemType.Size()
-	decoder.elemDecoder.decode(unsafe.Pointer(uintptr(slice.Data)+offset), iter)
+	decoder.elemDecoder.Decode(unsafe.Pointer(uintptr(slice.Data)+offset), iter)
 	slice.Len = 4
 	for iter.ReadArray() {
 		growOne(slice, decoder.sliceType, decoder.elemType)
 		offset += decoder.elemType.Size()
-		decoder.elemDecoder.decode(unsafe.Pointer(uintptr(slice.Data)+offset), iter)
+		decoder.elemDecoder.Decode(unsafe.Pointer(uintptr(slice.Data)+offset), iter)
 	}
 }
 

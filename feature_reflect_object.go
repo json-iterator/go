@@ -463,7 +463,7 @@ type generalStructDecoder struct {
 	fields map[string]*structFieldDecoder
 }
 
-func (decoder *generalStructDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (decoder *generalStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	if !iter.readObjectStart() {
 		return
 	}
@@ -473,7 +473,7 @@ func (decoder *generalStructDecoder) decode(ptr unsafe.Pointer, iter *Iterator) 
 	if fieldDecoder == nil {
 		iter.Skip()
 	} else {
-		fieldDecoder.decode(ptr, iter)
+		fieldDecoder.Decode(ptr, iter)
 	}
 	for iter.nextToken() == ',' {
 		fieldBytes = iter.readObjectFieldAsBytes()
@@ -482,7 +482,7 @@ func (decoder *generalStructDecoder) decode(ptr unsafe.Pointer, iter *Iterator) 
 		if fieldDecoder == nil {
 			iter.Skip()
 		} else {
-			fieldDecoder.decode(ptr, iter)
+			fieldDecoder.Decode(ptr, iter)
 		}
 	}
 	if iter.Error != nil && iter.Error != io.EOF {
@@ -494,7 +494,7 @@ type skipDecoder struct {
 	typ reflect.Type
 }
 
-func (decoder *skipDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (decoder *skipDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	iter.Skip()
 	if iter.Error != nil && iter.Error != io.EOF {
 		iter.Error = fmt.Errorf("%v: %s", decoder.typ, iter.Error.Error())
@@ -507,13 +507,13 @@ type oneFieldStructDecoder struct {
 	fieldDecoder *structFieldDecoder
 }
 
-func (decoder *oneFieldStructDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (decoder *oneFieldStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	if !iter.readObjectStart() {
 		return
 	}
 	for {
 		if iter.readFieldHash() == decoder.fieldHash {
-			decoder.fieldDecoder.decode(ptr, iter)
+			decoder.fieldDecoder.Decode(ptr, iter)
 		} else {
 			iter.Skip()
 		}
@@ -534,16 +534,16 @@ type twoFieldsStructDecoder struct {
 	fieldDecoder2 *structFieldDecoder
 }
 
-func (decoder *twoFieldsStructDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (decoder *twoFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	if !iter.readObjectStart() {
 		return
 	}
 	for {
 		switch iter.readFieldHash() {
 		case decoder.fieldHash1:
-			decoder.fieldDecoder1.decode(ptr, iter)
+			decoder.fieldDecoder1.Decode(ptr, iter)
 		case decoder.fieldHash2:
-			decoder.fieldDecoder2.decode(ptr, iter)
+			decoder.fieldDecoder2.Decode(ptr, iter)
 		default:
 			iter.Skip()
 		}
@@ -566,18 +566,18 @@ type threeFieldsStructDecoder struct {
 	fieldDecoder3 *structFieldDecoder
 }
 
-func (decoder *threeFieldsStructDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (decoder *threeFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	if !iter.readObjectStart() {
 		return
 	}
 	for {
 		switch iter.readFieldHash() {
 		case decoder.fieldHash1:
-			decoder.fieldDecoder1.decode(ptr, iter)
+			decoder.fieldDecoder1.Decode(ptr, iter)
 		case decoder.fieldHash2:
-			decoder.fieldDecoder2.decode(ptr, iter)
+			decoder.fieldDecoder2.Decode(ptr, iter)
 		case decoder.fieldHash3:
-			decoder.fieldDecoder3.decode(ptr, iter)
+			decoder.fieldDecoder3.Decode(ptr, iter)
 		default:
 			iter.Skip()
 		}
@@ -602,20 +602,20 @@ type fourFieldsStructDecoder struct {
 	fieldDecoder4 *structFieldDecoder
 }
 
-func (decoder *fourFieldsStructDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (decoder *fourFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	if !iter.readObjectStart() {
 		return
 	}
 	for {
 		switch iter.readFieldHash() {
 		case decoder.fieldHash1:
-			decoder.fieldDecoder1.decode(ptr, iter)
+			decoder.fieldDecoder1.Decode(ptr, iter)
 		case decoder.fieldHash2:
-			decoder.fieldDecoder2.decode(ptr, iter)
+			decoder.fieldDecoder2.Decode(ptr, iter)
 		case decoder.fieldHash3:
-			decoder.fieldDecoder3.decode(ptr, iter)
+			decoder.fieldDecoder3.Decode(ptr, iter)
 		case decoder.fieldHash4:
-			decoder.fieldDecoder4.decode(ptr, iter)
+			decoder.fieldDecoder4.Decode(ptr, iter)
 		default:
 			iter.Skip()
 		}
@@ -642,22 +642,22 @@ type fiveFieldsStructDecoder struct {
 	fieldDecoder5 *structFieldDecoder
 }
 
-func (decoder *fiveFieldsStructDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (decoder *fiveFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	if !iter.readObjectStart() {
 		return
 	}
 	for {
 		switch iter.readFieldHash() {
 		case decoder.fieldHash1:
-			decoder.fieldDecoder1.decode(ptr, iter)
+			decoder.fieldDecoder1.Decode(ptr, iter)
 		case decoder.fieldHash2:
-			decoder.fieldDecoder2.decode(ptr, iter)
+			decoder.fieldDecoder2.Decode(ptr, iter)
 		case decoder.fieldHash3:
-			decoder.fieldDecoder3.decode(ptr, iter)
+			decoder.fieldDecoder3.Decode(ptr, iter)
 		case decoder.fieldHash4:
-			decoder.fieldDecoder4.decode(ptr, iter)
+			decoder.fieldDecoder4.Decode(ptr, iter)
 		case decoder.fieldHash5:
-			decoder.fieldDecoder5.decode(ptr, iter)
+			decoder.fieldDecoder5.Decode(ptr, iter)
 		default:
 			iter.Skip()
 		}
@@ -686,24 +686,24 @@ type sixFieldsStructDecoder struct {
 	fieldDecoder6 *structFieldDecoder
 }
 
-func (decoder *sixFieldsStructDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (decoder *sixFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	if !iter.readObjectStart() {
 		return
 	}
 	for {
 		switch iter.readFieldHash() {
 		case decoder.fieldHash1:
-			decoder.fieldDecoder1.decode(ptr, iter)
+			decoder.fieldDecoder1.Decode(ptr, iter)
 		case decoder.fieldHash2:
-			decoder.fieldDecoder2.decode(ptr, iter)
+			decoder.fieldDecoder2.Decode(ptr, iter)
 		case decoder.fieldHash3:
-			decoder.fieldDecoder3.decode(ptr, iter)
+			decoder.fieldDecoder3.Decode(ptr, iter)
 		case decoder.fieldHash4:
-			decoder.fieldDecoder4.decode(ptr, iter)
+			decoder.fieldDecoder4.Decode(ptr, iter)
 		case decoder.fieldHash5:
-			decoder.fieldDecoder5.decode(ptr, iter)
+			decoder.fieldDecoder5.Decode(ptr, iter)
 		case decoder.fieldHash6:
-			decoder.fieldDecoder6.decode(ptr, iter)
+			decoder.fieldDecoder6.Decode(ptr, iter)
 		default:
 			iter.Skip()
 		}
@@ -734,26 +734,26 @@ type sevenFieldsStructDecoder struct {
 	fieldDecoder7 *structFieldDecoder
 }
 
-func (decoder *sevenFieldsStructDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (decoder *sevenFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	if !iter.readObjectStart() {
 		return
 	}
 	for {
 		switch iter.readFieldHash() {
 		case decoder.fieldHash1:
-			decoder.fieldDecoder1.decode(ptr, iter)
+			decoder.fieldDecoder1.Decode(ptr, iter)
 		case decoder.fieldHash2:
-			decoder.fieldDecoder2.decode(ptr, iter)
+			decoder.fieldDecoder2.Decode(ptr, iter)
 		case decoder.fieldHash3:
-			decoder.fieldDecoder3.decode(ptr, iter)
+			decoder.fieldDecoder3.Decode(ptr, iter)
 		case decoder.fieldHash4:
-			decoder.fieldDecoder4.decode(ptr, iter)
+			decoder.fieldDecoder4.Decode(ptr, iter)
 		case decoder.fieldHash5:
-			decoder.fieldDecoder5.decode(ptr, iter)
+			decoder.fieldDecoder5.Decode(ptr, iter)
 		case decoder.fieldHash6:
-			decoder.fieldDecoder6.decode(ptr, iter)
+			decoder.fieldDecoder6.Decode(ptr, iter)
 		case decoder.fieldHash7:
-			decoder.fieldDecoder7.decode(ptr, iter)
+			decoder.fieldDecoder7.Decode(ptr, iter)
 		default:
 			iter.Skip()
 		}
@@ -786,28 +786,28 @@ type eightFieldsStructDecoder struct {
 	fieldDecoder8 *structFieldDecoder
 }
 
-func (decoder *eightFieldsStructDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (decoder *eightFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	if !iter.readObjectStart() {
 		return
 	}
 	for {
 		switch iter.readFieldHash() {
 		case decoder.fieldHash1:
-			decoder.fieldDecoder1.decode(ptr, iter)
+			decoder.fieldDecoder1.Decode(ptr, iter)
 		case decoder.fieldHash2:
-			decoder.fieldDecoder2.decode(ptr, iter)
+			decoder.fieldDecoder2.Decode(ptr, iter)
 		case decoder.fieldHash3:
-			decoder.fieldDecoder3.decode(ptr, iter)
+			decoder.fieldDecoder3.Decode(ptr, iter)
 		case decoder.fieldHash4:
-			decoder.fieldDecoder4.decode(ptr, iter)
+			decoder.fieldDecoder4.Decode(ptr, iter)
 		case decoder.fieldHash5:
-			decoder.fieldDecoder5.decode(ptr, iter)
+			decoder.fieldDecoder5.Decode(ptr, iter)
 		case decoder.fieldHash6:
-			decoder.fieldDecoder6.decode(ptr, iter)
+			decoder.fieldDecoder6.Decode(ptr, iter)
 		case decoder.fieldHash7:
-			decoder.fieldDecoder7.decode(ptr, iter)
+			decoder.fieldDecoder7.Decode(ptr, iter)
 		case decoder.fieldHash8:
-			decoder.fieldDecoder8.decode(ptr, iter)
+			decoder.fieldDecoder8.Decode(ptr, iter)
 		default:
 			iter.Skip()
 		}
@@ -842,30 +842,30 @@ type nineFieldsStructDecoder struct {
 	fieldDecoder9 *structFieldDecoder
 }
 
-func (decoder *nineFieldsStructDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (decoder *nineFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	if !iter.readObjectStart() {
 		return
 	}
 	for {
 		switch iter.readFieldHash() {
 		case decoder.fieldHash1:
-			decoder.fieldDecoder1.decode(ptr, iter)
+			decoder.fieldDecoder1.Decode(ptr, iter)
 		case decoder.fieldHash2:
-			decoder.fieldDecoder2.decode(ptr, iter)
+			decoder.fieldDecoder2.Decode(ptr, iter)
 		case decoder.fieldHash3:
-			decoder.fieldDecoder3.decode(ptr, iter)
+			decoder.fieldDecoder3.Decode(ptr, iter)
 		case decoder.fieldHash4:
-			decoder.fieldDecoder4.decode(ptr, iter)
+			decoder.fieldDecoder4.Decode(ptr, iter)
 		case decoder.fieldHash5:
-			decoder.fieldDecoder5.decode(ptr, iter)
+			decoder.fieldDecoder5.Decode(ptr, iter)
 		case decoder.fieldHash6:
-			decoder.fieldDecoder6.decode(ptr, iter)
+			decoder.fieldDecoder6.Decode(ptr, iter)
 		case decoder.fieldHash7:
-			decoder.fieldDecoder7.decode(ptr, iter)
+			decoder.fieldDecoder7.Decode(ptr, iter)
 		case decoder.fieldHash8:
-			decoder.fieldDecoder8.decode(ptr, iter)
+			decoder.fieldDecoder8.Decode(ptr, iter)
 		case decoder.fieldHash9:
-			decoder.fieldDecoder9.decode(ptr, iter)
+			decoder.fieldDecoder9.Decode(ptr, iter)
 		default:
 			iter.Skip()
 		}
@@ -902,32 +902,32 @@ type tenFieldsStructDecoder struct {
 	fieldDecoder10 *structFieldDecoder
 }
 
-func (decoder *tenFieldsStructDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (decoder *tenFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	if !iter.readObjectStart() {
 		return
 	}
 	for {
 		switch iter.readFieldHash() {
 		case decoder.fieldHash1:
-			decoder.fieldDecoder1.decode(ptr, iter)
+			decoder.fieldDecoder1.Decode(ptr, iter)
 		case decoder.fieldHash2:
-			decoder.fieldDecoder2.decode(ptr, iter)
+			decoder.fieldDecoder2.Decode(ptr, iter)
 		case decoder.fieldHash3:
-			decoder.fieldDecoder3.decode(ptr, iter)
+			decoder.fieldDecoder3.Decode(ptr, iter)
 		case decoder.fieldHash4:
-			decoder.fieldDecoder4.decode(ptr, iter)
+			decoder.fieldDecoder4.Decode(ptr, iter)
 		case decoder.fieldHash5:
-			decoder.fieldDecoder5.decode(ptr, iter)
+			decoder.fieldDecoder5.Decode(ptr, iter)
 		case decoder.fieldHash6:
-			decoder.fieldDecoder6.decode(ptr, iter)
+			decoder.fieldDecoder6.Decode(ptr, iter)
 		case decoder.fieldHash7:
-			decoder.fieldDecoder7.decode(ptr, iter)
+			decoder.fieldDecoder7.Decode(ptr, iter)
 		case decoder.fieldHash8:
-			decoder.fieldDecoder8.decode(ptr, iter)
+			decoder.fieldDecoder8.Decode(ptr, iter)
 		case decoder.fieldHash9:
-			decoder.fieldDecoder9.decode(ptr, iter)
+			decoder.fieldDecoder9.Decode(ptr, iter)
 		case decoder.fieldHash10:
-			decoder.fieldDecoder10.decode(ptr, iter)
+			decoder.fieldDecoder10.Decode(ptr, iter)
 		default:
 			iter.Skip()
 		}
@@ -945,9 +945,9 @@ type structFieldDecoder struct {
 	fieldDecoder ValDecoder
 }
 
-func (decoder *structFieldDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (decoder *structFieldDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	fieldPtr := uintptr(ptr) + decoder.field.Offset
-	decoder.fieldDecoder.decode(unsafe.Pointer(fieldPtr), iter)
+	decoder.fieldDecoder.Decode(unsafe.Pointer(fieldPtr), iter)
 	if iter.Error != nil && iter.Error != io.EOF {
 		iter.Error = fmt.Errorf("%s: %s", decoder.field.Name, iter.Error.Error())
 	}
@@ -959,45 +959,45 @@ type structFieldEncoder struct {
 	omitempty    bool
 }
 
-func (encoder *structFieldEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
+func (encoder *structFieldEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	fieldPtr := uintptr(ptr) + encoder.field.Offset
-	encoder.fieldEncoder.encode(unsafe.Pointer(fieldPtr), stream)
+	encoder.fieldEncoder.Encode(unsafe.Pointer(fieldPtr), stream)
 	if stream.Error != nil && stream.Error != io.EOF {
 		stream.Error = fmt.Errorf("%s: %s", encoder.field.Name, stream.Error.Error())
 	}
 }
 
-func (encoder *structFieldEncoder) encodeInterface(val interface{}, stream *Stream) {
+func (encoder *structFieldEncoder) EncodeInterface(val interface{}, stream *Stream) {
 	writeToStream(val, stream, encoder)
 }
 
-func (encoder *structFieldEncoder) isEmpty(ptr unsafe.Pointer) bool {
+func (encoder *structFieldEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	fieldPtr := uintptr(ptr) + encoder.field.Offset
-	return encoder.fieldEncoder.isEmpty(unsafe.Pointer(fieldPtr))
+	return encoder.fieldEncoder.IsEmpty(unsafe.Pointer(fieldPtr))
 }
 
 type structEncoder struct {
 	fields map[string]*structFieldEncoder
 }
 
-func (encoder *structEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
+func (encoder *structEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteObjectStart()
 	isNotFirst := false
 	for fieldName, field := range encoder.fields {
-		if field.omitempty && field.isEmpty(ptr) {
+		if field.omitempty && field.IsEmpty(ptr) {
 			continue
 		}
 		if isNotFirst {
 			stream.WriteMore()
 		}
 		stream.WriteObjectField(fieldName)
-		field.encode(ptr, stream)
+		field.Encode(ptr, stream)
 		isNotFirst = true
 	}
 	stream.WriteObjectEnd()
 }
 
-func (encoder *structEncoder) encodeInterface(val interface{}, stream *Stream) {
+func (encoder *structEncoder) EncodeInterface(val interface{}, stream *Stream) {
 	var encoderToUse ValEncoder
 	encoderToUse = encoder
 	if len(encoder.fields) == 1 {
@@ -1024,9 +1024,9 @@ func (encoder *structEncoder) encodeInterface(val interface{}, stream *Stream) {
 	writeToStream(val, stream, encoderToUse)
 }
 
-func (encoder *structEncoder) isEmpty(ptr unsafe.Pointer) bool {
+func (encoder *structEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	for _, field := range encoder.fields {
-		if !field.isEmpty(ptr) {
+		if !field.IsEmpty(ptr) {
 			return false
 		}
 	}
@@ -1036,14 +1036,14 @@ func (encoder *structEncoder) isEmpty(ptr unsafe.Pointer) bool {
 type emptyStructEncoder struct {
 }
 
-func (encoder *emptyStructEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
+func (encoder *emptyStructEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteEmptyObject()
 }
 
-func (encoder *emptyStructEncoder) encodeInterface(val interface{}, stream *Stream) {
+func (encoder *emptyStructEncoder) EncodeInterface(val interface{}, stream *Stream) {
 	writeToStream(val, stream, encoder)
 }
 
-func (encoder *emptyStructEncoder) isEmpty(ptr unsafe.Pointer) bool {
+func (encoder *emptyStructEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	return true
 }

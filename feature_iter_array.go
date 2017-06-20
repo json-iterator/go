@@ -18,7 +18,7 @@ func (iter *Iterator) ReadArray() (ret bool) {
 	case ',':
 		return true
 	default:
-		iter.reportError("ReadArray", "expect [ or , or ] or n, but found: "+string([]byte{c}))
+		iter.ReportError("ReadArray", "expect [ or , or ] or n, but found: "+string([]byte{c}))
 		return
 	}
 }
@@ -45,6 +45,6 @@ func (iter *Iterator) ReadArrayCB(callback func(*Iterator) bool) (ret bool) {
 		iter.skipFixedBytes(3)
 		return true // null
 	}
-	iter.reportError("ReadArrayCB", "expect [ or n, but found: "+string([]byte{c}))
+	iter.ReportError("ReadArrayCB", "expect [ or n, but found: "+string([]byte{c}))
 	return false
 }

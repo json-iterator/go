@@ -25,7 +25,7 @@ func (iter *Iterator) ReadBool() (ret bool) {
 		iter.skipFixedBytes(4)
 		return false
 	}
-	iter.reportError("ReadBool", "expect t or f")
+	iter.ReportError("ReadBool", "expect t or f")
 	return
 }
 
@@ -81,7 +81,7 @@ func (iter *Iterator) Skip() {
 	case '{':
 		iter.skipObject()
 	default:
-		iter.reportError("Skip", fmt.Sprintf("do not know how to skip: %v", c))
+		iter.ReportError("Skip", fmt.Sprintf("do not know how to skip: %v", c))
 		return
 	}
 }
@@ -91,7 +91,7 @@ func (iter *Iterator) skipString() {
 		end, escaped := iter.findStringEnd()
 		if end == -1 {
 			if !iter.loadMore() {
-				iter.reportError("skipString", "incomplete string")
+				iter.ReportError("skipString", "incomplete string")
 				return
 			}
 			if escaped {
@@ -175,7 +175,7 @@ func (iter *Iterator) skipArray() {
 			}
 		}
 		if !iter.loadMore() {
-			iter.reportError("skipObject", "incomplete array")
+			iter.ReportError("skipObject", "incomplete array")
 			return
 		}
 	}
@@ -203,7 +203,7 @@ func (iter *Iterator) skipObject() {
 			}
 		}
 		if !iter.loadMore() {
-			iter.reportError("skipObject", "incomplete object")
+			iter.ReportError("skipObject", "incomplete object")
 			return
 		}
 	}
@@ -231,7 +231,7 @@ func (iter *Iterator) skipFixedBytes(n int) {
 		more := iter.head - iter.tail
 		if !iter.loadMore() {
 			if more > 0 {
-				iter.reportError("skipFixedBytes", "unexpected end")
+				iter.ReportError("skipFixedBytes", "unexpected end")
 			}
 			return
 		}

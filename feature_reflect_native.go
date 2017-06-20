@@ -9,296 +9,296 @@ import (
 type stringCodec struct {
 }
 
-func (codec *stringCodec) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (codec *stringCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	*((*string)(ptr)) = iter.ReadString()
 }
 
-func (codec *stringCodec) encode(ptr unsafe.Pointer, stream *Stream) {
+func (codec *stringCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	str := *((*string)(ptr))
 	stream.WriteString(str)
 }
 
-func (codec *stringCodec) encodeInterface(val interface{}, stream *Stream) {
+func (codec *stringCodec) EncodeInterface(val interface{}, stream *Stream) {
 	writeToStream(val, stream, codec)
 }
 
-func (codec *stringCodec) isEmpty(ptr unsafe.Pointer) bool {
+func (codec *stringCodec) IsEmpty(ptr unsafe.Pointer) bool {
 	return *((*string)(ptr)) == ""
 }
 
 type intCodec struct {
 }
 
-func (codec *intCodec) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (codec *intCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	*((*int)(ptr)) = iter.ReadInt()
 }
 
-func (codec *intCodec) encode(ptr unsafe.Pointer, stream *Stream) {
+func (codec *intCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteInt(*((*int)(ptr)))
 }
 
-func (encoder *intCodec) encodeInterface(val interface{}, stream *Stream) {
+func (encoder *intCodec) EncodeInterface(val interface{}, stream *Stream) {
 	writeToStream(val, stream, encoder)
 }
 
-func (codec *intCodec) isEmpty(ptr unsafe.Pointer) bool {
+func (codec *intCodec) IsEmpty(ptr unsafe.Pointer) bool {
 	return *((*int)(ptr)) == 0
 }
 
 type int8Codec struct {
 }
 
-func (codec *int8Codec) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (codec *int8Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	*((*int8)(ptr)) = iter.ReadInt8()
 }
 
-func (codec *int8Codec) encode(ptr unsafe.Pointer, stream *Stream) {
+func (codec *int8Codec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteInt8(*((*int8)(ptr)))
 }
 
-func (encoder *int8Codec) encodeInterface(val interface{}, stream *Stream) {
+func (encoder *int8Codec) EncodeInterface(val interface{}, stream *Stream) {
 	writeToStream(val, stream, encoder)
 }
 
-func (codec *int8Codec) isEmpty(ptr unsafe.Pointer) bool {
+func (codec *int8Codec) IsEmpty(ptr unsafe.Pointer) bool {
 	return *((*int8)(ptr)) == 0
 }
 
 type int16Codec struct {
 }
 
-func (codec *int16Codec) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (codec *int16Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	*((*int16)(ptr)) = iter.ReadInt16()
 }
 
-func (codec *int16Codec) encode(ptr unsafe.Pointer, stream *Stream) {
+func (codec *int16Codec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteInt16(*((*int16)(ptr)))
 }
 
-func (encoder *int16Codec) encodeInterface(val interface{}, stream *Stream) {
+func (encoder *int16Codec) EncodeInterface(val interface{}, stream *Stream) {
 	writeToStream(val, stream, encoder)
 }
 
-func (codec *int16Codec) isEmpty(ptr unsafe.Pointer) bool {
+func (codec *int16Codec) IsEmpty(ptr unsafe.Pointer) bool {
 	return *((*int16)(ptr)) == 0
 }
 
 type int32Codec struct {
 }
 
-func (codec *int32Codec) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (codec *int32Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	*((*int32)(ptr)) = iter.ReadInt32()
 }
 
-func (codec *int32Codec) encode(ptr unsafe.Pointer, stream *Stream) {
+func (codec *int32Codec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteInt32(*((*int32)(ptr)))
 }
 
-func (encoder *int32Codec) encodeInterface(val interface{}, stream *Stream) {
+func (encoder *int32Codec) EncodeInterface(val interface{}, stream *Stream) {
 	writeToStream(val, stream, encoder)
 }
 
-func (codec *int32Codec) isEmpty(ptr unsafe.Pointer) bool {
+func (codec *int32Codec) IsEmpty(ptr unsafe.Pointer) bool {
 	return *((*int32)(ptr)) == 0
 }
 
 type int64Codec struct {
 }
 
-func (codec *int64Codec) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (codec *int64Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	*((*int64)(ptr)) = iter.ReadInt64()
 }
 
-func (codec *int64Codec) encode(ptr unsafe.Pointer, stream *Stream) {
+func (codec *int64Codec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteInt64(*((*int64)(ptr)))
 }
 
-func (encoder *int64Codec) encodeInterface(val interface{}, stream *Stream) {
+func (encoder *int64Codec) EncodeInterface(val interface{}, stream *Stream) {
 	writeToStream(val, stream, encoder)
 }
 
-func (codec *int64Codec) isEmpty(ptr unsafe.Pointer) bool {
+func (codec *int64Codec) IsEmpty(ptr unsafe.Pointer) bool {
 	return *((*int64)(ptr)) == 0
 }
 
 type uintCodec struct {
 }
 
-func (codec *uintCodec) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (codec *uintCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	*((*uint)(ptr)) = iter.ReadUint()
 }
 
-func (codec *uintCodec) encode(ptr unsafe.Pointer, stream *Stream) {
+func (codec *uintCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteUint(*((*uint)(ptr)))
 }
 
-func (encoder *uintCodec) encodeInterface(val interface{}, stream *Stream) {
+func (encoder *uintCodec) EncodeInterface(val interface{}, stream *Stream) {
 	writeToStream(val, stream, encoder)
 }
 
-func (codec *uintCodec) isEmpty(ptr unsafe.Pointer) bool {
+func (codec *uintCodec) IsEmpty(ptr unsafe.Pointer) bool {
 	return *((*uint)(ptr)) == 0
 }
 
 type uint8Codec struct {
 }
 
-func (codec *uint8Codec) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (codec *uint8Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	*((*uint8)(ptr)) = iter.ReadUint8()
 }
 
-func (codec *uint8Codec) encode(ptr unsafe.Pointer, stream *Stream) {
+func (codec *uint8Codec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteUint8(*((*uint8)(ptr)))
 }
 
-func (encoder *uint8Codec) encodeInterface(val interface{}, stream *Stream) {
+func (encoder *uint8Codec) EncodeInterface(val interface{}, stream *Stream) {
 	writeToStream(val, stream, encoder)
 }
 
-func (codec *uint8Codec) isEmpty(ptr unsafe.Pointer) bool {
+func (codec *uint8Codec) IsEmpty(ptr unsafe.Pointer) bool {
 	return *((*uint8)(ptr)) == 0
 }
 
 type uint16Codec struct {
 }
 
-func (decoder *uint16Codec) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (decoder *uint16Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	*((*uint16)(ptr)) = iter.ReadUint16()
 }
 
-func (codec *uint16Codec) encode(ptr unsafe.Pointer, stream *Stream) {
+func (codec *uint16Codec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteUint16(*((*uint16)(ptr)))
 }
 
-func (encoder *uint16Codec) encodeInterface(val interface{}, stream *Stream) {
+func (encoder *uint16Codec) EncodeInterface(val interface{}, stream *Stream) {
 	writeToStream(val, stream, encoder)
 }
 
-func (codec *uint16Codec) isEmpty(ptr unsafe.Pointer) bool {
+func (codec *uint16Codec) IsEmpty(ptr unsafe.Pointer) bool {
 	return *((*uint16)(ptr)) == 0
 }
 
 type uint32Codec struct {
 }
 
-func (codec *uint32Codec) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (codec *uint32Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	*((*uint32)(ptr)) = iter.ReadUint32()
 }
 
-func (codec *uint32Codec) encode(ptr unsafe.Pointer, stream *Stream) {
+func (codec *uint32Codec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteUint32(*((*uint32)(ptr)))
 }
 
-func (encoder *uint32Codec) encodeInterface(val interface{}, stream *Stream) {
+func (encoder *uint32Codec) EncodeInterface(val interface{}, stream *Stream) {
 	writeToStream(val, stream, encoder)
 }
 
-func (codec *uint32Codec) isEmpty(ptr unsafe.Pointer) bool {
+func (codec *uint32Codec) IsEmpty(ptr unsafe.Pointer) bool {
 	return *((*uint32)(ptr)) == 0
 }
 
 type uint64Codec struct {
 }
 
-func (codec *uint64Codec) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (codec *uint64Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	*((*uint64)(ptr)) = iter.ReadUint64()
 }
 
-func (codec *uint64Codec) encode(ptr unsafe.Pointer, stream *Stream) {
+func (codec *uint64Codec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteUint64(*((*uint64)(ptr)))
 }
 
-func (encoder *uint64Codec) encodeInterface(val interface{}, stream *Stream) {
+func (encoder *uint64Codec) EncodeInterface(val interface{}, stream *Stream) {
 	writeToStream(val, stream, encoder)
 }
 
-func (codec *uint64Codec) isEmpty(ptr unsafe.Pointer) bool {
+func (codec *uint64Codec) IsEmpty(ptr unsafe.Pointer) bool {
 	return *((*uint64)(ptr)) == 0
 }
 
 type float32Codec struct {
 }
 
-func (codec *float32Codec) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (codec *float32Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	*((*float32)(ptr)) = iter.ReadFloat32()
 }
 
-func (codec *float32Codec) encode(ptr unsafe.Pointer, stream *Stream) {
+func (codec *float32Codec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteFloat32(*((*float32)(ptr)))
 }
 
-func (encoder *float32Codec) encodeInterface(val interface{}, stream *Stream) {
+func (encoder *float32Codec) EncodeInterface(val interface{}, stream *Stream) {
 	writeToStream(val, stream, encoder)
 }
 
-func (codec *float32Codec) isEmpty(ptr unsafe.Pointer) bool {
+func (codec *float32Codec) IsEmpty(ptr unsafe.Pointer) bool {
 	return *((*float32)(ptr)) == 0
 }
 
 type float64Codec struct {
 }
 
-func (codec *float64Codec) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (codec *float64Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	*((*float64)(ptr)) = iter.ReadFloat64()
 }
 
-func (codec *float64Codec) encode(ptr unsafe.Pointer, stream *Stream) {
+func (codec *float64Codec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteFloat64(*((*float64)(ptr)))
 }
 
-func (encoder *float64Codec) encodeInterface(val interface{}, stream *Stream) {
+func (encoder *float64Codec) EncodeInterface(val interface{}, stream *Stream) {
 	writeToStream(val, stream, encoder)
 }
 
-func (codec *float64Codec) isEmpty(ptr unsafe.Pointer) bool {
+func (codec *float64Codec) IsEmpty(ptr unsafe.Pointer) bool {
 	return *((*float64)(ptr)) == 0
 }
 
 type boolCodec struct {
 }
 
-func (codec *boolCodec) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (codec *boolCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	*((*bool)(ptr)) = iter.ReadBool()
 }
 
-func (codec *boolCodec) encode(ptr unsafe.Pointer, stream *Stream) {
+func (codec *boolCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteBool(*((*bool)(ptr)))
 }
 
-func (encoder *boolCodec) encodeInterface(val interface{}, stream *Stream) {
+func (encoder *boolCodec) EncodeInterface(val interface{}, stream *Stream) {
 	writeToStream(val, stream, encoder)
 }
 
-func (codec *boolCodec) isEmpty(ptr unsafe.Pointer) bool {
+func (codec *boolCodec) IsEmpty(ptr unsafe.Pointer) bool {
 	return !(*((*bool)(ptr)))
 }
 
 type emptyInterfaceCodec struct {
 }
 
-func (codec *emptyInterfaceCodec) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (codec *emptyInterfaceCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	*((*interface{})(ptr)) = iter.Read()
 }
 
-func (codec *emptyInterfaceCodec) encode(ptr unsafe.Pointer, stream *Stream) {
+func (codec *emptyInterfaceCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteVal(*((*interface{})(ptr)))
 }
 
-func (encoder *emptyInterfaceCodec) encodeInterface(val interface{}, stream *Stream) {
+func (encoder *emptyInterfaceCodec) EncodeInterface(val interface{}, stream *Stream) {
 	stream.WriteVal(val)
 }
 
-func (codec *emptyInterfaceCodec) isEmpty(ptr unsafe.Pointer) bool {
+func (codec *emptyInterfaceCodec) IsEmpty(ptr unsafe.Pointer) bool {
 	return ptr == nil
 }
 
 type nonEmptyInterfaceCodec struct {
 }
 
-func (codec *nonEmptyInterfaceCodec) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (codec *nonEmptyInterfaceCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	nonEmptyInterface := (*nonEmptyInterface)(ptr)
 	if nonEmptyInterface.itab == nil {
-		iter.reportError("read non-empty interface", "do not know which concrete type to decode to")
+		iter.ReportError("read non-empty interface", "do not know which concrete type to decode to")
 		return
 	}
 	var i interface{}
@@ -309,7 +309,7 @@ func (codec *nonEmptyInterfaceCodec) decode(ptr unsafe.Pointer, iter *Iterator) 
 	nonEmptyInterface.word = e.word
 }
 
-func (codec *nonEmptyInterfaceCodec) encode(ptr unsafe.Pointer, stream *Stream) {
+func (codec *nonEmptyInterfaceCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	nonEmptyInterface := (*nonEmptyInterface)(ptr)
 	var i interface{}
 	e := (*emptyInterface)(unsafe.Pointer(&i))
@@ -318,11 +318,11 @@ func (codec *nonEmptyInterfaceCodec) encode(ptr unsafe.Pointer, stream *Stream) 
 	stream.WriteVal(i)
 }
 
-func (encoder *nonEmptyInterfaceCodec) encodeInterface(val interface{}, stream *Stream) {
+func (encoder *nonEmptyInterfaceCodec) EncodeInterface(val interface{}, stream *Stream) {
 	stream.WriteVal(val)
 }
 
-func (codec *nonEmptyInterfaceCodec) isEmpty(ptr unsafe.Pointer) bool {
+func (codec *nonEmptyInterfaceCodec) IsEmpty(ptr unsafe.Pointer) bool {
 	nonEmptyInterface := (*nonEmptyInterface)(ptr)
 	return nonEmptyInterface.word == nil
 }
@@ -330,83 +330,83 @@ func (codec *nonEmptyInterfaceCodec) isEmpty(ptr unsafe.Pointer) bool {
 type anyCodec struct {
 }
 
-func (codec *anyCodec) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (codec *anyCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	*((*Any)(ptr)) = iter.ReadAny()
 }
 
-func (codec *anyCodec) encode(ptr unsafe.Pointer, stream *Stream) {
+func (codec *anyCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	(*((*Any)(ptr))).WriteTo(stream)
 }
 
-func (encoder *anyCodec) encodeInterface(val interface{}, stream *Stream) {
+func (encoder *anyCodec) EncodeInterface(val interface{}, stream *Stream) {
 	(val.(Any)).WriteTo(stream)
 }
 
-func (encoder *anyCodec) isEmpty(ptr unsafe.Pointer) bool {
+func (encoder *anyCodec) IsEmpty(ptr unsafe.Pointer) bool {
 	return (*((*Any)(ptr))).Size() == 0
 }
 
 type jsonNumberCodec struct {
 }
 
-func (codec *jsonNumberCodec) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (codec *jsonNumberCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	*((*json.Number)(ptr)) = json.Number([]byte(iter.readNumberAsString()))
 }
 
-func (codec *jsonNumberCodec) encode(ptr unsafe.Pointer, stream *Stream) {
+func (codec *jsonNumberCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteRaw(string(*((*json.Number)(ptr))))
 }
 
-func (encoder *jsonNumberCodec) encodeInterface(val interface{}, stream *Stream) {
+func (encoder *jsonNumberCodec) EncodeInterface(val interface{}, stream *Stream) {
 	stream.WriteRaw(string(val.(json.Number)))
 }
 
-func (encoder *jsonNumberCodec) isEmpty(ptr unsafe.Pointer) bool {
+func (encoder *jsonNumberCodec) IsEmpty(ptr unsafe.Pointer) bool {
 	return len(*((*json.Number)(ptr))) == 0
 }
 
 type jsonRawMessageCodec struct {
 }
 
-func (codec *jsonRawMessageCodec) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (codec *jsonRawMessageCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	*((*json.RawMessage)(ptr)) = json.RawMessage(iter.SkipAndReturnBytes())
 }
 
-func (codec *jsonRawMessageCodec) encode(ptr unsafe.Pointer, stream *Stream) {
+func (codec *jsonRawMessageCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteRaw(string(*((*json.RawMessage)(ptr))))
 }
 
-func (encoder *jsonRawMessageCodec) encodeInterface(val interface{}, stream *Stream) {
+func (encoder *jsonRawMessageCodec) EncodeInterface(val interface{}, stream *Stream) {
 	stream.WriteRaw(string(val.(json.RawMessage)))
 }
 
-func (encoder *jsonRawMessageCodec) isEmpty(ptr unsafe.Pointer) bool {
+func (encoder *jsonRawMessageCodec) IsEmpty(ptr unsafe.Pointer) bool {
 	return len(*((*json.RawMessage)(ptr))) == 0
 }
 
 type jsoniterRawMessageCodec struct {
 }
 
-func (codec *jsoniterRawMessageCodec) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (codec *jsoniterRawMessageCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	*((*RawMessage)(ptr)) = RawMessage(iter.SkipAndReturnBytes())
 }
 
-func (codec *jsoniterRawMessageCodec) encode(ptr unsafe.Pointer, stream *Stream) {
+func (codec *jsoniterRawMessageCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteRaw(string(*((*RawMessage)(ptr))))
 }
 
-func (encoder *jsoniterRawMessageCodec) encodeInterface(val interface{}, stream *Stream) {
+func (encoder *jsoniterRawMessageCodec) EncodeInterface(val interface{}, stream *Stream) {
 	stream.WriteRaw(string(val.(RawMessage)))
 }
 
-func (encoder *jsoniterRawMessageCodec) isEmpty(ptr unsafe.Pointer) bool {
+func (encoder *jsoniterRawMessageCodec) IsEmpty(ptr unsafe.Pointer) bool {
 	return len(*((*RawMessage)(ptr))) == 0
 }
 
 type base64Codec struct {
 }
 
-func (codec *base64Codec) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (codec *base64Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	encoding := base64.StdEncoding
 	src := iter.SkipAndReturnBytes()
 	src = src[1 : len(src)-1]
@@ -414,13 +414,13 @@ func (codec *base64Codec) decode(ptr unsafe.Pointer, iter *Iterator) {
 	dst := make([]byte, decodedLen)
 	_, err := encoding.Decode(dst, src)
 	if err != nil {
-		iter.reportError("decode base64", err.Error())
+		iter.ReportError("decode base64", err.Error())
 	} else {
 		*((*[]byte)(ptr)) = dst
 	}
 }
 
-func (codec *base64Codec) encode(ptr unsafe.Pointer, stream *Stream) {
+func (codec *base64Codec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	encoding := base64.StdEncoding
 	stream.writeByte('"')
 	src := *((*[]byte)(ptr))
@@ -431,7 +431,7 @@ func (codec *base64Codec) encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.writeByte('"')
 }
 
-func (encoder *base64Codec) encodeInterface(val interface{}, stream *Stream) {
+func (encoder *base64Codec) EncodeInterface(val interface{}, stream *Stream) {
 	encoding := base64.StdEncoding
 	stream.writeByte('"')
 	src := val.([]byte)
@@ -442,7 +442,7 @@ func (encoder *base64Codec) encodeInterface(val interface{}, stream *Stream) {
 	stream.writeByte('"')
 }
 
-func (encoder *base64Codec) isEmpty(ptr unsafe.Pointer) bool {
+func (encoder *base64Codec) IsEmpty(ptr unsafe.Pointer) bool {
 	return len(*((*[]byte)(ptr))) == 0
 }
 
@@ -450,19 +450,19 @@ type stringModeDecoder struct {
 	elemDecoder ValDecoder
 }
 
-func (decoder *stringModeDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (decoder *stringModeDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	c := iter.nextToken()
 	if c != '"' {
-		iter.reportError("stringModeDecoder", `expect "`)
+		iter.ReportError("stringModeDecoder", `expect "`)
 		return
 	}
-	decoder.elemDecoder.decode(ptr, iter)
+	decoder.elemDecoder.Decode(ptr, iter)
 	if iter.Error != nil {
 		return
 	}
 	c = iter.readByte()
 	if c != '"' {
-		iter.reportError("stringModeDecoder", `expect "`)
+		iter.ReportError("stringModeDecoder", `expect "`)
 		return
 	}
 }
@@ -471,25 +471,25 @@ type stringModeEncoder struct {
 	elemEncoder ValEncoder
 }
 
-func (encoder *stringModeEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
+func (encoder *stringModeEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.writeByte('"')
-	encoder.elemEncoder.encode(ptr, stream)
+	encoder.elemEncoder.Encode(ptr, stream)
 	stream.writeByte('"')
 }
 
-func (encoder *stringModeEncoder) encodeInterface(val interface{}, stream *Stream) {
+func (encoder *stringModeEncoder) EncodeInterface(val interface{}, stream *Stream) {
 	writeToStream(val, stream, encoder)
 }
 
-func (encoder *stringModeEncoder) isEmpty(ptr unsafe.Pointer) bool {
-	return encoder.elemEncoder.isEmpty(ptr)
+func (encoder *stringModeEncoder) IsEmpty(ptr unsafe.Pointer) bool {
+	return encoder.elemEncoder.IsEmpty(ptr)
 }
 
 type marshalerEncoder struct {
 	templateInterface emptyInterface
 }
 
-func (encoder *marshalerEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
+func (encoder *marshalerEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	templateInterface := encoder.templateInterface
 	templateInterface.word = ptr
 	realInterface := (*interface{})(unsafe.Pointer(&templateInterface))
@@ -501,11 +501,11 @@ func (encoder *marshalerEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
 		stream.Write(bytes)
 	}
 }
-func (encoder *marshalerEncoder) encodeInterface(val interface{}, stream *Stream) {
+func (encoder *marshalerEncoder) EncodeInterface(val interface{}, stream *Stream) {
 	writeToStream(val, stream, encoder)
 }
 
-func (encoder *marshalerEncoder) isEmpty(ptr unsafe.Pointer) bool {
+func (encoder *marshalerEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	templateInterface := encoder.templateInterface
 	templateInterface.word = ptr
 	realInterface := (*interface{})(unsafe.Pointer(&templateInterface))
@@ -522,7 +522,7 @@ type unmarshalerDecoder struct {
 	templateInterface emptyInterface
 }
 
-func (decoder *unmarshalerDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
+func (decoder *unmarshalerDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	templateInterface := decoder.templateInterface
 	templateInterface.word = ptr
 	realInterface := (*interface{})(unsafe.Pointer(&templateInterface))
@@ -530,6 +530,6 @@ func (decoder *unmarshalerDecoder) decode(ptr unsafe.Pointer, iter *Iterator) {
 	bytes := iter.SkipAndReturnBytes()
 	err := unmarshaler.UnmarshalJSON(bytes)
 	if err != nil {
-		iter.reportError("unmarshaler", err.Error())
+		iter.ReportError("unmarshaler", err.Error())
 	}
 }

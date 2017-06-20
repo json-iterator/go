@@ -91,30 +91,30 @@ func (cfg *frozenConfig) registerExtension(extension Extension) {
 type lossyFloat32Encoder struct {
 }
 
-func (encoder *lossyFloat32Encoder) encode(ptr unsafe.Pointer, stream *Stream) {
+func (encoder *lossyFloat32Encoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteFloat32Lossy(*((*float32)(ptr)))
 }
 
-func (encoder *lossyFloat32Encoder) encodeInterface(val interface{}, stream *Stream) {
+func (encoder *lossyFloat32Encoder) EncodeInterface(val interface{}, stream *Stream) {
 	writeToStream(val, stream, encoder)
 }
 
-func (encoder *lossyFloat32Encoder) isEmpty(ptr unsafe.Pointer) bool {
+func (encoder *lossyFloat32Encoder) IsEmpty(ptr unsafe.Pointer) bool {
 	return *((*float32)(ptr)) == 0
 }
 
 type lossyFloat64Encoder struct {
 }
 
-func (encoder *lossyFloat64Encoder) encode(ptr unsafe.Pointer, stream *Stream) {
+func (encoder *lossyFloat64Encoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteFloat64Lossy(*((*float64)(ptr)))
 }
 
-func (encoder *lossyFloat64Encoder) encodeInterface(val interface{}, stream *Stream) {
+func (encoder *lossyFloat64Encoder) EncodeInterface(val interface{}, stream *Stream) {
 	writeToStream(val, stream, encoder)
 }
 
-func (encoder *lossyFloat64Encoder) isEmpty(ptr unsafe.Pointer) bool {
+func (encoder *lossyFloat64Encoder) IsEmpty(ptr unsafe.Pointer) bool {
 	return *((*float64)(ptr)) == 0
 }
 
@@ -129,16 +129,16 @@ func (cfg *frozenConfig) marshalFloatWith6Digits() {
 type htmlEscapedStringEncoder struct {
 }
 
-func (encoder *htmlEscapedStringEncoder) encode(ptr unsafe.Pointer, stream *Stream) {
+func (encoder *htmlEscapedStringEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	str := *((*string)(ptr))
 	stream.WriteStringWithHtmlEscaped(str)
 }
 
-func (encoder *htmlEscapedStringEncoder) encodeInterface(val interface{}, stream *Stream) {
+func (encoder *htmlEscapedStringEncoder) EncodeInterface(val interface{}, stream *Stream) {
 	writeToStream(val, stream, encoder)
 }
 
-func (encoder *htmlEscapedStringEncoder) isEmpty(ptr unsafe.Pointer) bool {
+func (encoder *htmlEscapedStringEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	return *((*string)(ptr)) == ""
 }
 
@@ -237,7 +237,7 @@ func (cfg *frozenConfig) UnmarshalFromString(str string, v interface{}) error {
 		return nil
 	}
 	if iter.Error == nil {
-		iter.reportError("UnmarshalFromString", "there are bytes left after unmarshal")
+		iter.ReportError("UnmarshalFromString", "there are bytes left after unmarshal")
 	}
 	return iter.Error
 }
@@ -265,7 +265,7 @@ func (cfg *frozenConfig) Unmarshal(data []byte, v interface{}) error {
 		return nil
 	}
 	if iter.Error == nil {
-		iter.reportError("Unmarshal", "there are bytes left after unmarshal")
+		iter.ReportError("Unmarshal", "there are bytes left after unmarshal")
 	}
 	return iter.Error
 }

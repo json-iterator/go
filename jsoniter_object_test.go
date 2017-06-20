@@ -56,7 +56,7 @@ func Test_two_field(t *testing.T) {
 		case "field2":
 			iter.ReadInt64()
 		default:
-			iter.reportError("bind object", "unexpected field")
+			iter.ReportError("bind object", "unexpected field")
 		}
 	}
 }
@@ -204,6 +204,16 @@ func Test_decode_struct_field_with_tag(t *testing.T) {
 	should.Equal("hello", obj.Field1)
 	should.Equal("world", obj.Field2)
 	should.Equal(100, obj.Field3)
+}
+
+func Test_decode_struct_field_with_tag_string(t *testing.T) {
+	should := require.New(t)
+type TestObject struct {
+	Field1 int    `json:",string"`
+}
+	obj := TestObject{Field1: 100}
+	should.Nil(UnmarshalFromString(`{"Field1": "100"}`, &obj))
+	should.Equal(100, obj.Field1)
 }
 
 func Test_write_val_zero_field_struct(t *testing.T) {
