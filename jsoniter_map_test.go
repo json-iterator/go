@@ -68,11 +68,11 @@ func Test_decode_int_key_map(t *testing.T) {
 
 func Test_encode_TextMarshaler_key_map(t *testing.T) {
 	should := require.New(t)
-	f, _, _ := big.ParseFloat("1", 10, 64, big.ToZero)
-	val := map[*big.Float]string{f: "2"}
-	str, err := MarshalToString(val)
+f, _, _ := big.ParseFloat("1", 10, 64, big.ToZero)
+val := map[*big.Float]string{f: "2"}
+str, err := MarshalToString(val)
 	should.Nil(err)
-	should.Equal(`{"1":"2"}`, str)
+should.Equal(`{"1":"2"}`, str)
 }
 
 func Test_decode_TextMarshaler_key_map(t *testing.T) {

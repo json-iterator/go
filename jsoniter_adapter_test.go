@@ -60,3 +60,11 @@ func Test_use_number(t *testing.T) {
 	should.Nil(decoder2.Decode(&obj2))
 	should.Equal(json.Number("123"), obj2)
 }
+
+func Test_use_number_for_unmarshal(t *testing.T) {
+	should := require.New(t)
+	api := Config{UseNumber: true}.Froze()
+	var obj interface{}
+	should.Nil(api.UnmarshalFromString("123", &obj))
+	should.Equal(json.Number("123"), obj)
+}
