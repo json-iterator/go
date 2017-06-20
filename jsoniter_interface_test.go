@@ -86,7 +86,7 @@ func Test_read_interface(t *testing.T) {
 func Test_read_custom_interface(t *testing.T) {
 	should := require.New(t)
 	var val MyInterface
-	RegisterTypeDecoder("jsoniter.MyInterface", func(ptr unsafe.Pointer, iter *Iterator) {
+	RegisterTypeDecoderFunc("jsoniter.MyInterface", func(ptr unsafe.Pointer, iter *Iterator) {
 		*((*MyInterface)(ptr)) = MyString(iter.ReadString())
 	})
 	err := UnmarshalFromString(`"hello"`, &val)

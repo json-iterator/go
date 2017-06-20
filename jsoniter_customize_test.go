@@ -11,7 +11,7 @@ import (
 )
 
 func Test_customize_type_decoder(t *testing.T) {
-	RegisterTypeDecoder("time.Time", func(ptr unsafe.Pointer, iter *Iterator) {
+	RegisterTypeDecoderFunc("time.Time", func(ptr unsafe.Pointer, iter *Iterator) {
 		t, err := time.ParseInLocation("2006-01-02 15:04:05", iter.ReadString(), time.UTC)
 		if err != nil {
 			iter.Error = err
@@ -33,7 +33,7 @@ func Test_customize_type_decoder(t *testing.T) {
 
 func Test_customize_type_encoder(t *testing.T) {
 	should := require.New(t)
-	RegisterTypeEncoder("time.Time", func(ptr unsafe.Pointer, stream *Stream) {
+	RegisterTypeEncoderFunc("time.Time", func(ptr unsafe.Pointer, stream *Stream) {
 		t := *((*time.Time)(ptr))
 		stream.WriteString(t.UTC().Format("2006-01-02 15:04:05"))
 	}, nil)
@@ -47,7 +47,7 @@ func Test_customize_type_encoder(t *testing.T) {
 func Test_customize_byte_array_encoder(t *testing.T) {
 	ConfigDefault.cleanEncoders()
 	should := require.New(t)
-	RegisterTypeEncoder("[]uint8", func(ptr unsafe.Pointer, stream *Stream) {
+	RegisterTypeEncoderFunc("[]uint8", func(ptr unsafe.Pointer, stream *Stream) {
 		t := *((*[]byte)(ptr))
 		stream.WriteString(string(t))
 	}, nil)
@@ -71,7 +71,7 @@ type Tom struct {
 }
 
 func Test_customize_field_decoder(t *testing.T) {
-	RegisterFieldDecoder("jsoniter.Tom", "field1", func(ptr unsafe.Pointer, iter *Iterator) {
+	RegisterFieldDecoderFunc("jsoniter.Tom", "field1", func(ptr unsafe.Pointer, iter *Iterator) {
 		*((*string)(ptr)) = strconv.Itoa(iter.ReadInt())
 	})
 	defer ConfigDefault.cleanDecoders()
@@ -156,7 +156,7 @@ func Test_marshaler_and_encoder(t *testing.T) {
 		Field *ObjectImplementedMarshaler
 	}
 	should := require.New(t)
-	RegisterTypeEncoder("jsoniter.ObjectImplementedMarshaler", func(ptr unsafe.Pointer, stream *Stream) {
+	RegisterTypeEncoderFunc("jsoniter.ObjectImplementedMarshaler", func(ptr unsafe.Pointer, stream *Stream) {
 		stream.WriteString("hello from encoder")
 	}, nil)
 	val := ObjectImplementedMarshaler(100)
@@ -199,7 +199,7 @@ func Test_unmarshaler_and_decoder(t *testing.T) {
 		Field2 string
 	}
 	should := require.New(t)
-	RegisterTypeDecoder("jsoniter.ObjectImplementedUnmarshaler", func(ptr unsafe.Pointer, iter *Iterator) {
+	RegisterTypeDecoderFunc("jsoniter.ObjectImplementedUnmarshaler", func(ptr unsafe.Pointer, iter *Iterator) {
 		*(*ObjectImplementedUnmarshaler)(ptr) = 10
 		iter.Skip()
 	})

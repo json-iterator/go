@@ -47,6 +47,7 @@ func writeToStream(val interface{}, stream *Stream, encoder ValEncoder) {
 
 type DecoderFunc func(ptr unsafe.Pointer, iter *Iterator)
 type EncoderFunc func(ptr unsafe.Pointer, stream *Stream)
+
 type ExtensionFunc func(typ reflect.Type, field *reflect.StructField) ([]string, EncoderFunc, DecoderFunc)
 
 type funcDecoder struct {
@@ -105,25 +106,38 @@ func init() {
 	textUnmarshalerType = reflect.TypeOf((*encoding.TextUnmarshaler)(nil)).Elem()
 }
 
-// RegisterTypeDecoder can register a type for json object
-func RegisterTypeDecoder(typ string, fun DecoderFunc) {
+func RegisterTypeDecoderFunc(typ string, fun DecoderFunc) {
 	typeDecoders[typ] = &funcDecoder{fun}
 }
 
-// RegisterFieldDecoder can register a type for json field
-func RegisterFieldDecoder(typ string, field string, fun DecoderFunc) {
-	fieldDecoders[fmt.Sprintf("%s/%s", typ, field)] = &funcDecoder{fun}
+func RegisterTypeDecoder(typ string, decoder ValDecoder) {
+	typeDecoders[typ] = decoder
 }
 
-func RegisterTypeEncoder(typ string, fun EncoderFunc, isEmptyFunc func(unsafe.Pointer) bool) {
+func RegisterFieldDecoderFunc(typ string, field string, fun DecoderFunc) {
+	RegisterFieldDecoder(typ, field, &funcDecoder{fun})
+}
+
+func RegisterFieldDecoder(typ string, field string, decoder ValDecoder) {
+	fieldDecoders[fmt.Sprintf("%s/%s", typ, field)] = decoder
+}
+
+func RegisterTypeEncoderFunc(typ string, fun EncoderFunc, isEmptyFunc func(unsafe.Pointer) bool) {
 	typeEncoders[typ] = &funcEncoder{fun, isEmptyFunc}
 }
 
-func RegisterFieldEncoder(typ string, field string, fun EncoderFunc, isEmptyFunc func(unsafe.Pointer) bool) {
-	fieldEncoders[fmt.Sprintf("%s/%s", typ, field)] = &funcEncoder{fun, isEmptyFunc}
+func RegisterTypeEncoder(typ string, encoder ValEncoder) {
+	typeEncoders[typ] = encoder
 }
 
-// RegisterExtension can register a custom extension
+func RegisterFieldEncoderFunc(typ string, field string, fun EncoderFunc, isEmptyFunc func(unsafe.Pointer) bool) {
+	RegisterFieldEncoder(typ, field, &funcEncoder{fun, isEmptyFunc})
+}
+
+func RegisterFieldEncoder(typ string, field string, encoder ValEncoder) {
+	fieldEncoders[fmt.Sprintf("%s/%s", typ, field)] = encoder
+}
+
 func RegisterExtension(extension ExtensionFunc) {
 	extensions = append(extensions, extension)
 }
