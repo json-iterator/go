@@ -1,10 +1,10 @@
 package extra
 
 import (
+	"github.com/json-iterator/go"
+	"github.com/json-iterator/go/require"
 	"testing"
 	"time"
-	"github.com/json-iterator/go/require"
-	"github.com/json-iterator/go"
 )
 
 func Test_time_as_int64(t *testing.T) {

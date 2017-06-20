@@ -1,9 +1,9 @@
 package extra
 
 import (
-	"testing"
 	"github.com/json-iterator/go"
 	"github.com/json-iterator/go/require"
+	"testing"
 )
 
 func init() {

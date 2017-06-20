@@ -1,8 +1,8 @@
 package jsoniter
 
 import (
-	"strconv"
 	"math"
+	"strconv"
 )
 
 var intDigits []int8

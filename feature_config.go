@@ -10,11 +10,11 @@ import (
 )
 
 type Config struct {
-	IndentionStep                 int
-	MarshalFloatWith6Digits       bool
-	EscapeHtml                    bool
-	SortMapKeys                   bool
-	UseNumber                     bool
+	IndentionStep           int
+	MarshalFloatWith6Digits bool
+	EscapeHtml              bool
+	SortMapKeys             bool
+	UseNumber               bool
 }
 
 type frozenConfig struct {

@@ -1,11 +1,11 @@
 package jsoniter
 
 import (
-	"reflect"
 	"fmt"
-	"unsafe"
+	"reflect"
 	"strings"
 	"unicode"
+	"unsafe"
 )
 
 var typeDecoders = map[string]ValDecoder{}
@@ -192,6 +192,7 @@ func _getTypeEncoderFromExtension(typ reflect.Type) ValEncoder {
 }
 
 func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, error) {
+	anonymousBindings := []*Binding{}
 	bindings := []*Binding{}
 	for i := 0; i < typ.NumField(); i++ {
 		field := typ.Field(i)
@@ -202,7 +203,7 @@ func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, err
 					return nil, err
 				}
 				for _, binding := range structDescriptor.Fields {
-					bindings = append(bindings, binding)
+					anonymousBindings = append(anonymousBindings, binding)
 				}
 			} else if field.Type.Kind() == reflect.Ptr && field.Type.Elem().Kind() == reflect.Struct {
 				structDescriptor, err := describeStruct(cfg, field.Type.Elem())
@@ -214,7 +215,7 @@ func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, err
 					binding.Encoder = &structFieldEncoder{&field, binding.Encoder, false}
 					binding.Decoder = &optionalDecoder{field.Type, binding.Decoder}
 					binding.Decoder = &structFieldDecoder{&field, binding.Decoder}
-					bindings = append(bindings, binding)
+					anonymousBindings = append(anonymousBindings, binding)
 				}
 			}
 		} else {
@@ -272,6 +273,8 @@ func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, err
 		binding.Decoder = &structFieldDecoder{binding.Field, binding.Decoder}
 		binding.Encoder = &structFieldEncoder{binding.Field, binding.Encoder, shouldOmitEmpty}
 	}
+	// insert anonymous bindings to the head
+	structDescriptor.Fields = append(anonymousBindings, structDescriptor.Fields...)
 	return structDescriptor, nil
 }
 

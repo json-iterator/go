@@ -1,12 +1,12 @@
 package extra
 
 import (
-	"github.com/json-iterator/go"
-	"unsafe"
 	"encoding/json"
-	"strings"
+	"github.com/json-iterator/go"
 	"math"
 	"reflect"
+	"strings"
+	"unsafe"
 )
 
 const MaxUint = ^uint(0)

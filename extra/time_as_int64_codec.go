@@ -2,8 +2,8 @@ package extra
 
 import (
 	"github.com/json-iterator/go"
-	"unsafe"
 	"time"
+	"unsafe"
 )
 
 // keep epoch milliseconds
@@ -15,6 +15,7 @@ func RegisterTimeAsInt64Codec(precision time.Duration) {
 type timeAsInt64Codec struct {
 	precision time.Duration
 }
+
 func (codec *timeAsInt64Codec) Decode(ptr unsafe.Pointer, iter *jsoniter.Iterator) {
 	nanoseconds := iter.ReadInt64() * codec.precision.Nanoseconds()
 	*((*time.Time)(ptr)) = time.Unix(0, nanoseconds)
