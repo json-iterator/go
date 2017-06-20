@@ -44,3 +44,10 @@ func Test_int_to_int(t *testing.T) {
 	should.Nil(jsoniter.UnmarshalFromString(`100`, &val))
 	should.Equal(100, val)
 }
+
+func Test_float_to_int(t *testing.T) {
+	should := require.New(t)
+	var val int
+	should.Nil(jsoniter.UnmarshalFromString(`1.23`, &val))
+	should.Equal(1, val)
+}

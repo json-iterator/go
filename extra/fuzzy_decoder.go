@@ -43,5 +43,5 @@ func (decoder *FuzzyIntDecoder) Decode(ptr unsafe.Pointer, iter *jsoniter.Iterat
 	default:
 		iter.ReportError("FuzzyIntDecoder", "not number or string")
 	}
-	*((*int)(ptr)) = iter.ReadInt()
+	*((*int)(ptr)) = int(iter.ReadFloat64())
 }
