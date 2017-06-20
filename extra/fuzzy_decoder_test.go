@@ -51,3 +51,9 @@ func Test_float_to_int(t *testing.T) {
 	should.Nil(jsoniter.UnmarshalFromString(`1.23`, &val))
 	should.Equal(1, val)
 }
+
+func Test_large_float_to_int(t *testing.T) {
+	should := require.New(t)
+	var val int
+	should.NotNil(jsoniter.UnmarshalFromString(`1234512345123451234512345.0`, &val))
+}
