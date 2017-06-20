@@ -35,8 +35,8 @@ type Api interface {
 	UnmarshalFromString(str string, v interface{}) error
 	Unmarshal(data []byte, v interface{}) error
 	Get(data []byte, path ...interface{}) Any
-	NewEncoder(writer io.Writer) *AdaptedEncoder
-	NewDecoder(reader io.Reader) *AdaptedDecoder
+	NewEncoder(writer io.Writer) *Encoder
+	NewDecoder(reader io.Reader) *Decoder
 }
 
 var ConfigDefault = Config{
@@ -281,12 +281,12 @@ func (cfg *frozenConfig) Unmarshal(data []byte, v interface{}) error {
 	return iter.Error
 }
 
-func (cfg *frozenConfig) NewEncoder(writer io.Writer) *AdaptedEncoder {
+func (cfg *frozenConfig) NewEncoder(writer io.Writer) *Encoder {
 	stream := NewStream(cfg, writer, 512)
-	return &AdaptedEncoder{stream}
+	return &Encoder{stream}
 }
 
-func (cfg *frozenConfig) NewDecoder(reader io.Reader) *AdaptedDecoder {
+func (cfg *frozenConfig) NewDecoder(reader io.Reader) *Decoder {
 	iter := Parse(cfg, reader, 512)
-	return &AdaptedDecoder{iter}
+	return &Decoder{iter}
 }

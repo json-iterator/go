@@ -59,19 +59,19 @@ func MarshalToString(v interface{}) (string, error) {
 //
 // NewDecoder returns a new decoder that reads from r.
 //
-// Instead of a json/encoding Decoder, an AdaptedDecoder is returned
+// Instead of a json/encoding Decoder, an Decoder is returned
 // Refer to https://godoc.org/encoding/json#NewDecoder for more information
-func NewDecoder(reader io.Reader) *AdaptedDecoder {
+func NewDecoder(reader io.Reader) *Decoder {
 	return ConfigDefault.NewDecoder(reader)
 }
 
-// AdaptedDecoder reads and decodes JSON values from an input stream.
-// AdaptedDecoder provides identical APIs with json/stream Decoder (Token() and UseNumber() are in progress)
-type AdaptedDecoder struct {
+// Decoder reads and decodes JSON values from an input stream.
+// Decoder provides identical APIs with json/stream Decoder (Token() and UseNumber() are in progress)
+type Decoder struct {
 	iter *Iterator
 }
 
-func (adapter *AdaptedDecoder) Decode(obj interface{}) error {
+func (adapter *Decoder) Decode(obj interface{}) error {
 	adapter.iter.ReadVal(obj)
 	err := adapter.iter.Error
 	if err == io.EOF {
@@ -80,40 +80,40 @@ func (adapter *AdaptedDecoder) Decode(obj interface{}) error {
 	return adapter.iter.Error
 }
 
-func (adapter *AdaptedDecoder) More() bool {
+func (adapter *Decoder) More() bool {
 	return adapter.iter.head != adapter.iter.tail
 }
 
-func (adapter *AdaptedDecoder) Buffered() io.Reader {
+func (adapter *Decoder) Buffered() io.Reader {
 	remaining := adapter.iter.buf[adapter.iter.head:adapter.iter.tail]
 	return bytes.NewReader(remaining)
 }
 
-func (decoder *AdaptedDecoder) UseNumber() {
+func (decoder *Decoder) UseNumber() {
 	origCfg := decoder.iter.cfg.configBeforeFrozen
 	origCfg.UseNumber = true
 	decoder.iter.cfg = origCfg.Froze()
 }
 
-func NewEncoder(writer io.Writer) *AdaptedEncoder {
+func NewEncoder(writer io.Writer) *Encoder {
 	return ConfigDefault.NewEncoder(writer)
 }
 
-type AdaptedEncoder struct {
+type Encoder struct {
 	stream *Stream
 }
 
-func (adapter *AdaptedEncoder) Encode(val interface{}) error {
+func (adapter *Encoder) Encode(val interface{}) error {
 	adapter.stream.WriteVal(val)
 	adapter.stream.Flush()
 	return adapter.stream.Error
 }
 
-func (adapter *AdaptedEncoder) SetIndent(prefix, indent string) {
+func (adapter *Encoder) SetIndent(prefix, indent string) {
 	adapter.stream.cfg.indentionStep = len(indent)
 }
 
-func (adapter *AdaptedEncoder) SetEscapeHTML(escapeHtml bool) {
+func (adapter *Encoder) SetEscapeHTML(escapeHtml bool) {
 	config := adapter.stream.cfg.configBeforeFrozen
 	config.EscapeHtml = escapeHtml
 	adapter.stream.cfg = config.Froze()
