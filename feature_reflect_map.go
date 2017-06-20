@@ -127,7 +127,7 @@ func encodeMapKey(key reflect.Value, stream *Stream) {
 }
 
 func (encoder *mapEncoder) EncodeInterface(val interface{}, stream *Stream) {
-	writeToStream(val, stream, encoder)
+	WriteToStream(val, stream, encoder)
 }
 
 func (encoder *mapEncoder) IsEmpty(ptr unsafe.Pointer) bool {
@@ -178,7 +178,7 @@ func (sv stringValues) Less(i, j int) bool { return sv.get(i) < sv.get(j) }
 func (sv stringValues) get(i int) string   { return sv[i].String() }
 
 func (encoder *sortKeysMapEncoder) EncodeInterface(val interface{}, stream *Stream) {
-	writeToStream(val, stream, encoder)
+	WriteToStream(val, stream, encoder)
 }
 
 func (encoder *sortKeysMapEncoder) IsEmpty(ptr unsafe.Pointer) bool {

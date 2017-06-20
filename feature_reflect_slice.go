@@ -57,7 +57,7 @@ func (encoder *sliceEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 }
 
 func (encoder *sliceEncoder) EncodeInterface(val interface{}, stream *Stream) {
-	writeToStream(val, stream, encoder)
+	WriteToStream(val, stream, encoder)
 }
 
 func (encoder *sliceEncoder) IsEmpty(ptr unsafe.Pointer) bool {

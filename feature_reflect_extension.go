@@ -84,7 +84,7 @@ func (encoder *funcEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 }
 
 func (encoder *funcEncoder) EncodeInterface(val interface{}, stream *Stream) {
-	writeToStream(val, stream, encoder)
+	WriteToStream(val, stream, encoder)
 }
 
 func (encoder *funcEncoder) IsEmpty(ptr unsafe.Pointer) bool {

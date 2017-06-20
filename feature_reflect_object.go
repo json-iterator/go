@@ -968,7 +968,7 @@ func (encoder *structFieldEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 }
 
 func (encoder *structFieldEncoder) EncodeInterface(val interface{}, stream *Stream) {
-	writeToStream(val, stream, encoder)
+	WriteToStream(val, stream, encoder)
 }
 
 func (encoder *structFieldEncoder) IsEmpty(ptr unsafe.Pointer) bool {
@@ -1021,7 +1021,7 @@ func (encoder *structEncoder) EncodeInterface(val interface{}, stream *Stream) {
 			}
 		}
 	}
-	writeToStream(val, stream, encoderToUse)
+	WriteToStream(val, stream, encoderToUse)
 }
 
 func (encoder *structEncoder) IsEmpty(ptr unsafe.Pointer) bool {
@@ -1041,7 +1041,7 @@ func (encoder *emptyStructEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 }
 
 func (encoder *emptyStructEncoder) EncodeInterface(val interface{}, stream *Stream) {
-	writeToStream(val, stream, encoder)
+	WriteToStream(val, stream, encoder)
 }
 
 func (encoder *emptyStructEncoder) IsEmpty(ptr unsafe.Pointer) bool {

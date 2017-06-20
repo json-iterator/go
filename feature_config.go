@@ -96,7 +96,7 @@ func (encoder *lossyFloat32Encoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 }
 
 func (encoder *lossyFloat32Encoder) EncodeInterface(val interface{}, stream *Stream) {
-	writeToStream(val, stream, encoder)
+	WriteToStream(val, stream, encoder)
 }
 
 func (encoder *lossyFloat32Encoder) IsEmpty(ptr unsafe.Pointer) bool {
@@ -111,7 +111,7 @@ func (encoder *lossyFloat64Encoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 }
 
 func (encoder *lossyFloat64Encoder) EncodeInterface(val interface{}, stream *Stream) {
-	writeToStream(val, stream, encoder)
+	WriteToStream(val, stream, encoder)
 }
 
 func (encoder *lossyFloat64Encoder) IsEmpty(ptr unsafe.Pointer) bool {
@@ -135,7 +135,7 @@ func (encoder *htmlEscapedStringEncoder) Encode(ptr unsafe.Pointer, stream *Stre
 }
 
 func (encoder *htmlEscapedStringEncoder) EncodeInterface(val interface{}, stream *Stream) {
-	writeToStream(val, stream, encoder)
+	WriteToStream(val, stream, encoder)
 }
 
 func (encoder *htmlEscapedStringEncoder) IsEmpty(ptr unsafe.Pointer) bool {

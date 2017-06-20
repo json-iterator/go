@@ -52,7 +52,7 @@ func (encoder *arrayEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 }
 
 func (encoder *arrayEncoder) EncodeInterface(val interface{}, stream *Stream) {
-	writeToStream(val, stream, encoder)
+	WriteToStream(val, stream, encoder)
 }
 
 func (encoder *arrayEncoder) IsEmpty(ptr unsafe.Pointer) bool {

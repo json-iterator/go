@@ -32,7 +32,7 @@ type ValEncoder interface {
 	EncodeInterface(val interface{}, stream *Stream)
 }
 
-func writeToStream(val interface{}, stream *Stream, encoder ValEncoder) {
+func WriteToStream(val interface{}, stream *Stream, encoder ValEncoder) {
 	e := (*emptyInterface)(unsafe.Pointer(&val))
 	if e.word == nil {
 		stream.WriteNil()
@@ -100,7 +100,7 @@ func (encoder *optionalEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 }
 
 func (encoder *optionalEncoder) EncodeInterface(val interface{}, stream *Stream) {
-	writeToStream(val, stream, encoder)
+	WriteToStream(val, stream, encoder)
 }
 
 func (encoder *optionalEncoder) IsEmpty(ptr unsafe.Pointer) bool {
@@ -121,7 +121,7 @@ func (encoder *placeholderEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 }
 
 func (encoder *placeholderEncoder) EncodeInterface(val interface{}, stream *Stream) {
-	writeToStream(val, stream, encoder)
+	WriteToStream(val, stream, encoder)
 }
 
 func (encoder *placeholderEncoder) IsEmpty(ptr unsafe.Pointer) bool {

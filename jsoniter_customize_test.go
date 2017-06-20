@@ -139,18 +139,18 @@ func Test_customize_field_by_extension(t *testing.T) {
 
 type timeImplementedMarshaler time.Time
 
-func (obj *timeImplementedMarshaler) MarshalJSON() ([]byte, error) {
-	seconds := time.Time(*obj).Unix()
+func (obj timeImplementedMarshaler) MarshalJSON() ([]byte, error) {
+	seconds := time.Time(obj).Unix()
 	return []byte(strconv.FormatInt(seconds, 10)), nil
 }
 
 func Test_marshaler(t *testing.T) {
 	type TestObject struct {
-		Field *timeImplementedMarshaler
+		Field timeImplementedMarshaler
 	}
 	should := require.New(t)
 	val := timeImplementedMarshaler(time.Unix(123, 0))
-	obj := TestObject{&val}
+	obj := TestObject{val}
 	bytes, err := json.Marshal(obj)
 	should.Nil(err)
 	should.Equal(`{"Field":123}`, string(bytes))
