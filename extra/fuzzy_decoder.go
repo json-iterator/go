@@ -15,6 +15,7 @@ const MinInt = -MaxInt - 1
 func RegisterFuzzyDecoders() {
 	jsoniter.RegisterTypeDecoder("string", &FuzzyStringDecoder{})
 	jsoniter.RegisterTypeDecoder("float32", &FuzzyFloat32Decoder{})
+	jsoniter.RegisterTypeDecoder("float64", &FuzzyFloat64Decoder{})
 	jsoniter.RegisterTypeDecoder("int", &FuzzyIntegerDecoder{func(isFloat bool, ptr unsafe.Pointer, iter *jsoniter.Iterator) {
 		if isFloat {
 			val := iter.ReadFloat64()
@@ -194,6 +195,28 @@ func (decoder *FuzzyFloat32Decoder) Decode(ptr unsafe.Pointer, iter *jsoniter.It
 		newIter := iter.Config().BorrowIterator([]byte(str))
 		defer iter.Config().ReturnIterator(newIter)
 		*((*float32)(ptr)) = newIter.ReadFloat32()
+		if newIter.Error != nil {
+			iter.Error = newIter.Error
+		}
+	default:
+		iter.ReportError("FuzzyFloat32Decoder", "not number or string")
+	}
+}
+
+type FuzzyFloat64Decoder struct {
+}
+
+func (decoder *FuzzyFloat64Decoder) Decode(ptr unsafe.Pointer, iter *jsoniter.Iterator) {
+	valueType := iter.WhatIsNext()
+	var str string
+	switch valueType {
+	case jsoniter.Number:
+		*((*float64)(ptr)) = iter.ReadFloat64()
+	case jsoniter.String:
+		str = iter.ReadString()
+		newIter := iter.Config().BorrowIterator([]byte(str))
+		defer iter.Config().ReturnIterator(newIter)
+		*((*float64)(ptr)) = newIter.ReadFloat64()
 		if newIter.Error != nil {
 			iter.Error = newIter.Error
 		}

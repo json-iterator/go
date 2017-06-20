@@ -71,3 +71,17 @@ func Test_float_to_float32(t *testing.T) {
 	should.Nil(jsoniter.UnmarshalFromString(`1.23`, &val))
 	should.Equal(float32(1.23), val)
 }
+
+func Test_string_to_float64(t *testing.T) {
+	should := require.New(t)
+	var val float64
+	should.Nil(jsoniter.UnmarshalFromString(`"100"`, &val))
+	should.Equal(float64(100), val)
+}
+
+func Test_float_to_float64(t *testing.T) {
+	should := require.New(t)
+	var val float64
+	should.Nil(jsoniter.UnmarshalFromString(`1.23`, &val))
+	should.Equal(float64(1.23), val)
+}
