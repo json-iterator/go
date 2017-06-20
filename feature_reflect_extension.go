@@ -248,17 +248,6 @@ func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, err
 				Decoder:   decoder,
 				Encoder:   encoder,
 			}
-			shouldOmitEmpty := false
-			for _, tagPart := range tagParts[1:] {
-				if tagPart == "omitempty" {
-					shouldOmitEmpty = true
-				} else if tagPart == "string" {
-					binding.Decoder = &stringModeDecoder{binding.Decoder}
-					binding.Encoder = &stringModeEncoder{binding.Encoder}
-				}
-			}
-			binding.Decoder = &structFieldDecoder{&field, binding.Decoder}
-			binding.Encoder = &structFieldEncoder{&field, binding.Encoder, shouldOmitEmpty}
 			bindings = append(bindings, binding)
 		}
 	}
@@ -268,6 +257,20 @@ func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, err
 	}
 	for _, extension := range extensions {
 		extension.UpdateStructDescriptor(structDescriptor)
+	}
+	for _, binding := range structDescriptor.Fields {
+		shouldOmitEmpty := false
+		tagParts := strings.Split(binding.Field.Tag.Get("json"), ",")
+		for _, tagPart := range tagParts[1:] {
+			if tagPart == "omitempty" {
+				shouldOmitEmpty = true
+			} else if tagPart == "string" {
+				binding.Decoder = &stringModeDecoder{binding.Decoder}
+				binding.Encoder = &stringModeEncoder{binding.Encoder}
+			}
+		}
+		binding.Decoder = &structFieldDecoder{binding.Field, binding.Decoder}
+		binding.Encoder = &structFieldEncoder{binding.Field, binding.Encoder, shouldOmitEmpty}
 	}
 	return structDescriptor, nil
 }

@@ -137,41 +137,42 @@ func Test_customize_field_by_extension(t *testing.T) {
 //	should.Contains(str, `"field-2":"abc"`)
 //}
 
-type ObjectImplementedMarshaler int
+type timeImplementedMarshaler time.Time
 
-func (obj *ObjectImplementedMarshaler) MarshalJSON() ([]byte, error) {
-	return []byte(`"hello"`), nil
+func (obj *timeImplementedMarshaler) MarshalJSON() ([]byte, error) {
+	seconds := time.Time(*obj).Unix()
+	return []byte(strconv.FormatInt(seconds, 10)), nil
 }
 
 func Test_marshaler(t *testing.T) {
 	type TestObject struct {
-		Field *ObjectImplementedMarshaler
+		Field *timeImplementedMarshaler
 	}
 	should := require.New(t)
-	val := ObjectImplementedMarshaler(100)
+	val := timeImplementedMarshaler(time.Unix(123, 0))
 	obj := TestObject{&val}
 	bytes, err := json.Marshal(obj)
 	should.Nil(err)
-	should.Equal(`{"Field":"hello"}`, string(bytes))
+	should.Equal(`{"Field":123}`, string(bytes))
 	str, err := MarshalToString(obj)
 	should.Nil(err)
-	should.Equal(`{"Field":"hello"}`, str)
+	should.Equal(`{"Field":123}`, str)
 }
 
 func Test_marshaler_and_encoder(t *testing.T) {
 	type TestObject struct {
-		Field *ObjectImplementedMarshaler
+		Field *timeImplementedMarshaler
 	}
 	ConfigDefault.cleanEncoders()
 	should := require.New(t)
-	RegisterTypeEncoderFunc("jsoniter.ObjectImplementedMarshaler", func(ptr unsafe.Pointer, stream *Stream) {
+	RegisterTypeEncoderFunc("jsoniter.timeImplementedMarshaler", func(ptr unsafe.Pointer, stream *Stream) {
 		stream.WriteString("hello from encoder")
 	}, nil)
-	val := ObjectImplementedMarshaler(100)
+	val := timeImplementedMarshaler(time.Unix(123, 0))
 	obj := TestObject{&val}
 	bytes, err := json.Marshal(obj)
 	should.Nil(err)
-	should.Equal(`{"Field":"hello"}`, string(bytes))
+	should.Equal(`{"Field":123}`, string(bytes))
 	str, err := MarshalToString(obj)
 	should.Nil(err)
 	should.Equal(`{"Field":"hello from encoder"}`, str)
