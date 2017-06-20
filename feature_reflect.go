@@ -238,6 +238,9 @@ func decoderOfType(cfg *frozenConfig, typ reflect.Type) (ValDecoder, error) {
 	decoder = &placeholderDecoder{cfg: cfg, cacheKey: cacheKey}
 	cfg.addDecoderToCache(cacheKey, decoder)
 	decoder, err := createDecoderOfType(cfg, typ)
+	for _, extension := range extensions {
+		decoder = extension.DecorateDecoder(typ, decoder)
+	}
 	cfg.addDecoderToCache(cacheKey, decoder)
 	return decoder, err
 }
@@ -330,6 +333,9 @@ func encoderOfType(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error) {
 	encoder = &placeholderEncoder{cfg: cfg, cacheKey: cacheKey}
 	cfg.addEncoderToCache(cacheKey, encoder)
 	encoder, err := createEncoderOfType(cfg, typ)
+	for _, extension := range extensions {
+		encoder = extension.DecorateEncoder(typ, encoder)
+	}
 	cfg.addEncoderToCache(cacheKey, encoder)
 	return encoder, err
 }

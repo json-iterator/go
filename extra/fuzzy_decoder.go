@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"strings"
 	"math"
+	"reflect"
 )
 
 const MaxUint = ^uint(0)
@@ -13,6 +14,7 @@ const MaxInt = int(MaxUint >> 1)
 const MinInt = -MaxInt - 1
 
 func RegisterFuzzyDecoders() {
+	jsoniter.RegisterExtension(&tolerateEmptyArrayExtension{})
 	jsoniter.RegisterTypeDecoder("string", &FuzzyStringDecoder{})
 	jsoniter.RegisterTypeDecoder("float32", &FuzzyFloat32Decoder{})
 	jsoniter.RegisterTypeDecoder("float64", &FuzzyFloat64Decoder{})
@@ -136,6 +138,32 @@ func RegisterFuzzyDecoders() {
 			*((*uint64)(ptr)) = iter.ReadUint64()
 		}
 	}})
+}
+
+type tolerateEmptyArrayExtension struct {
+	jsoniter.DummyExtension
+}
+
+func (extension *tolerateEmptyArrayExtension) DecorateDecoder(typ reflect.Type, decoder jsoniter.ValDecoder) jsoniter.ValDecoder {
+	if typ.Kind() == reflect.Struct || typ.Kind() == reflect.Map {
+		return &tolerateEmptyArrayDecoder{decoder}
+	}
+	return decoder
+}
+
+type tolerateEmptyArrayDecoder struct {
+	valDecoder jsoniter.ValDecoder
+}
+
+func (decoder *tolerateEmptyArrayDecoder) Decode(ptr unsafe.Pointer, iter *jsoniter.Iterator) {
+	if iter.WhatIsNext() == jsoniter.Array {
+		iter.Skip()
+		newIter := iter.Config().BorrowIterator([]byte("{}"))
+		defer iter.Config().ReturnIterator(newIter)
+		decoder.valDecoder.Decode(ptr, newIter)
+	} else {
+		decoder.valDecoder.Decode(ptr, iter)
+	}
 }
 
 type FuzzyStringDecoder struct {

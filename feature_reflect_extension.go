@@ -29,17 +29,19 @@ func (structDescriptor *StructDescriptor) GetField(fieldName string) *Binding {
 }
 
 type Binding struct {
-	Field           *reflect.StructField
-	FromNames       []string
-	ToNames         []string
-	Encoder         ValEncoder
-	Decoder         ValDecoder
+	Field     *reflect.StructField
+	FromNames []string
+	ToNames   []string
+	Encoder   ValEncoder
+	Decoder   ValDecoder
 }
 
 type Extension interface {
 	UpdateStructDescriptor(structDescriptor *StructDescriptor)
 	CreateDecoder(typ reflect.Type) ValDecoder
 	CreateEncoder(typ reflect.Type) ValEncoder
+	DecorateDecoder(typ reflect.Type, decoder ValDecoder) ValDecoder
+	DecorateEncoder(typ reflect.Type, encoder ValEncoder) ValEncoder
 }
 
 type DummyExtension struct {
@@ -56,9 +58,18 @@ func (extension *DummyExtension) CreateEncoder(typ reflect.Type) ValEncoder {
 	return nil
 }
 
+func (extension *DummyExtension) DecorateDecoder(typ reflect.Type, decoder ValDecoder) ValDecoder {
+	return decoder
+}
+
+func (extension *DummyExtension) DecorateEncoder(typ reflect.Type, encoder ValEncoder) ValEncoder {
+	return encoder
+}
+
 type funcDecoder struct {
 	fun DecoderFunc
 }
+
 func (decoder *funcDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	decoder.fun(ptr, iter)
 }
@@ -120,6 +131,15 @@ func RegisterExtension(extension Extension) {
 }
 
 func getTypeDecoderFromExtension(typ reflect.Type) ValDecoder {
+	decoder := _getTypeDecoderFromExtension(typ)
+	if decoder != nil {
+		for _, extension := range extensions {
+			decoder = extension.DecorateDecoder(typ, decoder)
+		}
+	}
+	return decoder
+}
+func _getTypeDecoderFromExtension(typ reflect.Type) ValDecoder {
 	for _, extension := range extensions {
 		decoder := extension.CreateDecoder(typ)
 		if decoder != nil {
@@ -141,6 +161,16 @@ func getTypeDecoderFromExtension(typ reflect.Type) ValDecoder {
 }
 
 func getTypeEncoderFromExtension(typ reflect.Type) ValEncoder {
+	encoder := _getTypeEncoderFromExtension(typ)
+	if encoder != nil {
+		for _, extension := range extensions {
+			encoder = extension.DecorateEncoder(typ, encoder)
+		}
+	}
+	return encoder
+}
+
+func _getTypeEncoderFromExtension(typ reflect.Type) ValEncoder {
 	for _, extension := range extensions {
 		encoder := extension.CreateEncoder(typ)
 		if encoder != nil {

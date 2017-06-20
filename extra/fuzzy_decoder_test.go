@@ -85,3 +85,17 @@ func Test_float_to_float64(t *testing.T) {
 	should.Nil(jsoniter.UnmarshalFromString(`1.23`, &val))
 	should.Equal(float64(1.23), val)
 }
+
+func Test_empty_array_as_map(t *testing.T) {
+	should := require.New(t)
+	var val map[string]interface{}
+	should.Nil(jsoniter.UnmarshalFromString(`[]`, &val))
+	should.Equal(map[string]interface{}{}, val)
+}
+
+func Test_empty_array_as_object(t *testing.T) {
+	should := require.New(t)
+	var val struct{}
+	should.Nil(jsoniter.UnmarshalFromString(`[]`, &val))
+	should.Equal(struct{}{}, val)
+}
