@@ -113,6 +113,10 @@ func ParseString(cfg *frozenConfig, input string) *Iterator {
 	return ParseBytes(cfg, []byte(input))
 }
 
+func (iter *Iterator) Config() *frozenConfig {
+	return iter.cfg
+}
+
 // Reset can reset an Iterator instance for another json buffer in io.Reader
 func (iter *Iterator) Reset(reader io.Reader) *Iterator {
 	iter.reader = reader
