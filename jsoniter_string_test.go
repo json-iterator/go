@@ -136,6 +136,14 @@ func Test_string_encode_with_std_without_html_escape(t *testing.T) {
 	}
 }
 
+func Test_unicode(t *testing.T) {
+	should := require.New(t)
+	output , _ := MarshalToString(map[string]interface{}{"a": "数字山谷"})
+	should.Equal(`{"a":"数字山谷"}`, output)
+	output , _ = Config{EscapeHtml: false}.Froze().MarshalToString(map[string]interface{}{"a": "数字山谷"})
+	should.Equal(`{"a":"数字山谷"}`, output)
+}
+
 func Benchmark_jsoniter_unicode(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		iter := ParseString(ConfigDefault, `"\ud83d\udc4a"`)

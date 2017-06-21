@@ -49,6 +49,7 @@ var ConfigCompatibleWithStandardLibrary = Config{
 }.Froze()
 
 var ConfigFastest = Config{
+	EscapeHtml:  false,
 	MarshalFloatWith6Digits: true,
 }.Froze()
 
