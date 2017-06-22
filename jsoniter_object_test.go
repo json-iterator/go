@@ -407,6 +407,25 @@ func Test_shadow_struct_field(t *testing.T) {
 	should.Contains(output, `"max_age":20`)
 }
 
+func Test_embed_at_last(t *testing.T) {
+	type Base struct {
+		Type string `json:"type"`
+	}
+
+	type Struct struct {
+		Field string `json:"field"`
+		FieldType string `json:"field_type"`
+		Base
+	}
+	should := require.New(t)
+	s := Struct{Field: "field", FieldType: "field_type", Base: Base{"type"}}
+	output, err := MarshalToString(s)
+	should.Nil(err)
+	should.Contains(output, `"type":"type"`)
+	should.Contains(output, `"field":"field"`)
+	should.Contains(output, `"field_type":"field_type"`)
+}
+
 func Test_decode_nested(t *testing.T) {
 	type StructOfString struct {
 		Field1 string

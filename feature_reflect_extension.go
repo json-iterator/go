@@ -203,6 +203,8 @@ func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, err
 					return nil, err
 				}
 				for _, binding := range structDescriptor.Fields {
+					binding.Encoder = &structFieldEncoder{&field, binding.Encoder, false}
+					binding.Decoder = &structFieldDecoder{&field, binding.Decoder}
 					anonymousBindings = append(anonymousBindings, binding)
 				}
 			} else if field.Type.Kind() == reflect.Ptr && field.Type.Elem().Kind() == reflect.Struct {
