@@ -144,6 +144,26 @@ func Test_unicode(t *testing.T) {
 	should.Equal(`{"a":"数字山谷"}`, output)
 }
 
+func Test_unicode_and_escape(t *testing.T) {
+	should := require.New(t)
+	output , err := MarshalToString(`"数字山谷"`)
+	should.Nil(err)
+	should.Equal(`"\"数字山谷\""`, output)
+	output , err = ConfigFastest.MarshalToString(`"数字山谷"`)
+	should.Nil(err)
+	should.Equal(`"\"数字山谷\""`, output)
+}
+
+func Test_unsafe_unicode(t *testing.T) {
+	should := require.New(t)
+	output , err := MarshalToString("he\u2029\u2028he")
+	should.Nil(err)
+	should.Equal(`"he\u2029\u2028he"`, output)
+	output , err = ConfigFastest.MarshalToString("he\u2029\u2028he")
+	should.Nil(err)
+	should.Equal("\"he\u2029\u2028he\"", output)
+}
+
 func Benchmark_jsoniter_unicode(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		iter := ParseString(ConfigDefault, `"\ud83d\udc4a"`)

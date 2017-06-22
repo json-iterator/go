@@ -232,7 +232,7 @@ func (stream *Stream) WriteStringWithHtmlEscaped(s string) {
 	i := 0
 	for ; i < toWriteLen; i++ {
 		c := s[i]
-		if c <= utf8.RuneSelf && htmlSafeSet[c] {
+		if c < utf8.RuneSelf && htmlSafeSet[c] {
 			stream.buf[n] = c
 			n++
 		} else {
@@ -252,7 +252,7 @@ func (stream *Stream) WriteStringWithHtmlEscaped(s string) {
 func writeStringSlowPathWithHtmlEscaped(stream *Stream, i int, s string, valLen int) {
 	start := i
 	// for the remaining parts, we process them char by char
-	for ; i < valLen; i++ {
+	for ; i < valLen; {
 		if b := s[i]; b < utf8.RuneSelf {
 			if htmlSafeSet[b] {
 				i++
@@ -351,7 +351,7 @@ func (stream *Stream) WriteString(s string) {
 func writeStringSlowPath(stream *Stream, i int, s string, valLen int) {
 	start := i
 	// for the remaining parts, we process them char by char
-	for ; i < valLen; i++ {
+	for ; i < valLen; {
 		if b := s[i]; b < utf8.RuneSelf {
 			if safeSet[b] {
 				i++
@@ -382,10 +382,7 @@ func writeStringSlowPath(stream *Stream, i int, s string, valLen int) {
 			start = i
 			continue
 		}
-		if start < i {
-			stream.WriteRaw(s[start:i])
-		}
-		start = i
+		i++
 		continue
 	}
 	if start < len(s) {
