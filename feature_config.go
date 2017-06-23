@@ -49,7 +49,7 @@ var ConfigCompatibleWithStandardLibrary = Config{
 }.Froze()
 
 var ConfigFastest = Config{
-	EscapeHtml:  false,
+	EscapeHtml:              false,
 	MarshalFloatWith6Digits: true,
 }.Froze()
 
@@ -144,7 +144,6 @@ func (encoder *htmlEscapedStringEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 }
 
 func (cfg *frozenConfig) escapeHtml() {
-	// for better performance
 	cfg.addEncoderToCache(reflect.TypeOf((*string)(nil)).Elem(), &htmlEscapedStringEncoder{})
 }
 
@@ -192,14 +191,14 @@ func (cfg *frozenConfig) getEncoderFromCache(cacheKey reflect.Type) ValEncoder {
 func (cfg *frozenConfig) cleanDecoders() {
 	typeDecoders = map[string]ValDecoder{}
 	fieldDecoders = map[string]ValDecoder{}
-	atomic.StorePointer(&cfg.decoderCache, unsafe.Pointer(&map[string]ValDecoder{}))
+	*cfg = *cfg.configBeforeFrozen.Froze()
 }
 
 // cleanEncoders cleans encoders registered or cached
 func (cfg *frozenConfig) cleanEncoders() {
 	typeEncoders = map[string]ValEncoder{}
 	fieldEncoders = map[string]ValEncoder{}
-	atomic.StorePointer(&cfg.encoderCache, unsafe.Pointer(&map[string]ValEncoder{}))
+	*cfg = *cfg.configBeforeFrozen.Froze()
 }
 
 func (cfg *frozenConfig) MarshalToString(v interface{}) (string, error) {

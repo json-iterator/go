@@ -349,10 +349,7 @@ func Test_multiple_level_anonymous_struct(t *testing.T) {
 	obj := Level3{Level2{Level1{"1"}, "2"}, "3"}
 	output, err := MarshalToString(obj)
 	should.Nil(err)
-	fmt.Println(output)
-	should.Contains(output, `"Field1":"1"`)
-	should.Contains(output, `"Field2":"2"`)
-	should.Contains(output, `"Field3":"3"`)
+	should.Equal(`{"Field1":"1","Field2":"2","Field3":"3"}`, output)
 }
 
 func Test_multiple_level_anonymous_struct_with_ptr(t *testing.T) {
@@ -413,7 +410,7 @@ func Test_embed_at_last(t *testing.T) {
 	}
 
 	type Struct struct {
-		Field string `json:"field"`
+		Field     string `json:"field"`
 		FieldType string `json:"field_type"`
 		Base
 	}
@@ -421,9 +418,7 @@ func Test_embed_at_last(t *testing.T) {
 	s := Struct{Field: "field", FieldType: "field_type", Base: Base{"type"}}
 	output, err := MarshalToString(s)
 	should.Nil(err)
-	should.Contains(output, `"type":"type"`)
-	should.Contains(output, `"field":"field"`)
-	should.Contains(output, `"field_type":"field_type"`)
+	should.Equal(`{"field":"field","field_type":"field_type","type":"type"}`, output)
 }
 
 func Test_decode_nested(t *testing.T) {

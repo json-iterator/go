@@ -192,7 +192,8 @@ func _getTypeEncoderFromExtension(typ reflect.Type) ValEncoder {
 }
 
 func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, error) {
-	anonymousBindings := []*Binding{}
+	headAnonymousBindings := []*Binding{}
+	tailAnonymousBindings := []*Binding{}
 	bindings := []*Binding{}
 	for i := 0; i < typ.NumField(); i++ {
 		field := typ.Field(i)
@@ -205,7 +206,11 @@ func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, err
 				for _, binding := range structDescriptor.Fields {
 					binding.Encoder = &structFieldEncoder{&field, binding.Encoder, false}
 					binding.Decoder = &structFieldDecoder{&field, binding.Decoder}
-					anonymousBindings = append(anonymousBindings, binding)
+					if field.Offset == 0 {
+						headAnonymousBindings = append(headAnonymousBindings, binding)
+					} else {
+						tailAnonymousBindings = append(tailAnonymousBindings, binding)
+					}
 				}
 			} else if field.Type.Kind() == reflect.Ptr && field.Type.Elem().Kind() == reflect.Struct {
 				structDescriptor, err := describeStruct(cfg, field.Type.Elem())
@@ -217,7 +222,11 @@ func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, err
 					binding.Encoder = &structFieldEncoder{&field, binding.Encoder, false}
 					binding.Decoder = &optionalDecoder{field.Type, binding.Decoder}
 					binding.Decoder = &structFieldDecoder{&field, binding.Decoder}
-					anonymousBindings = append(anonymousBindings, binding)
+					if field.Offset == 0 {
+						headAnonymousBindings = append(headAnonymousBindings, binding)
+					} else {
+						tailAnonymousBindings = append(tailAnonymousBindings, binding)
+					}
 				}
 			}
 		} else {
@@ -276,7 +285,8 @@ func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, err
 		binding.Encoder = &structFieldEncoder{binding.Field, binding.Encoder, shouldOmitEmpty}
 	}
 	// insert anonymous bindings to the head
-	structDescriptor.Fields = append(anonymousBindings, structDescriptor.Fields...)
+	structDescriptor.Fields = append(headAnonymousBindings, structDescriptor.Fields...)
+	structDescriptor.Fields = append(structDescriptor.Fields, tailAnonymousBindings...)
 	return structDescriptor, nil
 }
 

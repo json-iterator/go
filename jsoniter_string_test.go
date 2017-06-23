@@ -138,28 +138,29 @@ func Test_string_encode_with_std_without_html_escape(t *testing.T) {
 
 func Test_unicode(t *testing.T) {
 	should := require.New(t)
-	output , _ := MarshalToString(map[string]interface{}{"a": "数字山谷"})
+	output, _ := MarshalToString(map[string]interface{}{"a": "数字山谷"})
 	should.Equal(`{"a":"数字山谷"}`, output)
-	output , _ = Config{EscapeHtml: false}.Froze().MarshalToString(map[string]interface{}{"a": "数字山谷"})
+	output, _ = Config{EscapeHtml: false}.Froze().MarshalToString(map[string]interface{}{"a": "数字山谷"})
 	should.Equal(`{"a":"数字山谷"}`, output)
 }
 
 func Test_unicode_and_escape(t *testing.T) {
 	should := require.New(t)
-	output , err := MarshalToString(`"数字山谷"`)
+	output, err := MarshalToString(`"数字山谷"`)
 	should.Nil(err)
 	should.Equal(`"\"数字山谷\""`, output)
-	output , err = ConfigFastest.MarshalToString(`"数字山谷"`)
+	output, err = ConfigFastest.MarshalToString(`"数字山谷"`)
 	should.Nil(err)
 	should.Equal(`"\"数字山谷\""`, output)
 }
 
 func Test_unsafe_unicode(t *testing.T) {
+	ConfigDefault.cleanEncoders()
 	should := require.New(t)
-	output , err := MarshalToString("he\u2029\u2028he")
+	output, err := ConfigDefault.MarshalToString("he\u2029\u2028he")
 	should.Nil(err)
 	should.Equal(`"he\u2029\u2028he"`, output)
-	output , err = ConfigFastest.MarshalToString("he\u2029\u2028he")
+	output, err = ConfigFastest.MarshalToString("he\u2029\u2028he")
 	should.Nil(err)
 	should.Equal("\"he\u2029\u2028he\"", output)
 }
