@@ -461,7 +461,7 @@ func createEncoderOfType(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error
 		}
 		return &uint32Codec{}, nil
 	case reflect.Uint64:
-		if typeName != "uint164" {
+		if typeName != "uint64" {
 			return encoderOfType(cfg, reflect.TypeOf((*uint64)(nil)).Elem())
 		}
 		return &uint64Codec{}, nil
