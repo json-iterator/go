@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"unsafe"
+	"reflect"
 )
 
 type stringCodec struct {
@@ -404,26 +405,43 @@ func (encoder *jsoniterRawMessageCodec) IsEmpty(ptr unsafe.Pointer) bool {
 }
 
 type base64Codec struct {
+	actualType reflect.Type
 }
 
 func (codec *base64Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
+	if iter.ReadNil() {
+		ptrSlice := (*sliceHeader)(ptr)
+		ptrSlice.Len = 0
+		ptrSlice.Cap = 0
+		ptrSlice.Data = nil
+		return
+	}
 	encoding := base64.StdEncoding
 	src := iter.SkipAndReturnBytes()
 	src = src[1 : len(src)-1]
 	decodedLen := encoding.DecodedLen(len(src))
 	dst := make([]byte, decodedLen)
-	_, err := encoding.Decode(dst, src)
+	len, err := encoding.Decode(dst, src)
 	if err != nil {
 		iter.ReportError("decode base64", err.Error())
 	} else {
-		*((*[]byte)(ptr)) = dst
+		dst = dst[:len]
+		dstSlice := (*sliceHeader)(unsafe.Pointer(&dst))
+		ptrSlice := (*sliceHeader)(ptr)
+		ptrSlice.Data = dstSlice.Data
+		ptrSlice.Cap = dstSlice.Cap
+		ptrSlice.Len = dstSlice.Len
 	}
 }
 
 func (codec *base64Codec) Encode(ptr unsafe.Pointer, stream *Stream) {
+	src := *((*[]byte)(ptr))
+	if len(src) == 0 {
+		stream.WriteNil()
+		return
+	}
 	encoding := base64.StdEncoding
 	stream.writeByte('"')
-	src := *((*[]byte)(ptr))
 	toGrow := encoding.EncodedLen(len(src))
 	stream.ensure(toGrow)
 	encoding.Encode(stream.buf[stream.n:], src)
@@ -432,9 +450,14 @@ func (codec *base64Codec) Encode(ptr unsafe.Pointer, stream *Stream) {
 }
 
 func (encoder *base64Codec) EncodeInterface(val interface{}, stream *Stream) {
+	ptr := extractInterface(val).word
+	src := *((*[]byte)(ptr))
+	if len(src) == 0 {
+		stream.WriteNil()
+		return
+	}
 	encoding := base64.StdEncoding
 	stream.writeByte('"')
-	src := val.([]byte)
 	toGrow := encoding.EncodedLen(len(src))
 	stream.ensure(toGrow)
 	encoding.Encode(stream.buf[stream.n:], src)

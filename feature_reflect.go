@@ -247,17 +247,17 @@ func decoderOfType(cfg *frozenConfig, typ reflect.Type) (ValDecoder, error) {
 
 func createDecoderOfType(cfg *frozenConfig, typ reflect.Type) (ValDecoder, error) {
 	typeName := typ.String()
-	if typeName == "[]uint8" {
-		return &base64Codec{}, nil
-	}
-	if typ.AssignableTo(jsonRawMessageType) {
+	if typ == jsonRawMessageType {
 		return &jsonRawMessageCodec{}, nil
 	}
-	if typ.AssignableTo(jsoniterRawMessageType) {
+	if typ == jsoniterRawMessageType {
 		return &jsoniterRawMessageCodec{}, nil
 	}
 	if typ.AssignableTo(jsonNumberType) {
 		return &jsonNumberCodec{}, nil
+	}
+	if typ.Kind() == reflect.Slice && typ.Elem().Kind() == reflect.Uint8 {
+		return &base64Codec{}, nil
 	}
 	if typ.ConvertibleTo(unmarshalerType) {
 		templateInterface := reflect.New(typ).Elem().Interface()
@@ -385,17 +385,17 @@ func encoderOfType(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error) {
 
 func createEncoderOfType(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error) {
 	typeName := typ.String()
-	if typeName == "[]uint8" {
-		return &base64Codec{}, nil
-	}
-	if typ.AssignableTo(jsonRawMessageType) {
+	if typ == jsonRawMessageType {
 		return &jsonRawMessageCodec{}, nil
 	}
-	if typ.AssignableTo(jsoniterRawMessageType) {
+	if typ == jsoniterRawMessageType {
 		return &jsoniterRawMessageCodec{}, nil
 	}
 	if typ.AssignableTo(jsonNumberType) {
 		return &jsonNumberCodec{}, nil
+	}
+	if typ.Kind() == reflect.Slice && typ.Elem().Kind() == reflect.Uint8 {
+		return &base64Codec{typ}, nil
 	}
 	if typ.ConvertibleTo(marshalerType) {
 		templateInterface := reflect.New(typ).Elem().Interface()

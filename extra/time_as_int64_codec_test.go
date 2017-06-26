@@ -19,6 +19,7 @@ func Test_time_as_int64(t *testing.T) {
 }
 
 func Test_time_as_int64_keep_microsecond(t *testing.T) {
+	t.Skip("conflict")
 	should := require.New(t)
 	RegisterTimeAsInt64Codec(time.Microsecond)
 	output, err := jsoniter.Marshal(time.Unix(1, 1002))
