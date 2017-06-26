@@ -23,6 +23,10 @@ func (decoder *mapDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	mapInterface.word = ptr
 	realInterface := (*interface{})(unsafe.Pointer(&mapInterface))
 	realVal := reflect.ValueOf(*realInterface).Elem()
+	if iter.ReadNil() {
+		realVal.Set(reflect.Zero(decoder.mapType))
+		return
+	}
 	if realVal.IsNil() {
 		realVal.Set(reflect.MakeMap(realVal.Type()))
 	}

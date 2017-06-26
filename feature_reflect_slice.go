@@ -87,6 +87,12 @@ func (decoder *sliceDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 
 func (decoder *sliceDecoder) doDecode(ptr unsafe.Pointer, iter *Iterator) {
 	slice := (*sliceHeader)(ptr)
+	if iter.ReadNil() {
+		slice.Len = 0
+		slice.Cap = 0
+		slice.Data = nil
+		return
+	}
 	reuseSlice(slice, decoder.sliceType, 4)
 	if !iter.ReadArray() {
 		return

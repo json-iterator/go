@@ -32,7 +32,7 @@ func Test_encode_null(t *testing.T) {
 	should.Equal("null", str)
 }
 
-func Test_decode_null_object(t *testing.T) {
+func Test_decode_null_object_field(t *testing.T) {
 	should := require.New(t)
 	iter := ParseString(ConfigDefault, `[null,"a"]`)
 	iter.ReadArray()
@@ -51,16 +51,27 @@ func Test_decode_null_object(t *testing.T) {
 	should.Len(objs, 1)
 }
 
-func Test_decode_null_array(t *testing.T) {
+func Test_decode_null_array_element(t *testing.T) {
+	should := require.New(t)
 	iter := ParseString(ConfigDefault, `[null,"a"]`)
-	iter.ReadArray()
-	if iter.ReadArray() != false {
-		t.FailNow()
-	}
-	iter.ReadArray()
-	if iter.ReadString() != "a" {
-		t.FailNow()
-	}
+	should.True(iter.ReadArray())
+	should.True(iter.ReadNil())
+	should.True(iter.ReadArray())
+	should.Equal("a", iter.ReadString())
+}
+
+func Test_decode_null_array(t *testing.T) {
+	should := require.New(t)
+	arr := []string{}
+	should.Nil(UnmarshalFromString("null", &arr))
+	should.Nil(arr)
+}
+
+func Test_decode_null_map(t *testing.T) {
+	should := require.New(t)
+	arr := map[string]string{}
+	should.Nil(UnmarshalFromString("null", &arr))
+	should.Nil(arr)
 }
 
 func Test_decode_null_string(t *testing.T) {
