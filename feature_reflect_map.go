@@ -37,7 +37,7 @@ func (decoder *mapDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 		keyType := decoder.keyType
 		switch {
 		case keyType.Kind() == reflect.String:
-			realVal.SetMapIndex(reflect.ValueOf(keyStr), elem.Elem())
+			realVal.SetMapIndex(reflect.ValueOf(keyStr).Convert(keyType), elem.Elem())
 			return true
 		case keyType.Implements(textUnmarshalerType):
 			textUnmarshaler := reflect.New(keyType.Elem()).Interface().(encoding.TextUnmarshaler)
@@ -172,7 +172,7 @@ func (encoder *sortKeysMapEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 		if i != 0 {
 			stream.WriteMore()
 		}
-		stream.WriteString(key.s)
+		stream.WriteVal(key.s) // might need html escape, so can not WriteString directly
 		stream.writeByte(':')
 		val := realVal.MapIndex(key.v).Interface()
 		encoder.elemEncoder.EncodeInterface(val, stream)
