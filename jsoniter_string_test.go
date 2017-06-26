@@ -101,6 +101,10 @@ func Test_html_escape(t *testing.T) {
 	output, err = ConfigCompatibleWithStandardLibrary.Marshal(`>`)
 	should.Nil(err)
 	should.Equal(`"\u003e"`, string(output))
+	type MyString string
+	output, err = ConfigCompatibleWithStandardLibrary.Marshal(MyString(`>`))
+	should.Nil(err)
+	should.Equal(`"\u003e"`, string(output))
 }
 
 func Test_string_encode_with_std(t *testing.T) {
