@@ -85,7 +85,6 @@ func (encoder *mapEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	mapInterface.word = ptr
 	realInterface := (*interface{})(unsafe.Pointer(&mapInterface))
 	realVal := reflect.ValueOf(*realInterface)
-
 	stream.WriteObjectStart()
 	for i, key := range realVal.MapKeys() {
 		if i != 0 {

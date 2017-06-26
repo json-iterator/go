@@ -162,3 +162,65 @@ func Test_read_large_number_as_interface(t *testing.T) {
 	should.Nil(err)
 	should.Equal(`123456789123456789123456789`, output)
 }
+
+func Test_nested_one_field_struct(t *testing.T) {
+	should := require.New(t)
+	type YetYetAnotherObject struct {
+		Field string
+	}
+	type YetAnotherObject struct {
+		Field *YetYetAnotherObject
+	}
+	type AnotherObject struct {
+		Field *YetAnotherObject
+	}
+	type TestObject struct {
+		Me *AnotherObject
+	}
+	obj := TestObject{&AnotherObject{&YetAnotherObject{&YetYetAnotherObject{"abc"}}}}
+	str, err := MarshalToString(obj)
+	should.Nil(err)
+	should.Equal(`{"Me":{"Field":{"Field":{"Field":"abc"}}}}`, str)
+	str, err = MarshalToString(&obj)
+	should.Nil(err)
+	should.Equal(`{"Me":{"Field":{"Field":{"Field":"abc"}}}}`, str)
+}
+
+func Test_struct_with_one_nil(t *testing.T) {
+	type TestObject struct {
+		F *float64
+	}
+	var obj TestObject
+	should := require.New(t)
+	output, err := MarshalToString(obj)
+	should.Nil(err)
+	should.Equal(`{"F":null}`, output)
+}
+
+func Test_array_with_one_nil(t *testing.T) {
+	obj := [1]*float64{nil}
+	should := require.New(t)
+	output, err := MarshalToString(obj)
+	should.Nil(err)
+	should.Equal(`[null]`, output)
+}
+
+func Test_embedded_array_with_one_nil(t *testing.T) {
+	type TestObject struct {
+		Field1 int
+		Field2 [1]*float64
+	}
+	var obj TestObject
+	should := require.New(t)
+	output, err := MarshalToString(obj)
+	should.Nil(err)
+	should.Contains(output, `"Field2":[null]`)
+}
+
+func Test_array_with_nothing(t *testing.T) {
+	var obj [2]*float64
+	should := require.New(t)
+	output, err := MarshalToString(obj)
+	should.Nil(err)
+	should.Equal(`[null,null]`, output)
+}

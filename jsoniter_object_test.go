@@ -280,29 +280,6 @@ func Test_recursive_struct(t *testing.T) {
 	should.Nil(err)
 }
 
-func Test_one_field_struct(t *testing.T) {
-	should := require.New(t)
-	type YetYetAnotherObject struct {
-		Field string
-	}
-	type YetAnotherObject struct {
-		Field *YetYetAnotherObject
-	}
-	type AnotherObject struct {
-		Field *YetAnotherObject
-	}
-	type TestObject struct {
-		Me *AnotherObject
-	}
-	obj := TestObject{&AnotherObject{&YetAnotherObject{&YetYetAnotherObject{"abc"}}}}
-	str, err := MarshalToString(obj)
-	should.Nil(err)
-	should.Equal(`{"Me":{"Field":{"Field":{"Field":"abc"}}}}`, str)
-	str, err = MarshalToString(&obj)
-	should.Nil(err)
-	should.Equal(`{"Me":{"Field":{"Field":{"Field":"abc"}}}}`, str)
-}
-
 func Test_encode_anonymous_struct(t *testing.T) {
 	should := require.New(t)
 	type TestObject struct {

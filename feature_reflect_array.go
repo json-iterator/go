@@ -33,10 +33,6 @@ type arrayEncoder struct {
 }
 
 func (encoder *arrayEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
-	if ptr == nil {
-		stream.WriteNil()
-		return
-	}
 	stream.WriteArrayStart()
 	elemPtr := uintptr(ptr)
 	encoder.elemEncoder.Encode(unsafe.Pointer(elemPtr), stream)
@@ -52,6 +48,14 @@ func (encoder *arrayEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 }
 
 func (encoder *arrayEncoder) EncodeInterface(val interface{}, stream *Stream) {
+	// special optimization for interface{}
+	e := (*emptyInterface)(unsafe.Pointer(&val))
+	if e.word == nil {
+		stream.WriteArrayStart()
+		stream.WriteNil()
+		stream.WriteArrayEnd()
+		return
+	}
 	WriteToStream(val, stream, encoder)
 }
 

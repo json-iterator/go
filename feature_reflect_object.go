@@ -1039,6 +1039,20 @@ func (encoder *structEncoder) EncodeInterface(val interface{}, stream *Stream) {
 					},
 				},
 			}
+			e := (*emptyInterface)(unsafe.Pointer(&val))
+			if e.word == nil {
+				stream.WriteObjectStart()
+				stream.WriteObjectField(firstFieldName)
+				stream.WriteNil()
+				stream.WriteObjectEnd()
+				return
+			}
+			if reflect.TypeOf(val).Kind() == reflect.Ptr {
+				encoderToUse.Encode(unsafe.Pointer(&e.word), stream)
+			} else {
+				encoderToUse.Encode(e.word, stream)
+			}
+			return
 		}
 	}
 	WriteToStream(val, stream, encoderToUse)
