@@ -20,7 +20,7 @@ func Test_Roundtrip(t *testing.T) {
 		if err != nil {
 			t.Errorf("failed to marshal with stdlib: %v", err)
 		}
-		jbIter, err := jsoniter.Marshal(before)
+		jbIter, err := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(before)
 		if err != nil {
 			t.Errorf("failed to marshal with jsoniter: %v", err)
 		}
@@ -35,7 +35,7 @@ func Test_Roundtrip(t *testing.T) {
 			t.Errorf("failed to unmarshal with stdlib: %v", err)
 		}
 		var afterIter T
-		err = jsoniter.Unmarshal(jbIter, &afterIter)
+		err = jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(jbIter, &afterIter)
 		if err != nil {
 			t.Errorf("failed to unmarshal with jsoniter: %v", err)
 		}
@@ -69,7 +69,7 @@ func indent(src []byte, prefix string) string {
 	return buf.String()
 }
 
-func BenchmarkStandardMarshal(t *testing.B) {
+func benchmarkMarshal(t *testing.B, name string, fn func(interface{}) ([]byte, error)) {
 	t.ReportAllocs()
 	t.ResetTimer()
 
@@ -77,68 +77,63 @@ func BenchmarkStandardMarshal(t *testing.B) {
 	fz := fuzz.NewWithSeed(0).MaxDepth(10).NilChance(0.3)
 	fz.Fuzz(&obj)
 	for i := 0; i < t.N; i++ {
-		jb, err := json.Marshal(obj)
+		jb, err := fn(obj)
 		if err != nil {
-			t.Fatalf("failed to marshal:\n input: %s\n  error: %v", dump(obj), err)
+			t.Fatalf("%s failed to marshal:\n input: %s\n  error: %v", name, dump(obj), err)
 		}
 		_ = jb
 	}
+}
+
+func benchmarkUnmarshal(t *testing.B, name string, fn func(data []byte, v interface{}) error) {
+	t.ReportAllocs()
+	t.ResetTimer()
+
+	var before T
+	fz := fuzz.NewWithSeed(0).MaxDepth(10).NilChance(0.3)
+	fz.Fuzz(&before)
+	jb, err := json.Marshal(before)
+	if err != nil {
+		t.Fatalf("failed to marshal: %v", err)
+	}
+
+	for i := 0; i < t.N; i++ {
+		var after T
+		err = fn(jb, &after)
+		if err != nil {
+			t.Fatalf("%s failed to unmarshal:\n  input: %q\n  error: %v", name, string(jb), err)
+		}
+	}
+}
+
+func BenchmarkStandardMarshal(t *testing.B) {
+	benchmarkMarshal(t, "stdlib", json.Marshal)
 }
 
 func BenchmarkStandardUnmarshal(t *testing.B) {
-	t.ReportAllocs()
-	t.ResetTimer()
-
-	var before T
-	fz := fuzz.NewWithSeed(0).MaxDepth(10).NilChance(0.3)
-	fz.Fuzz(&before)
-	jb, err := json.Marshal(before)
-	if err != nil {
-		t.Fatalf("failed to marshal: %v", err)
-	}
-
-	for i := 0; i < t.N; i++ {
-		var after T
-		err = json.Unmarshal(jb, &after)
-		if err != nil {
-			t.Fatalf("failed to unmarshal:\n  input: %q\n  error: %v", string(jb), err)
-		}
-	}
+	benchmarkUnmarshal(t, "stdlib", json.Unmarshal)
 }
 
-func BenchmarkJSONIterMarshal(t *testing.B) {
-	t.ReportAllocs()
-	t.ResetTimer()
-
-	var obj T
-	fz := fuzz.NewWithSeed(0).MaxDepth(10).NilChance(0.3)
-	fz.Fuzz(&obj)
-	for i := 0; i < t.N; i++ {
-		jb, err := jsoniter.Marshal(obj)
-		if err != nil {
-			t.Fatalf("failed to marshal:\n input: %s\n  error: %v", dump(obj), err)
-		}
-		_ = jb
-	}
+func BenchmarkJSONIterMarshalFastest(t *testing.B) {
+	benchmarkMarshal(t, "jsoniter-fastest", jsoniter.ConfigFastest.Marshal)
 }
 
-func BenchmarkJSONIterUnmarshal(t *testing.B) {
-	t.ReportAllocs()
-	t.ResetTimer()
+func BenchmarkJSONIterUnmarshalFastest(t *testing.B) {
+	benchmarkUnmarshal(t, "jsoniter-fastest", jsoniter.ConfigFastest.Unmarshal)
+}
 
-	var before T
-	fz := fuzz.NewWithSeed(0).MaxDepth(10).NilChance(0.3)
-	fz.Fuzz(&before)
-	jb, err := json.Marshal(before)
-	if err != nil {
-		t.Fatalf("failed to marshal: %v", err)
-	}
+func BenchmarkJSONIterMarshalDefault(t *testing.B) {
+	benchmarkMarshal(t, "jsoniter-default", jsoniter.Marshal)
+}
 
-	for i := 0; i < t.N; i++ {
-		var after T
-		err = jsoniter.Unmarshal(jb, &after)
-		if err != nil {
-			t.Fatalf("failed to unmarshal:\n  input: %q\n  error: %v", string(jb), err)
-		}
-	}
+func BenchmarkJSONIterUnmarshalDefault(t *testing.B) {
+	benchmarkUnmarshal(t, "jsoniter-default", jsoniter.Unmarshal)
+}
+
+func BenchmarkJSONIterMarshalCompatible(t *testing.B) {
+	benchmarkMarshal(t, "jsoniter-compat", jsoniter.ConfigCompatibleWithStandardLibrary.Marshal)
+}
+
+func BenchmarkJSONIterUnmarshalCompatible(t *testing.B) {
+	benchmarkUnmarshal(t, "jsoniter-compat", jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal)
 }
