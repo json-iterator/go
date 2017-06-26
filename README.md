@@ -1,6 +1,6 @@
 [![rcard](https://goreportcard.com/badge/github.com/json-iterator/go)](https://goreportcard.com/report/github.com/json-iterator/go)
 
-jsoniter (json-iterator) is fast and flexible JSON parser available in [Java](https://github.com/json-iterator/java) and [Go](https://github.com/json-iterator/go)
+A high-performance 100% compatible drop-in replacement of "encoding/json"
 
 # Benchmark
 
