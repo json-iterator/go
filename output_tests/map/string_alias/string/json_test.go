@@ -3,6 +3,8 @@ package test
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/davecgh/go-spew/spew"
@@ -18,29 +20,35 @@ func Test_Roundtrip(t *testing.T) {
 
 		jbStd, err := json.Marshal(before)
 		if err != nil {
-			t.Errorf("failed to marshal with stdlib: %v", err)
+			t.Fatalf("failed to marshal with stdlib: %v", err)
+		}
+		if len(strings.TrimSpace(string(jbStd))) == 0 {
+			t.Fatal("stdlib marshal produced empty result and no error")
 		}
 		jbIter, err := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(before)
 		if err != nil {
-			t.Errorf("failed to marshal with jsoniter: %v", err)
+			t.Fatalf("failed to marshal with jsoniter: %v", err)
+		}
+		if len(strings.TrimSpace(string(jbIter))) == 0 {
+			t.Fatal("jsoniter marshal produced empty result and no error")
 		}
 		if string(jbStd) != string(jbIter) {
-			t.Errorf("marshal expected:\n    %s\ngot:\n    %s\nobj:\n    %s",
+			t.Fatalf("marshal expected:\n    %s\ngot:\n    %s\nobj:\n    %s",
 				indent(jbStd, "    "), indent(jbIter, "    "), dump(before))
 		}
 
 		var afterStd T
 		err = json.Unmarshal(jbIter, &afterStd)
 		if err != nil {
-			t.Errorf("failed to unmarshal with stdlib: %v", err)
+			t.Fatalf("failed to unmarshal with stdlib: %v", err)
 		}
 		var afterIter T
 		err = jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(jbIter, &afterIter)
 		if err != nil {
-			t.Errorf("failed to unmarshal with jsoniter: %v", err)
+			t.Fatalf("failed to unmarshal with jsoniter: %v", err)
 		}
 		if fingerprint(afterStd) != fingerprint(afterIter) {
-			t.Errorf("unmarshal expected:\n    %s\ngot:\n    %s\nvia:\n    %s",
+			t.Fatalf("unmarshal expected:\n    %s\ngot:\n    %s\nvia:\n    %s",
 				dump(afterStd), dump(afterIter), indent(jbIter, "    "))
 		}
 	}
@@ -65,7 +73,10 @@ func dump(obj interface{}) string {
 
 func indent(src []byte, prefix string) string {
 	var buf bytes.Buffer
-	json.Indent(&buf, src, prefix, indentStr)
+	err := json.Indent(&buf, src, prefix, indentStr)
+	if err != nil {
+		return fmt.Sprintf("!!! %v", err)
+	}
 	return buf.String()
 }
 
