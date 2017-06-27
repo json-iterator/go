@@ -40,12 +40,14 @@ func Test_Roundtrip(t *testing.T) {
 		var afterStd T
 		err = json.Unmarshal(jbIter, &afterStd)
 		if err != nil {
-			t.Fatalf("failed to unmarshal with stdlib: %v", err)
+			t.Fatalf("failed to unmarshal with stdlib: %v\nvia:\n    %s",
+				err, indent(jbIter, "    "))
 		}
 		var afterIter T
 		err = jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(jbIter, &afterIter)
 		if err != nil {
-			t.Fatalf("failed to unmarshal with jsoniter: %v", err)
+			t.Fatalf("failed to unmarshal with jsoniter: %v\nvia:\n    %s",
+				err, indent(jbIter, "    "))
 		}
 		if fingerprint(afterStd) != fingerprint(afterIter) {
 			t.Fatalf("unmarshal expected:\n    %s\ngot:\n    %s\nvia:\n    %s",
