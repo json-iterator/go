@@ -107,7 +107,7 @@ func (encoder *optionalEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	if *((*unsafe.Pointer)(ptr)) == nil {
 		return true
 	} else {
-		return encoder.valueEncoder.IsEmpty(*((*unsafe.Pointer)(ptr)))
+		return false
 	}
 }
 
