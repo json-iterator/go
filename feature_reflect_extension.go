@@ -231,7 +231,7 @@ func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, err
 			}
 		} else {
 			tagParts := strings.Split(field.Tag.Get("json"), ",")
-			fieldNames := calcFieldNames(field.Name, tagParts[0])
+			fieldNames := calcFieldNames(field.Name, tagParts[0], string(field.Tag))
 			fieldCacheKey := fmt.Sprintf("%s/%s", typ.String(), field.Name)
 			decoder := fieldDecoders[fieldCacheKey]
 			if decoder == nil {
@@ -295,22 +295,22 @@ func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, err
 	return structDescriptor, nil
 }
 
-func calcFieldNames(originalFieldName string, tagProvidedFieldName string) []string {
-	// tag => exported? => original
-	isNotExported := unicode.IsLower(rune(originalFieldName[0]))
+func calcFieldNames(originalFieldName string, tagProvidedFieldName string, wholeTag string) []string {
+	// ignore?
+	if wholeTag == "-" {
+		return []string{}
+	}
+	// rename?
 	var fieldNames []string
-	/// tagParts[0] always present, even if no tags
-	switch tagProvidedFieldName {
-	case "":
-		if isNotExported {
-			fieldNames = []string{}
-		} else {
-			fieldNames = []string{originalFieldName}
-		}
-	case "-":
-		fieldNames = []string{}
-	default:
+	if tagProvidedFieldName == "" {
+		fieldNames = []string{originalFieldName}
+	} else {
 		fieldNames = []string{tagProvidedFieldName}
+	}
+	// private?
+	isNotExported := unicode.IsLower(rune(originalFieldName[0]))
+	if isNotExported {
+		fieldNames = []string{}
 	}
 	return fieldNames
 }
