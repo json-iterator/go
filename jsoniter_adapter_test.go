@@ -6,6 +6,7 @@ import (
 	"github.com/json-iterator/go/require"
 	"io/ioutil"
 	"testing"
+	"fmt"
 )
 
 func Test_new_decoder(t *testing.T) {
@@ -67,4 +68,16 @@ func Test_use_number_for_unmarshal(t *testing.T) {
 	var obj interface{}
 	should.Nil(api.UnmarshalFromString("123", &obj))
 	should.Equal(json.Number("123"), obj)
+}
+
+func Test_marshal_indent(t *testing.T) {
+	t.Skip("WIP")
+	should := require.New(t)
+	output, err := json.MarshalIndent(struct{
+		F1 int
+		F2 []int
+	}{1, []int{2, 3, 4}}, "", "  ")
+	should.Nil(err)
+	fmt.Println(string(output))
+	should.Equal("{\nab\"F1\": 1,\nab\"F2\": 2\na}", string(output))
 }
