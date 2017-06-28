@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"unsafe"
 	"reflect"
+	"encoding"
 )
 
 type stringCodec struct {
@@ -574,6 +575,40 @@ func (encoder *marshalerEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	}
 }
 
+type textMarshalerEncoder struct {
+	templateInterface emptyInterface
+}
+
+func (encoder *textMarshalerEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
+	templateInterface := encoder.templateInterface
+	templateInterface.word = ptr
+	realInterface := (*interface{})(unsafe.Pointer(&templateInterface))
+	marshaler := (*realInterface).(encoding.TextMarshaler)
+	bytes, err := marshaler.MarshalText()
+	if err != nil {
+		stream.Error = err
+	} else {
+		stream.WriteString(string(bytes))
+	}
+}
+
+func (encoder *textMarshalerEncoder) EncodeInterface(val interface{}, stream *Stream) {
+	WriteToStream(val, stream, encoder)
+}
+
+func (encoder *textMarshalerEncoder) IsEmpty(ptr unsafe.Pointer) bool {
+	templateInterface := encoder.templateInterface
+	templateInterface.word = ptr
+	realInterface := (*interface{})(unsafe.Pointer(&templateInterface))
+	marshaler := (*realInterface).(encoding.TextMarshaler)
+	bytes, err := marshaler.MarshalText()
+	if err != nil {
+		return true
+	} else {
+		return len(bytes) > 0
+	}
+}
+
 type unmarshalerDecoder struct {
 	templateInterface emptyInterface
 }
@@ -586,6 +621,22 @@ func (decoder *unmarshalerDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	bytes := iter.SkipAndReturnBytes()
 	err := unmarshaler.UnmarshalJSON(bytes)
 	if err != nil {
-		iter.ReportError("unmarshaler", err.Error())
+		iter.ReportError("unmarshalerDecoder", err.Error())
+	}
+}
+
+type textUnmarshalerDecoder struct {
+	templateInterface emptyInterface
+}
+
+func (decoder *textUnmarshalerDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
+	templateInterface := decoder.templateInterface
+	templateInterface.word = ptr
+	realInterface := (*interface{})(unsafe.Pointer(&templateInterface))
+	unmarshaler := (*realInterface).(encoding.TextUnmarshaler)
+	str := iter.ReadString()
+	err := unmarshaler.UnmarshalText([]byte(str))
+	if err != nil {
+		iter.ReportError("textUnmarshalerDecoder", err.Error())
 	}
 }

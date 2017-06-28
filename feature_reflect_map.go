@@ -35,6 +35,7 @@ func (decoder *mapDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 		decoder.elemDecoder.Decode(unsafe.Pointer(elem.Pointer()), iter)
 		// to put into map, we have to use reflection
 		keyType := decoder.keyType
+		// TODO: remove this from loop
 		switch {
 		case keyType.Kind() == reflect.String:
 			realVal.SetMapIndex(reflect.ValueOf(keyStr).Convert(keyType), elem.Elem())
@@ -47,6 +48,15 @@ func (decoder *mapDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 				return false
 			}
 			realVal.SetMapIndex(reflect.ValueOf(textUnmarshaler), elem.Elem())
+			return true
+		case reflect.PtrTo(keyType).Implements(textUnmarshalerType):
+			textUnmarshaler := reflect.New(keyType).Interface().(encoding.TextUnmarshaler)
+			err := textUnmarshaler.UnmarshalText([]byte(keyStr))
+			if err != nil {
+				iter.ReportError("read map key as TextUnmarshaler", err.Error())
+				return false
+			}
+			realVal.SetMapIndex(reflect.ValueOf(textUnmarshaler).Elem(), elem.Elem())
 			return true
 		default:
 			switch keyType.Kind() {

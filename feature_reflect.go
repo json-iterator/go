@@ -54,6 +54,7 @@ var jsoniterRawMessageType reflect.Type
 var anyType reflect.Type
 var marshalerType reflect.Type
 var unmarshalerType reflect.Type
+var textMarshalerType reflect.Type
 var textUnmarshalerType reflect.Type
 
 func init() {
@@ -63,6 +64,7 @@ func init() {
 	anyType = reflect.TypeOf((*Any)(nil)).Elem()
 	marshalerType = reflect.TypeOf((*json.Marshaler)(nil)).Elem()
 	unmarshalerType = reflect.TypeOf((*json.Unmarshaler)(nil)).Elem()
+	textMarshalerType = reflect.TypeOf((*encoding.TextMarshaler)(nil)).Elem()
 	textUnmarshalerType = reflect.TypeOf((*encoding.TextUnmarshaler)(nil)).Elem()
 }
 
@@ -259,7 +261,7 @@ func createDecoderOfType(cfg *frozenConfig, typ reflect.Type) (ValDecoder, error
 	if typ.Kind() == reflect.Slice && typ.Elem().Kind() == reflect.Uint8 {
 		return &base64Codec{}, nil
 	}
-	if typ.ConvertibleTo(unmarshalerType) {
+	if typ.Implements(unmarshalerType) {
 		templateInterface := reflect.New(typ).Elem().Interface()
 		var decoder ValDecoder = &unmarshalerDecoder{extractInterface(templateInterface)}
 		if typ.Kind() != reflect.Struct {
@@ -267,12 +269,25 @@ func createDecoderOfType(cfg *frozenConfig, typ reflect.Type) (ValDecoder, error
 		}
 		return decoder, nil
 	}
-	if reflect.PtrTo(typ).ConvertibleTo(unmarshalerType) {
+	if reflect.PtrTo(typ).Implements(unmarshalerType) {
 		templateInterface := reflect.New(typ).Interface()
 		var decoder ValDecoder = &unmarshalerDecoder{extractInterface(templateInterface)}
 		return decoder, nil
 	}
-	if typ.ConvertibleTo(anyType) {
+	if typ.Implements(textUnmarshalerType) {
+		templateInterface := reflect.New(typ).Elem().Interface()
+		var decoder ValDecoder = &textUnmarshalerDecoder{extractInterface(templateInterface)}
+		if typ.Kind() != reflect.Struct {
+			decoder = &optionalDecoder{typ, decoder}
+		}
+		return decoder, nil
+	}
+	if reflect.PtrTo(typ).Implements(textUnmarshalerType) {
+		templateInterface := reflect.New(typ).Interface()
+		var decoder ValDecoder = &textUnmarshalerDecoder{extractInterface(templateInterface)}
+		return decoder, nil
+	}
+	if typ.Implements(anyType) {
 		return &anyCodec{}, nil
 	}
 	switch typ.Kind() {
@@ -402,7 +417,7 @@ func createEncoderOfType(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error
 	if typ.Kind() == reflect.Slice && typ.Elem().Kind() == reflect.Uint8 {
 		return &base64Codec{typ}, nil
 	}
-	if typ.ConvertibleTo(marshalerType) {
+	if typ.Implements(marshalerType) {
 		templateInterface := reflect.New(typ).Elem().Interface()
 		var encoder ValEncoder = &marshalerEncoder{extractInterface(templateInterface)}
 		if typ.Kind() != reflect.Struct {
@@ -410,7 +425,15 @@ func createEncoderOfType(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error
 		}
 		return encoder, nil
 	}
-	if typ.ConvertibleTo(anyType) {
+	if typ.Implements(textMarshalerType) {
+		templateInterface := reflect.New(typ).Elem().Interface()
+		var encoder ValEncoder = &textMarshalerEncoder{extractInterface(templateInterface)}
+		if typ.Kind() != reflect.Struct {
+			encoder = &optionalEncoder{encoder}
+		}
+		return encoder, nil
+	}
+	if typ.Implements(anyType) {
 		return &anyCodec{}, nil
 	}
 	kind := typ.Kind()
