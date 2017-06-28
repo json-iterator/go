@@ -277,8 +277,13 @@ func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, err
 			if tagPart == "omitempty" {
 				shouldOmitEmpty = true
 			} else if tagPart == "string" {
-				binding.Decoder = &stringModeDecoder{binding.Decoder}
-				binding.Encoder = &stringModeEncoder{binding.Encoder}
+				if binding.Field.Type.Kind() == reflect.String {
+					binding.Decoder = &stringModeStringDecoder{binding.Decoder, cfg}
+					binding.Encoder = &stringModeStringEncoder{binding.Encoder, cfg}
+				} else {
+					binding.Decoder = &stringModeNumberDecoder{binding.Decoder}
+					binding.Encoder = &stringModeNumberEncoder{binding.Encoder}
+				}
 			}
 		}
 		binding.Decoder = &structFieldDecoder{binding.Field, binding.Decoder}
