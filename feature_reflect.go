@@ -267,6 +267,11 @@ func createDecoderOfType(cfg *frozenConfig, typ reflect.Type) (ValDecoder, error
 		}
 		return decoder, nil
 	}
+	if reflect.PtrTo(typ).ConvertibleTo(unmarshalerType) {
+		templateInterface := reflect.New(typ).Interface()
+		var decoder ValDecoder = &unmarshalerDecoder{extractInterface(templateInterface)}
+		return decoder, nil
+	}
 	if typ.ConvertibleTo(anyType) {
 		return &anyCodec{}, nil
 	}
