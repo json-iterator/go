@@ -238,7 +238,7 @@ func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, err
 			}
 		}
 		tagParts := strings.Split(field.Tag.Get("json"), ",")
-		fieldNames := calcFieldNames(field.Name, tagParts[0], string(field.Tag))
+		fieldNames := calcFieldNames(field.Name, tagParts[0], string(field.Tag.Get("json")))
 		fieldCacheKey := fmt.Sprintf("%s/%s", typ.String(), field.Name)
 		decoder := fieldDecoders[fieldCacheKey]
 		if decoder == nil {
