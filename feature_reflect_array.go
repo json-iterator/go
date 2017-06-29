@@ -56,7 +56,16 @@ func (encoder *arrayEncoder) EncodeInterface(val interface{}, stream *Stream) {
 		stream.WriteArrayEnd()
 		return
 	}
-	WriteToStream(val, stream, encoder)
+	elemType := encoder.arrayType.Elem()
+	if encoder.arrayType.Len() == 1 && (elemType.Kind() == reflect.Ptr ||elemType.Kind() == reflect.Map) {
+		ptr := uintptr(e.word)
+		e.word = unsafe.Pointer(&ptr)
+	}
+	if reflect.TypeOf(val).Kind() == reflect.Ptr {
+		encoder.Encode(unsafe.Pointer(&e.word), stream)
+	} else {
+		encoder.Encode(e.word, stream)
+	}
 }
 
 func (encoder *arrayEncoder) IsEmpty(ptr unsafe.Pointer) bool {

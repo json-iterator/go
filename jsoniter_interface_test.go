@@ -233,12 +233,21 @@ func Test_struct_with_not_nil_embedded(t *testing.T) {
 	should.Equal("1", obj.Field0)
 }
 
-func Test_array_with_one_nil(t *testing.T) {
+func Test_array_with_one_nil_ptr(t *testing.T) {
 	obj := [1]*float64{nil}
 	should := require.New(t)
 	output, err := MarshalToString(obj)
 	should.Nil(err)
 	should.Equal(`[null]`, output)
+}
+
+func Test_array_with_one_not_nil_ptr(t *testing.T) {
+	two := float64(2)
+	obj := [1]*float64{&two}
+	should := require.New(t)
+	output, err := MarshalToString(obj)
+	should.Nil(err)
+	should.Equal(`[2]`, output)
 }
 
 func Test_embedded_array_with_one_nil(t *testing.T) {
