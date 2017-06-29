@@ -31,6 +31,7 @@ func (structDescriptor *StructDescriptor) GetField(fieldName string) *Binding {
 }
 
 type Binding struct {
+	levels    []int
 	Field     *reflect.StructField
 	FromNames []string
 	ToNames   []string
@@ -206,6 +207,7 @@ func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, err
 					return nil, err
 				}
 				for _, binding := range structDescriptor.Fields {
+					binding.levels = append([]int{i}, binding.levels...)
 					binding.Encoder = &structFieldEncoder{&field, binding.Encoder, false}
 					binding.Decoder = &structFieldDecoder{&field, binding.Decoder}
 					if field.Offset == 0 {
@@ -221,12 +223,11 @@ func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, err
 					return nil, err
 				}
 				for _, binding := range structDescriptor.Fields {
-					cloneField := field
-					cloneField.Name = binding.Field.Name
+					binding.levels = append([]int{i}, binding.levels...)
 					binding.Encoder = &optionalEncoder{binding.Encoder}
-					binding.Encoder = &structFieldEncoder{&cloneField, binding.Encoder, false}
+					binding.Encoder = &structFieldEncoder{&field, binding.Encoder, false}
 					binding.Decoder = &deferenceDecoder{field.Type.Elem(), binding.Decoder}
-					binding.Decoder = &structFieldDecoder{&cloneField, binding.Decoder}
+					binding.Decoder = &structFieldDecoder{&field, binding.Decoder}
 					if field.Offset == 0 {
 						headAnonymousBindings = append(headAnonymousBindings, binding)
 					} else {
@@ -266,6 +267,7 @@ func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, err
 			Decoder:   decoder,
 			Encoder:   encoder,
 		}
+		binding.levels = []int{i}
 		bindings = append(bindings, binding)
 	}
 	return createStructDescriptor(cfg, typ, bindings, headAnonymousBindings, tailAnonymousBindings), nil
