@@ -282,8 +282,6 @@ func createStructDescriptor(cfg *frozenConfig, typ reflect.Type, bindings []*Bin
 			}
 			fallthrough
 		case reflect.Map:
-			fallthrough
-		case reflect.Slice:
 			onePtrOptimization = true
 		}
 	}
