@@ -212,6 +212,7 @@ func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, err
 						tailAnonymousBindings = append(tailAnonymousBindings, binding)
 					}
 				}
+				continue
 			} else if field.Type.Kind() == reflect.Ptr && field.Type.Elem().Kind() == reflect.Struct {
 				structDescriptor, err := describeStruct(cfg, field.Type.Elem())
 				if err != nil {
@@ -228,41 +229,44 @@ func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, err
 						tailAnonymousBindings = append(tailAnonymousBindings, binding)
 					}
 				}
+				continue
 			}
-		} else {
-			tagParts := strings.Split(field.Tag.Get("json"), ",")
-			fieldNames := calcFieldNames(field.Name, tagParts[0], string(field.Tag))
-			fieldCacheKey := fmt.Sprintf("%s/%s", typ.String(), field.Name)
-			decoder := fieldDecoders[fieldCacheKey]
-			if decoder == nil {
-				var err error
-				decoder, err = decoderOfType(cfg, field.Type)
-				if err != nil {
-					return nil, err
-				}
-			}
-			encoder := fieldEncoders[fieldCacheKey]
-			if encoder == nil {
-				var err error
-				encoder, err = encoderOfType(cfg, field.Type)
-				if err != nil {
-					return nil, err
-				}
-				// map is stored as pointer in the struct
-				if field.Type.Kind() == reflect.Map {
-					encoder = &optionalEncoder{encoder}
-				}
-			}
-			binding := &Binding{
-				Field:     &field,
-				FromNames: fieldNames,
-				ToNames:   fieldNames,
-				Decoder:   decoder,
-				Encoder:   encoder,
-			}
-			bindings = append(bindings, binding)
 		}
+		tagParts := strings.Split(field.Tag.Get("json"), ",")
+		fieldNames := calcFieldNames(field.Name, tagParts[0], string(field.Tag))
+		fieldCacheKey := fmt.Sprintf("%s/%s", typ.String(), field.Name)
+		decoder := fieldDecoders[fieldCacheKey]
+		if decoder == nil {
+			var err error
+			decoder, err = decoderOfType(cfg, field.Type)
+			if err != nil {
+				return nil, err
+			}
+		}
+		encoder := fieldEncoders[fieldCacheKey]
+		if encoder == nil {
+			var err error
+			encoder, err = encoderOfType(cfg, field.Type)
+			if err != nil {
+				return nil, err
+			}
+			// map is stored as pointer in the struct
+			if field.Type.Kind() == reflect.Map {
+				encoder = &optionalEncoder{encoder}
+			}
+		}
+		binding := &Binding{
+			Field:     &field,
+			FromNames: fieldNames,
+			ToNames:   fieldNames,
+			Decoder:   decoder,
+			Encoder:   encoder,
+		}
+		bindings = append(bindings, binding)
 	}
+	return createStructDescriptor(cfg, typ, bindings, headAnonymousBindings, tailAnonymousBindings), nil
+}
+func createStructDescriptor(cfg *frozenConfig, typ reflect.Type, bindings []*Binding, headAnonymousBindings []*Binding, tailAnonymousBindings []*Binding) *StructDescriptor {
 	structDescriptor := &StructDescriptor{
 		Type:   typ,
 		Fields: bindings,
@@ -270,6 +274,14 @@ func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, err
 	for _, extension := range extensions {
 		extension.UpdateStructDescriptor(structDescriptor)
 	}
+	processTags(structDescriptor, cfg)
+	// insert anonymous bindings to the head
+	structDescriptor.Fields = append(headAnonymousBindings, structDescriptor.Fields...)
+	structDescriptor.Fields = append(structDescriptor.Fields, tailAnonymousBindings...)
+	return structDescriptor
+}
+
+func processTags(structDescriptor *StructDescriptor, cfg *frozenConfig) {
 	for _, binding := range structDescriptor.Fields {
 		shouldOmitEmpty := false
 		tagParts := strings.Split(binding.Field.Tag.Get("json"), ",")
@@ -289,10 +301,6 @@ func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, err
 		binding.Decoder = &structFieldDecoder{binding.Field, binding.Decoder}
 		binding.Encoder = &structFieldEncoder{binding.Field, binding.Encoder, shouldOmitEmpty}
 	}
-	// insert anonymous bindings to the head
-	structDescriptor.Fields = append(headAnonymousBindings, structDescriptor.Fields...)
-	structDescriptor.Fields = append(structDescriptor.Fields, tailAnonymousBindings...)
-	return structDescriptor, nil
 }
 
 func calcFieldNames(originalFieldName string, tagProvidedFieldName string, wholeTag string) []string {
