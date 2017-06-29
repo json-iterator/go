@@ -51,6 +51,10 @@ func Marshal(v interface{}) ([]byte, error) {
 	return ConfigDefault.Marshal(v)
 }
 
+func MarshalIndent(v interface{}, prefix, indent string) ([]byte, error) {
+	return ConfigDefault.MarshalIndent(v, prefix, indent)
+}
+
 func MarshalToString(v interface{}) (string, error) {
 	return ConfigDefault.MarshalToString(v)
 }

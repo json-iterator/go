@@ -31,6 +31,7 @@ type frozenConfig struct {
 type Api interface {
 	MarshalToString(v interface{}) (string, error)
 	Marshal(v interface{}) ([]byte, error)
+	MarshalIndent(v interface{}, prefix, indent string) ([]byte, error)
 	UnmarshalFromString(str string, v interface{}) error
 	Unmarshal(data []byte, v interface{}) error
 	Get(data []byte, path ...interface{}) Any
@@ -54,6 +55,7 @@ var ConfigFastest = Config{
 }.Froze()
 
 func (cfg Config) Froze() *frozenConfig {
+	// TODO: cache frozen config
 	frozenConfig := &frozenConfig{
 		sortMapKeys:   cfg.SortMapKeys,
 		indentionStep: cfg.IndentionStep,
@@ -222,6 +224,20 @@ func (cfg *frozenConfig) Marshal(v interface{}) ([]byte, error) {
 	copied := make([]byte, len(result))
 	copy(copied, result)
 	return copied, nil
+}
+
+func (cfg *frozenConfig) MarshalIndent(v interface{}, prefix, indent string) ([]byte, error) {
+	if prefix != "" {
+		panic("prefix is not supported")
+	}
+	for _, r := range indent {
+		if r != ' ' {
+			panic("indent can only be space")
+		}
+	}
+	newCfg := cfg.configBeforeFrozen
+	newCfg.IndentionStep = len(indent)
+	return newCfg.Froze().Marshal(v)
 }
 
 func (cfg *frozenConfig) UnmarshalFromString(str string, v interface{}) error {

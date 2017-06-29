@@ -225,7 +225,11 @@ func (stream *Stream) WriteObjectStart() {
 
 func (stream *Stream) WriteObjectField(field string) {
 	stream.WriteString(field)
-	stream.writeByte(':')
+	if stream.indention > 0 {
+		stream.writeTwoBytes(':', ' ')
+	} else {
+		stream.writeByte(':')
+	}
 }
 
 func (stream *Stream) WriteObjectEnd() {
