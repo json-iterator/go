@@ -1,11 +1,11 @@
 package jsoniter
 
 import (
+	"encoding"
 	"encoding/base64"
 	"encoding/json"
-	"unsafe"
 	"reflect"
-	"encoding"
+	"unsafe"
 )
 
 type stringCodec struct {
@@ -419,7 +419,7 @@ func (codec *base64Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	}
 	encoding := base64.StdEncoding
 	src := iter.SkipAndReturnBytes()
-	src = src[1: len(src)-1]
+	src = src[1 : len(src)-1]
 	decodedLen := encoding.DecodedLen(len(src))
 	dst := make([]byte, decodedLen)
 	len, err := encoding.Decode(dst, src)
@@ -493,7 +493,7 @@ func (decoder *stringModeNumberDecoder) Decode(ptr unsafe.Pointer, iter *Iterato
 
 type stringModeStringDecoder struct {
 	elemDecoder ValDecoder
-	cfg *frozenConfig
+	cfg         *frozenConfig
 }
 
 func (decoder *stringModeStringDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
@@ -524,7 +524,7 @@ func (encoder *stringModeNumberEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 
 type stringModeStringEncoder struct {
 	elemEncoder ValEncoder
-	cfg *frozenConfig
+	cfg         *frozenConfig
 }
 
 func (encoder *stringModeStringEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {

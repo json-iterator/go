@@ -3,10 +3,10 @@ package jsoniter
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/json-iterator/go/require"
 	"io/ioutil"
 	"testing"
-	"fmt"
 )
 
 func Test_new_decoder(t *testing.T) {
@@ -73,7 +73,7 @@ func Test_use_number_for_unmarshal(t *testing.T) {
 func Test_marshal_indent(t *testing.T) {
 	t.Skip("WIP")
 	should := require.New(t)
-	output, err := json.MarshalIndent(struct{
+	output, err := json.MarshalIndent(struct {
 		F1 int
 		F2 []int
 	}{1, []int{2, 3, 4}}, "", "  ")

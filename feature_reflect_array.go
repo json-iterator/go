@@ -57,7 +57,7 @@ func (encoder *arrayEncoder) EncodeInterface(val interface{}, stream *Stream) {
 		return
 	}
 	elemType := encoder.arrayType.Elem()
-	if encoder.arrayType.Len() == 1 && (elemType.Kind() == reflect.Ptr ||elemType.Kind() == reflect.Map) {
+	if encoder.arrayType.Len() == 1 && (elemType.Kind() == reflect.Ptr || elemType.Kind() == reflect.Map) {
 		ptr := uintptr(e.word)
 		e.word = unsafe.Pointer(&ptr)
 	}
