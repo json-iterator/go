@@ -15,8 +15,10 @@ var fieldEncoders = map[string]ValEncoder{}
 var extensions = []Extension{}
 
 type StructDescriptor struct {
-	Type   reflect.Type
-	Fields []*Binding
+	onePtrEmbedded     bool
+	onePtrOptimization bool
+	Type               reflect.Type
+	Fields             []*Binding
 }
 
 func (structDescriptor *StructDescriptor) GetField(fieldName string) *Binding {
@@ -219,10 +221,12 @@ func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, err
 					return nil, err
 				}
 				for _, binding := range structDescriptor.Fields {
+					cloneField := field
+					cloneField.Name = binding.Field.Name
 					binding.Encoder = &optionalEncoder{binding.Encoder}
-					binding.Encoder = &structFieldEncoder{&field, binding.Encoder, false}
-					binding.Decoder = &optionalDecoder{field.Type, binding.Decoder}
-					binding.Decoder = &structFieldDecoder{&field, binding.Decoder}
+					binding.Encoder = &structFieldEncoder{&cloneField, binding.Encoder, false}
+					binding.Decoder = &deferenceDecoder{field.Type.Elem(), binding.Decoder}
+					binding.Decoder = &structFieldDecoder{&cloneField, binding.Decoder}
 					if field.Offset == 0 {
 						headAnonymousBindings = append(headAnonymousBindings, binding)
 					} else {
@@ -267,9 +271,27 @@ func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, err
 	return createStructDescriptor(cfg, typ, bindings, headAnonymousBindings, tailAnonymousBindings), nil
 }
 func createStructDescriptor(cfg *frozenConfig, typ reflect.Type, bindings []*Binding, headAnonymousBindings []*Binding, tailAnonymousBindings []*Binding) *StructDescriptor {
+	onePtrEmbedded := false
+	onePtrOptimization := false
+	if typ.NumField() == 1 {
+		firstField := typ.Field(0)
+		switch firstField.Type.Kind() {
+		case reflect.Ptr:
+			if firstField.Anonymous && firstField.Type.Elem().Kind() == reflect.Struct {
+				onePtrEmbedded = true
+			}
+			fallthrough
+		case reflect.Map:
+			fallthrough
+		case reflect.Slice:
+			onePtrOptimization = true
+		}
+	}
 	structDescriptor := &StructDescriptor{
-		Type:   typ,
-		Fields: bindings,
+		onePtrEmbedded:     onePtrEmbedded,
+		onePtrOptimization: onePtrOptimization,
+		Type:               typ,
+		Fields:             bindings,
 	}
 	for _, extension := range extensions {
 		extension.UpdateStructDescriptor(structDescriptor)

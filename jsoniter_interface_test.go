@@ -197,6 +197,42 @@ func Test_struct_with_one_nil(t *testing.T) {
 	should.Equal(`{"F":null}`, output)
 }
 
+func Test_struct_with_one_nil_embedded(t *testing.T) {
+	type Parent struct {
+		Field1 string
+		Field2 string
+	}
+	type TestObject struct {
+		*Parent
+	}
+	obj := TestObject{}
+	should := require.New(t)
+	bytes, err := json.Marshal(obj)
+	should.Nil(err)
+	should.Equal("{}", string(bytes))
+	output, err := MarshalToString(obj)
+	should.Nil(err)
+	should.Equal(`{}`, output)
+}
+
+func Test_struct_with_not_nil_embedded(t *testing.T) {
+	type Parent struct {
+		Field0 string
+		Field1 []string
+		Field2 map[string]interface{}
+	}
+	type TestObject struct {
+		*Parent
+	}
+	should := require.New(t)
+	var obj TestObject
+	err := UnmarshalFromString(`{"Field0":"1","Field1":null,"Field2":{"K":"V"}}`, &obj)
+	should.Nil(err)
+	should.Nil(obj.Field1)
+	should.Equal(map[string]interface{}{"K": "V"}, obj.Field2)
+	should.Equal("1", obj.Field0)
+}
+
 func Test_array_with_one_nil(t *testing.T) {
 	obj := [1]*float64{nil}
 	should := require.New(t)

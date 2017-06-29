@@ -36,7 +36,7 @@ func encoderOfStruct(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error) {
 			finalOrderedFields = append(finalOrderedFields, *structFieldTo)
 		}
 	}
-	return &structEncoder{finalOrderedFields}, nil
+	return &structEncoder{structDescriptor.onePtrEmbedded,structDescriptor.onePtrOptimization,finalOrderedFields}, nil
 }
 
 func decoderOfStruct(cfg *frozenConfig, typ reflect.Type) (ValDecoder, error) {
@@ -992,6 +992,8 @@ func (encoder *structFieldEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 }
 
 type structEncoder struct {
+	onePtrEmbedded bool
+	onePtrOptimization bool
 	fields []structFieldTo
 }
 
@@ -1018,44 +1020,21 @@ func (encoder *structEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 }
 
 func (encoder *structEncoder) EncodeInterface(val interface{}, stream *Stream) {
-	var encoderToUse ValEncoder
-	encoderToUse = encoder
-	if len(encoder.fields) == 1 {
-		firstFieldName := encoder.fields[0].toName
-		firstField := encoder.fields[0].encoder
-		firstEncoder := firstField.fieldEncoder
-		firstEncoderName := reflect.TypeOf(firstEncoder).String()
-		// interface{} has inline optimization for this case
-		if firstEncoderName == "*jsoniter.optionalEncoder" {
-			encoderToUse = &structEncoder{
-				fields: []structFieldTo{
-					{
-						toName: firstFieldName,
-						encoder: &structFieldEncoder{
-							field:        firstField.field,
-							fieldEncoder: firstEncoder.(*optionalEncoder).valueEncoder,
-							omitempty:    firstField.omitempty,
-						},
-					},
-				},
-			}
-			e := (*emptyInterface)(unsafe.Pointer(&val))
-			if e.word == nil {
-				stream.WriteObjectStart()
-				stream.WriteObjectField(firstFieldName)
-				stream.WriteNil()
-				stream.WriteObjectEnd()
-				return
-			}
-			if reflect.TypeOf(val).Kind() == reflect.Ptr {
-				encoderToUse.Encode(unsafe.Pointer(&e.word), stream)
-			} else {
-				encoderToUse.Encode(e.word, stream)
-			}
+	e := (*emptyInterface)(unsafe.Pointer(&val))
+	if encoder.onePtrOptimization {
+		if e.word == nil && encoder.onePtrEmbedded {
+			stream.WriteObjectStart()
+			stream.WriteObjectEnd()
 			return
 		}
+		ptr := uintptr(e.word)
+		e.word = unsafe.Pointer(&ptr)
 	}
-	WriteToStream(val, stream, encoderToUse)
+	if reflect.TypeOf(val).Kind() == reflect.Ptr {
+		encoder.Encode(unsafe.Pointer(&e.word), stream)
+	} else {
+		encoder.Encode(e.word, stream)
+	}
 }
 
 func (encoder *structEncoder) IsEmpty(ptr unsafe.Pointer) bool {

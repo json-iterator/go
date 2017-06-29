@@ -78,14 +78,34 @@ func (decoder *optionalDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 		*((*unsafe.Pointer)(ptr)) = nil
 	} else {
 		if *((*unsafe.Pointer)(ptr)) == nil {
-			// pointer to null, we have to allocate memory to hold the value
+			//pointer to null, we have to allocate memory to hold the value
 			value := reflect.New(decoder.valueType)
-			decoder.valueDecoder.Decode(unsafe.Pointer(value.Pointer()), iter)
-			*((*uintptr)(ptr)) = value.Pointer()
+			newPtr := extractInterface(value.Interface()).word
+			decoder.valueDecoder.Decode(newPtr, iter)
+			*((*uintptr)(ptr)) = uintptr(newPtr)
 		} else {
-			// reuse existing instance
+			//reuse existing instance
 			decoder.valueDecoder.Decode(*((*unsafe.Pointer)(ptr)), iter)
 		}
+	}
+}
+
+type deferenceDecoder struct {
+	// only to deference a pointer
+	valueType    reflect.Type
+	valueDecoder ValDecoder
+}
+
+func (decoder *deferenceDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
+	if *((*unsafe.Pointer)(ptr)) == nil {
+		//pointer to null, we have to allocate memory to hold the value
+		value := reflect.New(decoder.valueType)
+		newPtr := extractInterface(value.Interface()).word
+		decoder.valueDecoder.Decode(newPtr, iter)
+		*((*uintptr)(ptr)) = uintptr(newPtr)
+	} else {
+		//reuse existing instance
+		decoder.valueDecoder.Decode(*((*unsafe.Pointer)(ptr)), iter)
 	}
 }
 
