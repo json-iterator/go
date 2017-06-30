@@ -6,6 +6,7 @@ import (
 	"strings"
 	"unicode"
 	"unsafe"
+	"sort"
 )
 
 var typeDecoders = map[string]ValDecoder{}
@@ -195,8 +196,7 @@ func _getTypeEncoderFromExtension(typ reflect.Type) ValEncoder {
 }
 
 func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, error) {
-	headAnonymousBindings := []*Binding{}
-	tailAnonymousBindings := []*Binding{}
+	embeddedBindings := []*Binding{}
 	bindings := []*Binding{}
 	for i := 0; i < typ.NumField(); i++ {
 		field := typ.Field(i)
@@ -210,11 +210,7 @@ func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, err
 					binding.levels = append([]int{i}, binding.levels...)
 					binding.Encoder = &structFieldEncoder{&field, binding.Encoder, false}
 					binding.Decoder = &structFieldDecoder{&field, binding.Decoder}
-					if field.Offset == 0 {
-						headAnonymousBindings = append(headAnonymousBindings, binding)
-					} else {
-						tailAnonymousBindings = append(tailAnonymousBindings, binding)
-					}
+					embeddedBindings = append(embeddedBindings, binding)
 				}
 				continue
 			} else if field.Type.Kind() == reflect.Ptr && field.Type.Elem().Kind() == reflect.Struct {
@@ -228,11 +224,7 @@ func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, err
 					binding.Encoder = &structFieldEncoder{&field, binding.Encoder, false}
 					binding.Decoder = &deferenceDecoder{field.Type.Elem(), binding.Decoder}
 					binding.Decoder = &structFieldDecoder{&field, binding.Decoder}
-					if field.Offset == 0 {
-						headAnonymousBindings = append(headAnonymousBindings, binding)
-					} else {
-						tailAnonymousBindings = append(tailAnonymousBindings, binding)
-					}
+					embeddedBindings = append(embeddedBindings, binding)
 				}
 				continue
 			}
@@ -270,9 +262,9 @@ func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, err
 		binding.levels = []int{i}
 		bindings = append(bindings, binding)
 	}
-	return createStructDescriptor(cfg, typ, bindings, headAnonymousBindings, tailAnonymousBindings), nil
+	return createStructDescriptor(cfg, typ, bindings, embeddedBindings), nil
 }
-func createStructDescriptor(cfg *frozenConfig, typ reflect.Type, bindings []*Binding, headAnonymousBindings []*Binding, tailAnonymousBindings []*Binding) *StructDescriptor {
+func createStructDescriptor(cfg *frozenConfig, typ reflect.Type, bindings []*Binding, embeddedBindings []*Binding) *StructDescriptor {
 	onePtrEmbedded := false
 	onePtrOptimization := false
 	if typ.NumField() == 1 {
@@ -297,10 +289,35 @@ func createStructDescriptor(cfg *frozenConfig, typ reflect.Type, bindings []*Bin
 		extension.UpdateStructDescriptor(structDescriptor)
 	}
 	processTags(structDescriptor, cfg)
-	// insert anonymous bindings to the head
-	structDescriptor.Fields = append(headAnonymousBindings, structDescriptor.Fields...)
-	structDescriptor.Fields = append(structDescriptor.Fields, tailAnonymousBindings...)
+	// merge normal & embedded bindings & sort with original order
+	allBindings := sortableBindings(append(embeddedBindings, structDescriptor.Fields...))
+	sort.Sort(allBindings)
+	structDescriptor.Fields = allBindings
 	return structDescriptor
+}
+
+type sortableBindings []*Binding
+
+func (bindings sortableBindings) Len() int {
+	return len(bindings)
+}
+
+func (bindings sortableBindings) Less(i, j int) bool {
+	left := bindings[i].levels
+	right := bindings[j].levels
+	k := 0
+	for {
+		if left[k] < right[k] {
+			return true
+		} else if left[k] > right[k] {
+			return false
+		}
+		k++
+	}
+}
+
+func (bindings sortableBindings) Swap(i, j int) {
+	bindings[i], bindings[j] = bindings[j], bindings[i]
 }
 
 func processTags(structDescriptor *StructDescriptor, cfg *frozenConfig) {

@@ -84,7 +84,7 @@ func Test_write_object(t *testing.T) {
 	stream.WriteObjectEnd()
 	stream.Flush()
 	should.Nil(stream.Error)
-	should.Equal("{\n  \"hello\":1,\n  \"world\":2\n}", buf.String())
+	should.Equal("{\n  \"hello\": 1,\n  \"world\": 2\n}", buf.String())
 }
 
 func Test_decode_one_field_struct(t *testing.T) {
@@ -381,21 +381,33 @@ func Test_shadow_struct_field(t *testing.T) {
 	should.Contains(output, `"max_age":20`)
 }
 
-func Test_embed_at_last(t *testing.T) {
-	type Base struct {
-		Type string `json:"type"`
+func Test_embeded_order(t *testing.T) {
+	type A struct {
+		Field2 string
 	}
 
-	type Struct struct {
-		Field     string `json:"field"`
-		FieldType string `json:"field_type"`
-		Base
+	type C struct {
+		Field5 string
+	}
+
+	type B struct {
+		Field4 string
+		C
+		Field6 string
+	}
+
+	type TestObject struct {
+		Field1 string
+		A
+		Field3 string
+		B
+		Field7 string
 	}
 	should := require.New(t)
-	s := Struct{Field: "field", FieldType: "field_type", Base: Base{"type"}}
+	s := TestObject{}
 	output, err := MarshalToString(s)
 	should.Nil(err)
-	should.Equal(`{"field":"field","field_type":"field_type","type":"type"}`, output)
+	should.Equal(`{"Field1":"","Field2":"","Field3":"","Field4":"","Field5":"","Field6":"","Field7":""}`, output)
 }
 
 func Test_decode_nested(t *testing.T) {
