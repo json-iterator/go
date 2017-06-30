@@ -212,10 +212,10 @@ func Test_unmarshaler_and_decoder(t *testing.T) {
 	obj := TestObject{}
 	val := ObjectImplementedUnmarshaler(0)
 	obj.Field = &val
-	err := json.Unmarshal([]byte(`{"Field":"hello"}`), &obj)
+	err := json.Unmarshal([]byte(`{"Field":"100"}`), &obj)
 	should.Nil(err)
 	should.Equal(100, int(*obj.Field))
-	err = Unmarshal([]byte(`{"Field":"hello"}`), &obj)
+	err = Unmarshal([]byte(`{"Field":"100"}`), &obj)
 	should.Nil(err)
 	should.Equal(10, int(*obj.Field))
 }
