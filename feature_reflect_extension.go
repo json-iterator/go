@@ -200,7 +200,7 @@ func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, err
 	bindings := []*Binding{}
 	for i := 0; i < typ.NumField(); i++ {
 		field := typ.Field(i)
-		if field.Anonymous && field.Tag.Get("json") == "" {
+		if field.Anonymous && (field.Tag.Get("json") == "" || strings.Split(field.Tag.Get("json"), ",")[0] == "") {
 			if field.Type.Kind() == reflect.Struct {
 				structDescriptor, err := describeStruct(cfg, field.Type)
 				if err != nil {
