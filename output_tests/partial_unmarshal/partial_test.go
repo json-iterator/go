@@ -1,3 +1,4 @@
+// NOTE: This test is different than most of the other JSON roundtrip tests.
 package test
 
 import (
@@ -12,10 +13,10 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
-func Test_Roundtrip(t *testing.T) {
+func Test_PartialUnmarshal(t *testing.T) {
 	fz := fuzz.New().MaxDepth(10).NilChance(0.3)
 	for i := 0; i < 1000; i++ {
-		var before T
+		var before T1
 		fz.Fuzz(&before)
 
 		jbStd, err := json.Marshal(before)
@@ -37,13 +38,13 @@ func Test_Roundtrip(t *testing.T) {
 				indent(jbStd, "    "), indent(jbIter, "    "), dump(before))
 		}
 
-		var afterStd T
+		var afterStd T2
 		err = json.Unmarshal(jbIter, &afterStd)
 		if err != nil {
 			t.Fatalf("failed to unmarshal with stdlib: %v\nvia:\n    %s",
 				err, indent(jbIter, "    "))
 		}
-		var afterIter T
+		var afterIter T2
 		err = jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(jbIter, &afterIter)
 		if err != nil {
 			t.Fatalf("failed to unmarshal with jsoniter: %v\nvia:\n    %s",
@@ -80,73 +81,4 @@ func indent(src []byte, prefix string) string {
 		return fmt.Sprintf("!!! %v", err)
 	}
 	return buf.String()
-}
-
-func benchmarkMarshal(t *testing.B, name string, fn func(interface{}) ([]byte, error)) {
-	t.ReportAllocs()
-	t.ResetTimer()
-
-	var obj T
-	fz := fuzz.NewWithSeed(0).MaxDepth(10).NilChance(0.3)
-	fz.Fuzz(&obj)
-	for i := 0; i < t.N; i++ {
-		jb, err := fn(obj)
-		if err != nil {
-			t.Fatalf("%s failed to marshal:\n input: %s\n  error: %v", name, dump(obj), err)
-		}
-		_ = jb
-	}
-}
-
-func benchmarkUnmarshal(t *testing.B, name string, fn func(data []byte, v interface{}) error) {
-	t.ReportAllocs()
-	t.ResetTimer()
-
-	var before T
-	fz := fuzz.NewWithSeed(0).MaxDepth(10).NilChance(0.3)
-	fz.Fuzz(&before)
-	jb, err := json.Marshal(before)
-	if err != nil {
-		t.Fatalf("failed to marshal: %v", err)
-	}
-
-	for i := 0; i < t.N; i++ {
-		var after T
-		err = fn(jb, &after)
-		if err != nil {
-			t.Fatalf("%s failed to unmarshal:\n  input: %q\n  error: %v", name, string(jb), err)
-		}
-	}
-}
-
-func BenchmarkStandardMarshal(t *testing.B) {
-	benchmarkMarshal(t, "stdlib", json.Marshal)
-}
-
-func BenchmarkStandardUnmarshal(t *testing.B) {
-	benchmarkUnmarshal(t, "stdlib", json.Unmarshal)
-}
-
-func BenchmarkJSONIterMarshalFastest(t *testing.B) {
-	benchmarkMarshal(t, "jsoniter-fastest", jsoniter.ConfigFastest.Marshal)
-}
-
-func BenchmarkJSONIterUnmarshalFastest(t *testing.B) {
-	benchmarkUnmarshal(t, "jsoniter-fastest", jsoniter.ConfigFastest.Unmarshal)
-}
-
-func BenchmarkJSONIterMarshalDefault(t *testing.B) {
-	benchmarkMarshal(t, "jsoniter-default", jsoniter.Marshal)
-}
-
-func BenchmarkJSONIterUnmarshalDefault(t *testing.B) {
-	benchmarkUnmarshal(t, "jsoniter-default", jsoniter.Unmarshal)
-}
-
-func BenchmarkJSONIterMarshalCompatible(t *testing.B) {
-	benchmarkMarshal(t, "jsoniter-compat", jsoniter.ConfigCompatibleWithStandardLibrary.Marshal)
-}
-
-func BenchmarkJSONIterUnmarshalCompatible(t *testing.B) {
-	benchmarkUnmarshal(t, "jsoniter-compat", jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal)
 }
