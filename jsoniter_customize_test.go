@@ -180,26 +180,22 @@ func Test_marshaler_and_encoder(t *testing.T) {
 
 type ObjectImplementedUnmarshaler int
 
-func (obj *ObjectImplementedUnmarshaler) UnmarshalJSON([]byte) error {
-	*obj = 100
+func (obj *ObjectImplementedUnmarshaler) UnmarshalJSON(s []byte) error {
+	val, _ := strconv.ParseInt(string(s[1:len(s)-1]), 10, 64)
+	*obj = ObjectImplementedUnmarshaler(val)
 	return nil
 }
 
 func Test_unmarshaler(t *testing.T) {
-	type TestObject struct {
-		Field  *ObjectImplementedUnmarshaler
-		Field2 string
-	}
 	should := require.New(t)
-	obj := TestObject{}
-	val := ObjectImplementedUnmarshaler(0)
-	obj.Field = &val
-	err := json.Unmarshal([]byte(`{"Field":"hello"}`), &obj)
+	var obj ObjectImplementedUnmarshaler
+	err := json.Unmarshal([]byte(`   "100" `), &obj)
 	should.Nil(err)
-	should.Equal(100, int(*obj.Field))
-	err = Unmarshal([]byte(`{"Field":"hello"}`), &obj)
+	should.Equal(100, int(obj))
+	iter := ParseString(ConfigDefault, `   "100" `)
+	iter.ReadVal(&obj)
 	should.Nil(err)
-	should.Equal(100, int(*obj.Field))
+	should.Equal(100, int(obj))
 }
 
 func Test_unmarshaler_and_decoder(t *testing.T) {

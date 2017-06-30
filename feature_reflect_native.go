@@ -618,6 +618,8 @@ func (decoder *unmarshalerDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	templateInterface.word = ptr
 	realInterface := (*interface{})(unsafe.Pointer(&templateInterface))
 	unmarshaler := (*realInterface).(json.Unmarshaler)
+	iter.nextToken()
+	iter.unreadByte() // skip spaces
 	bytes := iter.SkipAndReturnBytes()
 	err := unmarshaler.UnmarshalJSON(bytes)
 	if err != nil {
