@@ -186,6 +186,25 @@ func Test_nested_one_field_struct(t *testing.T) {
 	should.Equal(`{"Me":{"Field":{"Field":{"Field":"abc"}}}}`, str)
 }
 
+func Test_struct_with_embedded_ptr_with_tag(t *testing.T) {
+	type O1 struct {
+		O1F string
+	}
+
+	type Option struct {
+		O1 *O1
+	}
+
+	type T struct {
+		Option `json:","`
+	}
+	var obj T
+	should := require.New(t)
+	output, err := MarshalToString(obj)
+	should.Nil(err)
+	should.Equal(`{"O1":null}`, output)
+}
+
 func Test_struct_with_one_nil(t *testing.T) {
 	type TestObject struct {
 		F *float64

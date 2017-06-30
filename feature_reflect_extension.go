@@ -277,6 +277,8 @@ func createStructDescriptor(cfg *frozenConfig, typ reflect.Type, bindings []*Bin
 			fallthrough
 		case reflect.Map:
 			onePtrOptimization = true
+		case reflect.Struct:
+			onePtrOptimization = isStructOnePtr(firstField.Type)
 		}
 	}
 	structDescriptor := &StructDescriptor{
@@ -294,6 +296,21 @@ func createStructDescriptor(cfg *frozenConfig, typ reflect.Type, bindings []*Bin
 	sort.Sort(allBindings)
 	structDescriptor.Fields = allBindings
 	return structDescriptor
+}
+
+func isStructOnePtr(typ reflect.Type) bool {
+	if typ.NumField() == 1 {
+		firstField := typ.Field(0)
+		switch firstField.Type.Kind() {
+		case reflect.Ptr:
+			return true
+		case reflect.Map:
+			return true
+		case reflect.Struct:
+			return isStructOnePtr(firstField.Type)
+		}
+	}
+	return false
 }
 
 type sortableBindings []*Binding
