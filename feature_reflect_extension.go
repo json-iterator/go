@@ -208,7 +208,8 @@ func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, err
 				}
 				for _, binding := range structDescriptor.Fields {
 					binding.levels = append([]int{i}, binding.levels...)
-					binding.Encoder = &structFieldEncoder{&field, binding.Encoder, false}
+					omitempty := binding.Encoder.(*structFieldEncoder).omitempty
+					binding.Encoder = &structFieldEncoder{&field, binding.Encoder, omitempty}
 					binding.Decoder = &structFieldDecoder{&field, binding.Decoder}
 					embeddedBindings = append(embeddedBindings, binding)
 				}
@@ -220,8 +221,9 @@ func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, err
 				}
 				for _, binding := range structDescriptor.Fields {
 					binding.levels = append([]int{i}, binding.levels...)
+					omitempty := binding.Encoder.(*structFieldEncoder).omitempty
 					binding.Encoder = &optionalEncoder{binding.Encoder}
-					binding.Encoder = &structFieldEncoder{&field, binding.Encoder, false}
+					binding.Encoder = &structFieldEncoder{&field, binding.Encoder, omitempty}
 					binding.Decoder = &deferenceDecoder{field.Type.Elem(), binding.Decoder}
 					binding.Decoder = &structFieldDecoder{&field, binding.Decoder}
 					embeddedBindings = append(embeddedBindings, binding)
