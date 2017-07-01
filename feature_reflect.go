@@ -32,6 +32,10 @@ type ValEncoder interface {
 	EncodeInterface(val interface{}, stream *Stream)
 }
 
+type checkIsEmpty interface {
+	IsEmpty(ptr unsafe.Pointer) bool
+}
+
 func WriteToStream(val interface{}, stream *Stream, encoder ValEncoder) {
 	e := (*emptyInterface)(unsafe.Pointer(&val))
 	if e.word == nil {
@@ -424,7 +428,6 @@ func encoderOfType(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error) {
 }
 
 func createEncoderOfType(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error) {
-	typeName := typ.String()
 	if typ == jsonRawMessageType {
 		return &jsonRawMessageCodec{}, nil
 	}
@@ -438,17 +441,31 @@ func createEncoderOfType(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error
 		return &base64Codec{typ}, nil
 	}
 	if typ.Implements(marshalerType) {
+		checkIsEmpty, err := createEncoderOfSimpleType(cfg, typ)
+		if err != nil {
+			return nil, err
+		}
 		templateInterface := reflect.New(typ).Elem().Interface()
-		var encoder ValEncoder = &marshalerEncoder{extractInterface(templateInterface)}
-		if typ.Kind() != reflect.Struct {
+		var encoder ValEncoder = &marshalerEncoder{
+			templateInterface: extractInterface(templateInterface),
+			checkIsEmpty:      checkIsEmpty,
+		}
+		if typ.Kind() == reflect.Ptr {
 			encoder = &optionalEncoder{encoder}
 		}
 		return encoder, nil
 	}
 	if typ.Implements(textMarshalerType) {
+		checkIsEmpty, err := createEncoderOfSimpleType(cfg, typ)
+		if err != nil {
+			return nil, err
+		}
 		templateInterface := reflect.New(typ).Elem().Interface()
-		var encoder ValEncoder = &textMarshalerEncoder{extractInterface(templateInterface)}
-		if typ.Kind() != reflect.Struct {
+		var encoder ValEncoder = &textMarshalerEncoder{
+			templateInterface: extractInterface(templateInterface),
+			checkIsEmpty:      checkIsEmpty,
+		}
+		if typ.Kind() == reflect.Ptr {
 			encoder = &optionalEncoder{encoder}
 		}
 		return encoder, nil
@@ -456,6 +473,11 @@ func createEncoderOfType(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error
 	if typ.Implements(anyType) {
 		return &anyCodec{}, nil
 	}
+	return createEncoderOfSimpleType(cfg, typ)
+}
+
+func createEncoderOfSimpleType(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error) {
+	typeName := typ.String()
 	kind := typ.Kind()
 	switch kind {
 	case reflect.String:

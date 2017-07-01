@@ -419,7 +419,7 @@ func (codec *base64Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	}
 	encoding := base64.StdEncoding
 	src := iter.SkipAndReturnBytes()
-	src = src[1 : len(src)-1]
+	src = src[1: len(src)-1]
 	decodedLen := encoding.DecodedLen(len(src))
 	dst := make([]byte, decodedLen)
 	len, err := encoding.Decode(dst, src)
@@ -544,6 +544,7 @@ func (encoder *stringModeStringEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 
 type marshalerEncoder struct {
 	templateInterface emptyInterface
+	checkIsEmpty      checkIsEmpty
 }
 
 func (encoder *marshalerEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
@@ -563,20 +564,12 @@ func (encoder *marshalerEncoder) EncodeInterface(val interface{}, stream *Stream
 }
 
 func (encoder *marshalerEncoder) IsEmpty(ptr unsafe.Pointer) bool {
-	templateInterface := encoder.templateInterface
-	templateInterface.word = ptr
-	realInterface := (*interface{})(unsafe.Pointer(&templateInterface))
-	marshaler := (*realInterface).(json.Marshaler)
-	bytes, err := marshaler.MarshalJSON()
-	if err != nil {
-		return true
-	} else {
-		return len(bytes) > 0
-	}
+	return encoder.checkIsEmpty.IsEmpty(ptr)
 }
 
 type textMarshalerEncoder struct {
 	templateInterface emptyInterface
+	checkIsEmpty checkIsEmpty
 }
 
 func (encoder *textMarshalerEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
@@ -597,16 +590,7 @@ func (encoder *textMarshalerEncoder) EncodeInterface(val interface{}, stream *St
 }
 
 func (encoder *textMarshalerEncoder) IsEmpty(ptr unsafe.Pointer) bool {
-	templateInterface := encoder.templateInterface
-	templateInterface.word = ptr
-	realInterface := (*interface{})(unsafe.Pointer(&templateInterface))
-	marshaler := (*realInterface).(encoding.TextMarshaler)
-	bytes, err := marshaler.MarshalText()
-	if err != nil {
-		return true
-	} else {
-		return len(bytes) > 0
-	}
+	return encoder.checkIsEmpty.IsEmpty(ptr)
 }
 
 type unmarshalerDecoder struct {
