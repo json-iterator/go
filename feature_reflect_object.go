@@ -1092,12 +1092,7 @@ func (encoder *structEncoder) EncodeInterface(val interface{}, stream *Stream) {
 }
 
 func (encoder *structEncoder) IsEmpty(ptr unsafe.Pointer) bool {
-	for _, field := range encoder.fields {
-		if !field.encoder.IsEmpty(ptr) {
-			return false
-		}
-	}
-	return true
+	return false
 }
 
 type emptyStructEncoder struct {
@@ -1112,5 +1107,5 @@ func (encoder *emptyStructEncoder) EncodeInterface(val interface{}, stream *Stre
 }
 
 func (encoder *emptyStructEncoder) IsEmpty(ptr unsafe.Pointer) bool {
-	return true
+	return false
 }
