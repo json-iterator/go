@@ -118,25 +118,6 @@ func Test_customize_field_by_extension(t *testing.T) {
 	should.Equal(`{"field-1":100}`, str)
 }
 
-//func Test_unexported_fields(t *testing.T) {
-//	jsoniter := Config{SupportUnexportedStructFields: true}.Froze()
-//	should := require.New(t)
-//	type TestObject struct {
-//		field1 string
-//		field2 string `json:"field-2"`
-//	}
-//	obj := TestObject{}
-//	obj.field1 = "hello"
-//	should.Nil(jsoniter.UnmarshalFromString(`{}`, &obj))
-//	should.Equal("hello", obj.field1)
-//	should.Nil(jsoniter.UnmarshalFromString(`{"field1": "world", "field-2": "abc"}`, &obj))
-//	should.Equal("world", obj.field1)
-//	should.Equal("abc", obj.field2)
-//	str, err := jsoniter.MarshalToString(obj)
-//	should.Nil(err)
-//	should.Contains(str, `"field-2":"abc"`)
-//}
-
 type timeImplementedMarshaler time.Time
 
 func (obj timeImplementedMarshaler) MarshalJSON() ([]byte, error) {
@@ -237,4 +218,26 @@ func Test_marshaler_on_struct(t *testing.T) {
 	fixed := tmStruct{"hello"}
 	//json.Marshal(fixed)
 	Marshal(fixed)
+}
+
+type withChan struct {
+	F2 chan []byte
+}
+
+func (q withChan) MarshalJSON() ([]byte, error) {
+	return []byte(`""`), nil
+}
+
+func (q *withChan) UnmarshalJSON(value []byte) error {
+	return nil
+}
+
+func Test_with_chan(t *testing.T) {
+	type TestObject struct {
+		F1 withChan
+	}
+	should := require.New(t)
+	output, err := MarshalToString(TestObject{})
+	should.Nil(err)
+	should.Equal(`{"F1":""}`, output)
 }

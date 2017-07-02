@@ -446,7 +446,7 @@ func createEncoderOfType(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error
 		return &base64Codec{typ}, nil
 	}
 	if typ.Implements(marshalerType) {
-		checkIsEmpty, err := createEncoderOfSimpleType(cfg, typ)
+		checkIsEmpty, err := createCheckIsEmpty(typ)
 		if err != nil {
 			return nil, err
 		}
@@ -461,7 +461,7 @@ func createEncoderOfType(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error
 		return encoder, nil
 	}
 	if typ.Implements(textMarshalerType) {
-		checkIsEmpty, err := createEncoderOfSimpleType(cfg, typ)
+		checkIsEmpty, err := createCheckIsEmpty(typ)
 		if err != nil {
 			return nil, err
 		}
@@ -479,6 +479,60 @@ func createEncoderOfType(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error
 		return &anyCodec{}, nil
 	}
 	return createEncoderOfSimpleType(cfg, typ)
+}
+
+func createCheckIsEmpty(typ reflect.Type) (checkIsEmpty, error) {
+	kind := typ.Kind()
+	switch kind {
+	case reflect.String:
+		return &stringCodec{}, nil
+	case reflect.Int:
+		return &intCodec{}, nil
+	case reflect.Int8:
+		return &int8Codec{}, nil
+	case reflect.Int16:
+		return &int16Codec{}, nil
+	case reflect.Int32:
+		return &int32Codec{}, nil
+	case reflect.Int64:
+		return &int64Codec{}, nil
+	case reflect.Uint:
+		return &uintCodec{}, nil
+	case reflect.Uint8:
+		return &uint8Codec{}, nil
+	case reflect.Uint16:
+		return &uint16Codec{}, nil
+	case reflect.Uint32:
+		return &uint32Codec{}, nil
+	case reflect.Uintptr:
+		return &uintptrCodec{}, nil
+	case reflect.Uint64:
+		return &uint64Codec{}, nil
+	case reflect.Float32:
+		return &float32Codec{}, nil
+	case reflect.Float64:
+		return &float64Codec{}, nil
+	case reflect.Bool:
+		return &boolCodec{}, nil
+	case reflect.Interface:
+		if typ.NumMethod() == 0 {
+			return &emptyInterfaceCodec{}, nil
+		} else {
+			return &nonEmptyInterfaceCodec{}, nil
+		}
+	case reflect.Struct:
+		return &structEncoder{}, nil
+	case reflect.Array:
+		return &arrayEncoder{}, nil
+	case reflect.Slice:
+		return &sliceEncoder{}, nil
+	case reflect.Map:
+		return &mapEncoder{}, nil
+	case reflect.Ptr:
+		return &optionalEncoder{}, nil
+	default:
+		return nil, fmt.Errorf("unsupported type: %v", typ)
+	}
 }
 
 func createEncoderOfSimpleType(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error) {
