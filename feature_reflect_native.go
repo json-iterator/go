@@ -438,7 +438,7 @@ func (codec *base64Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	}
 	encoding := base64.StdEncoding
 	src := iter.SkipAndReturnBytes()
-	src = src[1: len(src)-1]
+	src = src[1 : len(src)-1]
 	decodedLen := encoding.DecodedLen(len(src))
 	dst := make([]byte, decodedLen)
 	len, err := encoding.Decode(dst, src)
@@ -588,7 +588,7 @@ func (encoder *marshalerEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 
 type textMarshalerEncoder struct {
 	templateInterface emptyInterface
-	checkIsEmpty checkIsEmpty
+	checkIsEmpty      checkIsEmpty
 }
 
 func (encoder *textMarshalerEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {

@@ -3,10 +3,10 @@ package jsoniter
 import (
 	"fmt"
 	"reflect"
+	"sort"
 	"strings"
 	"unicode"
 	"unsafe"
-	"sort"
 )
 
 var typeDecoders = map[string]ValDecoder{}
