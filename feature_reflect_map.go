@@ -166,7 +166,7 @@ func (encoder *sortKeysMapEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 
 	// Extract and sort the keys.
 	keys := realVal.MapKeys()
-	sv := make([]reflectWithString, len(keys))
+	sv := stringValues(make([]reflectWithString, len(keys)))
 	for i, v := range keys {
 		sv[i].v = v
 		if err := sv[i].resolve(); err != nil {
@@ -174,7 +174,7 @@ func (encoder *sortKeysMapEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 			return
 		}
 	}
-	sort.Slice(sv, func(i, j int) bool { return sv[i].s < sv[j].s })
+	sort.Sort(sv)
 
 	stream.WriteObjectStart()
 	for i, key := range sv {
