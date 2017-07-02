@@ -61,4 +61,9 @@ go get github.com/json-iterator/go
 
 # Contribution Welcomed !
 
+Contributors
+
+* [thockin](https://github.com/thockin) 
+* [cch123](https://github.com/cch123)
+
 Report issue or pull request, or email taowen@gmail.com, or [![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/json-iterator/Lobby)
