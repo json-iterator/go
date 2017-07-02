@@ -85,7 +85,9 @@ func Test_write_float32(t *testing.T) {
 			stream.WriteFloat32Lossy(val)
 			stream.Flush()
 			should.Nil(stream.Error)
-			should.Equal(strconv.FormatFloat(float64(val), 'f', -1, 32), buf.String())
+			output, err := json.Marshal(val)
+			should.Nil(err)
+			should.Equal(string(output), buf.String())
 		})
 		t.Run(fmt.Sprintf("%v", val), func(t *testing.T) {
 			should := require.New(t)
@@ -94,7 +96,9 @@ func Test_write_float32(t *testing.T) {
 			stream.WriteVal(val)
 			stream.Flush()
 			should.Nil(stream.Error)
-			should.Equal(strconv.FormatFloat(float64(val), 'f', -1, 32), buf.String())
+			output, err := json.Marshal(val)
+			should.Nil(err)
+			should.Equal(string(output), buf.String())
 		})
 	}
 	should := require.New(t)

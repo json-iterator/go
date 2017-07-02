@@ -2,6 +2,7 @@ package jsoniter
 
 import (
 	"strconv"
+	"math"
 )
 
 var _POW10 []uint64
@@ -11,7 +12,15 @@ func init() {
 }
 
 func (stream *Stream) WriteFloat32(val float32) {
-	stream.WriteRaw(strconv.FormatFloat(float64(val), 'f', -1, 32))
+	abs := math.Abs(float64(val))
+	fmt := byte('f')
+	// Note: Must use float32 comparisons for underlying float32 value to get precise cutoffs right.
+	if abs != 0 {
+		if float32(abs) < 1e-6 || float32(abs) >= 1e21 {
+			fmt = 'e'
+		}
+	}
+	stream.WriteRaw(strconv.FormatFloat(float64(val), fmt, -1, 32))
 }
 
 func (stream *Stream) WriteFloat32Lossy(val float32) {
@@ -20,7 +29,7 @@ func (stream *Stream) WriteFloat32Lossy(val float32) {
 		val = -val
 	}
 	if val > 0x4ffffff {
-		stream.WriteRaw(strconv.FormatFloat(float64(val), 'f', -1, 32))
+		stream.WriteFloat32(val)
 		return
 	}
 	precision := 6
@@ -43,7 +52,15 @@ func (stream *Stream) WriteFloat32Lossy(val float32) {
 }
 
 func (stream *Stream) WriteFloat64(val float64) {
-	stream.WriteRaw(strconv.FormatFloat(float64(val), 'f', -1, 64))
+	abs := math.Abs(val)
+	fmt := byte('f')
+	// Note: Must use float32 comparisons for underlying float32 value to get precise cutoffs right.
+	if abs != 0 {
+		if abs < 1e-6 || abs >= 1e21 {
+			fmt = 'e'
+		}
+	}
+	stream.WriteRaw(strconv.FormatFloat(float64(val), fmt, -1, 64))
 }
 
 func (stream *Stream) WriteFloat64Lossy(val float64) {
@@ -52,7 +69,7 @@ func (stream *Stream) WriteFloat64Lossy(val float64) {
 		val = -val
 	}
 	if val > 0x4ffffff {
-		stream.WriteRaw(strconv.FormatFloat(val, 'f', -1, 64))
+		stream.WriteFloat64(val)
 		return
 	}
 	precision := 6
