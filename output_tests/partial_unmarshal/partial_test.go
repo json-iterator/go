@@ -15,7 +15,7 @@ import (
 
 func Test_PartialUnmarshal(t *testing.T) {
 	fz := fuzz.New().MaxDepth(10).NilChance(0.3)
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < 100; i++ {
 		var before T1
 		fz.Fuzz(&before)
 
