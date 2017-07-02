@@ -232,7 +232,7 @@ func (q *withChan) UnmarshalJSON(value []byte) error {
 	return nil
 }
 
-func Test_with_chan(t *testing.T) {
+func Test_marshal_json_with_chan(t *testing.T) {
 	type TestObject struct {
 		F1 withChan
 	}
@@ -240,4 +240,48 @@ func Test_with_chan(t *testing.T) {
 	output, err := MarshalToString(TestObject{})
 	should.Nil(err)
 	should.Equal(`{"F1":""}`, output)
+}
+
+type withTime struct {
+	time.Time
+}
+
+func (t *withTime) UnmarshalJSON(b []byte) error {
+	return nil
+}
+func (t withTime) MarshalJSON() ([]byte, error) {
+	return []byte(`"fake"`), nil
+}
+
+func Test_marshal_json_with_time(t *testing.T) {
+	type S1 struct {
+		F1 withTime
+		F2 *withTime
+	}
+	type TestObject struct {
+		TF1 S1
+	}
+	should := require.New(t)
+	obj := TestObject{
+		S1{
+			F1: withTime{
+				time.Unix(0, 0),
+			},
+			F2: &withTime{
+				time.Unix(0, 0),
+			},
+		},
+	}
+	output, err := json.Marshal(obj)
+	should.Nil(err)
+	should.Equal(`{"TF1":{"F1":"fake","F2":"fake"}}`, string(output))
+	output, err = Marshal(obj)
+	should.Nil(err)
+	should.Equal(`{"TF1":{"F1":"fake","F2":"fake"}}`, string(output))
+	obj = TestObject{}
+	should.Nil(json.Unmarshal([]byte(`{"TF1":{"F1":"fake","F2":"fake"}}`), &obj))
+	should.NotNil(obj.TF1.F2)
+	obj = TestObject{}
+	should.Nil(Unmarshal([]byte(`{"TF1":{"F1":"fake","F2":"fake"}}`), &obj))
+	should.NotNil(obj.TF1.F2)
 }

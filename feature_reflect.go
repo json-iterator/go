@@ -288,8 +288,8 @@ func createDecoderOfType(cfg *frozenConfig, typ reflect.Type) (ValDecoder, error
 	if typ.Implements(unmarshalerType) {
 		templateInterface := reflect.New(typ).Elem().Interface()
 		var decoder ValDecoder = &unmarshalerDecoder{extractInterface(templateInterface)}
-		if typ.Kind() != reflect.Struct {
-			decoder = &optionalDecoder{typ, decoder}
+		if typ.Kind() == reflect.Ptr {
+			decoder = &optionalDecoder{typ.Elem(), decoder}
 		}
 		return decoder, nil
 	}
@@ -301,8 +301,8 @@ func createDecoderOfType(cfg *frozenConfig, typ reflect.Type) (ValDecoder, error
 	if typ.Implements(textUnmarshalerType) {
 		templateInterface := reflect.New(typ).Elem().Interface()
 		var decoder ValDecoder = &textUnmarshalerDecoder{extractInterface(templateInterface)}
-		if typ.Kind() != reflect.Struct {
-			decoder = &optionalDecoder{typ, decoder}
+		if typ.Kind() == reflect.Ptr {
+			decoder = &optionalDecoder{typ.Elem(), decoder}
 		}
 		return decoder, nil
 	}
