@@ -47,6 +47,25 @@ func (codec *intCodec) IsEmpty(ptr unsafe.Pointer) bool {
 	return *((*int)(ptr)) == 0
 }
 
+type uintptrCodec struct {
+}
+
+func (codec *uintptrCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
+	*((*uintptr)(ptr)) = uintptr(iter.ReadUint64())
+}
+
+func (codec *uintptrCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
+	stream.WriteUint64(uint64(*((*uintptr)(ptr))))
+}
+
+func (encoder *uintptrCodec) EncodeInterface(val interface{}, stream *Stream) {
+	WriteToStream(val, stream, encoder)
+}
+
+func (codec *uintptrCodec) IsEmpty(ptr unsafe.Pointer) bool {
+	return *((*uintptr)(ptr)) == 0
+}
+
 type int8Codec struct {
 }
 

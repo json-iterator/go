@@ -365,6 +365,11 @@ func createDecoderOfType(cfg *frozenConfig, typ reflect.Type) (ValDecoder, error
 			return decoderOfType(cfg, reflect.TypeOf((*uint32)(nil)).Elem())
 		}
 		return &uint32Codec{}, nil
+	case reflect.Uintptr:
+		if typeName != "uintptr" {
+			return decoderOfType(cfg, reflect.TypeOf((*uintptr)(nil)).Elem())
+		}
+		return &uintptrCodec{}, nil
 	case reflect.Uint64:
 		if typeName != "uint64" {
 			return decoderOfType(cfg, reflect.TypeOf((*uint64)(nil)).Elem())
@@ -530,6 +535,11 @@ func createEncoderOfSimpleType(cfg *frozenConfig, typ reflect.Type) (ValEncoder,
 			return encoderOfType(cfg, reflect.TypeOf((*uint32)(nil)).Elem())
 		}
 		return &uint32Codec{}, nil
+	case reflect.Uintptr:
+		if typeName != "uintptr" {
+			return encoderOfType(cfg, reflect.TypeOf((*uintptr)(nil)).Elem())
+		}
+		return &uintptrCodec{}, nil
 	case reflect.Uint64:
 		if typeName != "uint64" {
 			return encoderOfType(cfg, reflect.TypeOf((*uint64)(nil)).Elem())
