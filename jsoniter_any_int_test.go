@@ -26,6 +26,10 @@ var intConvertMap = map[string]int{
 	`"123true"`:  123,
 	`"1.2332e6"`: 1,
 	`""`:         0,
+	"+":          0,
+	"-":          0,
+	"[]":         0,
+	"[1,2]":      1,
 }
 
 func Test_read_any_to_int(t *testing.T) {
@@ -67,6 +71,10 @@ var uintConvertMap = map[string]int{
 	`"123true"`:  123,
 	`"1.2332e6"`: 1,
 	`""`:         0,
+	"+":          0,
+	"-":          0,
+	"[]":         0,
+	"[1,2]":      1,
 	// TODO need to solve
 	//"-1.1":       1,
 	//"-321.1": 321,
