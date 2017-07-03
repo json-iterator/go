@@ -35,7 +35,7 @@ func (any *stringAny) LastError() error {
 
 func (any *stringAny) ToBool() bool {
 	str := any.ToString()
-	if str == "false" {
+	if str == "0" {
 		return false
 	}
 	for _, c := range str {
