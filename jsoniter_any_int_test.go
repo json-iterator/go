@@ -30,6 +30,8 @@ var intConvertMap = map[string]int{
 	"-":          0,
 	"[]":         0,
 	"[1,2]":      1,
+	// object in php cannot convert to int
+	"{}": 0,
 }
 
 func Test_read_any_to_int(t *testing.T) {
@@ -75,6 +77,7 @@ var uintConvertMap = map[string]int{
 	"-":          0,
 	"[]":         0,
 	"[1,2]":      1,
+	"{}":         0,
 	// TODO need to solve
 	//"-1.1":       1,
 	//"-321.1": 321,
