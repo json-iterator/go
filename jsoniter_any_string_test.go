@@ -1,8 +1,9 @@
 package jsoniter
 
 import (
-	"github.com/json-iterator/go/require"
 	"testing"
+
+	"github.com/json-iterator/go/require"
 )
 
 func Test_read_string_as_any(t *testing.T) {
@@ -13,7 +14,7 @@ func Test_read_string_as_any(t *testing.T) {
 	any = Get([]byte(`" "`))
 	should.False(any.ToBool())
 	any = Get([]byte(`"false"`))
-	should.False(any.ToBool())
+	should.True(any.ToBool())
 	any = Get([]byte(`"123"`))
 	should.Equal(123, any.ToInt())
 }

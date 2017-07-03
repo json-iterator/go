@@ -25,9 +25,7 @@ func (any *objectLazyAny) LastError() error {
 }
 
 func (any *objectLazyAny) ToBool() bool {
-	iter := any.cfg.BorrowIterator(any.buf)
-	defer any.cfg.ReturnIterator(iter)
-	return iter.ReadObject() != ""
+	return true
 }
 
 func (any *objectLazyAny) ToInt() int {
