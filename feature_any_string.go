@@ -49,32 +49,69 @@ func (any *stringAny) ToBool() bool {
 }
 
 func (any *stringAny) ToInt() int {
-	parsed, _ := strconv.ParseInt(any.val, 10, 64)
-	return int(parsed)
+	return int(any.ToInt64())
+
 }
 
 func (any *stringAny) ToInt32() int32 {
-	parsed, _ := strconv.ParseInt(any.val, 10, 32)
-	return int32(parsed)
+	return int32(any.ToInt64())
 }
 
 func (any *stringAny) ToInt64() int64 {
-	parsed, _ := strconv.ParseInt(any.val, 10, 64)
-	return parsed
+	if any.val == "" {
+		return 0
+	}
+
+	flag := 1
+	startPos := 0
+	endPos := 0
+	if any.val[0] == '+' || any.val[0] == '-' {
+		startPos = 1
+	}
+
+	if any.val[0] == '-' {
+		flag = -1
+	}
+
+	for i := startPos; i < len(any.val); i++ {
+		if any.val[i] >= '0' && any.val[i] <= '9' {
+			endPos = i + 1
+		} else {
+			break
+		}
+	}
+	parsed, _ := strconv.ParseInt(any.val[startPos:endPos], 10, 64)
+	return int64(flag) * parsed
 }
 
 func (any *stringAny) ToUint() uint {
-	parsed, _ := strconv.ParseUint(any.val, 10, 64)
-	return uint(parsed)
+	return uint(any.ToUint64())
 }
 
 func (any *stringAny) ToUint32() uint32 {
-	parsed, _ := strconv.ParseUint(any.val, 10, 32)
-	return uint32(parsed)
+	return uint32(any.ToUint64())
 }
 
 func (any *stringAny) ToUint64() uint64 {
-	parsed, _ := strconv.ParseUint(any.val, 10, 64)
+	if any.val == "" {
+		return 0
+	}
+
+	startPos := 0
+	endPos := 0
+	// uint skip flag, is this correct?
+	if any.val[0] == '+' || any.val[0] == '-' {
+		startPos = 1
+	}
+
+	for i := startPos; i < len(any.val); i++ {
+		if any.val[i] >= '0' && any.val[i] <= '9' {
+			endPos = i + 1
+		} else {
+			break
+		}
+	}
+	parsed, _ := strconv.ParseUint(any.val[startPos:endPos], 10, 64)
 	return parsed
 }
 
