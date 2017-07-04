@@ -21,6 +21,9 @@ func init() {
 }
 
 func (iter *Iterator) ReadUint() uint {
+	if iter.buf[iter.head] == '-' && len(iter.buf) > 1 {
+		iter.buf = iter.buf[1:]
+	}
 	return uint(iter.ReadUint64())
 }
 
@@ -104,6 +107,9 @@ func (iter *Iterator) ReadInt32() (ret int32) {
 }
 
 func (iter *Iterator) ReadUint32() (ret uint32) {
+	if iter.buf[iter.head] == '-' && len(iter.buf) > 1 {
+		iter.buf = iter.buf[1:]
+	}
 	return iter.readUint32(iter.nextToken())
 }
 
@@ -215,6 +221,9 @@ func (iter *Iterator) ReadInt64() (ret int64) {
 }
 
 func (iter *Iterator) ReadUint64() uint64 {
+	if iter.buf[iter.head] == '-' && len(iter.buf) > 1 {
+		iter.buf = iter.buf[1:]
+	}
 	return iter.readUint64(iter.nextToken())
 }
 
