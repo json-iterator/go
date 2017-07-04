@@ -119,51 +119,13 @@ func (any *stringAny) ToUint64() uint64 {
 }
 
 func (any *stringAny) ToFloat32() float32 {
-	return float32(any.ToFloat64())
+	parsed, _ := strconv.ParseFloat(any.val, 32)
+	return float32(parsed)
 }
 
 func (any *stringAny) ToFloat64() float64 {
-	if any.val == "" {
-		return 0
-	}
-
-	startPos := 0
-	endPos := 0
-	flag := 1
-
-	if any.val[0] == '+' || any.val[0] == '-' {
-		startPos = 1
-	}
-
-	if any.val[0] == '-' {
-		flag = -1
-	}
-
-	pointOccurCnt := 0
-	pointPos := -1
-
-	for i := startPos; i < len(any.val); i++ {
-		if any.val[i] >= '0' && any.val[i] <= '9' {
-			endPos = i + 1
-		} else if any.val[i] == '.' && pointOccurCnt == 0 {
-			endPos = i + 1
-			pointOccurCnt++
-			pointPos = i
-		} else {
-			break
-		}
-	}
-
-	if pointPos == endPos-1 {
-		endPos--
-	}
-
-	if endPos <= startPos {
-		return 0
-	}
-
-	parsed, _ := strconv.ParseFloat(any.val[startPos:endPos], 64)
-	return float64(flag) * parsed
+	parsed, _ := strconv.ParseFloat(any.val, 64)
+	return parsed
 }
 
 func (any *stringAny) ToString() string {

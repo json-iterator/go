@@ -15,9 +15,9 @@ var floatConvertMap = map[string]float64{
 	`"false"`: 0,
 
 	"123":       123,
-	`"123true"`: 123,
+	`"123true"`: 0,
 
-	`"-123true"`: -123,
+	`"-123true"`: 0,
 	"0":          0,
 	`"0"`:        0,
 	"-1":         -1,
