@@ -119,12 +119,37 @@ func (any *stringAny) ToUint64() uint64 {
 }
 
 func (any *stringAny) ToFloat32() float32 {
-	parsed, _ := strconv.ParseFloat(any.val, 32)
-	return float32(parsed)
+	return float32(any.ToFloat64())
 }
 
 func (any *stringAny) ToFloat64() float64 {
-	parsed, _ := strconv.ParseFloat(any.val, 64)
+	if len(any.val) == 0 {
+		return 0
+	}
+
+	// first char invalid
+	if any.val[0] != '+' && any.val[0] != '-' && (any.val[0] > '9' || any.val[0] < '0') {
+		return 0
+	}
+
+	// extract valid num expression from string
+	// eg 123true => 123, -12.12xxa => -12.12
+	endPos := 1
+	for i := 1; i < len(any.val); i++ {
+		if any.val[i] == '.' || any.val[i] == 'e' {
+			endPos = i + 1
+			continue
+		}
+
+		// end position is the first char which is not digit
+		if any.val[i] >= '0' && any.val[i] <= '9' {
+			endPos = i + 1
+		} else {
+			endPos = i
+			break
+		}
+	}
+	parsed, _ := strconv.ParseFloat(any.val[:endPos], 64)
 	return parsed
 }
 
