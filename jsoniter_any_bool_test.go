@@ -14,10 +14,12 @@ var boolConvertMap = map[string]bool{
 	`"true"`:  true,
 	`"false"`: true,
 
-	"123": true,
-	"0":   false,
-	`"0"`: false,
-	"-1":  true,
+	"123":   true,
+	`"123"`: true,
+	"0":     false,
+	`"0"`:   false,
+	"-1":    true,
+	`"-1"`:  true,
 
 	"1.1":       true,
 	"0.0":       false,
