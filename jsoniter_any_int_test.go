@@ -25,12 +25,14 @@ var intConvertMap = map[string]int{
 	`"false"`:    0,
 	`"true123"`:  0,
 	`"123true"`:  123,
+	`"-123true"`: -123,
 	`"1.2332e6"`: 1,
 	`""`:         0,
 	"+":          0,
 	"-":          0,
 	"[]":         0,
 	"[1,2]":      1,
+	`["1","2"]`:  1,
 	// object in php cannot convert to int
 	"{}": 0,
 }
@@ -73,6 +75,7 @@ var uintConvertMap = map[string]int{
 	`"true"`:     0,
 	`"false"`:    0,
 	`"true123"`:  0,
+	`"+1"`:       1,
 	`"123true"`:  123,
 	`"-123true"`: 0,
 	`"1.2332e6"`: 1,
