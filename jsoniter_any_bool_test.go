@@ -8,6 +8,7 @@ import (
 )
 
 var boolConvertMap = map[string]bool{
+	"null":  false,
 	"true":  true,
 	"false": false,
 

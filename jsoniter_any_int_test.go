@@ -9,10 +9,11 @@ import (
 )
 
 var intConvertMap = map[string]int{
+	"null":       0,
 	"321.1":      321,
 	"-321.1":     -321,
 	`"1.1"`:      1,
-	`"-1.1"`:     -1,
+	`"-321.1"`:   -321,
 	"0.0":        0,
 	"0":          0,
 	`"0"`:        0,
@@ -24,12 +25,14 @@ var intConvertMap = map[string]int{
 	`"false"`:    0,
 	`"true123"`:  0,
 	`"123true"`:  123,
+	`"-123true"`: -123,
 	`"1.2332e6"`: 1,
 	`""`:         0,
 	"+":          0,
 	"-":          0,
 	"[]":         0,
 	"[1,2]":      1,
+	`["1","2"]`:  1,
 	// object in php cannot convert to int
 	"{}": 0,
 }
@@ -58,29 +61,34 @@ func Test_read_any_to_int(t *testing.T) {
 }
 
 var uintConvertMap = map[string]int{
+	"null":       0,
 	"321.1":      321,
 	`"1.1"`:      1,
-	`"-1.1"`:     1,
+	`"-123.1"`:   0,
 	"0.0":        0,
 	"0":          0,
 	`"0"`:        0,
 	`"0.0"`:      0,
+	`"00.0"`:     0,
 	"true":       1,
 	"false":      0,
 	`"true"`:     0,
 	`"false"`:    0,
 	`"true123"`:  0,
+	`"+1"`:       1,
 	`"123true"`:  123,
+	`"-123true"`: 0,
 	`"1.2332e6"`: 1,
 	`""`:         0,
 	"+":          0,
 	"-":          0,
+	".":          0,
 	"[]":         0,
 	"[1,2]":      1,
 	"{}":         0,
-	// TODO need to solve
-	//"-1.1":       1,
-	//"-321.1": 321,
+	"{1,2}":      0,
+	"-1.1":       0,
+	"-321.1":     0,
 }
 
 func Test_read_any_to_uint(t *testing.T) {
@@ -98,7 +106,7 @@ func Test_read_any_to_uint(t *testing.T) {
 
 	for k, v := range uintConvertMap {
 		any := Get([]byte(k))
-		should.Equal(uint32(v), any.ToUint32(), fmt.Sprintf("origin val %v", k))
+		should.Equal(uint(v), any.ToUint(), fmt.Sprintf("origin val %v", k))
 	}
 
 }

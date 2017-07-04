@@ -99,8 +99,11 @@ func (any *stringAny) ToUint64() uint64 {
 
 	startPos := 0
 	endPos := 0
-	// uint skip flag, is this correct?
-	if any.val[0] == '+' || any.val[0] == '-' {
+
+	if any.val[0] == '-' {
+		return 0
+	}
+	if any.val[0] == '+' {
 		startPos = 1
 	}
 
