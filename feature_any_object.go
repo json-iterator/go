@@ -29,67 +29,35 @@ func (any *objectLazyAny) ToBool() bool {
 }
 
 func (any *objectLazyAny) ToInt() int {
-	if any.ToBool() {
-		return 1
-	} else {
-		return 0
-	}
+	return 0
 }
 
 func (any *objectLazyAny) ToInt32() int32 {
-	if any.ToBool() {
-		return 1
-	} else {
-		return 0
-	}
+	return 0
 }
 
 func (any *objectLazyAny) ToInt64() int64 {
-	if any.ToBool() {
-		return 1
-	} else {
-		return 0
-	}
+	return 0
 }
 
 func (any *objectLazyAny) ToUint() uint {
-	if any.ToBool() {
-		return 1
-	} else {
-		return 0
-	}
+	return 0
 }
 
 func (any *objectLazyAny) ToUint32() uint32 {
-	if any.ToBool() {
-		return 1
-	} else {
-		return 0
-	}
+	return 0
 }
 
 func (any *objectLazyAny) ToUint64() uint64 {
-	if any.ToBool() {
-		return 1
-	} else {
-		return 0
-	}
+	return 0
 }
 
 func (any *objectLazyAny) ToFloat32() float32 {
-	if any.ToBool() {
-		return 1
-	} else {
-		return 0
-	}
+	return 0
 }
 
 func (any *objectLazyAny) ToFloat64() float64 {
-	if any.ToBool() {
-		return 1
-	} else {
-		return 0
-	}
+	return 0
 }
 
 func (any *objectLazyAny) ToString() string {

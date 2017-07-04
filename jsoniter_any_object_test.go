@@ -1,8 +1,9 @@
 package jsoniter
 
 import (
-	"github.com/json-iterator/go/require"
 	"testing"
+
+	"github.com/json-iterator/go/require"
 )
 
 func Test_read_object_as_any(t *testing.T) {
@@ -18,7 +19,7 @@ func Test_read_object_as_any(t *testing.T) {
 	should.Equal(2, len(any.Keys()))
 	should.Equal(2, any.Size())
 	should.True(any.ToBool())
-	should.Equal(1, any.ToInt())
+	should.Equal(0, any.ToInt())
 	should.Equal(Object, any.ValueType())
 	should.Nil(any.LastError())
 	should.Equal("b", any.GetObject()["a"].ToString())

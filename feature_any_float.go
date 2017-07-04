@@ -42,7 +42,10 @@ func (any *floatAny) ToInt64() int64 {
 }
 
 func (any *floatAny) ToUint() uint {
-	return uint(any.val)
+	if any.val > 0 {
+		return uint(any.val)
+	}
+	return uint(-any.val)
 }
 
 func (any *floatAny) ToUint32() uint32 {
