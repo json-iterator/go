@@ -2,7 +2,6 @@ package jsoniter
 
 import (
 	"fmt"
-	"io"
 	"testing"
 
 	"github.com/json-iterator/go/require"
@@ -111,13 +110,65 @@ func Test_read_any_to_uint(t *testing.T) {
 
 }
 
-func Test_read_int64_as_any(t *testing.T) {
+func Test_read_int64_to_any(t *testing.T) {
 	should := require.New(t)
-	any := Get([]byte("1234"))
-	should.Equal(1234, any.ToInt())
-	should.Equal(io.EOF, any.LastError())
-	should.Equal("1234", any.ToString())
-	should.True(any.ToBool())
+	any := WrapInt64(12345)
+	should.Equal(12345, any.ToInt())
+	should.Equal(int32(12345), any.ToInt32())
+	should.Equal(int64(12345), any.ToInt64())
+	should.Equal(uint(12345), any.ToUint())
+	should.Equal(uint32(12345), any.ToUint32())
+	should.Equal(uint64(12345), any.ToUint64())
+	should.Equal(float32(12345), any.ToFloat32())
+	should.Equal(float64(12345), any.ToFloat64())
+	should.Equal("12345", any.ToString())
+	should.Equal(true, any.ToBool())
+}
+func Test_read_int32_to_any(t *testing.T) {
+	should := require.New(t)
+	any := WrapInt32(12345)
+	should.Equal(12345, any.ToInt())
+	should.Equal(int32(12345), any.ToInt32())
+	should.Equal(int64(12345), any.ToInt64())
+	should.Equal(uint(12345), any.ToUint())
+	should.Equal(uint32(12345), any.ToUint32())
+	should.Equal(uint64(12345), any.ToUint64())
+	should.Equal(float32(12345), any.ToFloat32())
+	should.Equal(float64(12345), any.ToFloat64())
+	should.Equal("12345", any.ToString())
+	should.Equal(true, any.ToBool())
+}
+
+func Test_read_uint32_to_any(t *testing.T) {
+	should := require.New(t)
+	any := WrapUint32(12345)
+	should.Equal(12345, any.ToInt())
+	should.Equal(int32(12345), any.ToInt32())
+	should.Equal(int64(12345), any.ToInt64())
+	should.Equal(uint(12345), any.ToUint())
+	should.Equal(uint32(12345), any.ToUint32())
+	should.Equal(uint64(12345), any.ToUint64())
+	should.Equal(float32(12345), any.ToFloat32())
+	should.Equal(float64(12345), any.ToFloat64())
+	should.Equal("12345", any.ToString())
+	should.Equal(true, any.ToBool())
+	should.Equal(any.ValueType(), Number)
+}
+
+func Test_read_uint64_to_any(t *testing.T) {
+	should := require.New(t)
+	any := WrapUint64(12345)
+	should.Equal(12345, any.ToInt())
+	should.Equal(int32(12345), any.ToInt32())
+	should.Equal(int64(12345), any.ToInt64())
+	should.Equal(uint(12345), any.ToUint())
+	should.Equal(uint32(12345), any.ToUint32())
+	should.Equal(uint64(12345), any.ToUint64())
+	should.Equal(float32(12345), any.ToFloat32())
+	should.Equal(float64(12345), any.ToFloat64())
+	should.Equal("12345", any.ToString())
+	should.Equal(true, any.ToBool())
+	should.Equal(any.ValueType(), Number)
 }
 
 func Test_int_lazy_any_get(t *testing.T) {
