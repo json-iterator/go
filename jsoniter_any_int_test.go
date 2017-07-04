@@ -9,6 +9,7 @@ import (
 )
 
 var intConvertMap = map[string]int{
+	"null":       0,
 	"321.1":      321,
 	"-321.1":     -321,
 	`"1.1"`:      1,
@@ -58,10 +59,10 @@ func Test_read_any_to_int(t *testing.T) {
 }
 
 var uintConvertMap = map[string]int{
-
+	"null":       0,
 	"321.1":      321,
 	`"1.1"`:      1,
-	`"-123.1"`:   123,
+	`"-123.1"`:   0,
 	"0.0":        0,
 	"0":          0,
 	`"0"`:        0,
@@ -73,6 +74,7 @@ var uintConvertMap = map[string]int{
 	`"false"`:    0,
 	`"true123"`:  0,
 	`"123true"`:  123,
+	`"-123true"`: 0,
 	`"1.2332e6"`: 1,
 	`""`:         0,
 	"+":          0,
@@ -82,8 +84,8 @@ var uintConvertMap = map[string]int{
 	"[1,2]":      1,
 	"{}":         0,
 	"{1,2}":      0,
-	"-1.1":       1,
-	"-321.1":     321,
+	"-1.1":       0,
+	"-321.1":     0,
 }
 
 func Test_read_any_to_uint(t *testing.T) {
