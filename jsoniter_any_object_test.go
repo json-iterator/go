@@ -49,7 +49,21 @@ func Test_object_lazy_any_get_invalid(t *testing.T) {
 	should.Equal(Invalid, any.Get(1).ValueType())
 }
 
-func Test_wrap_object(t *testing.T) {
+func Test_wrap_map_and_convert_to_any(t *testing.T) {
+	should := require.New(t)
+	any := Wrap(map[string]interface{}{"a": 1})
+	should.True(any.ToBool())
+	should.Equal(0, any.ToInt())
+	should.Equal(int32(0), any.ToInt32())
+	should.Equal(int64(0), any.ToInt64())
+	should.Equal(float32(0), any.ToFloat32())
+	should.Equal(float64(0), any.ToFloat64())
+	should.Equal(uint(0), any.ToUint())
+	should.Equal(uint32(0), any.ToUint32())
+	should.Equal(uint64(0), any.ToUint64())
+}
+
+func Test_wrap_object_and_convert_to_any(t *testing.T) {
 	should := require.New(t)
 	type TestObject struct {
 		Field1 string
@@ -60,6 +74,24 @@ func Test_wrap_object(t *testing.T) {
 	any = Wrap(TestObject{"hello", "world"})
 	should.Equal(2, any.Size())
 	should.Equal(`{"Field1":"hello"}`, any.Get('*').ToString())
+
+	should.Equal(0, any.ToInt())
+	should.Equal(int32(0), any.ToInt32())
+	should.Equal(int64(0), any.ToInt64())
+	should.Equal(float32(0), any.ToFloat32())
+	should.Equal(float64(0), any.ToFloat64())
+	should.Equal(uint(0), any.ToUint())
+	should.Equal(uint32(0), any.ToUint32())
+	should.Equal(uint64(0), any.ToUint64())
+	should.True(any.ToBool())
+	should.Equal(`{"Field1":"hello"}`, any.ToString())
+
+	// cannot pass!
+	//stream := NewStream(ConfigDefault, nil, 32)
+	//any.WriteTo(stream)
+	//should.Equal(`{"Field1":"hello"}`, string(stream.Buffer()))
+	// cannot pass!
+
 }
 
 func Test_any_within_struct(t *testing.T) {
