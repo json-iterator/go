@@ -136,7 +136,7 @@ func (any *stringAny) ToFloat64() float64 {
 	// eg 123true => 123, -12.12xxa => -12.12
 	endPos := 1
 	for i := 1; i < len(any.val); i++ {
-		if any.val[i] == '.' || any.val[i] == 'e' {
+		if any.val[i] == '.' || any.val[i] == 'e' || any.val[i] == 'E' {
 			endPos = i + 1
 			continue
 		}

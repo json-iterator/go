@@ -123,6 +123,10 @@ func Test_read_int64_to_any(t *testing.T) {
 	should.Equal(float64(12345), any.ToFloat64())
 	should.Equal("12345", any.ToString())
 	should.Equal(true, any.ToBool())
+	should.Equal(any.ValueType(), Number)
+	stream := NewStream(ConfigDefault, nil, 32)
+	any.WriteTo(stream)
+	should.Equal("12345", string(stream.Buffer()))
 }
 func Test_read_int32_to_any(t *testing.T) {
 	should := require.New(t)
@@ -137,6 +141,10 @@ func Test_read_int32_to_any(t *testing.T) {
 	should.Equal(float64(12345), any.ToFloat64())
 	should.Equal("12345", any.ToString())
 	should.Equal(true, any.ToBool())
+	should.Equal(any.ValueType(), Number)
+	stream := NewStream(ConfigDefault, nil, 32)
+	any.WriteTo(stream)
+	should.Equal("12345", string(stream.Buffer()))
 }
 
 func Test_read_uint32_to_any(t *testing.T) {
@@ -153,6 +161,9 @@ func Test_read_uint32_to_any(t *testing.T) {
 	should.Equal("12345", any.ToString())
 	should.Equal(true, any.ToBool())
 	should.Equal(any.ValueType(), Number)
+	stream := NewStream(ConfigDefault, nil, 32)
+	any.WriteTo(stream)
+	should.Equal("12345", string(stream.Buffer()))
 }
 
 func Test_read_uint64_to_any(t *testing.T) {
@@ -169,6 +180,12 @@ func Test_read_uint64_to_any(t *testing.T) {
 	should.Equal("12345", any.ToString())
 	should.Equal(true, any.ToBool())
 	should.Equal(any.ValueType(), Number)
+	stream := NewStream(ConfigDefault, nil, 32)
+	any.WriteTo(stream)
+	should.Equal("12345", string(stream.Buffer()))
+	stream = NewStream(ConfigDefault, nil, 32)
+	stream.WriteUint(uint(123))
+	should.Equal("123", string(stream.Buffer()))
 }
 
 func Test_int_lazy_any_get(t *testing.T) {
