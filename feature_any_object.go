@@ -182,59 +182,35 @@ func (any *objectAny) ToBool() bool {
 }
 
 func (any *objectAny) ToInt() int {
-	if any.val.NumField() == 0 {
-		return 0
-	}
-	return 1
+	return 0
 }
 
 func (any *objectAny) ToInt32() int32 {
-	if any.val.NumField() == 0 {
-		return 0
-	}
-	return 1
+	return 0
 }
 
 func (any *objectAny) ToInt64() int64 {
-	if any.val.NumField() == 0 {
-		return 0
-	}
-	return 1
+	return 0
 }
 
 func (any *objectAny) ToUint() uint {
-	if any.val.NumField() == 0 {
-		return 0
-	}
-	return 1
+	return 0
 }
 
 func (any *objectAny) ToUint32() uint32 {
-	if any.val.NumField() == 0 {
-		return 0
-	}
-	return 1
+	return 0
 }
 
 func (any *objectAny) ToUint64() uint64 {
-	if any.val.NumField() == 0 {
-		return 0
-	}
-	return 1
+	return 0
 }
 
 func (any *objectAny) ToFloat32() float32 {
-	if any.val.NumField() == 0 {
-		return 0
-	}
-	return 1
+	return 0
 }
 
 func (any *objectAny) ToFloat64() float64 {
-	if any.val.NumField() == 0 {
-		return 0
-	}
-	return 1
+	return 0
 }
 
 func (any *objectAny) ToString() string {
@@ -333,63 +309,39 @@ func (any *mapAny) LastError() error {
 }
 
 func (any *mapAny) ToBool() bool {
-	return any.val.Len() != 0
+	return true
 }
 
 func (any *mapAny) ToInt() int {
-	if any.val.Len() == 0 {
-		return 0
-	}
-	return 1
+	return 0
 }
 
 func (any *mapAny) ToInt32() int32 {
-	if any.val.Len() == 0 {
-		return 0
-	}
-	return 1
+	return 0
 }
 
 func (any *mapAny) ToInt64() int64 {
-	if any.val.Len() == 0 {
-		return 0
-	}
-	return 1
+	return 0
 }
 
 func (any *mapAny) ToUint() uint {
-	if any.val.Len() == 0 {
-		return 0
-	}
-	return 1
+	return 0
 }
 
 func (any *mapAny) ToUint32() uint32 {
-	if any.val.Len() == 0 {
-		return 0
-	}
-	return 1
+	return 0
 }
 
 func (any *mapAny) ToUint64() uint64 {
-	if any.val.Len() == 0 {
-		return 0
-	}
-	return 1
+	return 0
 }
 
 func (any *mapAny) ToFloat32() float32 {
-	if any.val.Len() == 0 {
-		return 0
-	}
-	return 1
+	return 0
 }
 
 func (any *mapAny) ToFloat64() float64 {
-	if any.val.Len() == 0 {
-		return 0
-	}
-	return 1
+	return 0
 }
 
 func (any *mapAny) ToString() string {
