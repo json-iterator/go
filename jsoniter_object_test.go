@@ -3,8 +3,9 @@ package jsoniter
 import (
 	"bytes"
 	"fmt"
-	"github.com/json-iterator/go/require"
 	"testing"
+
+	"github.com/json-iterator/go/require"
 )
 
 func Test_empty_object(t *testing.T) {
@@ -381,7 +382,7 @@ func Test_shadow_struct_field(t *testing.T) {
 	should.Contains(output, `"max_age":20`)
 }
 
-func Test_embeded_order(t *testing.T) {
+func Test_embedded_order(t *testing.T) {
 	type A struct {
 		Field2 string
 	}

@@ -44,4 +44,21 @@ func Test_read_bool_as_any(t *testing.T) {
 			should.False(any.ToBool(), fmt.Sprintf("origin val is %v", k))
 		}
 	}
+
+}
+
+func Test_write_bool_to_stream(t *testing.T) {
+	should := require.New(t)
+	any := Get([]byte("true"))
+	stream := NewStream(ConfigDefault, nil, 32)
+	any.WriteTo(stream)
+	should.Equal("true", string(stream.Buffer()))
+	should.Equal(any.ValueType(), Bool)
+
+	any = Get([]byte("false"))
+	stream = NewStream(ConfigDefault, nil, 32)
+	any.WriteTo(stream)
+	should.Equal("false", string(stream.Buffer()))
+
+	should.Equal(any.ValueType(), Bool)
 }
