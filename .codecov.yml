@@ -1,4 +1,5 @@
 ignore:
     - "output_tests/.*"
     - "assert/.*"
+    - "require/.*"
 
