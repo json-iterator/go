@@ -1,5 +1,4 @@
-codecov:
-    ignore:
-        - "output_tests"
-        - "assert"
+ignore:
+    - "output_tests/.*"
+    - "assert"
 
