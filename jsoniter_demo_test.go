@@ -2,9 +2,9 @@ package jsoniter
 
 import (
 	"encoding/json"
-	"fmt"
-	"github.com/json-iterator/go/require"
 	"testing"
+
+	"github.com/json-iterator/go/require"
 )
 
 func Test_bind_api_demo(t *testing.T) {
@@ -21,7 +21,7 @@ func Test_iterator_api_demo(t *testing.T) {
 	for iter.ReadArray() {
 		total += iter.ReadInt()
 	}
-	fmt.Println(total)
+	//fmt.Println(total)
 }
 
 type People struct {

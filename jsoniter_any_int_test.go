@@ -183,6 +183,9 @@ func Test_read_uint64_to_any(t *testing.T) {
 	stream := NewStream(ConfigDefault, nil, 32)
 	any.WriteTo(stream)
 	should.Equal("12345", string(stream.Buffer()))
+	stream = NewStream(ConfigDefault, nil, 32)
+	stream.WriteUint(uint(123))
+	should.Equal("123", string(stream.Buffer()))
 }
 
 func Test_int_lazy_any_get(t *testing.T) {
