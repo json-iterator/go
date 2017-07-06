@@ -3,8 +3,9 @@ package jsoniter
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/json-iterator/go/require"
 	"testing"
+
+	"github.com/json-iterator/go/require"
 )
 
 func Test_true(t *testing.T) {
@@ -27,9 +28,10 @@ func Test_write_true_false(t *testing.T) {
 	stream := NewStream(ConfigDefault, buf, 4096)
 	stream.WriteTrue()
 	stream.WriteFalse()
+	stream.WriteBool(false)
 	stream.Flush()
 	should.Nil(stream.Error)
-	should.Equal("truefalse", buf.String())
+	should.Equal("truefalsefalse", buf.String())
 }
 
 func Test_write_val_bool(t *testing.T) {
@@ -37,7 +39,9 @@ func Test_write_val_bool(t *testing.T) {
 	buf := &bytes.Buffer{}
 	stream := NewStream(ConfigDefault, buf, 4096)
 	stream.WriteVal(true)
+	should.Equal(stream.Buffered(), 4)
 	stream.Flush()
+	should.Equal(stream.Buffered(), 0)
 	should.Nil(stream.Error)
 	should.Equal("true", buf.String())
 }

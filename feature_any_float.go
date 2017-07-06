@@ -42,15 +42,24 @@ func (any *floatAny) ToInt64() int64 {
 }
 
 func (any *floatAny) ToUint() uint {
-	return uint(any.val)
+	if any.val > 0 {
+		return uint(any.val)
+	}
+	return 0
 }
 
 func (any *floatAny) ToUint32() uint32 {
-	return uint32(any.val)
+	if any.val > 0 {
+		return uint32(any.val)
+	}
+	return 0
 }
 
 func (any *floatAny) ToUint64() uint64 {
-	return uint64(any.val)
+	if any.val > 0 {
+		return uint64(any.val)
+	}
+	return 0
 }
 
 func (any *floatAny) ToFloat32() float32 {

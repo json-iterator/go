@@ -1,9 +1,41 @@
 package jsoniter
 
 import (
-	"github.com/json-iterator/go/require"
 	"testing"
+
+	"github.com/json-iterator/go/require"
 )
+
+var stringConvertMap = map[string]string{
+	"null":              "",
+	"321.1":             "321.1",
+	`"1.1"`:             "1.1",
+	`"-123.1"`:          "-123.1",
+	"0.0":               "0.0",
+	"0":                 "0",
+	`"0"`:               "0",
+	`"0.0"`:             "0.0",
+	`"00.0"`:            "00.0",
+	"true":              "true",
+	"false":             "false",
+	`"true"`:            "true",
+	`"false"`:           "false",
+	`"true123"`:         "true123",
+	`"+1"`:              "+1",
+	"[]":                "[]",
+	"[1,2]":             "[1,2]",
+	"{}":                "{}",
+	"{1,2}":             "{1,2}",
+	`{"a":1, "b":true}`: `{"a":1, "b":true}`,
+}
+
+func Test_read_any_to_string(t *testing.T) {
+	should := require.New(t)
+	for k, v := range stringConvertMap {
+		any := Get([]byte(k))
+		should.Equal(v, any.ToString(), "original val "+k)
+	}
+}
 
 func Test_read_string_as_any(t *testing.T) {
 	should := require.New(t)
@@ -13,7 +45,7 @@ func Test_read_string_as_any(t *testing.T) {
 	any = Get([]byte(`" "`))
 	should.False(any.ToBool())
 	any = Get([]byte(`"false"`))
-	should.False(any.ToBool())
+	should.True(any.ToBool())
 	any = Get([]byte(`"123"`))
 	should.Equal(123, any.ToInt())
 }

@@ -3,8 +3,9 @@ package jsoniter
 import (
 	"bytes"
 	"fmt"
-	"github.com/json-iterator/go/require"
 	"testing"
+
+	"github.com/json-iterator/go/require"
 )
 
 func Test_empty_object(t *testing.T) {
@@ -33,6 +34,7 @@ func Test_one_field(t *testing.T) {
 		should.Equal("a", field)
 		return true
 	}))
+
 }
 
 func Test_two_field(t *testing.T) {
@@ -69,6 +71,11 @@ func Test_object_wrapper_any_get_all(t *testing.T) {
 	}
 	any := Wrap(TestObject{[]int{1, 2}, []int{3, 4}})
 	should.Contains(any.Get('*', 0).ToString(), `"Field2":3`)
+	should.Contains(any.Keys(), "Field1")
+	should.Contains(any.Keys(), "Field2")
+	should.NotContains(any.Keys(), "Field3")
+
+	//should.Contains(any.GetObject()["Field1"].GetArray()[0], 1)
 }
 
 func Test_write_object(t *testing.T) {
@@ -167,6 +174,106 @@ func Test_decode_five_fields_struct(t *testing.T) {
 	should.Equal("e", obj.Field5)
 }
 
+func Test_decode_six_fields_struct(t *testing.T) {
+	should := require.New(t)
+	type TestObject struct {
+		Field1 string
+		Field2 string
+		Field3 string
+		Field4 string
+		Field5 string
+		Field6 string
+	}
+	obj := TestObject{}
+	should.Nil(UnmarshalFromString(`{}`, &obj))
+	should.Equal("", obj.Field1)
+	should.Nil(UnmarshalFromString(`{"Field1": "a", "Field2": "b", "Field3": "c", "Field4": "d", "Field5": "e", "Field6": "x"}`, &obj))
+	should.Equal("a", obj.Field1)
+	should.Equal("b", obj.Field2)
+	should.Equal("c", obj.Field3)
+	should.Equal("d", obj.Field4)
+	should.Equal("e", obj.Field5)
+	should.Equal("x", obj.Field6)
+}
+
+func Test_decode_seven_fields_struct(t *testing.T) {
+	should := require.New(t)
+	type TestObject struct {
+		Field1 string
+		Field2 string
+		Field3 string
+		Field4 string
+		Field5 string
+		Field6 string
+		Field7 string
+	}
+	obj := TestObject{}
+	should.Nil(UnmarshalFromString(`{}`, &obj))
+	should.Equal("", obj.Field1)
+	should.Nil(UnmarshalFromString(`{"Field1": "a", "Field2": "b", "Field3": "c", "Field4": "d", "Field5": "e", "Field6": "x", "Field7":"y"}`, &obj))
+	should.Equal("a", obj.Field1)
+	should.Equal("b", obj.Field2)
+	should.Equal("c", obj.Field3)
+	should.Equal("d", obj.Field4)
+	should.Equal("e", obj.Field5)
+	should.Equal("x", obj.Field6)
+	should.Equal("y", obj.Field7)
+}
+
+func Test_decode_eight_fields_struct(t *testing.T) {
+	should := require.New(t)
+	type TestObject struct {
+		Field1 string
+		Field2 string
+		Field3 string
+		Field4 string
+		Field5 string
+		Field6 string
+		Field7 string
+		Field8 string
+	}
+	obj := TestObject{}
+	should.Nil(UnmarshalFromString(`{}`, &obj))
+	should.Equal("", obj.Field1)
+	should.Nil(UnmarshalFromString(`{"Field8":"1", "Field1": "a", "Field2": "b", "Field3": "c", "Field4": "d", "Field5": "e", "Field6": "x", "Field7":"y"}`, &obj))
+	should.Equal("a", obj.Field1)
+	should.Equal("b", obj.Field2)
+	should.Equal("c", obj.Field3)
+	should.Equal("d", obj.Field4)
+	should.Equal("e", obj.Field5)
+	should.Equal("x", obj.Field6)
+	should.Equal("y", obj.Field7)
+	should.Equal("1", obj.Field8)
+}
+
+func Test_decode_nine_fields_struct(t *testing.T) {
+	should := require.New(t)
+	type TestObject struct {
+		Field1 string
+		Field2 string
+		Field3 string
+		Field4 string
+		Field5 string
+		Field6 string
+		Field7 string
+		Field8 string
+		Field9 string
+	}
+	obj := TestObject{}
+	should.Nil(UnmarshalFromString(`{}`, &obj))
+	should.Equal("", obj.Field1)
+	should.Nil(UnmarshalFromString(`{"Field8" : "zzzzzzzzzzz", "Field7": "zz", "Field6" : "xx", "Field1": "a", "Field2": "b", "Field3": "c", "Field4": "d", "Field5": "e", "Field9":"f"}`, &obj))
+	should.Equal("a", obj.Field1)
+	should.Equal("b", obj.Field2)
+	should.Equal("c", obj.Field3)
+	should.Equal("d", obj.Field4)
+	should.Equal("e", obj.Field5)
+	should.Equal("xx", obj.Field6)
+	should.Equal("zz", obj.Field7)
+	should.Equal("zzzzzzzzzzz", obj.Field8)
+	should.Equal("f", obj.Field9)
+}
+
 func Test_decode_ten_fields_struct(t *testing.T) {
 	should := require.New(t)
 	type TestObject struct {
@@ -184,12 +291,44 @@ func Test_decode_ten_fields_struct(t *testing.T) {
 	obj := TestObject{}
 	should.Nil(UnmarshalFromString(`{}`, &obj))
 	should.Equal("", obj.Field1)
-	should.Nil(UnmarshalFromString(`{"Field1": "a", "Field2": "b", "Field3": "c", "Field4": "d", "Field5": "e"}`, &obj))
+	should.Nil(UnmarshalFromString(`{"Field10":"x", "Field9": "x", "Field8":"x", "Field7":"x", "Field6":"x", "Field1": "a", "Field2": "b", "Field3": "c", "Field4": "d", "Field5": "e"}`, &obj))
 	should.Equal("a", obj.Field1)
 	should.Equal("b", obj.Field2)
 	should.Equal("c", obj.Field3)
 	should.Equal("d", obj.Field4)
 	should.Equal("e", obj.Field5)
+	should.Equal("x", obj.Field6)
+	should.Equal("x", obj.Field7)
+	should.Equal("x", obj.Field8)
+	should.Equal("x", obj.Field9)
+	should.Equal("x", obj.Field10)
+}
+
+func Test_decode_more_than_ten_fields_struct(t *testing.T) {
+	should := require.New(t)
+	type TestObject struct {
+		Field1  string
+		Field2  string
+		Field3  string
+		Field4  string
+		Field5  string
+		Field6  string
+		Field7  string
+		Field8  string
+		Field9  string
+		Field10 string
+		Field11 int
+	}
+	obj := TestObject{}
+	should.Nil(UnmarshalFromString(`{}`, &obj))
+	should.Equal("", obj.Field1)
+	should.Nil(UnmarshalFromString(`{"Field11":1, "Field1": "a", "Field2": "b", "Field3": "c", "Field4": "d", "Field5": "e"}`, &obj))
+	should.Equal("a", obj.Field1)
+	should.Equal("b", obj.Field2)
+	should.Equal("c", obj.Field3)
+	should.Equal("d", obj.Field4)
+	should.Equal("e", obj.Field5)
+	should.Equal(1, obj.Field11)
 }
 
 func Test_decode_struct_field_with_tag(t *testing.T) {
@@ -381,7 +520,7 @@ func Test_shadow_struct_field(t *testing.T) {
 	should.Contains(output, `"max_age":20`)
 }
 
-func Test_embeded_order(t *testing.T) {
+func Test_embedded_order(t *testing.T) {
 	type A struct {
 		Field2 string
 	}

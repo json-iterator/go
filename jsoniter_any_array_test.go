@@ -1,8 +1,9 @@
 package jsoniter
 
 import (
-	"github.com/json-iterator/go/require"
 	"testing"
+
+	"github.com/json-iterator/go/require"
 )
 
 func Test_read_empty_array_as_any(t *testing.T) {
@@ -46,10 +47,36 @@ func Test_read_two_element_array_as_any(t *testing.T) {
 	should.Equal([]int{1, 2}, arr)
 }
 
-func Test_wrap_array(t *testing.T) {
+func Test_wrap_array_and_convert_to_any(t *testing.T) {
 	should := require.New(t)
 	any := Wrap([]int{1, 2, 3})
+	any2 := Wrap([]int{})
+
 	should.Equal("[1,2,3]", any.ToString())
+	should.True(any.ToBool())
+	should.False(any2.ToBool())
+
+	should.Equal(1, any.ToInt())
+	should.Equal(0, any2.ToInt())
+	should.Equal(int32(1), any.ToInt32())
+	should.Equal(int32(0), any2.ToInt32())
+	should.Equal(int64(1), any.ToInt64())
+	should.Equal(int64(0), any2.ToInt64())
+	should.Equal(uint(1), any.ToUint())
+	should.Equal(uint(0), any2.ToUint())
+	should.Equal(uint32(1), any.ToUint32())
+	should.Equal(uint32(0), any2.ToUint32())
+	should.Equal(uint64(1), any.ToUint64())
+	should.Equal(uint64(0), any2.ToUint64())
+	should.Equal(float32(1), any.ToFloat32())
+	should.Equal(float32(0), any2.ToFloat32())
+	should.Equal(float64(1), any.ToFloat64())
+	should.Equal(float64(0), any2.ToFloat64())
+	should.Equal(3, any.Size())
+	should.Equal(0, any2.Size())
+
+	var i interface{} = []int{1, 2, 3}
+	should.Equal(i, any.GetInterface())
 }
 
 func Test_array_lazy_any_get(t *testing.T) {
