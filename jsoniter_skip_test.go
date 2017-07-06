@@ -3,8 +3,9 @@ package jsoniter
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/json-iterator/go/require"
 	"testing"
+
+	"github.com/json-iterator/go/require"
 )
 
 func Test_skip_number(t *testing.T) {
@@ -15,6 +16,7 @@ func Test_skip_number(t *testing.T) {
 	if iter.ReadString() != "b" {
 		t.FailNow()
 	}
+
 }
 
 func Test_skip_null(t *testing.T) {
