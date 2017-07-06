@@ -6,9 +6,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/json-iterator/go/require"
 	"strconv"
 	"testing"
+
+	"github.com/json-iterator/go/require"
 )
 
 func Test_read_big_float(t *testing.T) {
@@ -111,6 +112,10 @@ func Test_write_float32(t *testing.T) {
 	stream.Flush()
 	should.Nil(stream.Error)
 	should.Equal("abcdefg1.123456", buf.String())
+
+	stream = NewStream(ConfigDefault, nil, 0)
+	stream.WriteFloat32(float32(0.0000001))
+	should.Equal("1e-07", string(stream.buf))
 }
 
 func Test_write_float64(t *testing.T) {
@@ -144,6 +149,10 @@ func Test_write_float64(t *testing.T) {
 	stream.Flush()
 	should.Nil(stream.Error)
 	should.Equal("abcdefg1.123456", buf.String())
+
+	stream = NewStream(ConfigDefault, nil, 0)
+	stream.WriteFloat64(float64(0.0000001))
+	should.Equal("1e-07", string(stream.buf))
 }
 
 func Test_read_float64_cursor(t *testing.T) {

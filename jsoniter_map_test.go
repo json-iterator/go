@@ -2,9 +2,10 @@ package jsoniter
 
 import (
 	"encoding/json"
-	"github.com/json-iterator/go/require"
 	"math/big"
 	"testing"
+
+	"github.com/json-iterator/go/require"
 )
 
 func Test_read_map(t *testing.T) {
@@ -30,6 +31,14 @@ func Test_map_wrapper_any_get_all(t *testing.T) {
 	should := require.New(t)
 	any := Wrap(map[string][]int{"Field1": {1, 2}})
 	should.Equal(`{"Field1":1}`, any.Get('*', 0).ToString())
+	should.Contains(any.Keys(), "Field1")
+	should.Equal(any.GetObject()["Field1"].ToInt(), 1)
+
+	// map write to
+	stream := NewStream(ConfigDefault, nil, 0)
+	any.WriteTo(stream)
+	// TODO cannot pass
+	//should.Equal(string(stream.buf), "")
 }
 
 func Test_write_val_map(t *testing.T) {

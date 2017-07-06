@@ -25,4 +25,6 @@ func Test_invalid(t *testing.T) {
 	should.Equal(float64(0), any.ToFloat64())
 	should.Equal("", any.ToString())
 
+	should.Equal(Invalid, any.Get(0.1).Get(1).ValueType())
+
 }

@@ -191,5 +191,7 @@ func Test_read_uint64_to_any(t *testing.T) {
 func Test_int_lazy_any_get(t *testing.T) {
 	should := require.New(t)
 	any := Get([]byte("1234"))
+	// panic!!
+	//should.Equal(any.LastError(), io.EOF)
 	should.Equal(Invalid, any.Get(1, "2").ValueType())
 }

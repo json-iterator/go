@@ -34,6 +34,7 @@ func Test_one_field(t *testing.T) {
 		should.Equal("a", field)
 		return true
 	}))
+
 }
 
 func Test_two_field(t *testing.T) {
@@ -70,6 +71,11 @@ func Test_object_wrapper_any_get_all(t *testing.T) {
 	}
 	any := Wrap(TestObject{[]int{1, 2}, []int{3, 4}})
 	should.Contains(any.Get('*', 0).ToString(), `"Field2":3`)
+	should.Contains(any.Keys(), "Field1")
+	should.Contains(any.Keys(), "Field2")
+	should.NotContains(any.Keys(), "Field3")
+
+	//should.Contains(any.GetObject()["Field1"].GetArray()[0], 1)
 }
 
 func Test_write_object(t *testing.T) {
