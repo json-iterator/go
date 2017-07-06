@@ -586,7 +586,7 @@ func (decoder *oneFieldStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterator)
 		} else {
 			iter.Skip()
 		}
-		if iter.nextToken() != ',' {
+		if iter.isObjectEnd() {
 			break
 		}
 	}
@@ -616,7 +616,7 @@ func (decoder *twoFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterator
 		default:
 			iter.Skip()
 		}
-		if iter.nextToken() != ',' {
+		if iter.isObjectEnd() {
 			break
 		}
 	}
@@ -650,7 +650,7 @@ func (decoder *threeFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterat
 		default:
 			iter.Skip()
 		}
-		if iter.nextToken() != ',' {
+		if iter.isObjectEnd() {
 			break
 		}
 	}
@@ -688,7 +688,7 @@ func (decoder *fourFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterato
 		default:
 			iter.Skip()
 		}
-		if iter.nextToken() != ',' {
+		if iter.isObjectEnd() {
 			break
 		}
 	}
@@ -730,7 +730,7 @@ func (decoder *fiveFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterato
 		default:
 			iter.Skip()
 		}
-		if iter.nextToken() != ',' {
+		if iter.isObjectEnd() {
 			break
 		}
 	}
@@ -776,7 +776,7 @@ func (decoder *sixFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterator
 		default:
 			iter.Skip()
 		}
-		if iter.nextToken() != ',' {
+		if iter.isObjectEnd() {
 			break
 		}
 	}
@@ -826,7 +826,7 @@ func (decoder *sevenFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterat
 		default:
 			iter.Skip()
 		}
-		if iter.nextToken() != ',' {
+		if iter.isObjectEnd() {
 			break
 		}
 	}
@@ -880,7 +880,7 @@ func (decoder *eightFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterat
 		default:
 			iter.Skip()
 		}
-		if iter.nextToken() != ',' {
+		if iter.isObjectEnd() {
 			break
 		}
 	}
@@ -938,7 +938,7 @@ func (decoder *nineFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterato
 		default:
 			iter.Skip()
 		}
-		if iter.nextToken() != ',' {
+		if iter.isObjectEnd() {
 			break
 		}
 	}
@@ -1000,7 +1000,7 @@ func (decoder *tenFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterator
 		default:
 			iter.Skip()
 		}
-		if iter.nextToken() != ',' {
+		if iter.isObjectEnd() {
 			break
 		}
 	}

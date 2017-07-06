@@ -154,6 +154,18 @@ func (iter *Iterator) skipWhitespacesWithoutLoadMore() bool {
 	return true
 }
 
+func (iter *Iterator) isObjectEnd() bool {
+	c := iter.nextToken()
+	if c == ',' {
+		return false
+	}
+	if c == '}' {
+		return true
+	}
+	iter.ReportError("isObjectEnd", "object ended prematurely")
+	return true
+}
+
 func (iter *Iterator) nextToken() byte {
 	// a variation of skip whitespaces, returning the next non-whitespace token
 	for {
