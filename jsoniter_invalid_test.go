@@ -1,8 +1,8 @@
 package jsoniter
 
 import (
-	"testing"
 	"github.com/stretchr/testify/require"
+	"testing"
 )
 
 func Test_missing_object_end(t *testing.T) {
