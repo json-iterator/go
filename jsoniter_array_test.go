@@ -3,7 +3,7 @@ package jsoniter
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/json-iterator/go/require"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 

@@ -2,7 +2,7 @@ package jsoniter
 
 import (
 	"encoding/json"
-	"github.com/json-iterator/go/require"
+	"github.com/stretchr/testify/require"
 	"testing"
 	"unsafe"
 )

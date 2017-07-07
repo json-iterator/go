@@ -3,7 +3,7 @@ package jsoniter
 import (
 	"testing"
 
-	"github.com/json-iterator/go/require"
+	"github.com/stretchr/testify/require"
 )
 
 // if must be valid is useless, just drop this test

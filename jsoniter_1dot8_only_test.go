@@ -8,7 +8,7 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"github.com/json-iterator/go/require"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_new_encoder(t *testing.T) {

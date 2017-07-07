@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/json-iterator/go/require"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_empty_object(t *testing.T) {

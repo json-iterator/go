@@ -2,7 +2,7 @@ package jsoniter
 
 import (
 	"testing"
-	"github.com/json-iterator/go/require"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_missing_object_end(t *testing.T) {

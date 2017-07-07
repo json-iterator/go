@@ -5,7 +5,7 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/json-iterator/go/require"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_read_map(t *testing.T) {

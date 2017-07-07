@@ -3,7 +3,7 @@ package jsoniter
 import (
 	"testing"
 
-	"github.com/json-iterator/go/require"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_wrap_and_valuetype_everything(t *testing.T) {

@@ -6,7 +6,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/json-iterator/go/require"
+	"github.com/stretchr/testify/require"
 	"testing"
 	"unicode/utf8"
 )

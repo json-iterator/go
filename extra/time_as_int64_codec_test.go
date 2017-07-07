@@ -2,7 +2,7 @@ package extra
 
 import (
 	"github.com/json-iterator/go"
-	"github.com/json-iterator/go/require"
+	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
 )
