@@ -129,3 +129,19 @@ func Test_encode_map_with_sorted_keys(t *testing.T) {
 	should.Nil(err)
 	should.Equal(string(bytes), output)
 }
+
+func Test_encode_map_uint_keys(t *testing.T) {
+	should := require.New(t)
+	m := map[uint64]interface{}{
+		uint64(1): "a",
+		uint64(2): "a",
+		uint64(4): "a",
+	}
+
+	bytes, err := json.Marshal(m)
+	should.Nil(err)
+
+	output, err := ConfigCompatibleWithStandardLibrary.MarshalToString(m)
+	should.Equal(string(bytes), output)
+
+}
