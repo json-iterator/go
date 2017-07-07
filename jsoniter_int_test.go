@@ -6,10 +6,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"strconv"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func Test_read_uint64_invalid(t *testing.T) {
@@ -81,12 +82,52 @@ func Test_read_int64_array(t *testing.T) {
 	should.Equal(3, len(val))
 }
 
-func Test_read_int32_overflow(t *testing.T) {
+func Test_read_int_overflow(t *testing.T) {
 	should := require.New(t)
-	input := "123456789123456789,"
-	iter := ParseString(ConfigDefault, input)
-	iter.ReadInt32()
-	should.NotNil(iter.Error)
+	inputArr := []string{"123451", "-123451"}
+	for _, s := range inputArr {
+		iter := ParseString(ConfigDefault, s)
+		iter.ReadInt8()
+		should.NotNil(iter.Error)
+
+		iterU := ParseString(ConfigDefault, s)
+		iterU.ReadUint8()
+		should.NotNil(iterU.Error)
+
+	}
+
+	inputArr = []string{"12345678912", "-12345678912"}
+	for _, s := range inputArr {
+		iter := ParseString(ConfigDefault, s)
+		iter.ReadInt16()
+		should.NotNil(iter.Error)
+
+		iterUint := ParseString(ConfigDefault, s)
+		iterUint.ReadUint16()
+		should.NotNil(iterUint.Error)
+	}
+
+	inputArr = []string{"3111111111", "-3111111111", "1234232323232323235678912", "-1234567892323232323212"}
+	for _, s := range inputArr {
+		iter := ParseString(ConfigDefault, s)
+		iter.ReadInt32()
+		should.NotNil(iter.Error)
+
+		iterUint := ParseString(ConfigDefault, s)
+		iterUint.ReadUint32()
+		should.NotNil(iterUint.Error)
+	}
+
+	inputArr = []string{"9223372036854775811", "-9523372036854775807", "1234232323232323235678912", "-1234567892323232323212"}
+	for _, s := range inputArr {
+		iter := ParseString(ConfigDefault, s)
+		iter.ReadInt64()
+		should.NotNil(iter.Error)
+
+		iterUint := ParseString(ConfigDefault, s)
+		iterUint.ReadUint64()
+		should.NotNil(iterUint.Error)
+	}
 }
 
 func Test_read_int64(t *testing.T) {
