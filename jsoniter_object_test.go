@@ -404,6 +404,20 @@ func Test_omit_empty(t *testing.T) {
 	should.Equal(`{"field-2":"hello"}`, str)
 }
 
+func Test_ignore_field_on_not_valid_type(t *testing.T) {
+	should := require.New(t)
+	type TestObject struct {
+		Field1 string `json:"field-1,omitempty"`
+		Field2 func() `json:"-"`
+	}
+	obj := TestObject{}
+	obj.Field1 = "hello world"
+	obj.Field2 = func() {}
+	str, err := MarshalToString(&obj)
+	should.Nil(err)
+	should.Equal(`{"field-1":"hello world"}`, str)
+}
+
 func Test_recursive_struct(t *testing.T) {
 	should := require.New(t)
 	type TestObject struct {

@@ -200,7 +200,12 @@ func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, err
 	bindings := []*Binding{}
 	for i := 0; i < typ.NumField(); i++ {
 		field := typ.Field(i)
-		if field.Anonymous && (field.Tag.Get("json") == "" || strings.Split(field.Tag.Get("json"), ",")[0] == "") {
+		tag := field.Tag.Get("json")
+		tagParts := strings.Split(tag, ",")
+		if tag == "-" {
+			continue
+		}
+		if field.Anonymous && (tag == "" || tagParts[0] == "") {
 			if field.Type.Kind() == reflect.Struct {
 				structDescriptor, err := describeStruct(cfg, field.Type)
 				if err != nil {
@@ -231,8 +236,7 @@ func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, err
 				continue
 			}
 		}
-		tagParts := strings.Split(field.Tag.Get("json"), ",")
-		fieldNames := calcFieldNames(field.Name, tagParts[0], string(field.Tag.Get("json")))
+		fieldNames := calcFieldNames(field.Name, tagParts[0], tag)
 		fieldCacheKey := fmt.Sprintf("%s/%s", typ.String(), field.Name)
 		decoder := fieldDecoders[fieldCacheKey]
 		if decoder == nil {
