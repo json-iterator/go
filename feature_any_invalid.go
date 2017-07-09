@@ -69,9 +69,8 @@ func (any *invalidAny) WriteTo(stream *Stream) {
 func (any *invalidAny) Get(path ...interface{}) Any {
 	if any.err == nil {
 		return &invalidAny{baseAny{}, fmt.Errorf("get %v from invalid", path)}
-	} else {
-		return &invalidAny{baseAny{}, fmt.Errorf("%v, get %v from invalid", any.err, path)}
 	}
+	return &invalidAny{baseAny{}, fmt.Errorf("%v, get %v from invalid", any.err, path)}
 }
 
 func (any *invalidAny) Parse() *Iterator {

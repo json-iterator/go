@@ -25,10 +25,6 @@ type Any interface {
 	// TODO: add Set
 	Size() int
 	Keys() []string
-	// TODO: remove me
-	GetArray() []Any
-	// TODO: remove me
-	GetObject() map[string]Any
 	GetInterface() interface{}
 	WriteTo(stream *Stream)
 }
@@ -45,14 +41,6 @@ func (any *baseAny) Size() int {
 
 func (any *baseAny) Keys() []string {
 	return []string{}
-}
-
-func (any *baseAny) GetArray() []Any {
-	return []Any{}
-}
-
-func (any *baseAny) GetObject() map[string]Any {
-	return map[string]Any{}
 }
 
 func (any *baseAny) ToVal(obj interface{}) {

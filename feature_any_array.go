@@ -33,65 +33,57 @@ func (any *arrayLazyAny) ToBool() bool {
 func (any *arrayLazyAny) ToInt() int {
 	if any.ToBool() {
 		return 1
-	} else {
-		return 0
 	}
+	return 0
 }
 
 func (any *arrayLazyAny) ToInt32() int32 {
 	if any.ToBool() {
 		return 1
-	} else {
-		return 0
 	}
+	return 0
 }
 
 func (any *arrayLazyAny) ToInt64() int64 {
 	if any.ToBool() {
 		return 1
-	} else {
-		return 0
 	}
+	return 0
 }
 
 func (any *arrayLazyAny) ToUint() uint {
 	if any.ToBool() {
 		return 1
-	} else {
-		return 0
 	}
+	return 0
 }
 
 func (any *arrayLazyAny) ToUint32() uint32 {
 	if any.ToBool() {
 		return 1
-	} else {
-		return 0
 	}
+	return 0
 }
 
 func (any *arrayLazyAny) ToUint64() uint64 {
 	if any.ToBool() {
 		return 1
-	} else {
-		return 0
 	}
+	return 0
 }
 
 func (any *arrayLazyAny) ToFloat32() float32 {
 	if any.ToBool() {
 		return 1
-	} else {
-		return 0
 	}
+	return 0
 }
 
 func (any *arrayLazyAny) ToFloat64() float64 {
 	if any.ToBool() {
 		return 1
-	} else {
-		return 0
 	}
+	return 0
 }
 
 func (any *arrayLazyAny) ToString() string {
@@ -115,10 +107,9 @@ func (any *arrayLazyAny) Get(path ...interface{}) Any {
 		valueBytes := locateArrayElement(iter, firstPath)
 		if valueBytes == nil {
 			return newInvalidAny(path)
-		} else {
-			iter.ResetBytes(valueBytes)
-			return locatePath(iter, path[1:])
 		}
+		iter.ResetBytes(valueBytes)
+		return locatePath(iter, path[1:])
 	case int32:
 		if '*' == firstPath {
 			iter := any.cfg.BorrowIterator(any.buf)
@@ -132,9 +123,8 @@ func (any *arrayLazyAny) Get(path ...interface{}) Any {
 				return true
 			})
 			return wrapArray(arr)
-		} else {
-			return newInvalidAny(path)
 		}
+		return newInvalidAny(path)
 	default:
 		return newInvalidAny(path)
 	}
@@ -150,17 +140,6 @@ func (any *arrayLazyAny) Size() int {
 		return true
 	})
 	return size
-}
-
-func (any *arrayLazyAny) GetArray() []Any {
-	elements := make([]Any, 0)
-	iter := any.cfg.BorrowIterator(any.buf)
-	defer any.cfg.ReturnIterator(iter)
-	iter.ReadArrayCB(func(iter *Iterator) bool {
-		elements = append(elements, iter.ReadAny())
-		return true
-	})
-	return elements
 }
 
 func (any *arrayLazyAny) WriteTo(stream *Stream) {
@@ -279,9 +258,8 @@ func (any *arrayAny) Get(path ...interface{}) Any {
 				}
 			}
 			return wrapArray(mappedAll)
-		} else {
-			return newInvalidAny(path)
 		}
+		return newInvalidAny(path)
 	default:
 		return newInvalidAny(path)
 	}
@@ -289,14 +267,6 @@ func (any *arrayAny) Get(path ...interface{}) Any {
 
 func (any *arrayAny) Size() int {
 	return any.val.Len()
-}
-
-func (any *arrayAny) GetArray() []Any {
-	elements := make([]Any, any.val.Len())
-	for i := 0; i < any.val.Len(); i++ {
-		elements[i] = Wrap(any.val.Index(i).Interface())
-	}
-	return elements
 }
 
 func (any *arrayAny) WriteTo(stream *Stream) {

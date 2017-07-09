@@ -81,10 +81,9 @@ func (any *objectLazyAny) Get(path ...interface{}) Any {
 		valueBytes := locateObjectField(iter, firstPath)
 		if valueBytes == nil {
 			return newInvalidAny(path)
-		} else {
-			iter.ResetBytes(valueBytes)
-			return locatePath(iter, path[1:])
 		}
+		iter.ResetBytes(valueBytes)
+		return locatePath(iter, path[1:])
 	case int32:
 		if '*' == firstPath {
 			mappedAll := map[string]Any{}
@@ -98,9 +97,8 @@ func (any *objectLazyAny) Get(path ...interface{}) Any {
 				return true
 			})
 			return wrapMap(mappedAll)
-		} else {
-			return newInvalidAny(path)
 		}
+		return newInvalidAny(path)
 	default:
 		return newInvalidAny(path)
 	}
@@ -128,17 +126,6 @@ func (any *objectLazyAny) Size() int {
 		return true
 	})
 	return size
-}
-
-func (any *objectLazyAny) GetObject() map[string]Any {
-	asMap := map[string]Any{}
-	iter := any.cfg.BorrowIterator(any.buf)
-	defer any.cfg.ReturnIterator(iter)
-	iter.ReadObjectCB(func(iter *Iterator, field string) bool {
-		asMap[field] = iter.ReadAny()
-		return true
-	})
-	return asMap
 }
 
 func (any *objectLazyAny) WriteTo(stream *Stream) {
@@ -243,9 +230,8 @@ func (any *objectAny) Get(path ...interface{}) Any {
 				}
 			}
 			return wrapMap(mappedAll)
-		} else {
-			return newInvalidAny(path)
 		}
+		return newInvalidAny(path)
 	default:
 		return newInvalidAny(path)
 	}
@@ -261,17 +247,6 @@ func (any *objectAny) Keys() []string {
 
 func (any *objectAny) Size() int {
 	return any.val.NumField()
-}
-
-func (any *objectAny) GetObject() map[string]Any {
-	object := map[string]Any{}
-	for i := 0; i < any.val.NumField(); i++ {
-		field := any.val.Field(i)
-		if field.CanInterface() {
-			object[any.val.Type().Field(i).Name] = Wrap(field.Interface())
-		}
-	}
-	return object
 }
 
 func (any *objectAny) WriteTo(stream *Stream) {
@@ -367,9 +342,8 @@ func (any *mapAny) Get(path ...interface{}) Any {
 				}
 			}
 			return wrapMap(mappedAll)
-		} else {
-			return newInvalidAny(path)
 		}
+		return newInvalidAny(path)
 	default:
 		value := any.val.MapIndex(reflect.ValueOf(firstPath))
 		if !value.IsValid() {
@@ -389,16 +363,6 @@ func (any *mapAny) Keys() []string {
 
 func (any *mapAny) Size() int {
 	return any.val.Len()
-}
-
-func (any *mapAny) GetObject() map[string]Any {
-	object := map[string]Any{}
-	for _, key := range any.val.MapKeys() {
-		keyAsStr := key.String()
-		element := Wrap(any.val.MapIndex(key).Interface())
-		object[keyAsStr] = element
-	}
-	return object
 }
 
 func (any *mapAny) WriteTo(stream *Stream) {
