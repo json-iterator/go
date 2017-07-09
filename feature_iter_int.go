@@ -20,14 +20,17 @@ func init() {
 	}
 }
 
+// ReadUint read uint
 func (iter *Iterator) ReadUint() uint {
 	return uint(iter.ReadUint64())
 }
 
+// ReadInt read int
 func (iter *Iterator) ReadInt() int {
 	return int(iter.ReadInt64())
 }
 
+// ReadInt8 read int8
 func (iter *Iterator) ReadInt8() (ret int8) {
 	c := iter.nextToken()
 	if c == '-' {
@@ -37,16 +40,16 @@ func (iter *Iterator) ReadInt8() (ret int8) {
 			return
 		}
 		return -int8(val)
-	} else {
-		val := iter.readUint32(c)
-		if val > math.MaxInt8 {
-			iter.ReportError("ReadInt8", "overflow: "+strconv.FormatInt(int64(val), 10))
-			return
-		}
-		return int8(val)
 	}
+	val := iter.readUint32(c)
+	if val > math.MaxInt8 {
+		iter.ReportError("ReadInt8", "overflow: "+strconv.FormatInt(int64(val), 10))
+		return
+	}
+	return int8(val)
 }
 
+// ReadUint8 read uint8
 func (iter *Iterator) ReadUint8() (ret uint8) {
 	val := iter.readUint32(iter.nextToken())
 	if val > math.MaxUint8 {
@@ -56,6 +59,7 @@ func (iter *Iterator) ReadUint8() (ret uint8) {
 	return uint8(val)
 }
 
+// ReadInt16 read int16
 func (iter *Iterator) ReadInt16() (ret int16) {
 	c := iter.nextToken()
 	if c == '-' {
@@ -65,16 +69,16 @@ func (iter *Iterator) ReadInt16() (ret int16) {
 			return
 		}
 		return -int16(val)
-	} else {
-		val := iter.readUint32(c)
-		if val > math.MaxInt16 {
-			iter.ReportError("ReadInt16", "overflow: "+strconv.FormatInt(int64(val), 10))
-			return
-		}
-		return int16(val)
 	}
+	val := iter.readUint32(c)
+	if val > math.MaxInt16 {
+		iter.ReportError("ReadInt16", "overflow: "+strconv.FormatInt(int64(val), 10))
+		return
+	}
+	return int16(val)
 }
 
+// ReadUint16 read uint16
 func (iter *Iterator) ReadUint16() (ret uint16) {
 	val := iter.readUint32(iter.nextToken())
 	if val > math.MaxUint16 {
@@ -84,6 +88,7 @@ func (iter *Iterator) ReadUint16() (ret uint16) {
 	return uint16(val)
 }
 
+// ReadInt32 read int32
 func (iter *Iterator) ReadInt32() (ret int32) {
 	c := iter.nextToken()
 	if c == '-' {
@@ -93,16 +98,16 @@ func (iter *Iterator) ReadInt32() (ret int32) {
 			return
 		}
 		return -int32(val)
-	} else {
-		val := iter.readUint32(c)
-		if val > math.MaxInt32 {
-			iter.ReportError("ReadInt32", "overflow: "+strconv.FormatInt(int64(val), 10))
-			return
-		}
-		return int32(val)
 	}
+	val := iter.readUint32(c)
+	if val > math.MaxInt32 {
+		iter.ReportError("ReadInt32", "overflow: "+strconv.FormatInt(int64(val), 10))
+		return
+	}
+	return int32(val)
 }
 
+// ReadUint32 read uint32
 func (iter *Iterator) ReadUint32() (ret uint32) {
 	return iter.readUint32(iter.nextToken())
 }
@@ -182,10 +187,9 @@ func (iter *Iterator) readUint32(c byte) (ret uint32) {
 				if value2 < value {
 					iter.ReportError("readUint32", "overflow")
 					return
-				} else {
-					value = value2
-					continue
 				}
+				value = value2
+				continue
 			}
 			value = (value << 3) + (value << 1) + uint32(ind)
 		}
@@ -195,6 +199,7 @@ func (iter *Iterator) readUint32(c byte) (ret uint32) {
 	}
 }
 
+// ReadInt64 read int64
 func (iter *Iterator) ReadInt64() (ret int64) {
 	c := iter.nextToken()
 	if c == '-' {
@@ -204,16 +209,16 @@ func (iter *Iterator) ReadInt64() (ret int64) {
 			return
 		}
 		return -int64(val)
-	} else {
-		val := iter.readUint64(c)
-		if val > math.MaxInt64 {
-			iter.ReportError("ReadInt64", "overflow: "+strconv.FormatUint(uint64(val), 10))
-			return
-		}
-		return int64(val)
 	}
+	val := iter.readUint64(c)
+	if val > math.MaxInt64 {
+		iter.ReportError("ReadInt64", "overflow: "+strconv.FormatUint(uint64(val), 10))
+		return
+	}
+	return int64(val)
 }
 
+// ReadUint64 read uint64
 func (iter *Iterator) ReadUint64() uint64 {
 	return iter.readUint64(iter.nextToken())
 }
@@ -240,10 +245,9 @@ func (iter *Iterator) readUint64(c byte) (ret uint64) {
 				if value2 < value {
 					iter.ReportError("readUint64", "overflow")
 					return
-				} else {
-					value = value2
-					continue
 				}
+				value = value2
+				continue
 			}
 			value = (value << 3) + (value << 1) + uint64(ind)
 		}

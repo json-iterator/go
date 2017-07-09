@@ -1,5 +1,6 @@
 package jsoniter
 
+// ReadArray read array element, tells if the array has more element to read.
 func (iter *Iterator) ReadArray() (ret bool) {
 	c := iter.nextToken()
 	switch c {
@@ -23,6 +24,7 @@ func (iter *Iterator) ReadArray() (ret bool) {
 	}
 }
 
+// ReadArrayCB read array with callback
 func (iter *Iterator) ReadArrayCB(callback func(*Iterator) bool) (ret bool) {
 	c := iter.nextToken()
 	if c == '[' {

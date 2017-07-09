@@ -4,6 +4,7 @@ import (
 	"unicode/utf16"
 )
 
+// ReadString read string from iterator
 func (iter *Iterator) ReadString() (ret string) {
 	c := iter.nextToken()
 	if c == '"' {
@@ -96,6 +97,8 @@ func (iter *Iterator) readStringSlowPath() (ret string) {
 	return
 }
 
+// ReadStringAsSlice read string from iterator without copying into string form.
+// The []byte can not be kept, as it will change after next iterator call.
 func (iter *Iterator) ReadStringAsSlice() (ret []byte) {
 	c := iter.nextToken()
 	if c == '"' {

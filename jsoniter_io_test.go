@@ -2,9 +2,9 @@ package jsoniter
 
 import (
 	"bytes"
+	"github.com/stretchr/testify/require"
 	"io"
 	"testing"
-	"github.com/stretchr/testify/require"
 )
 
 func Test_read_by_one(t *testing.T) {

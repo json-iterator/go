@@ -6,6 +6,9 @@ import (
 	"unsafe"
 )
 
+// ReadObject read one field from object.
+// If object ended, returns empty string.
+// Otherwise, returns the field name.
 func (iter *Iterator) ReadObject() (ret string) {
 	c := iter.nextToken()
 	switch c {
@@ -74,6 +77,7 @@ func calcHash(str string) int32 {
 	return int32(hash)
 }
 
+// ReadObjectCB read object with callback, the key is ascii only and field name not copied
 func (iter *Iterator) ReadObjectCB(callback func(*Iterator, string) bool) bool {
 	c := iter.nextToken()
 	if c == '{' {
@@ -106,6 +110,7 @@ func (iter *Iterator) ReadObjectCB(callback func(*Iterator, string) bool) bool {
 	return false
 }
 
+// ReadMapCB read map with callback, the key can be any string
 func (iter *Iterator) ReadMapCB(callback func(*Iterator, string) bool) bool {
 	c := iter.nextToken()
 	if c == '{' {

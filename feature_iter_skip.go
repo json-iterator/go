@@ -29,6 +29,8 @@ func (iter *Iterator) ReadBool() (ret bool) {
 	return
 }
 
+// SkipAndReturnBytes skip next JSON element, and return its content as []byte.
+// The []byte can be kept, it is a copy of data.
 func (iter *Iterator) SkipAndReturnBytes() []byte {
 	iter.startCapture(iter.head)
 	iter.Skip()
@@ -58,10 +60,9 @@ func (iter *Iterator) stopCapture() []byte {
 	iter.captured = nil
 	if len(captured) == 0 {
 		return remaining
-	} else {
-		captured = append(captured, remaining...)
-		return captured
 	}
+	captured = append(captured, remaining...)
+	return captured
 }
 
 // Skip skips a json object and positions to relatively the next json object

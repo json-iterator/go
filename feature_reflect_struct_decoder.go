@@ -1,9 +1,9 @@
 package jsoniter
 
 import (
-	"reflect"
-	"io"
 	"fmt"
+	"io"
+	"reflect"
 	"unsafe"
 )
 
@@ -71,7 +71,7 @@ func createStructDecoder(typ reflect.Type, fields map[string]*structFieldDecoder
 			}
 		}
 		return &threeFieldsStructDecoder{typ,
-										 fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3}, nil
+			fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3}, nil
 	case 4:
 		var fieldName1 int32
 		var fieldName2 int32
@@ -103,8 +103,8 @@ func createStructDecoder(typ reflect.Type, fields map[string]*structFieldDecoder
 			}
 		}
 		return &fourFieldsStructDecoder{typ,
-										fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3,
-										fieldName4, fieldDecoder4}, nil
+			fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3,
+			fieldName4, fieldDecoder4}, nil
 	case 5:
 		var fieldName1 int32
 		var fieldName2 int32
@@ -141,8 +141,8 @@ func createStructDecoder(typ reflect.Type, fields map[string]*structFieldDecoder
 			}
 		}
 		return &fiveFieldsStructDecoder{typ,
-										fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3,
-										fieldName4, fieldDecoder4, fieldName5, fieldDecoder5}, nil
+			fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3,
+			fieldName4, fieldDecoder4, fieldName5, fieldDecoder5}, nil
 	case 6:
 		var fieldName1 int32
 		var fieldName2 int32
@@ -184,8 +184,8 @@ func createStructDecoder(typ reflect.Type, fields map[string]*structFieldDecoder
 			}
 		}
 		return &sixFieldsStructDecoder{typ,
-									   fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3,
-									   fieldName4, fieldDecoder4, fieldName5, fieldDecoder5, fieldName6, fieldDecoder6}, nil
+			fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3,
+			fieldName4, fieldDecoder4, fieldName5, fieldDecoder5, fieldName6, fieldDecoder6}, nil
 	case 7:
 		var fieldName1 int32
 		var fieldName2 int32
@@ -232,9 +232,9 @@ func createStructDecoder(typ reflect.Type, fields map[string]*structFieldDecoder
 			}
 		}
 		return &sevenFieldsStructDecoder{typ,
-										 fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3,
-										 fieldName4, fieldDecoder4, fieldName5, fieldDecoder5, fieldName6, fieldDecoder6,
-										 fieldName7, fieldDecoder7}, nil
+			fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3,
+			fieldName4, fieldDecoder4, fieldName5, fieldDecoder5, fieldName6, fieldDecoder6,
+			fieldName7, fieldDecoder7}, nil
 	case 8:
 		var fieldName1 int32
 		var fieldName2 int32
@@ -286,9 +286,9 @@ func createStructDecoder(typ reflect.Type, fields map[string]*structFieldDecoder
 			}
 		}
 		return &eightFieldsStructDecoder{typ,
-										 fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3,
-										 fieldName4, fieldDecoder4, fieldName5, fieldDecoder5, fieldName6, fieldDecoder6,
-										 fieldName7, fieldDecoder7, fieldName8, fieldDecoder8}, nil
+			fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3,
+			fieldName4, fieldDecoder4, fieldName5, fieldDecoder5, fieldName6, fieldDecoder6,
+			fieldName7, fieldDecoder7, fieldName8, fieldDecoder8}, nil
 	case 9:
 		var fieldName1 int32
 		var fieldName2 int32
@@ -345,9 +345,9 @@ func createStructDecoder(typ reflect.Type, fields map[string]*structFieldDecoder
 			}
 		}
 		return &nineFieldsStructDecoder{typ,
-										fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3,
-										fieldName4, fieldDecoder4, fieldName5, fieldDecoder5, fieldName6, fieldDecoder6,
-										fieldName7, fieldDecoder7, fieldName8, fieldDecoder8, fieldName9, fieldDecoder9}, nil
+			fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3,
+			fieldName4, fieldDecoder4, fieldName5, fieldDecoder5, fieldName6, fieldDecoder6,
+			fieldName7, fieldDecoder7, fieldName8, fieldDecoder8, fieldName9, fieldDecoder9}, nil
 	case 10:
 		var fieldName1 int32
 		var fieldName2 int32
@@ -409,14 +409,13 @@ func createStructDecoder(typ reflect.Type, fields map[string]*structFieldDecoder
 			}
 		}
 		return &tenFieldsStructDecoder{typ,
-									   fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3,
-									   fieldName4, fieldDecoder4, fieldName5, fieldDecoder5, fieldName6, fieldDecoder6,
-									   fieldName7, fieldDecoder7, fieldName8, fieldDecoder8, fieldName9, fieldDecoder9,
-									   fieldName10, fieldDecoder10}, nil
+			fieldName1, fieldDecoder1, fieldName2, fieldDecoder2, fieldName3, fieldDecoder3,
+			fieldName4, fieldDecoder4, fieldName5, fieldDecoder5, fieldName6, fieldDecoder6,
+			fieldName7, fieldDecoder7, fieldName8, fieldDecoder8, fieldName9, fieldDecoder9,
+			fieldName10, fieldDecoder10}, nil
 	}
 	return &generalStructDecoder{typ, fields}, nil
 }
-
 
 type generalStructDecoder struct {
 	typ    reflect.Type

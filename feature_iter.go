@@ -1,9 +1,3 @@
-//
-// Besides, jsoniter.Iterator provides a different set of interfaces
-// iterating given bytes/string/reader
-// and yielding parsed elements one by one.
-// This set of interfaces reads input as required and gives
-// better performance.
 package jsoniter
 
 import (
@@ -11,15 +5,23 @@ import (
 	"io"
 )
 
+// ValueType the type for JSON element
 type ValueType int
 
 const (
+	// Invalid invalid JSON element
 	Invalid ValueType = iota
+	// String JSON element "string"
 	String
+	// Number JSON element 100 or 0.10
 	Number
+	// Nil JSON element null
 	Nil
+	// Bool JSON element true or false
 	Bool
+	// Array JSON element []
 	Array
+	// Object JSON element {}
 	Object
 )
 
@@ -63,7 +65,8 @@ func init() {
 	valueTypes['{'] = Object
 }
 
-// Iterator is a fast and flexible JSON parser
+// Iterator is a io.Reader like object, with JSON specific read functions.
+// Error is not returned as return value, but stored as Error member on this iterator instance.
 type Iterator struct {
 	cfg              *frozenConfig
 	reader           io.Reader
@@ -75,10 +78,10 @@ type Iterator struct {
 	Error            error
 }
 
-// Create creates an empty Iterator instance
-func NewIterator(cfg *frozenConfig) *Iterator {
+// NewIterator creates an empty Iterator instance
+func NewIterator(cfg API) *Iterator {
 	return &Iterator{
-		cfg:    cfg,
+		cfg:    cfg.(*frozenConfig),
 		reader: nil,
 		buf:    nil,
 		head:   0,
@@ -86,10 +89,10 @@ func NewIterator(cfg *frozenConfig) *Iterator {
 	}
 }
 
-// Parse parses a json buffer in io.Reader into an Iterator instance
-func Parse(cfg *frozenConfig, reader io.Reader, bufSize int) *Iterator {
+// Parse creates an Iterator instance from io.Reader
+func Parse(cfg API, reader io.Reader, bufSize int) *Iterator {
 	return &Iterator{
-		cfg:    cfg,
+		cfg:    cfg.(*frozenConfig),
 		reader: reader,
 		buf:    make([]byte, bufSize),
 		head:   0,
@@ -97,10 +100,10 @@ func Parse(cfg *frozenConfig, reader io.Reader, bufSize int) *Iterator {
 	}
 }
 
-// ParseBytes parses a json byte slice into an Iterator instance
-func ParseBytes(cfg *frozenConfig, input []byte) *Iterator {
+// ParseBytes creates an Iterator instance from byte array
+func ParseBytes(cfg API, input []byte) *Iterator {
 	return &Iterator{
-		cfg:    cfg,
+		cfg:    cfg.(*frozenConfig),
 		reader: nil,
 		buf:    input,
 		head:   0,
@@ -108,16 +111,17 @@ func ParseBytes(cfg *frozenConfig, input []byte) *Iterator {
 	}
 }
 
-// ParseString parses a json string into an Iterator instance
-func ParseString(cfg *frozenConfig, input string) *Iterator {
+// ParseString creates an Iterator instance from string
+func ParseString(cfg API, input string) *Iterator {
 	return ParseBytes(cfg, []byte(input))
 }
 
-func (iter *Iterator) Config() *frozenConfig {
+// Pool returns a pool can provide more iterator with same configuration
+func (iter *Iterator) Pool() IteratorPool {
 	return iter.cfg
 }
 
-// Reset can reset an Iterator instance for another json buffer in io.Reader
+// Reset reuse iterator instance by specifying another reader
 func (iter *Iterator) Reset(reader io.Reader) *Iterator {
 	iter.reader = reader
 	iter.head = 0
@@ -125,7 +129,7 @@ func (iter *Iterator) Reset(reader io.Reader) *Iterator {
 	return iter
 }
 
-// ResetBytes can reset an Iterator instance for another json byte slice
+// ResetBytes reuse iterator instance by specifying another byte array as input
 func (iter *Iterator) ResetBytes(input []byte) *Iterator {
 	iter.reader = nil
 	iter.buf = input
@@ -134,7 +138,7 @@ func (iter *Iterator) ResetBytes(input []byte) *Iterator {
 	return iter
 }
 
-// WhatIsNext gets ValueType of relatively next json object
+// WhatIsNext gets ValueType of relatively next json element
 func (iter *Iterator) WhatIsNext() ValueType {
 	valueType := valueTypes[iter.nextToken()]
 	iter.unreadByte()
@@ -184,6 +188,7 @@ func (iter *Iterator) nextToken() byte {
 	}
 }
 
+// ReportError record a error in iterator instance with current position.
 func (iter *Iterator) ReportError(operation string, msg string) {
 	if iter.Error != nil {
 		if iter.Error != io.EOF {
@@ -198,7 +203,7 @@ func (iter *Iterator) ReportError(operation string, msg string) {
 		string(iter.buf[peekStart:iter.head]), string(iter.buf[0:iter.tail]))
 }
 
-// CurrentBuffer gets current buffer as string
+// CurrentBuffer gets current buffer as string for debugging purpose
 func (iter *Iterator) CurrentBuffer() string {
 	peekStart := iter.head - 10
 	if peekStart < 0 {
@@ -261,6 +266,7 @@ func (iter *Iterator) unreadByte() {
 	return
 }
 
+// Read read the next JSON element as generic interface{}.
 func (iter *Iterator) Read() interface{} {
 	valueType := iter.WhatIsNext()
 	switch valueType {

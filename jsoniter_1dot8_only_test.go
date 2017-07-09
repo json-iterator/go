@@ -26,7 +26,7 @@ func Test_new_encoder(t *testing.T) {
 }
 
 func Test_string_encode_with_std_without_html_escape(t *testing.T) {
-	api := Config{EscapeHtml: false}.Froze()
+	api := Config{EscapeHTML: false}.Froze()
 	should := require.New(t)
 	for i := 0; i < utf8.RuneSelf; i++ {
 		input := string([]byte{byte(i)})

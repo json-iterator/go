@@ -18,7 +18,7 @@ func Test_customize_type_decoder(t *testing.T) {
 		}
 		*((*time.Time)(ptr)) = t
 	})
-	defer ConfigDefault.cleanDecoders()
+	defer ConfigDefault.(*frozenConfig).cleanDecoders()
 	val := time.Time{}
 	err := Unmarshal([]byte(`"2016-12-05 08:43:28"`), &val)
 	if err != nil {
@@ -36,7 +36,7 @@ func Test_customize_type_encoder(t *testing.T) {
 		t := *((*time.Time)(ptr))
 		stream.WriteString(t.UTC().Format("2006-01-02 15:04:05"))
 	}, nil)
-	defer ConfigDefault.cleanEncoders()
+	defer ConfigDefault.(*frozenConfig).cleanEncoders()
 	val := time.Unix(0, 0)
 	str, err := MarshalToString(val)
 	should.Nil(err)
@@ -44,13 +44,13 @@ func Test_customize_type_encoder(t *testing.T) {
 }
 
 func Test_customize_byte_array_encoder(t *testing.T) {
-	ConfigDefault.cleanEncoders()
+	ConfigDefault.(*frozenConfig).cleanEncoders()
 	should := require.New(t)
 	RegisterTypeEncoderFunc("[]uint8", func(ptr unsafe.Pointer, stream *Stream) {
 		t := *((*[]byte)(ptr))
 		stream.WriteString(string(t))
 	}, nil)
-	defer ConfigDefault.cleanEncoders()
+	defer ConfigDefault.(*frozenConfig).cleanEncoders()
 	val := []byte("abc")
 	str, err := MarshalToString(val)
 	should.Nil(err)
@@ -73,7 +73,7 @@ func Test_customize_field_decoder(t *testing.T) {
 	RegisterFieldDecoderFunc("jsoniter.Tom", "field1", func(ptr unsafe.Pointer, iter *Iterator) {
 		*((*string)(ptr)) = strconv.Itoa(iter.ReadInt())
 	})
-	defer ConfigDefault.cleanDecoders()
+	defer ConfigDefault.(*frozenConfig).cleanDecoders()
 	tom := Tom{}
 	err := Unmarshal([]byte(`{"field1": 100}`), &tom)
 	if err != nil {
@@ -144,7 +144,7 @@ func Test_marshaler_and_encoder(t *testing.T) {
 	type TestObject struct {
 		Field *timeImplementedMarshaler
 	}
-	ConfigDefault.cleanEncoders()
+	ConfigDefault.(*frozenConfig).cleanEncoders()
 	should := require.New(t)
 	RegisterTypeEncoderFunc("jsoniter.timeImplementedMarshaler", func(ptr unsafe.Pointer, stream *Stream) {
 		stream.WriteString("hello from encoder")
@@ -184,7 +184,7 @@ func Test_unmarshaler_and_decoder(t *testing.T) {
 		Field  *ObjectImplementedUnmarshaler
 		Field2 string
 	}
-	ConfigDefault.cleanDecoders()
+	ConfigDefault.(*frozenConfig).cleanDecoders()
 	should := require.New(t)
 	RegisterTypeDecoderFunc("jsoniter.ObjectImplementedUnmarshaler", func(ptr unsafe.Pointer, iter *Iterator) {
 		*(*ObjectImplementedUnmarshaler)(ptr) = 10

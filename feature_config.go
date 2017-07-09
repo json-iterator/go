@@ -9,10 +9,12 @@ import (
 	"unsafe"
 )
 
+// Config customize how the API should behave.
+// The API is created from Config by Froze.
 type Config struct {
 	IndentionStep           int
 	MarshalFloatWith6Digits bool
-	EscapeHtml              bool
+	EscapeHTML              bool
 	SortMapKeys             bool
 	UseNumber               bool
 }
@@ -28,7 +30,11 @@ type frozenConfig struct {
 	iteratorPool       chan *Iterator
 }
 
-type Api interface {
+// API the public interface of this package.
+// Primary Marshal and Unmarshal.
+type API interface {
+	IteratorPool
+	StreamPool
 	MarshalToString(v interface{}) (string, error)
 	Marshal(v interface{}) ([]byte, error)
 	MarshalIndent(v interface{}, prefix, indent string) ([]byte, error)
@@ -39,22 +45,25 @@ type Api interface {
 	NewDecoder(reader io.Reader) *Decoder
 }
 
+// ConfigDefault the default API
 var ConfigDefault = Config{
-	EscapeHtml: true,
+	EscapeHTML: true,
 }.Froze()
 
-// Trying to be 100% compatible with standard library behavior
+// ConfigCompatibleWithStandardLibrary tries to be 100% compatible with standard library behavior
 var ConfigCompatibleWithStandardLibrary = Config{
-	EscapeHtml:  true,
+	EscapeHTML:  true,
 	SortMapKeys: true,
 }.Froze()
 
+// ConfigFastest marshals float with only 6 digits precision
 var ConfigFastest = Config{
-	EscapeHtml:              false,
+	EscapeHTML:              false,
 	MarshalFloatWith6Digits: true,
 }.Froze()
 
-func (cfg Config) Froze() *frozenConfig {
+// Froze forge API from config
+func (cfg Config) Froze() API {
 	// TODO: cache frozen config
 	frozenConfig := &frozenConfig{
 		sortMapKeys:   cfg.SortMapKeys,
@@ -67,8 +76,8 @@ func (cfg Config) Froze() *frozenConfig {
 	if cfg.MarshalFloatWith6Digits {
 		frozenConfig.marshalFloatWith6Digits()
 	}
-	if cfg.EscapeHtml {
-		frozenConfig.escapeHtml()
+	if cfg.EscapeHTML {
+		frozenConfig.escapeHTML()
 	}
 	if cfg.UseNumber {
 		frozenConfig.useNumber()
@@ -145,7 +154,7 @@ func (encoder *htmlEscapedStringEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	return *((*string)(ptr)) == ""
 }
 
-func (cfg *frozenConfig) escapeHtml() {
+func (cfg *frozenConfig) escapeHTML() {
 	cfg.addEncoderToCache(reflect.TypeOf((*string)(nil)).Elem(), &htmlEscapedStringEncoder{})
 }
 
@@ -189,18 +198,16 @@ func (cfg *frozenConfig) getEncoderFromCache(cacheKey reflect.Type) ValEncoder {
 	return cache[cacheKey]
 }
 
-// cleanDecoders cleans decoders registered or cached
 func (cfg *frozenConfig) cleanDecoders() {
 	typeDecoders = map[string]ValDecoder{}
 	fieldDecoders = map[string]ValDecoder{}
-	*cfg = *cfg.configBeforeFrozen.Froze()
+	*cfg = *(cfg.configBeforeFrozen.Froze().(*frozenConfig))
 }
 
-// cleanEncoders cleans encoders registered or cached
 func (cfg *frozenConfig) cleanEncoders() {
 	typeEncoders = map[string]ValEncoder{}
 	fieldEncoders = map[string]ValEncoder{}
-	*cfg = *cfg.configBeforeFrozen.Froze()
+	*cfg = *(cfg.configBeforeFrozen.Froze().(*frozenConfig))
 }
 
 func (cfg *frozenConfig) MarshalToString(v interface{}) (string, error) {

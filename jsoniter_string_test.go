@@ -127,7 +127,7 @@ func Test_unicode(t *testing.T) {
 	should := require.New(t)
 	output, _ := MarshalToString(map[string]interface{}{"a": "数字山谷"})
 	should.Equal(`{"a":"数字山谷"}`, output)
-	output, _ = Config{EscapeHtml: false}.Froze().MarshalToString(map[string]interface{}{"a": "数字山谷"})
+	output, _ = Config{EscapeHTML: false}.Froze().MarshalToString(map[string]interface{}{"a": "数字山谷"})
 	should.Equal(`{"a":"数字山谷"}`, output)
 }
 
@@ -142,7 +142,7 @@ func Test_unicode_and_escape(t *testing.T) {
 }
 
 func Test_unsafe_unicode(t *testing.T) {
-	ConfigDefault.cleanEncoders()
+	ConfigDefault.(*frozenConfig).cleanEncoders()
 	should := require.New(t)
 	output, err := ConfigDefault.MarshalToString("he\u2029\u2028he")
 	should.Nil(err)

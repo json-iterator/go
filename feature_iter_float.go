@@ -30,6 +30,7 @@ func init() {
 	floatDigits['.'] = dotInNumber
 }
 
+// ReadBigFloat read big.Float
 func (iter *Iterator) ReadBigFloat() (ret *big.Float) {
 	str := iter.readNumberAsString()
 	if iter.Error != nil && iter.Error != io.EOF {
@@ -47,6 +48,7 @@ func (iter *Iterator) ReadBigFloat() (ret *big.Float) {
 	return val
 }
 
+// ReadBigInt read big.Int
 func (iter *Iterator) ReadBigInt() (ret *big.Int) {
 	str := iter.readNumberAsString()
 	if iter.Error != nil && iter.Error != io.EOF {
@@ -62,14 +64,14 @@ func (iter *Iterator) ReadBigInt() (ret *big.Int) {
 	return ret
 }
 
+//ReadFloat32 read float32
 func (iter *Iterator) ReadFloat32() (ret float32) {
 	c := iter.nextToken()
 	if c == '-' {
 		return -iter.readPositiveFloat32()
-	} else {
-		iter.unreadByte()
-		return iter.readPositiveFloat32()
 	}
+	iter.unreadByte()
+	return iter.readPositiveFloat32()
 }
 
 func (iter *Iterator) readPositiveFloat32() (ret float32) {
@@ -165,14 +167,14 @@ func (iter *Iterator) readFloat32SlowPath() (ret float32) {
 	return float32(val)
 }
 
+// ReadFloat64 read float64
 func (iter *Iterator) ReadFloat64() (ret float64) {
 	c := iter.nextToken()
 	if c == '-' {
 		return -iter.readPositiveFloat64()
-	} else {
-		iter.unreadByte()
-		return iter.readPositiveFloat64()
 	}
+	iter.unreadByte()
+	return iter.readPositiveFloat64()
 }
 
 func (iter *Iterator) readPositiveFloat64() (ret float64) {

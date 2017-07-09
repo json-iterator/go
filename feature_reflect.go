@@ -36,6 +36,7 @@ type checkIsEmpty interface {
 	IsEmpty(ptr unsafe.Pointer) bool
 }
 
+// WriteToStream the default implementation for TypeEncoder method EncodeInterface
 func WriteToStream(val interface{}, stream *Stream, encoder ValEncoder) {
 	e := (*emptyInterface)(unsafe.Pointer(&val))
 	if e.word == nil {
@@ -48,9 +49,6 @@ func WriteToStream(val interface{}, stream *Stream, encoder ValEncoder) {
 		encoder.Encode(e.word, stream)
 	}
 }
-
-type DecoderFunc func(ptr unsafe.Pointer, iter *Iterator)
-type EncoderFunc func(ptr unsafe.Pointer, stream *Stream)
 
 var jsonNumberType reflect.Type
 var jsonRawMessageType reflect.Type
@@ -132,9 +130,8 @@ func (encoder *optionalEncoder) EncodeInterface(val interface{}, stream *Stream)
 func (encoder *optionalEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	if *((*unsafe.Pointer)(ptr)) == nil {
 		return true
-	} else {
-		return false
 	}
+	return false
 }
 
 type placeholderEncoder struct {
@@ -206,7 +203,7 @@ type nonEmptyInterface struct {
 	word unsafe.Pointer
 }
 
-// Read converts an Iterator instance into go interface, same as json.Unmarshal
+// ReadVal copy the underlying JSON into go interface, same as json.Unmarshal
 func (iter *Iterator) ReadVal(obj interface{}) {
 	typ := reflect.TypeOf(obj)
 	cacheKey := typ.Elem()
@@ -219,6 +216,7 @@ func (iter *Iterator) ReadVal(obj interface{}) {
 	decoder.Decode(e.word, iter)
 }
 
+// WriteVal copy the go interface into underlying JSON, same as json.Marshal
 func (stream *Stream) WriteVal(val interface{}) {
 	if nil == val {
 		stream.WriteNil()
@@ -393,9 +391,8 @@ func createDecoderOfType(cfg *frozenConfig, typ reflect.Type) (ValDecoder, error
 	case reflect.Interface:
 		if typ.NumMethod() == 0 {
 			return &emptyInterfaceCodec{}, nil
-		} else {
-			return &nonEmptyInterfaceCodec{}, nil
 		}
+		return &nonEmptyInterfaceCodec{}, nil
 	case reflect.Struct:
 		return prefix(fmt.Sprintf("[%s]", typeName)).addToDecoder(decoderOfStruct(cfg, typ))
 	case reflect.Array:
@@ -517,9 +514,8 @@ func createCheckIsEmpty(typ reflect.Type) (checkIsEmpty, error) {
 	case reflect.Interface:
 		if typ.NumMethod() == 0 {
 			return &emptyInterfaceCodec{}, nil
-		} else {
-			return &nonEmptyInterfaceCodec{}, nil
 		}
+		return &nonEmptyInterfaceCodec{}, nil
 	case reflect.Struct:
 		return &structEncoder{}, nil
 	case reflect.Array:
@@ -617,9 +613,8 @@ func createEncoderOfSimpleType(cfg *frozenConfig, typ reflect.Type) (ValEncoder,
 	case reflect.Interface:
 		if typ.NumMethod() == 0 {
 			return &emptyInterfaceCodec{}, nil
-		} else {
-			return &nonEmptyInterfaceCodec{}, nil
 		}
+		return &nonEmptyInterfaceCodec{}, nil
 	case reflect.Struct:
 		return prefix(fmt.Sprintf("[%s]", typeName)).addToEncoder(encoderOfStruct(cfg, typ))
 	case reflect.Array:
@@ -679,7 +674,6 @@ func encoderOfMap(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error) {
 	mapInterface := reflect.New(typ).Elem().Interface()
 	if cfg.sortMapKeys {
 		return &sortKeysMapEncoder{typ, elemType, encoder, *((*emptyInterface)(unsafe.Pointer(&mapInterface)))}, nil
-	} else {
-		return &mapEncoder{typ, elemType, encoder, *((*emptyInterface)(unsafe.Pointer(&mapInterface)))}, nil
 	}
+	return &mapEncoder{typ, elemType, encoder, *((*emptyInterface)(unsafe.Pointer(&mapInterface)))}, nil
 }

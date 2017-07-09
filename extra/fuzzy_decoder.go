@@ -160,8 +160,8 @@ type tolerateEmptyArrayDecoder struct {
 func (decoder *tolerateEmptyArrayDecoder) Decode(ptr unsafe.Pointer, iter *jsoniter.Iterator) {
 	if iter.WhatIsNext() == jsoniter.Array {
 		iter.Skip()
-		newIter := iter.Config().BorrowIterator([]byte("{}"))
-		defer iter.Config().ReturnIterator(newIter)
+		newIter := iter.Pool().BorrowIterator([]byte("{}"))
+		defer iter.Pool().ReturnIterator(newIter)
 		decoder.valDecoder.Decode(ptr, newIter)
 	} else {
 		decoder.valDecoder.Decode(ptr, iter)
@@ -202,8 +202,8 @@ func (decoder *fuzzyIntegerDecoder) Decode(ptr unsafe.Pointer, iter *jsoniter.It
 	default:
 		iter.ReportError("fuzzyIntegerDecoder", "not number or string")
 	}
-	newIter := iter.Config().BorrowIterator([]byte(str))
-	defer iter.Config().ReturnIterator(newIter)
+	newIter := iter.Pool().BorrowIterator([]byte(str))
+	defer iter.Pool().ReturnIterator(newIter)
 	isFloat := strings.IndexByte(str, '.') != -1
 	decoder.fun(isFloat, ptr, newIter)
 	if newIter.Error != nil {
@@ -222,8 +222,8 @@ func (decoder *fuzzyFloat32Decoder) Decode(ptr unsafe.Pointer, iter *jsoniter.It
 		*((*float32)(ptr)) = iter.ReadFloat32()
 	case jsoniter.String:
 		str = iter.ReadString()
-		newIter := iter.Config().BorrowIterator([]byte(str))
-		defer iter.Config().ReturnIterator(newIter)
+		newIter := iter.Pool().BorrowIterator([]byte(str))
+		defer iter.Pool().ReturnIterator(newIter)
 		*((*float32)(ptr)) = newIter.ReadFloat32()
 		if newIter.Error != nil {
 			iter.Error = newIter.Error
@@ -244,8 +244,8 @@ func (decoder *fuzzyFloat64Decoder) Decode(ptr unsafe.Pointer, iter *jsoniter.It
 		*((*float64)(ptr)) = iter.ReadFloat64()
 	case jsoniter.String:
 		str = iter.ReadString()
-		newIter := iter.Config().BorrowIterator([]byte(str))
-		defer iter.Config().ReturnIterator(newIter)
+		newIter := iter.Pool().BorrowIterator([]byte(str))
+		defer iter.Pool().ReturnIterator(newIter)
 		*((*float64)(ptr)) = newIter.ReadFloat64()
 		if newIter.Error != nil {
 			iter.Error = newIter.Error

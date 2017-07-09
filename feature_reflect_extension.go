@@ -110,6 +110,11 @@ func (encoder *funcEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	return encoder.isEmptyFunc(ptr)
 }
 
+// DecoderFunc the function form of TypeDecoder
+type DecoderFunc func(ptr unsafe.Pointer, iter *Iterator)
+// EncoderFunc the function form of TypeEncoder
+type EncoderFunc func(ptr unsafe.Pointer, stream *Stream)
+
 // RegisterTypeDecoderFunc register TypeDecoder for a type with function
 func RegisterTypeDecoderFunc(typ string, fun DecoderFunc) {
 	typeDecoders[typ] = &funcDecoder{fun}

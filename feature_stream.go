@@ -4,7 +4,7 @@ import (
 	"io"
 )
 
-// Stream is a writer like object, with JSON specific write functions.
+// Stream is a io.Writer like object, with JSON specific write functions.
 // Error is not returned as return value, but stored as Error member on this stream instance.
 type Stream struct {
 	cfg       *frozenConfig
@@ -19,15 +19,20 @@ type Stream struct {
 // cfg can be jsoniter.ConfigDefault.
 // out can be nil if write to internal buffer.
 // bufSize is the initial size for the internal buffer in bytes.
-func NewStream(cfg *frozenConfig, out io.Writer, bufSize int) *Stream {
+func NewStream(cfg API, out io.Writer, bufSize int) *Stream {
 	return &Stream{
-		cfg:       cfg,
+		cfg:       cfg.(*frozenConfig),
 		out:       out,
 		buf:       make([]byte, bufSize),
 		n:         0,
 		Error:     nil,
 		indention: 0,
 	}
+}
+
+// Pool returns a pool can provide more stream with same configuration
+func (stream *Stream) Pool() StreamPool {
+	return stream.cfg
 }
 
 // Reset reuse this stream instance by assign a new writer
@@ -195,7 +200,6 @@ func (stream *Stream) growAtLeast(minimal int) {
 	copy(newBuf, stream.Buffer())
 	stream.buf = newBuf
 }
-
 
 // WriteRaw write string out without quotes, just like []byte
 func (stream *Stream) WriteRaw(s string) {
