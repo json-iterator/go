@@ -9,90 +9,90 @@ import (
 )
 
 func Test_skip_number(t *testing.T) {
-	iter := ParseString(ConfigDefault, `[-0.12, "b"]`)
+	iter := ParseString(ConfigDefault, `[-0.12, "stream"]`)
 	iter.ReadArray()
 	iter.Skip()
 	iter.ReadArray()
-	if iter.ReadString() != "b" {
+	if iter.ReadString() != "stream" {
 		t.FailNow()
 	}
 
 }
 
 func Test_skip_null(t *testing.T) {
-	iter := ParseString(ConfigDefault, `[null , "b"]`)
+	iter := ParseString(ConfigDefault, `[null , "stream"]`)
 	iter.ReadArray()
 	iter.Skip()
 	iter.ReadArray()
-	if iter.ReadString() != "b" {
+	if iter.ReadString() != "stream" {
 		t.FailNow()
 	}
 }
 
 func Test_skip_true(t *testing.T) {
-	iter := ParseString(ConfigDefault, `[true , "b"]`)
+	iter := ParseString(ConfigDefault, `[true , "stream"]`)
 	iter.ReadArray()
 	iter.Skip()
 	iter.ReadArray()
-	if iter.ReadString() != "b" {
+	if iter.ReadString() != "stream" {
 		t.FailNow()
 	}
 }
 
 func Test_skip_false(t *testing.T) {
-	iter := ParseString(ConfigDefault, `[false , "b"]`)
+	iter := ParseString(ConfigDefault, `[false , "stream"]`)
 	iter.ReadArray()
 	iter.Skip()
 	iter.ReadArray()
-	if iter.ReadString() != "b" {
+	if iter.ReadString() != "stream" {
 		t.FailNow()
 	}
 }
 
 func Test_skip_array(t *testing.T) {
-	iter := ParseString(ConfigDefault, `[[1, [2, [3], 4]], "b"]`)
+	iter := ParseString(ConfigDefault, `[[1, [2, [3], 4]], "stream"]`)
 	iter.ReadArray()
 	iter.Skip()
 	iter.ReadArray()
-	if iter.ReadString() != "b" {
+	if iter.ReadString() != "stream" {
 		t.FailNow()
 	}
 }
 
 func Test_skip_empty_array(t *testing.T) {
-	iter := ParseString(ConfigDefault, `[ [ ], "b"]`)
+	iter := ParseString(ConfigDefault, `[ [ ], "stream"]`)
 	iter.ReadArray()
 	iter.Skip()
 	iter.ReadArray()
-	if iter.ReadString() != "b" {
+	if iter.ReadString() != "stream" {
 		t.FailNow()
 	}
 }
 
 func Test_skip_nested(t *testing.T) {
-	iter := ParseString(ConfigDefault, `[ {"a" : [{"b": "c"}], "d": 102 }, "b"]`)
+	iter := ParseString(ConfigDefault, `[ {"a" : [{"stream": "c"}], "d": 102 }, "stream"]`)
 	iter.ReadArray()
 	iter.Skip()
 	iter.ReadArray()
-	if iter.ReadString() != "b" {
+	if iter.ReadString() != "stream" {
 		t.FailNow()
 	}
 }
 
 func Test_skip_and_return_bytes(t *testing.T) {
 	should := require.New(t)
-	iter := ParseString(ConfigDefault, `[ {"a" : [{"b": "c"}], "d": 102 }, "b"]`)
+	iter := ParseString(ConfigDefault, `[ {"a" : [{"stream": "c"}], "d": 102 }, "stream"]`)
 	iter.ReadArray()
 	skipped := iter.SkipAndReturnBytes()
-	should.Equal(`{"a" : [{"b": "c"}], "d": 102 }`, string(skipped))
+	should.Equal(`{"a" : [{"stream": "c"}], "d": 102 }`, string(skipped))
 }
 
 func Test_skip_and_return_bytes_with_reader(t *testing.T) {
 	should := require.New(t)
-	iter := Parse(ConfigDefault, bytes.NewBufferString(`[ {"a" : [{"b": "c"}], "d": 102 }, "b"]`), 4)
+	iter := Parse(ConfigDefault, bytes.NewBufferString(`[ {"a" : [{"stream": "c"}], "d": 102 }, "stream"]`), 4)
 	iter.ReadArray()
 	skipped := iter.SkipAndReturnBytes()
-	should.Equal(`{"a" : [{"b": "c"}], "d": 102 }`, string(skipped))
+	should.Equal(`{"a" : [{"stream": "c"}], "d": 102 }`, string(skipped))
 }
 
 type TestResp struct {

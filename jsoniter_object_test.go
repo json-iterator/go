@@ -22,14 +22,14 @@ func Test_empty_object(t *testing.T) {
 
 func Test_one_field(t *testing.T) {
 	should := require.New(t)
-	iter := ParseString(ConfigDefault, `{"a": "b"}`)
+	iter := ParseString(ConfigDefault, `{"a": "stream"}`)
 	field := iter.ReadObject()
 	should.Equal("a", field)
 	value := iter.ReadString()
-	should.Equal("b", value)
+	should.Equal("stream", value)
 	field = iter.ReadObject()
 	should.Equal("", field)
-	iter = ParseString(ConfigDefault, `{"a": "b"}`)
+	iter = ParseString(ConfigDefault, `{"a": "stream"}`)
 	should.True(iter.ReadObjectCB(func(iter *Iterator, field string) bool {
 		should.Equal("a", field)
 		return true
@@ -39,11 +39,11 @@ func Test_one_field(t *testing.T) {
 
 func Test_two_field(t *testing.T) {
 	should := require.New(t)
-	iter := ParseString(ConfigDefault, `{ "a": "b" , "c": "d" }`)
+	iter := ParseString(ConfigDefault, `{ "a": "stream" , "c": "d" }`)
 	field := iter.ReadObject()
 	should.Equal("a", field)
 	value := iter.ReadString()
-	should.Equal("b", value)
+	should.Equal("stream", value)
 	field = iter.ReadObject()
 	should.Equal("c", field)
 	value = iter.ReadString()
@@ -115,9 +115,9 @@ func Test_decode_two_fields_struct(t *testing.T) {
 	obj := TestObject{}
 	should.Nil(UnmarshalFromString(`{}`, &obj))
 	should.Equal("", obj.Field1)
-	should.Nil(UnmarshalFromString(`{"Field1": "a", "Field2": "b"}`, &obj))
+	should.Nil(UnmarshalFromString(`{"Field1": "a", "Field2": "stream"}`, &obj))
 	should.Equal("a", obj.Field1)
-	should.Equal("b", obj.Field2)
+	should.Equal("stream", obj.Field2)
 }
 
 func Test_decode_three_fields_struct(t *testing.T) {
@@ -130,9 +130,9 @@ func Test_decode_three_fields_struct(t *testing.T) {
 	obj := TestObject{}
 	should.Nil(UnmarshalFromString(`{}`, &obj))
 	should.Equal("", obj.Field1)
-	should.Nil(UnmarshalFromString(`{"Field1": "a", "Field2": "b", "Field3": "c"}`, &obj))
+	should.Nil(UnmarshalFromString(`{"Field1": "a", "Field2": "stream", "Field3": "c"}`, &obj))
 	should.Equal("a", obj.Field1)
-	should.Equal("b", obj.Field2)
+	should.Equal("stream", obj.Field2)
 	should.Equal("c", obj.Field3)
 }
 
@@ -147,9 +147,9 @@ func Test_decode_four_fields_struct(t *testing.T) {
 	obj := TestObject{}
 	should.Nil(UnmarshalFromString(`{}`, &obj))
 	should.Equal("", obj.Field1)
-	should.Nil(UnmarshalFromString(`{"Field1": "a", "Field2": "b", "Field3": "c", "Field4": "d"}`, &obj))
+	should.Nil(UnmarshalFromString(`{"Field1": "a", "Field2": "stream", "Field3": "c", "Field4": "d"}`, &obj))
 	should.Equal("a", obj.Field1)
-	should.Equal("b", obj.Field2)
+	should.Equal("stream", obj.Field2)
 	should.Equal("c", obj.Field3)
 	should.Equal("d", obj.Field4)
 }
@@ -166,9 +166,9 @@ func Test_decode_five_fields_struct(t *testing.T) {
 	obj := TestObject{}
 	should.Nil(UnmarshalFromString(`{}`, &obj))
 	should.Equal("", obj.Field1)
-	should.Nil(UnmarshalFromString(`{"Field1": "a", "Field2": "b", "Field3": "c", "Field4": "d", "Field5": "e"}`, &obj))
+	should.Nil(UnmarshalFromString(`{"Field1": "a", "Field2": "stream", "Field3": "c", "Field4": "d", "Field5": "e"}`, &obj))
 	should.Equal("a", obj.Field1)
-	should.Equal("b", obj.Field2)
+	should.Equal("stream", obj.Field2)
 	should.Equal("c", obj.Field3)
 	should.Equal("d", obj.Field4)
 	should.Equal("e", obj.Field5)
@@ -187,9 +187,9 @@ func Test_decode_six_fields_struct(t *testing.T) {
 	obj := TestObject{}
 	should.Nil(UnmarshalFromString(`{}`, &obj))
 	should.Equal("", obj.Field1)
-	should.Nil(UnmarshalFromString(`{"Field1": "a", "Field2": "b", "Field3": "c", "Field4": "d", "Field5": "e", "Field6": "x"}`, &obj))
+	should.Nil(UnmarshalFromString(`{"Field1": "a", "Field2": "stream", "Field3": "c", "Field4": "d", "Field5": "e", "Field6": "x"}`, &obj))
 	should.Equal("a", obj.Field1)
-	should.Equal("b", obj.Field2)
+	should.Equal("stream", obj.Field2)
 	should.Equal("c", obj.Field3)
 	should.Equal("d", obj.Field4)
 	should.Equal("e", obj.Field5)
@@ -210,9 +210,9 @@ func Test_decode_seven_fields_struct(t *testing.T) {
 	obj := TestObject{}
 	should.Nil(UnmarshalFromString(`{}`, &obj))
 	should.Equal("", obj.Field1)
-	should.Nil(UnmarshalFromString(`{"Field1": "a", "Field2": "b", "Field3": "c", "Field4": "d", "Field5": "e", "Field6": "x", "Field7":"y"}`, &obj))
+	should.Nil(UnmarshalFromString(`{"Field1": "a", "Field2": "stream", "Field3": "c", "Field4": "d", "Field5": "e", "Field6": "x", "Field7":"y"}`, &obj))
 	should.Equal("a", obj.Field1)
-	should.Equal("b", obj.Field2)
+	should.Equal("stream", obj.Field2)
 	should.Equal("c", obj.Field3)
 	should.Equal("d", obj.Field4)
 	should.Equal("e", obj.Field5)
@@ -235,9 +235,9 @@ func Test_decode_eight_fields_struct(t *testing.T) {
 	obj := TestObject{}
 	should.Nil(UnmarshalFromString(`{}`, &obj))
 	should.Equal("", obj.Field1)
-	should.Nil(UnmarshalFromString(`{"Field8":"1", "Field1": "a", "Field2": "b", "Field3": "c", "Field4": "d", "Field5": "e", "Field6": "x", "Field7":"y"}`, &obj))
+	should.Nil(UnmarshalFromString(`{"Field8":"1", "Field1": "a", "Field2": "stream", "Field3": "c", "Field4": "d", "Field5": "e", "Field6": "x", "Field7":"y"}`, &obj))
 	should.Equal("a", obj.Field1)
-	should.Equal("b", obj.Field2)
+	should.Equal("stream", obj.Field2)
 	should.Equal("c", obj.Field3)
 	should.Equal("d", obj.Field4)
 	should.Equal("e", obj.Field5)
@@ -262,9 +262,9 @@ func Test_decode_nine_fields_struct(t *testing.T) {
 	obj := TestObject{}
 	should.Nil(UnmarshalFromString(`{}`, &obj))
 	should.Equal("", obj.Field1)
-	should.Nil(UnmarshalFromString(`{"Field8" : "zzzzzzzzzzz", "Field7": "zz", "Field6" : "xx", "Field1": "a", "Field2": "b", "Field3": "c", "Field4": "d", "Field5": "e", "Field9":"f"}`, &obj))
+	should.Nil(UnmarshalFromString(`{"Field8" : "zzzzzzzzzzz", "Field7": "zz", "Field6" : "xx", "Field1": "a", "Field2": "stream", "Field3": "c", "Field4": "d", "Field5": "e", "Field9":"f"}`, &obj))
 	should.Equal("a", obj.Field1)
-	should.Equal("b", obj.Field2)
+	should.Equal("stream", obj.Field2)
 	should.Equal("c", obj.Field3)
 	should.Equal("d", obj.Field4)
 	should.Equal("e", obj.Field5)
@@ -291,9 +291,9 @@ func Test_decode_ten_fields_struct(t *testing.T) {
 	obj := TestObject{}
 	should.Nil(UnmarshalFromString(`{}`, &obj))
 	should.Equal("", obj.Field1)
-	should.Nil(UnmarshalFromString(`{"Field10":"x", "Field9": "x", "Field8":"x", "Field7":"x", "Field6":"x", "Field1": "a", "Field2": "b", "Field3": "c", "Field4": "d", "Field5": "e"}`, &obj))
+	should.Nil(UnmarshalFromString(`{"Field10":"x", "Field9": "x", "Field8":"x", "Field7":"x", "Field6":"x", "Field1": "a", "Field2": "stream", "Field3": "c", "Field4": "d", "Field5": "e"}`, &obj))
 	should.Equal("a", obj.Field1)
-	should.Equal("b", obj.Field2)
+	should.Equal("stream", obj.Field2)
 	should.Equal("c", obj.Field3)
 	should.Equal("d", obj.Field4)
 	should.Equal("e", obj.Field5)
@@ -322,9 +322,9 @@ func Test_decode_more_than_ten_fields_struct(t *testing.T) {
 	obj := TestObject{}
 	should.Nil(UnmarshalFromString(`{}`, &obj))
 	should.Equal("", obj.Field1)
-	should.Nil(UnmarshalFromString(`{"Field11":1, "Field1": "a", "Field2": "b", "Field3": "c", "Field4": "d", "Field5": "e"}`, &obj))
+	should.Nil(UnmarshalFromString(`{"Field11":1, "Field1": "a", "Field2": "stream", "Field3": "c", "Field4": "d", "Field5": "e"}`, &obj))
 	should.Equal("a", obj.Field1)
-	should.Equal("b", obj.Field2)
+	should.Equal("stream", obj.Field2)
 	should.Equal("c", obj.Field3)
 	should.Equal("d", obj.Field4)
 	should.Equal("e", obj.Field5)

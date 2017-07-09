@@ -5,12 +5,13 @@ import (
 	"strconv"
 )
 
-var _POW10 []uint64
+var pow10 []uint64
 
 func init() {
-	_POW10 = []uint64{1, 10, 100, 1000, 10000, 100000, 1000000}
+	pow10 = []uint64{1, 10, 100, 1000, 10000, 100000, 1000000}
 }
 
+// WriteFloat32 write float32 to stream
 func (stream *Stream) WriteFloat32(val float32) {
 	abs := math.Abs(float64(val))
 	fmt := byte('f')
@@ -23,6 +24,7 @@ func (stream *Stream) WriteFloat32(val float32) {
 	stream.WriteRaw(strconv.FormatFloat(float64(val), fmt, -1, 32))
 }
 
+// WriteFloat32Lossy write float32 to stream with ONLY 6 digits precision although much much faster
 func (stream *Stream) WriteFloat32Lossy(val float32) {
 	if val < 0 {
 		stream.writeByte('-')
@@ -42,7 +44,7 @@ func (stream *Stream) WriteFloat32Lossy(val float32) {
 	}
 	stream.writeByte('.')
 	stream.ensure(10)
-	for p := precision - 1; p > 0 && fval < _POW10[p]; p-- {
+	for p := precision - 1; p > 0 && fval < pow10[p]; p-- {
 		stream.writeByte('0')
 	}
 	stream.WriteUint64(fval)
@@ -51,6 +53,7 @@ func (stream *Stream) WriteFloat32Lossy(val float32) {
 	}
 }
 
+// WriteFloat64 write float64 to stream
 func (stream *Stream) WriteFloat64(val float64) {
 	abs := math.Abs(val)
 	fmt := byte('f')
@@ -63,6 +66,7 @@ func (stream *Stream) WriteFloat64(val float64) {
 	stream.WriteRaw(strconv.FormatFloat(float64(val), fmt, -1, 64))
 }
 
+// WriteFloat64Lossy write float64 to stream with ONLY 6 digits precision although much much faster
 func (stream *Stream) WriteFloat64Lossy(val float64) {
 	if val < 0 {
 		stream.writeByte('-')
@@ -82,7 +86,7 @@ func (stream *Stream) WriteFloat64Lossy(val float64) {
 	}
 	stream.writeByte('.')
 	stream.ensure(10)
-	for p := precision - 1; p > 0 && fval < _POW10[p]; p-- {
+	for p := precision - 1; p > 0 && fval < pow10[p]; p-- {
 		stream.writeByte('0')
 	}
 	stream.WriteUint64(fval)

@@ -26,7 +26,7 @@ var stringConvertMap = map[string]string{
 	"[1,2]":             "[1,2]",
 	"{}":                "{}",
 	"{1,2}":             "{1,2}",
-	`{"a":1, "b":true}`: `{"a":1, "b":true}`,
+	`{"a":1, "stream":true}`: `{"a":1, "stream":true}`,
 }
 
 func Test_read_any_to_string(t *testing.T) {

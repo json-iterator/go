@@ -24,177 +24,177 @@ func NewStream(cfg *frozenConfig, out io.Writer, bufSize int) *Stream {
 	}
 }
 
-func (b *Stream) Reset(out io.Writer) {
-	b.out = out
-	b.n = 0
+func (stream *Stream) Reset(out io.Writer) {
+	stream.out = out
+	stream.n = 0
 }
 
 // Available returns how many bytes are unused in the buffer.
-func (b *Stream) Available() int {
-	return len(b.buf) - b.n
+func (stream *Stream) Available() int {
+	return len(stream.buf) - stream.n
 }
 
 // Buffered returns the number of bytes that have been written into the current buffer.
-func (b *Stream) Buffered() int {
-	return b.n
+func (stream *Stream) Buffered() int {
+	return stream.n
 }
 
-func (b *Stream) Buffer() []byte {
-	return b.buf[:b.n]
+func (stream *Stream) Buffer() []byte {
+	return stream.buf[:stream.n]
 }
 
 // Write writes the contents of p into the buffer.
 // It returns the number of bytes written.
 // If nn < len(p), it also returns an error explaining
 // why the write is short.
-func (b *Stream) Write(p []byte) (nn int, err error) {
-	for len(p) > b.Available() && b.Error == nil {
-		if b.out == nil {
-			b.growAtLeast(len(p))
+func (stream *Stream) Write(p []byte) (nn int, err error) {
+	for len(p) > stream.Available() && stream.Error == nil {
+		if stream.out == nil {
+			stream.growAtLeast(len(p))
 		} else {
 			var n int
-			if b.Buffered() == 0 {
+			if stream.Buffered() == 0 {
 				// Large write, empty buffer.
 				// Write directly from p to avoid copy.
-				n, b.Error = b.out.Write(p)
+				n, stream.Error = stream.out.Write(p)
 			} else {
-				n = copy(b.buf[b.n:], p)
-				b.n += n
-				b.Flush()
+				n = copy(stream.buf[stream.n:], p)
+				stream.n += n
+				stream.Flush()
 			}
 			nn += n
 			p = p[n:]
 		}
 	}
-	if b.Error != nil {
-		return nn, b.Error
+	if stream.Error != nil {
+		return nn, stream.Error
 	}
-	n := copy(b.buf[b.n:], p)
-	b.n += n
+	n := copy(stream.buf[stream.n:], p)
+	stream.n += n
 	nn += n
 	return nn, nil
 }
 
 // WriteByte writes a single byte.
-func (b *Stream) writeByte(c byte) {
-	if b.Error != nil {
+func (stream *Stream) writeByte(c byte) {
+	if stream.Error != nil {
 		return
 	}
-	if b.Available() < 1 {
-		b.growAtLeast(1)
+	if stream.Available() < 1 {
+		stream.growAtLeast(1)
 	}
-	b.buf[b.n] = c
-	b.n++
+	stream.buf[stream.n] = c
+	stream.n++
 }
 
-func (b *Stream) writeTwoBytes(c1 byte, c2 byte) {
-	if b.Error != nil {
+func (stream *Stream) writeTwoBytes(c1 byte, c2 byte) {
+	if stream.Error != nil {
 		return
 	}
-	if b.Available() < 2 {
-		b.growAtLeast(2)
+	if stream.Available() < 2 {
+		stream.growAtLeast(2)
 	}
-	b.buf[b.n] = c1
-	b.buf[b.n+1] = c2
-	b.n += 2
+	stream.buf[stream.n] = c1
+	stream.buf[stream.n+1] = c2
+	stream.n += 2
 }
 
-func (b *Stream) writeThreeBytes(c1 byte, c2 byte, c3 byte) {
-	if b.Error != nil {
+func (stream *Stream) writeThreeBytes(c1 byte, c2 byte, c3 byte) {
+	if stream.Error != nil {
 		return
 	}
-	if b.Available() < 3 {
-		b.growAtLeast(3)
+	if stream.Available() < 3 {
+		stream.growAtLeast(3)
 	}
-	b.buf[b.n] = c1
-	b.buf[b.n+1] = c2
-	b.buf[b.n+2] = c3
-	b.n += 3
+	stream.buf[stream.n] = c1
+	stream.buf[stream.n+1] = c2
+	stream.buf[stream.n+2] = c3
+	stream.n += 3
 }
 
-func (b *Stream) writeFourBytes(c1 byte, c2 byte, c3 byte, c4 byte) {
-	if b.Error != nil {
+func (stream *Stream) writeFourBytes(c1 byte, c2 byte, c3 byte, c4 byte) {
+	if stream.Error != nil {
 		return
 	}
-	if b.Available() < 4 {
-		b.growAtLeast(4)
+	if stream.Available() < 4 {
+		stream.growAtLeast(4)
 	}
-	b.buf[b.n] = c1
-	b.buf[b.n+1] = c2
-	b.buf[b.n+2] = c3
-	b.buf[b.n+3] = c4
-	b.n += 4
+	stream.buf[stream.n] = c1
+	stream.buf[stream.n+1] = c2
+	stream.buf[stream.n+2] = c3
+	stream.buf[stream.n+3] = c4
+	stream.n += 4
 }
 
-func (b *Stream) writeFiveBytes(c1 byte, c2 byte, c3 byte, c4 byte, c5 byte) {
-	if b.Error != nil {
+func (stream *Stream) writeFiveBytes(c1 byte, c2 byte, c3 byte, c4 byte, c5 byte) {
+	if stream.Error != nil {
 		return
 	}
-	if b.Available() < 5 {
-		b.growAtLeast(5)
+	if stream.Available() < 5 {
+		stream.growAtLeast(5)
 	}
-	b.buf[b.n] = c1
-	b.buf[b.n+1] = c2
-	b.buf[b.n+2] = c3
-	b.buf[b.n+3] = c4
-	b.buf[b.n+4] = c5
-	b.n += 5
+	stream.buf[stream.n] = c1
+	stream.buf[stream.n+1] = c2
+	stream.buf[stream.n+2] = c3
+	stream.buf[stream.n+3] = c4
+	stream.buf[stream.n+4] = c5
+	stream.n += 5
 }
 
 // Flush writes any buffered data to the underlying io.Writer.
-func (b *Stream) Flush() error {
-	if b.out == nil {
+func (stream *Stream) Flush() error {
+	if stream.out == nil {
 		return nil
 	}
-	if b.Error != nil {
-		return b.Error
+	if stream.Error != nil {
+		return stream.Error
 	}
-	if b.n == 0 {
+	if stream.n == 0 {
 		return nil
 	}
-	n, err := b.out.Write(b.buf[0:b.n])
-	if n < b.n && err == nil {
+	n, err := stream.out.Write(stream.buf[0:stream.n])
+	if n < stream.n && err == nil {
 		err = io.ErrShortWrite
 	}
 	if err != nil {
-		if n > 0 && n < b.n {
-			copy(b.buf[0:b.n-n], b.buf[n:b.n])
+		if n > 0 && n < stream.n {
+			copy(stream.buf[0:stream.n-n], stream.buf[n:stream.n])
 		}
-		b.n -= n
-		b.Error = err
+		stream.n -= n
+		stream.Error = err
 		return err
 	}
-	b.n = 0
+	stream.n = 0
 	return nil
 }
 
-func (b *Stream) ensure(minimal int) {
-	available := b.Available()
+func (stream *Stream) ensure(minimal int) {
+	available := stream.Available()
 	if available < minimal {
-		if b.n > 1024 {
-			b.Flush()
+		if stream.n > 1024 {
+			stream.Flush()
 		}
-		b.growAtLeast(minimal)
+		stream.growAtLeast(minimal)
 	}
 }
 
-func (b *Stream) growAtLeast(minimal int) {
-	toGrow := len(b.buf)
+func (stream *Stream) growAtLeast(minimal int) {
+	toGrow := len(stream.buf)
 	if toGrow < minimal {
 		toGrow = minimal
 	}
-	newBuf := make([]byte, len(b.buf)+toGrow)
-	copy(newBuf, b.Buffer())
-	b.buf = newBuf
+	newBuf := make([]byte, len(stream.buf)+toGrow)
+	copy(newBuf, stream.Buffer())
+	stream.buf = newBuf
 }
 
-func (b *Stream) WriteRaw(s string) {
-	b.ensure(len(s))
-	if b.Error != nil {
+func (stream *Stream) WriteRaw(s string) {
+	stream.ensure(len(s))
+	if stream.Error != nil {
 		return
 	}
-	n := copy(b.buf[b.n:], s)
-	b.n += n
+	n := copy(stream.buf[stream.n:], s)
+	stream.n += n
 }
 
 func (stream *Stream) WriteNil() {

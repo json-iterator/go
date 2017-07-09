@@ -8,13 +8,13 @@ import (
 
 func Test_read_object_as_any(t *testing.T) {
 	should := require.New(t)
-	any := Get([]byte(`{"a":"b","c":"d"}`))
-	should.Equal(`{"a":"b","c":"d"}`, any.ToString())
+	any := Get([]byte(`{"a":"stream","c":"d"}`))
+	should.Equal(`{"a":"stream","c":"d"}`, any.ToString())
 	// partial parse
-	should.Equal("b", any.Get("a").ToString())
+	should.Equal("stream", any.Get("a").ToString())
 	should.Equal("d", any.Get("c").ToString())
 	should.Equal(2, len(any.Keys()))
-	any = Get([]byte(`{"a":"b","c":"d"}`))
+	any = Get([]byte(`{"a":"stream","c":"d"}`))
 	// full parse
 	should.Equal(2, len(any.Keys()))
 	should.Equal(2, any.Size())
@@ -22,30 +22,30 @@ func Test_read_object_as_any(t *testing.T) {
 	should.Equal(0, any.ToInt())
 	should.Equal(Object, any.ValueType())
 	should.Nil(any.LastError())
-	should.Equal("b", any.GetObject()["a"].ToString())
+	should.Equal("stream", any.GetObject()["a"].ToString())
 	obj := struct {
 		A string
 	}{}
 	any.ToVal(&obj)
-	should.Equal("b", obj.A)
+	should.Equal("stream", obj.A)
 }
 
 func Test_object_lazy_any_get(t *testing.T) {
 	should := require.New(t)
-	any := Get([]byte(`{"a":{"b":{"c":"d"}}}`))
-	should.Equal("d", any.Get("a", "b", "c").ToString())
+	any := Get([]byte(`{"a":{"stream":{"c":"d"}}}`))
+	should.Equal("d", any.Get("a", "stream", "c").ToString())
 }
 
 func Test_object_lazy_any_get_all(t *testing.T) {
 	should := require.New(t)
-	any := Get([]byte(`{"a":[0],"b":[1]}`))
+	any := Get([]byte(`{"a":[0],"stream":[1]}`))
 	should.Contains(any.Get('*', 0).ToString(), `"a":0`)
 }
 
 func Test_object_lazy_any_get_invalid(t *testing.T) {
 	should := require.New(t)
 	any := Get([]byte(`{}`))
-	should.Equal(Invalid, any.Get("a", "b", "c").ValueType())
+	should.Equal(Invalid, any.Get("a", "stream", "c").ValueType())
 	should.Equal(Invalid, any.Get(1).ValueType())
 }
 

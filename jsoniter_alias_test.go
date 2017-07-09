@@ -25,7 +25,7 @@ func Test_alias(t *testing.T) {
 	type myuintptr uintptr
 	var a struct {
 		A myint8    `json:"a"`
-		B myint16   `json:"b"`
+		B myint16   `json:"stream"`
 		C myint32   `json:"c"`
 		D myint64   `json:"d"`
 		E myuint8   `json:"e"`
@@ -41,7 +41,7 @@ func Test_alias(t *testing.T) {
 		O myuintptr `json:"o"`
 	}
 
-	should.Nil(UnmarshalFromString(`{"a" : 1, "b" : 1, "c": 1, "d" : 1, "e" : 1, "f" : 1, "g" : 1, "h": 1, "i" : 1, "j" : 1, "k" :"xxxx", "l" : 1, "m":1, "n": true, "o" : 1}`, &a))
+	should.Nil(UnmarshalFromString(`{"a" : 1, "stream" : 1, "c": 1, "d" : 1, "e" : 1, "f" : 1, "g" : 1, "h": 1, "i" : 1, "j" : 1, "k" :"xxxx", "l" : 1, "m":1, "n": true, "o" : 1}`, &a))
 	should.Equal(myfloat32(1), a.I)
 	should.Equal(myfloat64(1), a.J)
 	should.Equal(myint8(1), a.A)
@@ -57,6 +57,6 @@ func Test_alias(t *testing.T) {
 	should.Equal(myuintptr(1), a.O)
 	b, err := Marshal(a)
 	should.Nil(err)
-	should.Equal(`{"a":1,"b":1,"c":1,"d":1,"e":1,"f":1,"g":1,"h":1,"i":1,"j":1,"k":"xxxx","l":1,"m":1,"n":true,"o":1}`, string(b))
+	should.Equal(`{"a":1,"stream":1,"c":1,"d":1,"e":1,"f":1,"g":1,"h":1,"i":1,"j":1,"k":"xxxx","l":1,"m":1,"n":true,"o":1}`, string(b))
 
 }

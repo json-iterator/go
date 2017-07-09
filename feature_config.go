@@ -134,7 +134,7 @@ type htmlEscapedStringEncoder struct {
 
 func (encoder *htmlEscapedStringEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	str := *((*string)(ptr))
-	stream.WriteStringWithHtmlEscaped(str)
+	stream.WriteStringWithHTMLEscaped(str)
 }
 
 func (encoder *htmlEscapedStringEncoder) EncodeInterface(val interface{}, stream *Stream) {

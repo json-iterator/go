@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io"
 	"testing"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_read_by_one(t *testing.T) {
@@ -34,36 +35,21 @@ func Test_read_by_one(t *testing.T) {
 }
 
 func Test_read_by_two(t *testing.T) {
+	should := require.New(t)
 	iter := Parse(ConfigDefault, bytes.NewBufferString("abc"), 2)
 	b := iter.readByte()
-	if iter.Error != nil {
-		t.Fatal(iter.Error)
-	}
-	if b != 'a' {
-		t.Fatal(b)
-	}
+	should.Nil(iter.Error)
+	should.Equal(byte('a'), b)
 	b = iter.readByte()
-	if iter.Error != nil {
-		t.Fatal(iter.Error)
-	}
-	if b != 'b' {
-		t.Fatal(b)
-	}
+	should.Nil(iter.Error)
+	should.Equal(byte('b'), b)
 	iter.unreadByte()
-	if iter.Error != nil {
-		t.Fatal(iter.Error)
-	}
+	should.Nil(iter.Error)
 	iter.unreadByte()
-	if iter.Error != nil {
-		t.Fatal(iter.Error)
-	}
+	should.Nil(iter.Error)
 	b = iter.readByte()
-	if iter.Error != nil {
-		t.Fatal(iter.Error)
-	}
-	if b != 'a' {
-		t.Fatal(b)
-	}
+	should.Nil(iter.Error)
+	should.Equal(byte('a'), b)
 }
 
 func Test_read_until_eof(t *testing.T) {

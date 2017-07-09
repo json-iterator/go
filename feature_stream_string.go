@@ -217,7 +217,8 @@ var safeSet = [utf8.RuneSelf]bool{
 
 var hex = "0123456789abcdef"
 
-func (stream *Stream) WriteStringWithHtmlEscaped(s string) {
+// WriteStringWithHTMLEscaped write string to stream with html special characters escaped
+func (stream *Stream) WriteStringWithHTMLEscaped(s string) {
 	stream.ensure(32)
 	valLen := len(s)
 	toWriteLen := valLen
@@ -246,10 +247,10 @@ func (stream *Stream) WriteStringWithHtmlEscaped(s string) {
 		return
 	}
 	stream.n = n
-	writeStringSlowPathWithHtmlEscaped(stream, i, s, valLen)
+	writeStringSlowPathWithHTMLEscaped(stream, i, s, valLen)
 }
 
-func writeStringSlowPathWithHtmlEscaped(stream *Stream, i int, s string, valLen int) {
+func writeStringSlowPathWithHTMLEscaped(stream *Stream, i int, s string, valLen int) {
 	start := i
 	// for the remaining parts, we process them char by char
 	for i < valLen {
@@ -316,6 +317,7 @@ func writeStringSlowPathWithHtmlEscaped(stream *Stream, i int, s string, valLen 
 	stream.writeByte('"')
 }
 
+// WriteString write string to stream without html escape
 func (stream *Stream) WriteString(s string) {
 	stream.ensure(32)
 	valLen := len(s)
