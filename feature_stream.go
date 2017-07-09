@@ -16,9 +16,9 @@ type Stream struct {
 }
 
 // NewStream create new stream instance.
-// cfg can be jsoniter.ConfigDefault
-// out can be nil if write to internal buffer
-// bufSize is the initial size for the internal buffer in bytes
+// cfg can be jsoniter.ConfigDefault.
+// out can be nil if write to internal buffer.
+// bufSize is the initial size for the internal buffer in bytes.
 func NewStream(cfg *frozenConfig, out io.Writer, bufSize int) *Stream {
 	return &Stream{
 		cfg:       cfg,
@@ -255,13 +255,13 @@ func (stream *Stream) WriteObjectEnd() {
 	stream.writeByte('}')
 }
 
-// WriteObjectEnd write {}
+// WriteEmptyObject write {}
 func (stream *Stream) WriteEmptyObject() {
 	stream.writeByte('{')
 	stream.writeByte('}')
 }
 
-// WriteObjectEnd write , with possible indention
+// WriteMore write , with possible indention
 func (stream *Stream) WriteMore() {
 	stream.writeByte(',')
 	stream.writeIndention(0)
