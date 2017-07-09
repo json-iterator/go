@@ -6,7 +6,7 @@ import (
 	"unsafe"
 )
 
-// keep epoch milliseconds
+// RegisterTimeAsInt64Codec encode/decode time since number of unit since epoch. the precision is the unit.
 func RegisterTimeAsInt64Codec(precision time.Duration) {
 	jsoniter.RegisterTypeEncoder("time.Time", &timeAsInt64Codec{precision})
 	jsoniter.RegisterTypeDecoder("time.Time", &timeAsInt64Codec{precision})

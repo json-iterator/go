@@ -5,6 +5,7 @@ import (
 	"unicode"
 )
 
+// SetNamingStrategy rename struct fields uniformly
 func SetNamingStrategy(translate func(string) string) {
 	jsoniter.RegisterExtension(&namingStrategyExtension{jsoniter.DummyExtension{}, translate})
 }
@@ -21,6 +22,7 @@ func (extension *namingStrategyExtension) UpdateStructDescriptor(structDescripto
 	}
 }
 
+// LowerCaseWithUnderscores one strategy to SetNamingStrategy for. It will change HelloWorld to hello_world.
 func LowerCaseWithUnderscores(name string) string {
 	newName := []rune{}
 	for i, c := range name {

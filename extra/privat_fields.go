@@ -5,6 +5,7 @@ import (
 	"unicode"
 )
 
+// SupportPrivateFields include private fields when encoding/decoding
 func SupportPrivateFields() {
 	jsoniter.RegisterExtension(&privateFieldsExtension{})
 }
