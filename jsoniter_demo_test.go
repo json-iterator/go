@@ -16,12 +16,13 @@ func Test_bind_api_demo(t *testing.T) {
 }
 
 func Test_iterator_api_demo(t *testing.T) {
+	should := require.New(t)
 	iter := ParseString(ConfigDefault, `[0,1,2,3]`)
 	total := 0
 	for iter.ReadArray() {
 		total += iter.ReadInt()
 	}
-	//fmt.Println(total)
+	should.Equal(6, total)
 }
 
 type People struct {

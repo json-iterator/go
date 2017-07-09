@@ -142,6 +142,7 @@ func Test_encode_map_uint_keys(t *testing.T) {
 	should.Nil(err)
 
 	output, err := ConfigCompatibleWithStandardLibrary.MarshalToString(m)
+	should.Nil(err)
 	should.Equal(string(bytes), output)
 
 }
