@@ -34,11 +34,11 @@ type arrayEncoder struct {
 
 func (encoder *arrayEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteArrayStart()
-	elemPtr := uintptr(ptr)
-	encoder.elemEncoder.Encode(unsafe.Pointer(elemPtr), stream)
+	elemPtr := unsafe.Pointer(ptr)
+	encoder.elemEncoder.Encode(elemPtr, stream)
 	for i := 1; i < encoder.arrayType.Len(); i++ {
 		stream.WriteMore()
-		elemPtr += encoder.elemType.Size()
+		elemPtr = unsafe.Pointer(uintptr(elemPtr) + encoder.elemType.Size())
 		encoder.elemEncoder.Encode(unsafe.Pointer(elemPtr), stream)
 	}
 	stream.WriteArrayEnd()

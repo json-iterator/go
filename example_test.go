@@ -44,7 +44,7 @@ func ExampleUnmarshal() {
 	// [{Name:Platypus Order:Monotremata} {Name:Quoll Order:Dasyuromorphia}]
 }
 
-func ExampleMarshalWithBestPerformance() {
+func ExampleConfigFastest_Marshal() {
 	type ColorGroup struct {
 		ID     int
 		Name   string
@@ -66,7 +66,7 @@ func ExampleMarshalWithBestPerformance() {
 	// {"ID":1,"Name":"Reds","Colors":["Crimson","Red","Ruby","Maroon"]}
 }
 
-func ExampleUnmarshalWithBestPerformance() {
+func ExampleConfigFastest_Unmarshal() {
 	var jsonBlob = []byte(`[
 		{"Name": "Platypus", "Order": "Monotremata"},
 		{"Name": "Quoll",    "Order": "Dasyuromorphia"}
@@ -87,7 +87,7 @@ func ExampleUnmarshalWithBestPerformance() {
 	// [{Name:Platypus Order:Monotremata} {Name:Quoll Order:Dasyuromorphia}]
 }
 
-func ExampleOneLine() {
+func ExampleGet() {
 	val := []byte(`{"ID":1,"Name":"Reds","Colors":["Crimson","Red","Ruby","Maroon"]}`)
 	fmt.Printf(Get(val, "Colors", 0).ToString())
 	// Output:

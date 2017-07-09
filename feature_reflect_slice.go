@@ -43,11 +43,11 @@ func (encoder *sliceEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 		return
 	}
 	stream.WriteArrayStart()
-	elemPtr := uintptr(slice.Data)
+	elemPtr := unsafe.Pointer(slice.Data)
 	encoder.elemEncoder.Encode(unsafe.Pointer(elemPtr), stream)
 	for i := 1; i < slice.Len; i++ {
 		stream.WriteMore()
-		elemPtr += encoder.elemType.Size()
+		elemPtr = unsafe.Pointer(uintptr(elemPtr) + encoder.elemType.Size())
 		encoder.elemEncoder.Encode(unsafe.Pointer(elemPtr), stream)
 	}
 	stream.WriteArrayEnd()

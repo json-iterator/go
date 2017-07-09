@@ -1015,8 +1015,8 @@ type structFieldDecoder struct {
 }
 
 func (decoder *structFieldDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
-	fieldPtr := uintptr(ptr) + decoder.field.Offset
-	decoder.fieldDecoder.Decode(unsafe.Pointer(fieldPtr), iter)
+	fieldPtr := unsafe.Pointer(uintptr(ptr) + decoder.field.Offset)
+	decoder.fieldDecoder.Decode(fieldPtr, iter)
 	if iter.Error != nil && iter.Error != io.EOF {
 		iter.Error = fmt.Errorf("%s: %s", decoder.field.Name, iter.Error.Error())
 	}
@@ -1029,8 +1029,8 @@ type structFieldEncoder struct {
 }
 
 func (encoder *structFieldEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
-	fieldPtr := uintptr(ptr) + encoder.field.Offset
-	encoder.fieldEncoder.Encode(unsafe.Pointer(fieldPtr), stream)
+	fieldPtr := unsafe.Pointer(uintptr(ptr) + encoder.field.Offset)
+	encoder.fieldEncoder.Encode(fieldPtr, stream)
 	if stream.Error != nil && stream.Error != io.EOF {
 		stream.Error = fmt.Errorf("%s: %s", encoder.field.Name, stream.Error.Error())
 	}
@@ -1041,8 +1041,8 @@ func (encoder *structFieldEncoder) EncodeInterface(val interface{}, stream *Stre
 }
 
 func (encoder *structFieldEncoder) IsEmpty(ptr unsafe.Pointer) bool {
-	fieldPtr := uintptr(ptr) + encoder.field.Offset
-	return encoder.fieldEncoder.IsEmpty(unsafe.Pointer(fieldPtr))
+	fieldPtr := unsafe.Pointer(uintptr(ptr) + encoder.field.Offset)
+	return encoder.fieldEncoder.IsEmpty(fieldPtr)
 }
 
 type structEncoder struct {
