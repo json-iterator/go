@@ -1,6 +1,6 @@
 package test
 
-type A struct {
+type typeA struct {
 	Byte1   byte
 	Byte2   byte
 	Bool1   bool
@@ -17,4 +17,4 @@ type A struct {
 	String2 string
 }
 
-type typeForTest A
+type typeForTest typeA

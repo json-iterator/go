@@ -1,5 +1,5 @@
 package test
 
-type StringAlias string
+type stringAlias string
 
-type typeForTest map[StringAlias]string
+type typeForTest map[stringAlias]string

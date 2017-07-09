@@ -1,7 +1,7 @@
 package test
 
-type A string
+type typeA string
 
 type typeForTest struct {
-	F A
+	F typeA
 }

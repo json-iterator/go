@@ -1,13 +1,13 @@
 package test
 
-type S string
+type typeS string
 
-type A struct {
-	F1 S
-	F2 S
-	F3 S
+type typeA struct {
+	F1 typeS
+	F2 typeS
+	F3 typeS
 }
 
 type typeForTest struct {
-	F A
+	F typeA
 }

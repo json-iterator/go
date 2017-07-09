@@ -5,18 +5,18 @@ import (
 	"strings"
 )
 
-type KeyType string
+type keyType string
 
-func (k KeyType) MarshalText() ([]byte, error) {
+func (k keyType) MarshalText() ([]byte, error) {
 	return []byte("MANUAL__" + k), nil
 }
 
-func (k *KeyType) UnmarshalText(text []byte) error {
-	*k = KeyType(strings.TrimPrefix(string(text), "MANUAL__"))
+func (k *keyType) UnmarshalText(text []byte) error {
+	*k = keyType(strings.TrimPrefix(string(text), "MANUAL__"))
 	return nil
 }
 
-var _ encoding.TextMarshaler = KeyType("")
-var _ encoding.TextUnmarshaler = new(KeyType)
+var _ encoding.TextMarshaler = keyType("")
+var _ encoding.TextUnmarshaler = new(keyType)
 
-type typeForTest map[KeyType]string
+type typeForTest map[keyType]string

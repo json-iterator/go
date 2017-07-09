@@ -1,6 +1,6 @@
 package test
 
-type Struct struct {
+type typeA struct {
 	String string
 	Int    int32
 	Float  float64
@@ -11,4 +11,4 @@ type Struct struct {
 	Map   map[string]string
 }
 
-type typeForTest map[string]*Struct
+type typeForTest map[string]*typeA

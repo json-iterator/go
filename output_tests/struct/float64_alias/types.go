@@ -1,7 +1,7 @@
 package test
 
-type A float64
+type typeA float64
 
 type typeForTest struct {
-	F A
+	F typeA
 }

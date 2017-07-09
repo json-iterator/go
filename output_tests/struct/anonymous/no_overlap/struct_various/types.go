@@ -1,5 +1,6 @@
 package test
 
+// Embedded TEST ONLY
 type Embedded struct {
 	String string
 	Int    int32

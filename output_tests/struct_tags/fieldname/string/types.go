@@ -1,5 +1,6 @@
 package test
 
+// E TEST ONLY
 type E struct {
 	E1 string
 }

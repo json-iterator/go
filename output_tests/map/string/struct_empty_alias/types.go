@@ -1,5 +1,5 @@
 package test
 
-type A struct{}
+type typeA struct{}
 
-type typeForTest map[string]A
+type typeForTest map[string]typeA

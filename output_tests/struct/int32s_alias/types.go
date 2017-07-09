@@ -1,9 +1,9 @@
 package test
 
-type A int32
+type typeA int32
 
 type typeForTest struct {
-	F1 A
-	F2 A
-	F3 A
+	F1 typeA
+	F2 typeA
+	F3 typeA
 }

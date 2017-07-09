@@ -1,10 +1,10 @@
 package test
 
-type A1 string
-type A2 *string
+type typeA1 string
+type typeA2 *string
 
 type typeForTest struct {
-	F1 *A1
-	F2 A2
-	F3 *A2
+	F1 *typeA1
+	F2 typeA2
+	F3 *typeA2
 }

@@ -1,9 +1,9 @@
 package test
 
-type A struct {
+type typeA struct {
 	F float64
 }
 
 type typeForTest struct {
-	F A
+	F typeA
 }

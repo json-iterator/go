@@ -1,5 +1,5 @@
 package test
 
-type A struct{}
+type typeA struct{}
 
-type typeForTest [4]A
+type typeForTest [4]typeA
