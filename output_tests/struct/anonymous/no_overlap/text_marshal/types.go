@@ -36,10 +36,12 @@ func decode(str string) string {
 	return string(bs)
 }
 
+// MarshalText TEST ONLY
 func (m MarshalerForTest) MarshalText() ([]byte, error) {
 	return []byte(`MANUAL__` + encode(string(m))), nil
 }
 
+// UnmarshalText TEST ONLY
 func (m *MarshalerForTest) UnmarshalText(text []byte) error {
 	*m = MarshalerForTest(decode(strings.TrimPrefix(string(text), "MANUAL__")))
 	return nil

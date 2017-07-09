@@ -36,10 +36,12 @@ func decode(str string) string {
 	return string(bs)
 }
 
+// MarshalJSON TEST ONLY
 func (m MarshalerForTest) MarshalJSON() ([]byte, error) {
 	return []byte(`"MANUAL__` + encode(string(m)) + `"`), nil
 }
 
+// UnmarshalJSON TEST ONLY
 func (m *MarshalerForTest) UnmarshalJSON(text []byte) error {
 	*m = MarshalerForTest(decode(strings.TrimPrefix(strings.Trim(string(text), `"`), "MANUAL__")))
 	return nil

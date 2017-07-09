@@ -4,6 +4,8 @@ import (
 	"io"
 )
 
+// Stream is a writer like object, with JSON specific write functions.
+// Error is not returned as return value, but stored as Error member on this stream instance.
 type Stream struct {
 	cfg       *frozenConfig
 	out       io.Writer
@@ -13,6 +15,10 @@ type Stream struct {
 	indention int
 }
 
+// NewStream create new stream instance.
+// cfg can be jsoniter.ConfigDefault
+// out can be nil if write to internal buffer
+// bufSize is the initial size for the internal buffer in bytes
 func NewStream(cfg *frozenConfig, out io.Writer, bufSize int) *Stream {
 	return &Stream{
 		cfg:       cfg,
@@ -24,6 +30,7 @@ func NewStream(cfg *frozenConfig, out io.Writer, bufSize int) *Stream {
 	}
 }
 
+// Reset reuse this stream instance by assign a new writer
 func (stream *Stream) Reset(out io.Writer) {
 	stream.out = out
 	stream.n = 0
@@ -39,6 +46,7 @@ func (stream *Stream) Buffered() int {
 	return stream.n
 }
 
+// Buffer if writer is nil, use this method to take the result
 func (stream *Stream) Buffer() []byte {
 	return stream.buf[:stream.n]
 }
@@ -188,6 +196,8 @@ func (stream *Stream) growAtLeast(minimal int) {
 	stream.buf = newBuf
 }
 
+
+// WriteRaw write string out without quotes, just like []byte
 func (stream *Stream) WriteRaw(s string) {
 	stream.ensure(len(s))
 	if stream.Error != nil {
@@ -197,18 +207,22 @@ func (stream *Stream) WriteRaw(s string) {
 	stream.n += n
 }
 
+// WriteNil write null to stream
 func (stream *Stream) WriteNil() {
 	stream.writeFourBytes('n', 'u', 'l', 'l')
 }
 
+// WriteTrue write true to stream
 func (stream *Stream) WriteTrue() {
 	stream.writeFourBytes('t', 'r', 'u', 'e')
 }
 
+// WriteFalse write false to stream
 func (stream *Stream) WriteFalse() {
 	stream.writeFiveBytes('f', 'a', 'l', 's', 'e')
 }
 
+// WriteBool write true or false into stream
 func (stream *Stream) WriteBool(val bool) {
 	if val {
 		stream.WriteTrue()
@@ -217,12 +231,14 @@ func (stream *Stream) WriteBool(val bool) {
 	}
 }
 
+// WriteObjectStart write { with possible indention
 func (stream *Stream) WriteObjectStart() {
 	stream.indention += stream.cfg.indentionStep
 	stream.writeByte('{')
 	stream.writeIndention(0)
 }
 
+// WriteObjectField write "field": with possible indention
 func (stream *Stream) WriteObjectField(field string) {
 	stream.WriteString(field)
 	if stream.indention > 0 {
@@ -232,33 +248,39 @@ func (stream *Stream) WriteObjectField(field string) {
 	}
 }
 
+// WriteObjectEnd write } with possible indention
 func (stream *Stream) WriteObjectEnd() {
 	stream.writeIndention(stream.cfg.indentionStep)
 	stream.indention -= stream.cfg.indentionStep
 	stream.writeByte('}')
 }
 
+// WriteObjectEnd write {}
 func (stream *Stream) WriteEmptyObject() {
 	stream.writeByte('{')
 	stream.writeByte('}')
 }
 
+// WriteObjectEnd write , with possible indention
 func (stream *Stream) WriteMore() {
 	stream.writeByte(',')
 	stream.writeIndention(0)
 }
 
+// WriteArrayStart write [ with possible indention
 func (stream *Stream) WriteArrayStart() {
 	stream.indention += stream.cfg.indentionStep
 	stream.writeByte('[')
 	stream.writeIndention(0)
 }
 
+// WriteEmptyArray write []
 func (stream *Stream) WriteEmptyArray() {
 	stream.writeByte('[')
 	stream.writeByte(']')
 }
 
+// WriteArrayEnd write ] with possible indention
 func (stream *Stream) WriteArrayEnd() {
 	stream.writeIndention(stream.cfg.indentionStep)
 	stream.indention -= stream.cfg.indentionStep
