@@ -22,7 +22,6 @@ func Test_read_object_as_any(t *testing.T) {
 	should.Equal(0, any.ToInt())
 	should.Equal(Object, any.ValueType())
 	should.Nil(any.LastError())
-	should.Equal("stream", any.GetObject()["a"].ToString())
 	obj := struct {
 		A string
 	}{}

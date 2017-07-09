@@ -32,7 +32,6 @@ func Test_map_wrapper_any_get_all(t *testing.T) {
 	any := Wrap(map[string][]int{"Field1": {1, 2}})
 	should.Equal(`{"Field1":1}`, any.Get('*', 0).ToString())
 	should.Contains(any.Keys(), "Field1")
-	should.Equal(any.GetObject()["Field1"].ToInt(), 1)
 
 	// map write to
 	stream := NewStream(ConfigDefault, nil, 0)

@@ -37,7 +37,6 @@ func Test_read_two_element_array_as_any(t *testing.T) {
 	should.Equal(2, any.Size())
 	should.True(any.ToBool())
 	should.Equal(1, any.ToInt())
-	should.Equal(1, any.GetArray()[0].ToInt())
 	should.Equal([]interface{}{float64(1), float64(2)}, any.GetInterface())
 	stream := NewStream(ConfigDefault, nil, 32)
 	any.WriteTo(stream)
