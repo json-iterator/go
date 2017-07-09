@@ -1,3 +1,3 @@
 package test
 
-type T float32
+type typeForTest float32

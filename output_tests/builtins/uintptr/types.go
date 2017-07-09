@@ -1,3 +1,3 @@
 package test
 
-type T uintptr
+type typeForTest uintptr

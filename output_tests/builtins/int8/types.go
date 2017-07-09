@@ -1,3 +1,3 @@
 package test
 
-type T int8
+type typeForTest int8

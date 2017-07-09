@@ -1,3 +1,3 @@
 package test
 
-type T uint16
+type typeForTest uint16

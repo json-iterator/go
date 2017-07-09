@@ -1,3 +1,3 @@
 package test
 
-type T float64
+type typeForTest float64

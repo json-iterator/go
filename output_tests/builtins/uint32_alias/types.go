@@ -1,3 +1,3 @@
 package test
 
-type T uint32
+type typeForTest uint32

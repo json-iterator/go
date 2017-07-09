@@ -1,3 +1,3 @@
 package test
 
-type T int16
+type typeForTest int16

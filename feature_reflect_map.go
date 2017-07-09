@@ -136,7 +136,7 @@ func encodeMapKey(key reflect.Value, stream *Stream) {
 		stream.writeByte('"')
 		return
 	}
-	stream.Error = &json.UnsupportedTypeError{Type:key.Type()}
+	stream.Error = &json.UnsupportedTypeError{Type: key.Type()}
 }
 
 func (encoder *mapEncoder) EncodeInterface(val interface{}, stream *Stream) {
@@ -216,7 +216,7 @@ func (w *reflectWithString) resolve() error {
 		w.s = strconv.FormatUint(w.v.Uint(), 10)
 		return nil
 	}
-	return &json.UnsupportedTypeError{Type:w.v.Type()}
+	return &json.UnsupportedTypeError{Type: w.v.Type()}
 }
 
 func (sv stringValues) Len() int           { return len(sv) }
