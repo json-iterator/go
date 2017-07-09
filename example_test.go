@@ -1,10 +1,8 @@
-package jsoniter_test
+package jsoniter
 
 import (
 	"fmt"
 	"os"
-
-	"github.com/json-iterator/go"
 )
 
 func ExampleMarshal() {
@@ -18,7 +16,7 @@ func ExampleMarshal() {
 		Name:   "Reds",
 		Colors: []string{"Crimson", "Red", "Ruby", "Maroon"},
 	}
-	b, err := jsoniter.Marshal(group)
+	b, err := Marshal(group)
 	if err != nil {
 		fmt.Println("error:", err)
 	}
@@ -37,7 +35,7 @@ func ExampleUnmarshal() {
 		Order string
 	}
 	var animals []Animal
-	err := jsoniter.Unmarshal(jsonBlob, &animals)
+	err := Unmarshal(jsonBlob, &animals)
 	if err != nil {
 		fmt.Println("error:", err)
 	}
@@ -57,8 +55,8 @@ func ExampleMarshalWithBestPerformance() {
 		Name:   "Reds",
 		Colors: []string{"Crimson", "Red", "Ruby", "Maroon"},
 	}
-	stream := jsoniter.ConfigFastest.BorrowStream(nil)
-	defer jsoniter.ConfigFastest.ReturnStream(stream)
+	stream := ConfigFastest.BorrowStream(nil)
+	defer ConfigFastest.ReturnStream(stream)
 	stream.WriteVal(group)
 	if stream.Error != nil {
 		fmt.Println("error:", stream.Error)
@@ -78,8 +76,8 @@ func ExampleUnmarshalWithBestPerformance() {
 		Order string
 	}
 	var animals []Animal
-	iter := jsoniter.ConfigFastest.BorrowIterator(jsonBlob)
-	defer jsoniter.ConfigFastest.ReturnIterator(iter)
+	iter := ConfigFastest.BorrowIterator(jsonBlob)
+	defer ConfigFastest.ReturnIterator(iter)
 	iter.ReadVal(&animals)
 	if iter.Error != nil {
 		fmt.Println("error:", iter.Error)
@@ -91,7 +89,7 @@ func ExampleUnmarshalWithBestPerformance() {
 
 func ExampleOneLine() {
 	val := []byte(`{"ID":1,"Name":"Reds","Colors":["Crimson","Red","Ruby","Maroon"]}`)
-	fmt.Printf(jsoniter.Get(val, "Colors", 0).ToString())
+	fmt.Printf(Get(val, "Colors", 0).ToString())
 	// Output:
 	// Crimson
 }

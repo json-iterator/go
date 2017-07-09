@@ -381,7 +381,7 @@ func Test_mixed(t *testing.T) {
 	type AA struct {
 		ID      int                    `json:"id"`
 		Payload map[string]interface{} `json:"payload"`
-		buf     *bytes.Buffer          `json:"-"`
+		buf     *bytes.Buffer
 	}
 	aa := AA{}
 	err := UnmarshalFromString(` {"id":1, "payload":{"account":"123","password":"456"}}`, &aa)
