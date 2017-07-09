@@ -6,6 +6,8 @@ import (
 	"reflect"
 )
 
+// Any generic object representation.
+// The lazy json implementation holds []byte and parse lazily.
 type Any interface {
 	LastError() error
 	ValueType() ValueType
@@ -47,30 +49,37 @@ func (any *baseAny) ToVal(obj interface{}) {
 	panic("not implemented")
 }
 
+// WrapInt32 turn int32 into Any interface
 func WrapInt32(val int32) Any {
 	return &int32Any{baseAny{}, val}
 }
 
+// WrapInt64 turn int64 into Any interface
 func WrapInt64(val int64) Any {
 	return &int64Any{baseAny{}, val}
 }
 
+// WrapUint32 turn uint32 into Any interface
 func WrapUint32(val uint32) Any {
 	return &uint32Any{baseAny{}, val}
 }
 
+// WrapUint64 turn uint64 into Any interface
 func WrapUint64(val uint64) Any {
 	return &uint64Any{baseAny{}, val}
 }
 
+// WrapFloat64 turn float64 into Any interface
 func WrapFloat64(val float64) Any {
 	return &floatAny{baseAny{}, val}
 }
 
+// WrapString turn string into Any interface
 func WrapString(val string) Any {
 	return &stringAny{baseAny{}, val}
 }
 
+// Wrap turn a go object into Any interface
 func Wrap(val interface{}) Any {
 	if val == nil {
 		return &nilAny{}
@@ -79,8 +88,8 @@ func Wrap(val interface{}) Any {
 	if isAny {
 		return asAny
 	}
-	type_ := reflect.TypeOf(val)
-	switch type_.Kind() {
+	typ := reflect.TypeOf(val)
+	switch typ.Kind() {
 	case reflect.Slice:
 		return wrapArray(val)
 	case reflect.Struct:
@@ -116,13 +125,13 @@ func Wrap(val interface{}) Any {
 	case reflect.Bool:
 		if val.(bool) == true {
 			return &trueAny{}
-		} else {
-			return &falseAny{}
 		}
+		return &falseAny{}
 	}
-	return &invalidAny{baseAny{}, fmt.Errorf("unsupported type: %v", type_)}
+	return &invalidAny{baseAny{}, fmt.Errorf("unsupported type: %v", typ)}
 }
 
+// ReadAny read next JSON element as an Any object. It is a better json.RawMessage.
 func (iter *Iterator) ReadAny() Any {
 	return iter.readAny()
 }
@@ -220,9 +229,8 @@ func locatePath(iter *Iterator, path []interface{}) Any {
 		case int32:
 			if '*' == pathKey {
 				return iter.readAny().Get(path[i:]...)
-			} else {
-				return newInvalidAny(path[i:])
 			}
+			return newInvalidAny(path[i:])
 		default:
 			return newInvalidAny(path[i:])
 		}
