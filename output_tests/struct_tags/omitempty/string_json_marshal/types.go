@@ -1,15 +1,15 @@
 package test
 
 type typeForTest struct {
-	F JM `json:"f,omitempty"`
+	F jm `json:"f,omitempty"`
 }
 
-type JM string
+type jm string
 
-func (t *JM) UnmarshalJSON(b []byte) error {
+func (t *jm) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func (t JM) MarshalJSON() ([]byte, error) {
+func (t jm) MarshalJSON() ([]byte, error) {
 	return []byte(`""`), nil
 }

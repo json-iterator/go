@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-type Marshaler struct {
+type marshalerForTest struct {
 	X string
 }
 
@@ -37,11 +37,11 @@ func decode(str string) string {
 	return string(bs)
 }
 
-func (m Marshaler) MarshalJSON() ([]byte, error) {
+func (m marshalerForTest) MarshalJSON() ([]byte, error) {
 	return []byte(`"MANUAL__` + encode(m.X) + `"`), nil
 }
 
-func (m *Marshaler) UnmarshalJSON(text []byte) error {
+func (m *marshalerForTest) UnmarshalJSON(text []byte) error {
 	m.X = decode(strings.TrimPrefix(strings.Trim(string(text), `"`), "MANUAL__"))
 	return nil
 }

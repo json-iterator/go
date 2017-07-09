@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-type Marshaler struct {
+type marshalerForTest struct {
 	X string
 }
 
@@ -37,20 +37,20 @@ func decode(str string) string {
 	return string(bs)
 }
 
-func (m Marshaler) MarshalText() ([]byte, error) {
+func (m marshalerForTest) MarshalText() ([]byte, error) {
 	return []byte(`MANUAL__` + encode(m.X)), nil
 }
 
-func (m *Marshaler) UnmarshalText(text []byte) error {
+func (m *marshalerForTest) UnmarshalText(text []byte) error {
 	m.X = decode(strings.TrimPrefix(string(text), "MANUAL__"))
 	return nil
 }
 
-var _ encoding.TextMarshaler = Marshaler{}
-var _ encoding.TextUnmarshaler = &Marshaler{}
+var _ encoding.TextMarshaler = marshalerForTest{}
+var _ encoding.TextUnmarshaler = &marshalerForTest{}
 
 type typeForTest struct {
 	S string
-	M Marshaler
+	M marshalerForTest
 	I int8
 }

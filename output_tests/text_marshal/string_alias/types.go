@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-type Marshaler string
+type marshalerForTest string
 
 func encode(str string) string {
 	buf := bytes.Buffer{}
@@ -35,16 +35,16 @@ func decode(str string) string {
 	return string(bs)
 }
 
-func (m Marshaler) MarshalText() ([]byte, error) {
+func (m marshalerForTest) MarshalText() ([]byte, error) {
 	return []byte(`MANUAL__` + encode(string(m))), nil
 }
 
-func (m *Marshaler) UnmarshalText(text []byte) error {
-	*m = Marshaler(decode(strings.TrimPrefix(string(text), "MANUAL__")))
+func (m *marshalerForTest) UnmarshalText(text []byte) error {
+	*m = marshalerForTest(decode(strings.TrimPrefix(string(text), "MANUAL__")))
 	return nil
 }
 
-var _ encoding.TextMarshaler = *new(Marshaler)
-var _ encoding.TextUnmarshaler = new(Marshaler)
+var _ encoding.TextMarshaler = *new(marshalerForTest)
+var _ encoding.TextUnmarshaler = new(marshalerForTest)
 
-type typeForTest Marshaler
+type typeForTest marshalerForTest

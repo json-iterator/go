@@ -1,20 +1,20 @@
 package test
 
-type DoubleEmbedded struct {
+type doubleEmbedded struct {
 	F1 int32 `json:"F1"`
 }
 
-type Embedded1 struct {
-	DoubleEmbedded
+type embedded1 struct {
+	doubleEmbedded
 	F1 int32
 }
 
-type Embedded2 struct {
+type embedded2 struct {
 	F1 int32 `json:"F1"`
-	DoubleEmbedded
+	doubleEmbedded
 }
 
 type typeForTest struct {
-	Embedded1
-	Embedded2
+	embedded1
+	embedded2
 }
