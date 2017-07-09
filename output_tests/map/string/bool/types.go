@@ -1,3 +1,3 @@
 package test
 
-type T map[string]bool
+type typeForTest map[string]bool

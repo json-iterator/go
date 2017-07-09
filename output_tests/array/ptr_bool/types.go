@@ -1,3 +1,3 @@
 package test
 
-type T [4]*bool
+type typeForTest [4]*bool

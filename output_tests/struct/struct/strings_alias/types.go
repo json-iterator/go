@@ -8,6 +8,6 @@ type A struct {
 	F3 S
 }
 
-type T struct {
+type typeForTest struct {
 	F A
 }

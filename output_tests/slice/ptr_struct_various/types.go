@@ -1,6 +1,6 @@
 package test
 
-type T []*struct {
+type typeForTest []*struct {
 	String string
 	Int    int32
 	Float  float64

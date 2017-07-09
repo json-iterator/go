@@ -2,6 +2,6 @@ package test
 
 type A struct{}
 
-type T struct {
+type typeForTest struct {
 	F A
 }

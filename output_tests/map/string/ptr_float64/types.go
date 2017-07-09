@@ -1,3 +1,3 @@
 package test
 
-type T map[string]*float64
+type typeForTest map[string]*float64

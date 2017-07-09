@@ -4,6 +4,6 @@ type E struct {
 	F string `json:"F,omitempty"`
 }
 
-type T struct {
+type typeForTest struct {
 	E
 }

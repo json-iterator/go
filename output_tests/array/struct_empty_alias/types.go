@@ -2,4 +2,4 @@ package test
 
 type A struct{}
 
-type T [4]A
+type typeForTest [4]A

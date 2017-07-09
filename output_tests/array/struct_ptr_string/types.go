@@ -1,5 +1,5 @@
 package test
 
-type T [4]struct {
+type typeForTest [4]struct {
 	F *string
 }

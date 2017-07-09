@@ -2,4 +2,4 @@ package test
 
 type StringAlias string
 
-type T map[StringAlias]StringAlias
+type typeForTest map[StringAlias]StringAlias

@@ -1,5 +1,5 @@
 package test
 
-type T map[string]struct {
+type typeForTest map[string]struct {
 	F *string
 }

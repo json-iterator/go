@@ -1,3 +1,3 @@
 package test
 
-type T []byte
+type typeForTest []byte

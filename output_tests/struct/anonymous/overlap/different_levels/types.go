@@ -8,7 +8,7 @@ type E2 struct {
 	F2 string
 }
 
-type T struct {
+type typeForTest struct {
 	E1
 	E2
 	F1 string

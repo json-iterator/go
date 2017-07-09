@@ -11,6 +11,6 @@ type Embedded struct {
 	Map   map[string]string
 }
 
-type T struct {
+type typeForTest struct {
 	*Embedded
 }

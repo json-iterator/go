@@ -8,7 +8,7 @@ type Embedded2 struct {
 	F1 int32
 }
 
-type T struct {
+type typeForTest struct {
 	Embedded1
 	Embedded2
 }

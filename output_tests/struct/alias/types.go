@@ -17,4 +17,4 @@ type A struct {
 	String2 string
 }
 
-type T A
+type typeForTest A

@@ -1,5 +1,5 @@
 package test
 
-type T struct {
+type typeForTest struct {
 	F struct{} `json:"f,omitempty"` // omitempty is meaningless here
 }

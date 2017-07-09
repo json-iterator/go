@@ -49,7 +49,7 @@ func (m *Marshaler) UnmarshalText(text []byte) error {
 var _ encoding.TextMarshaler = Marshaler{}
 var _ encoding.TextUnmarshaler = &Marshaler{}
 
-type T struct {
+type typeForTest struct {
 	S string
 	M Marshaler
 	I int8

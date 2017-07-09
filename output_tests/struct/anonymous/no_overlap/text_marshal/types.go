@@ -47,7 +47,7 @@ func (m *Marshaler) UnmarshalText(text []byte) error {
 var _ encoding.TextMarshaler = *new(Marshaler)
 var _ encoding.TextUnmarshaler = new(Marshaler)
 
-type T struct {
+type typeForTest struct {
 	F1 float64
 	Marshaler
 	F2 int32

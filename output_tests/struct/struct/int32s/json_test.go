@@ -15,7 +15,7 @@ import (
 func Test_Roundtrip(t *testing.T) {
 	fz := fuzz.New().MaxDepth(10).NilChance(0.3)
 	for i := 0; i < 100; i++ {
-		var before T
+		var before typeForTest
 		fz.Fuzz(&before)
 
 		jbStd, err := json.Marshal(before)
@@ -37,13 +37,13 @@ func Test_Roundtrip(t *testing.T) {
 				indent(jbStd, "    "), indent(jbIter, "    "), dump(before))
 		}
 
-		var afterStd T
+		var afterStd typeForTest
 		err = json.Unmarshal(jbIter, &afterStd)
 		if err != nil {
 			t.Fatalf("failed to unmarshal with stdlib: %v\nvia:\n    %s",
 				err, indent(jbIter, "    "))
 		}
-		var afterIter T
+		var afterIter typeForTest
 		err = jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(jbIter, &afterIter)
 		if err != nil {
 			t.Fatalf("failed to unmarshal with jsoniter: %v\nvia:\n    %s",
@@ -86,7 +86,7 @@ func benchmarkMarshal(t *testing.B, name string, fn func(interface{}) ([]byte, e
 	t.ReportAllocs()
 	t.ResetTimer()
 
-	var obj T
+	var obj typeForTest
 	fz := fuzz.NewWithSeed(0).MaxDepth(10).NilChance(0.3)
 	fz.Fuzz(&obj)
 	for i := 0; i < t.N; i++ {
@@ -102,7 +102,7 @@ func benchmarkUnmarshal(t *testing.B, name string, fn func(data []byte, v interf
 	t.ReportAllocs()
 	t.ResetTimer()
 
-	var before T
+	var before typeForTest
 	fz := fuzz.NewWithSeed(0).MaxDepth(10).NilChance(0.3)
 	fz.Fuzz(&before)
 	jb, err := json.Marshal(before)
@@ -111,7 +111,7 @@ func benchmarkUnmarshal(t *testing.B, name string, fn func(data []byte, v interf
 	}
 
 	for i := 0; i < t.N; i++ {
-		var after T
+		var after typeForTest
 		err = fn(jb, &after)
 		if err != nil {
 			t.Fatalf("%s failed to unmarshal:\n  input: %q\n  error: %v", name, string(jb), err)

@@ -1,3 +1,3 @@
 package test
 
-type T [4]int32
+type typeForTest [4]int32

@@ -2,6 +2,6 @@ package test
 
 type Embedded string
 
-type T struct {
+type typeForTest struct {
 	*Embedded
 }

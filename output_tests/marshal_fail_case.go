@@ -8,12 +8,12 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
-type T struct {
+type typeForTest struct {
 	F *float64
 }
 
 func main() {
-	var obj T
+	var obj typeForTest
 
 	jb1, _ := json.Marshal(obj)
 	jb2, _ := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(obj)

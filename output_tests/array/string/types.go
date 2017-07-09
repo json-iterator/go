@@ -1,3 +1,3 @@
 package test
 
-type T [4]string
+type typeForTest [4]string

@@ -51,4 +51,4 @@ var _ json.Unmarshaler = &Marshaler{}
 
 type A Marshaler
 
-type T A
+type typeForTest A

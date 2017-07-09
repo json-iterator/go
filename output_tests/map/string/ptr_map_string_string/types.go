@@ -1,3 +1,3 @@
 package test
 
-type T map[string]*map[string]string
+type typeForTest map[string]*map[string]string

@@ -16,7 +16,7 @@ import (
 func Test_PartialUnmarshal(t *testing.T) {
 	fz := fuzz.New().MaxDepth(10).NilChance(0.3)
 	for i := 0; i < 100; i++ {
-		var before T1
+		var before typeForTest1
 		fz.Fuzz(&before)
 
 		jbStd, err := json.Marshal(before)
@@ -38,13 +38,13 @@ func Test_PartialUnmarshal(t *testing.T) {
 				indent(jbStd, "    "), indent(jbIter, "    "), dump(before))
 		}
 
-		var afterStd T2
+		var afterStd typeForTest2
 		err = json.Unmarshal(jbIter, &afterStd)
 		if err != nil {
 			t.Fatalf("failed to unmarshal with stdlib: %v\nvia:\n    %s",
 				err, indent(jbIter, "    "))
 		}
-		var afterIter T2
+		var afterIter typeForTest2
 		err = jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(jbIter, &afterIter)
 		if err != nil {
 			t.Fatalf("failed to unmarshal with jsoniter: %v\nvia:\n    %s",

@@ -47,4 +47,4 @@ func (m *Marshaler) UnmarshalJSON(text []byte) error {
 var _ json.Marshaler = *new(Marshaler)
 var _ json.Unmarshaler = new(Marshaler)
 
-type T Marshaler
+type typeForTest Marshaler

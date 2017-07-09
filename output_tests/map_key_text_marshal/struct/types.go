@@ -21,4 +21,4 @@ func (k *KeyType) UnmarshalText(text []byte) error {
 var _ encoding.TextMarshaler = KeyType{}
 var _ encoding.TextUnmarshaler = &KeyType{}
 
-type T map[KeyType]string
+type typeForTest map[KeyType]string

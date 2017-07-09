@@ -11,4 +11,4 @@ type Struct struct {
 	Map   map[string]string
 }
 
-type T map[string]*Struct
+type typeForTest map[string]*Struct

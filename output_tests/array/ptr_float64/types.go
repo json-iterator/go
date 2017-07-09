@@ -1,3 +1,3 @@
 package test
 
-type T [4]*float64
+type typeForTest [4]*float64

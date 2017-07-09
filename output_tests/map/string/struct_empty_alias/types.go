@@ -2,4 +2,4 @@ package test
 
 type A struct{}
 
-type T map[string]A
+type typeForTest map[string]A

@@ -1,3 +1,3 @@
 package test
 
-type T map[string]byte
+type typeForTest map[string]byte

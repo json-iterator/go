@@ -51,7 +51,7 @@ var _ encoding.TextUnmarshaler = &Marshaler{}
 
 type A Marshaler
 
-type T struct {
+type typeForTest struct {
 	S string
 	M A
 	I int8

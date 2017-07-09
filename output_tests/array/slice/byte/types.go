@@ -1,3 +1,3 @@
 package test
 
-type T [4][4]byte
+type typeForTest [4][4]byte

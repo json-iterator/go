@@ -4,6 +4,6 @@ type A struct {
 	F float64
 }
 
-type T struct {
+type typeForTest struct {
 	F A
 }

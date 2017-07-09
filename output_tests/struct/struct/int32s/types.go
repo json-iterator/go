@@ -1,6 +1,6 @@
 package test
 
-type T struct {
+type typeForTest struct {
 	F struct {
 		F1 int32
 		F2 int32

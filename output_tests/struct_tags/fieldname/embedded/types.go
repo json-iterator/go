@@ -19,7 +19,7 @@ type S6 struct {
 	S6F string
 }
 
-type T struct {
+type typeForTest struct {
 	S1 `json:"F1"`
 	S2 `json:"f2"`
 	S3 `json:"-"`

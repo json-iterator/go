@@ -1,6 +1,6 @@
 package test
 
-type T struct {
+type typeForTest struct {
 	F *TM `json:"f,omitempty"`
 }
 

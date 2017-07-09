@@ -2,6 +2,6 @@ package test
 
 type A float64
 
-type T struct {
+type typeForTest struct {
 	F A
 }

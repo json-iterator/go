@@ -1,3 +1,3 @@
 package test
 
-type T map[uint8]string
+type typeForTest map[uint8]string

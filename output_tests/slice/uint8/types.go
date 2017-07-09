@@ -1,3 +1,3 @@
 package test
 
-type T []uint8
+type typeForTest []uint8

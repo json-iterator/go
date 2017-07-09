@@ -1,3 +1,3 @@
 package test
 
-type T []map[int32]string
+type typeForTest []map[int32]string

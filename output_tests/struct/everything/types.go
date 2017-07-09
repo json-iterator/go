@@ -1,6 +1,6 @@
 package test
 
-type T struct {
+type typeForTest struct {
 	Byte1   byte
 	Byte2   byte
 	Bool1   bool

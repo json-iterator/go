@@ -1,9 +1,9 @@
 package test
 
-type T1 struct {
+type typeForTest1 struct {
 	Field string
 }
 
-type T2 struct {
+type typeForTest2 struct {
 	FIELD string
 }

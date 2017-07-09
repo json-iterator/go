@@ -1,5 +1,5 @@
 package test
 
-type T struct {
+type typeForTest struct {
 	F map[int32]*string
 }

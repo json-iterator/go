@@ -14,7 +14,7 @@ type Embedded2 struct {
 	DoubleEmbedded
 }
 
-type T struct {
+type typeForTest struct {
 	Embedded1
 	Embedded2
 }

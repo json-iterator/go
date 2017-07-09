@@ -49,7 +49,7 @@ func (m *Marshaler) UnmarshalJSON(text []byte) error {
 var _ json.Marshaler = Marshaler{}
 var _ json.Unmarshaler = &Marshaler{}
 
-type T struct {
+type typeForTest struct {
 	S string
 	M Marshaler
 	I int8

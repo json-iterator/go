@@ -4,7 +4,7 @@ type E struct {
 	E1 string
 }
 
-type T struct {
+type typeForTest struct {
 	F1 string `json:"F1"`
 	F2 string `json:"f2"`
 	F3 string `json:"-"`

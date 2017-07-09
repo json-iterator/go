@@ -1,6 +1,6 @@
 package test
 
-type T struct {
+type typeForTest struct {
 	F struct {
 		F1 string
 		F2 string
