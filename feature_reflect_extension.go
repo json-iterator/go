@@ -15,6 +15,7 @@ var typeEncoders = map[string]ValEncoder{}
 var fieldEncoders = map[string]ValEncoder{}
 var extensions = []Extension{}
 
+// StructDescriptor describe how should we encode/decode the struct
 type StructDescriptor struct {
 	onePtrEmbedded     bool
 	onePtrOptimization bool
@@ -22,6 +23,8 @@ type StructDescriptor struct {
 	Fields             []*Binding
 }
 
+// GetField get one field from the descriptor by its name.
+// Can not use map here to keep field orders.
 func (structDescriptor *StructDescriptor) GetField(fieldName string) *Binding {
 	for _, binding := range structDescriptor.Fields {
 		if binding.Field.Name == fieldName {
@@ -31,6 +34,7 @@ func (structDescriptor *StructDescriptor) GetField(fieldName string) *Binding {
 	return nil
 }
 
+// Binding describe how should we encode/decode the struct field
 type Binding struct {
 	levels    []int
 	Field     *reflect.StructField
@@ -40,6 +44,8 @@ type Binding struct {
 	Decoder   ValDecoder
 }
 
+// Extension the one for all SPI. Customize encoding/decoding by specifying alternate encoder/decoder.
+// Can also rename fields by UpdateStructDescriptor.
 type Extension interface {
 	UpdateStructDescriptor(structDescriptor *StructDescriptor)
 	CreateDecoder(typ reflect.Type) ValDecoder
@@ -48,24 +54,30 @@ type Extension interface {
 	DecorateEncoder(typ reflect.Type, encoder ValEncoder) ValEncoder
 }
 
+// DummyExtension embed this type get dummy implementation for all methods of Extension
 type DummyExtension struct {
 }
 
+// UpdateStructDescriptor No-op
 func (extension *DummyExtension) UpdateStructDescriptor(structDescriptor *StructDescriptor) {
 }
 
+// CreateDecoder No-op
 func (extension *DummyExtension) CreateDecoder(typ reflect.Type) ValDecoder {
 	return nil
 }
 
+// CreateEncoder No-op
 func (extension *DummyExtension) CreateEncoder(typ reflect.Type) ValEncoder {
 	return nil
 }
 
+// DecorateDecoder No-op
 func (extension *DummyExtension) DecorateDecoder(typ reflect.Type, decoder ValDecoder) ValDecoder {
 	return decoder
 }
 
+// DecorateEncoder No-op
 func (extension *DummyExtension) DecorateEncoder(typ reflect.Type, encoder ValEncoder) ValEncoder {
 	return encoder
 }
@@ -98,38 +110,47 @@ func (encoder *funcEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	return encoder.isEmptyFunc(ptr)
 }
 
+// RegisterTypeDecoderFunc register TypeDecoder for a type with function
 func RegisterTypeDecoderFunc(typ string, fun DecoderFunc) {
 	typeDecoders[typ] = &funcDecoder{fun}
 }
 
+// RegisterTypeDecoder register TypeDecoder for a typ
 func RegisterTypeDecoder(typ string, decoder ValDecoder) {
 	typeDecoders[typ] = decoder
 }
 
+// RegisterFieldDecoderFunc register TypeDecoder for a struct field with function
 func RegisterFieldDecoderFunc(typ string, field string, fun DecoderFunc) {
 	RegisterFieldDecoder(typ, field, &funcDecoder{fun})
 }
 
+// RegisterFieldDecoder register TypeDecoder for a struct field
 func RegisterFieldDecoder(typ string, field string, decoder ValDecoder) {
 	fieldDecoders[fmt.Sprintf("%s/%s", typ, field)] = decoder
 }
 
+// RegisterTypeEncoderFunc register TypeEncoder for a type with encode/isEmpty function
 func RegisterTypeEncoderFunc(typ string, fun EncoderFunc, isEmptyFunc func(unsafe.Pointer) bool) {
 	typeEncoders[typ] = &funcEncoder{fun, isEmptyFunc}
 }
 
+// RegisterTypeEncoder register TypeEncoder for a type
 func RegisterTypeEncoder(typ string, encoder ValEncoder) {
 	typeEncoders[typ] = encoder
 }
 
+// RegisterFieldEncoderFunc register TypeEncoder for a struct field with encode/isEmpty function
 func RegisterFieldEncoderFunc(typ string, field string, fun EncoderFunc, isEmptyFunc func(unsafe.Pointer) bool) {
 	RegisterFieldEncoder(typ, field, &funcEncoder{fun, isEmptyFunc})
 }
 
+// RegisterFieldEncoder register TypeEncoder for a struct field
 func RegisterFieldEncoder(typ string, field string, encoder ValEncoder) {
 	fieldEncoders[fmt.Sprintf("%s/%s", typ, field)] = encoder
 }
 
+// RegisterExtension register extension
 func RegisterExtension(extension Extension) {
 	extensions = append(extensions, extension)
 }
