@@ -29,7 +29,10 @@ func Test_read_big_int(t *testing.T) {
 }
 
 func Test_read_float(t *testing.T) {
-	inputs := []string{`1.1`, `1000`, `9223372036854775807`, `12.3`, `-12.3`, `720368.54775807`, `720368.547758075`}
+	inputs := []string{
+		`1.1`, `1000`, `9223372036854775807`, `12.3`, `-12.3`, `720368.54775807`, `720368.547758075`,
+		`1e1`, `1e+1`, `1e-1`, `1E1`, `1E+1`, `1E-1`, `-1e1`, `-1e+1`, `-1e-1`,
+	}
 	for _, input := range inputs {
 		// non-streaming
 		t.Run(fmt.Sprintf("%v", input), func(t *testing.T) {

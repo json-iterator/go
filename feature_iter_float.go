@@ -133,7 +133,7 @@ load_loop:
 		for i := iter.head; i < iter.tail; i++ {
 			c := iter.buf[i]
 			switch c {
-			case '-', '.', 'e', 'E', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+			case '+', '-', '.', 'e', 'E', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
 				str = append(str, c)
 				continue
 			default:
