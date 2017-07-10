@@ -186,6 +186,9 @@ func (encoder *sortKeysMapEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 		}
 		stream.WriteVal(key.s) // might need html escape, so can not WriteString directly
 		stream.writeByte(':')
+		if stream.indention > 0 {
+			stream.writeByte(' ')
+		}
 		val := realVal.MapIndex(key.v).Interface()
 		encoder.elemEncoder.EncodeInterface(val, stream)
 	}
