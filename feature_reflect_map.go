@@ -102,6 +102,9 @@ func (encoder *mapEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 		}
 		encodeMapKey(key, stream)
 		stream.writeByte(':')
+		if stream.indention > 0 {
+			stream.writeByte(' ')
+		}
 		val := realVal.MapIndex(key).Interface()
 		encoder.elemEncoder.EncodeInterface(val, stream)
 	}
