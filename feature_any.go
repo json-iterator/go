@@ -143,13 +143,13 @@ func (iter *Iterator) readAny() Any {
 		iter.unreadByte()
 		return &stringAny{baseAny{}, iter.ReadString()}
 	case 'n':
-		iter.skipFixedBytes(3) // null
+		iter.skipThreeBytes('u', 'l', 'l') // null
 		return &nilAny{}
 	case 't':
-		iter.skipFixedBytes(3) // true
+		iter.skipThreeBytes('r', 'u', 'e') // true
 		return &trueAny{}
 	case 'f':
-		iter.skipFixedBytes(4) // false
+		iter.skipFourBytes('a', 'l', 's', 'e') // false
 		return &falseAny{}
 	case '{':
 		return iter.readObjectAny()
