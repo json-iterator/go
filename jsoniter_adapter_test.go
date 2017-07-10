@@ -78,4 +78,7 @@ func Test_marshal_indent_map(t *testing.T) {
 	output, err = MarshalIndent(obj, "", "  ")
 	should.Nil(err)
 	should.Equal("{\n  \"1\": 2\n}", string(output))
+	output, err = ConfigCompatibleWithStandardLibrary.MarshalIndent(obj, "", "  ")
+	should.Nil(err)
+	should.Equal("{\n  \"1\": 2\n}", string(output))
 }

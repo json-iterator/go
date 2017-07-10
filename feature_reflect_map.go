@@ -101,9 +101,10 @@ func (encoder *mapEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 			stream.WriteMore()
 		}
 		encodeMapKey(key, stream)
-		stream.writeByte(':')
 		if stream.indention > 0 {
-			stream.writeByte(' ')
+			stream.writeTwoBytes(byte(':'), byte(' '))
+		} else {
+			stream.writeByte(':')
 		}
 		val := realVal.MapIndex(key).Interface()
 		encoder.elemEncoder.EncodeInterface(val, stream)
@@ -185,7 +186,11 @@ func (encoder *sortKeysMapEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 			stream.WriteMore()
 		}
 		stream.WriteVal(key.s) // might need html escape, so can not WriteString directly
-		stream.writeByte(':')
+		if stream.indention > 0 {
+			stream.writeTwoBytes(byte(':'), byte(' '))
+		} else {
+			stream.writeByte(':')
+		}
 		val := realVal.MapIndex(key.v).Interface()
 		encoder.elemEncoder.EncodeInterface(val, stream)
 	}
