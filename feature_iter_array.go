@@ -5,7 +5,7 @@ func (iter *Iterator) ReadArray() (ret bool) {
 	c := iter.nextToken()
 	switch c {
 	case 'n':
-		iter.skipFixedBytes(3)
+		iter.skipThreeBytes('u', 'l', 'l')
 		return false // null
 	case '[':
 		c = iter.nextToken()
@@ -44,7 +44,7 @@ func (iter *Iterator) ReadArrayCB(callback func(*Iterator) bool) (ret bool) {
 		return true
 	}
 	if c == 'n' {
-		iter.skipFixedBytes(3)
+		iter.skipThreeBytes('u', 'l', 'l')
 		return true // null
 	}
 	iter.ReportError("ReadArrayCB", "expect [ or n, but found: "+string([]byte{c}))

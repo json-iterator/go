@@ -13,7 +13,7 @@ func (iter *Iterator) ReadObject() (ret string) {
 	c := iter.nextToken()
 	switch c {
 	case 'n':
-		iter.skipFixedBytes(3)
+		iter.skipThreeBytes('u', 'l', 'l')
 		return "" // null
 	case '{':
 		c = iter.nextToken()
@@ -103,7 +103,7 @@ func (iter *Iterator) ReadObjectCB(callback func(*Iterator, string) bool) bool {
 		return false
 	}
 	if c == 'n' {
-		iter.skipFixedBytes(3)
+		iter.skipThreeBytes('u', 'l', 'l')
 		return true // null
 	}
 	iter.ReportError("ReadObjectCB", `expect { or n`)
@@ -144,7 +144,7 @@ func (iter *Iterator) ReadMapCB(callback func(*Iterator, string) bool) bool {
 		return false
 	}
 	if c == 'n' {
-		iter.skipFixedBytes(3)
+		iter.skipThreeBytes('u', 'l', 'l')
 		return true // null
 	}
 	iter.ReportError("ReadMapCB", `expect { or n`)
@@ -161,7 +161,7 @@ func (iter *Iterator) readObjectStart() bool {
 		iter.unreadByte()
 		return true
 	} else if c == 'n' {
-		iter.skipFixedBytes(3)
+		iter.skipThreeBytes('u', 'l', 'l')
 		return false
 	}
 	iter.ReportError("readObjectStart", "expect { or n")

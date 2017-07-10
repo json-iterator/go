@@ -7,7 +7,7 @@ import "fmt"
 func (iter *Iterator) ReadNil() (ret bool) {
 	c := iter.nextToken()
 	if c == 'n' {
-		iter.skipFixedBytes(3) // null
+		iter.skipThreeBytes('u', 'l', 'l') // null
 		return true
 	}
 	iter.unreadByte()
@@ -18,11 +18,11 @@ func (iter *Iterator) ReadNil() (ret bool) {
 func (iter *Iterator) ReadBool() (ret bool) {
 	c := iter.nextToken()
 	if c == 't' {
-		iter.skipFixedBytes(3)
+		iter.skipThreeBytes('r', 'u', 'e')
 		return true
 	}
 	if c == 'f' {
-		iter.skipFixedBytes(4)
+		iter.skipFourBytes('a', 'l', 's', 'e')
 		return false
 	}
 	iter.ReportError("ReadBool", "expect t or f")
@@ -71,10 +71,12 @@ func (iter *Iterator) Skip() {
 	switch c {
 	case '"':
 		iter.skipString()
-	case 'n', 't':
-		iter.skipFixedBytes(3) // null or true
+	case 'n':
+		iter.skipThreeBytes('u', 'l', 'l') // null
+	case 't':
+		iter.skipThreeBytes('r', 'u', 'e') // true
 	case 'f':
-		iter.skipFixedBytes(4) // false
+		iter.skipFourBytes('a', 'l', 's', 'e') // false
 	case '-', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
 		iter.skipNumber()
 	case '[':
@@ -226,16 +228,36 @@ func (iter *Iterator) skipNumber() {
 	}
 }
 
-func (iter *Iterator) skipFixedBytes(n int) {
-	iter.head += n
-	if iter.head >= iter.tail {
-		more := iter.head - iter.tail
-		if !iter.loadMore() {
-			if more > 0 {
-				iter.ReportError("skipFixedBytes", "unexpected end")
-			}
-			return
-		}
-		iter.head += more
+func (iter *Iterator) skipFourBytes(b1, b2, b3, b4 byte) {
+	if iter.readByte() != b1 {
+		iter.ReportError("skipFourBytes", fmt.Sprintf("expect %s", string([]byte{b1, b2, b3, b4})))
+		return
+	}
+	if iter.readByte() != b2 {
+		iter.ReportError("skipFourBytes", fmt.Sprintf("expect %s", string([]byte{b1, b2, b3, b4})))
+		return
+	}
+	if iter.readByte() != b3 {
+		iter.ReportError("skipFourBytes", fmt.Sprintf("expect %s", string([]byte{b1, b2, b3, b4})))
+		return
+	}
+	if iter.readByte() != b4 {
+		iter.ReportError("skipFourBytes", fmt.Sprintf("expect %s", string([]byte{b1, b2, b3, b4})))
+		return
+	}
+}
+
+func (iter *Iterator) skipThreeBytes(b1, b2, b3 byte) {
+	if iter.readByte() != b1 {
+		iter.ReportError("skipThreeBytes", fmt.Sprintf("expect %s", string([]byte{b1, b2, b3})))
+		return
+	}
+	if iter.readByte() != b2 {
+		iter.ReportError("skipThreeBytes", fmt.Sprintf("expect %s", string([]byte{b1, b2, b3})))
+		return
+	}
+	if iter.readByte() != b3 {
+		iter.ReportError("skipThreeBytes", fmt.Sprintf("expect %s", string([]byte{b1, b2, b3})))
+		return
 	}
 }

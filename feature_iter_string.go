@@ -2,6 +2,7 @@ package jsoniter
 
 import (
 	"unicode/utf16"
+	"fmt"
 )
 
 // ReadString read string from iterator
@@ -16,11 +17,15 @@ func (iter *Iterator) ReadString() (ret string) {
 				return ret
 			} else if c == '\\' {
 				break
+			} else if c < ' ' {
+				iter.ReportError("ReadString",
+					fmt.Sprintf(`invalid control character found: %d`, c))
+				return
 			}
 		}
 		return iter.readStringSlowPath()
 	} else if c == 'n' {
-		iter.skipFixedBytes(3)
+		iter.skipThreeBytes('u', 'l', 'l')
 		return ""
 	}
 	iter.ReportError("ReadString", `expects " or n`)

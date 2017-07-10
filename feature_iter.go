@@ -275,7 +275,7 @@ func (iter *Iterator) Read() interface{} {
 	case Number:
 		return iter.ReadFloat64()
 	case Nil:
-		iter.skipFixedBytes(4) // null
+		iter.skipFourBytes('n', 'u', 'l', 'l')
 		return nil
 	case Bool:
 		return iter.ReadBool()

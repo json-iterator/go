@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/stretchr/testify/require"
 	"testing"
+	"io"
 )
 
 func Test_read_null(t *testing.T) {
@@ -13,6 +14,12 @@ func Test_read_null(t *testing.T) {
 	should.True(iter.ReadNil())
 	iter = ParseString(ConfigDefault, `null`)
 	should.Nil(iter.Read())
+	iter = ParseString(ConfigDefault, `navy`)
+	iter.Read()
+	should.True(iter.Error != nil && iter.Error != io.EOF)
+	iter = ParseString(ConfigDefault, `navy`)
+	iter.ReadNil()
+	should.True(iter.Error != nil && iter.Error != io.EOF)
 }
 
 func Test_write_null(t *testing.T) {
