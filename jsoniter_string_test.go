@@ -6,10 +6,57 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"testing"
 	"unicode/utf8"
+
+	"github.com/stretchr/testify/require"
 )
+
+func Test_read_string(t *testing.T) {
+	badInputs := []string{
+		``,
+		`"`,
+		`"\"`,
+		`"\\\"`,
+		"\"\n\"",
+		`navy`,
+	}
+
+	for _, input := range badInputs {
+		testReadString(t, input, "", true, "json.Unmarshal", json.Unmarshal)
+		testReadString(t, input, "", true, "jsoniter.Unmarshal", Unmarshal)
+		testReadString(t, input, "", true, "jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal", ConfigCompatibleWithStandardLibrary.Unmarshal)
+	}
+
+	goodInputs := []struct {
+		input       string
+		expectValue string
+	}{
+		{`""`, ""},
+		{`"a"`, "a"},
+		{`null`, ""},
+		{`"Iñtërnâtiônàlizætiøn,💝🐹🌇⛔"`, "Iñtërnâtiônàlizætiøn,💝🐹🌇⛔"},
+	}
+
+	for _, tc := range goodInputs {
+		testReadString(t, tc.input, tc.expectValue, false, "json.Unmarshal", json.Unmarshal)
+		testReadString(t, tc.input, tc.expectValue, false, "jsoniter.Unmarshal", Unmarshal)
+		testReadString(t, tc.input, tc.expectValue, false, "jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal", ConfigCompatibleWithStandardLibrary.Unmarshal)
+	}
+}
+
+func testReadString(t *testing.T, input string, expectValue string, expectError bool, marshalerName string, marshaler func([]byte, interface{}) error) {
+	var value string
+	err := marshaler([]byte(input), &value)
+	if expectError != (err != nil) {
+		t.Errorf("%q: %s: expected error %v, got %v", input, marshalerName, expectError, err)
+		return
+	}
+	if value != expectValue {
+		t.Errorf("%q: %s: expected %q, got %q", input, marshalerName, expectValue, value)
+		return
+	}
+}
 
 func Test_read_normal_string(t *testing.T) {
 	cases := map[string]string{
