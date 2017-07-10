@@ -19,7 +19,10 @@ func Test_read_string(t *testing.T) {
 		`"\"`,
 		`"\\\"`,
 		"\"\n\"",
-		`navy`,
+	}
+	for i :=0; i < 32; i++ {
+		// control characters are invalid
+		badInputs = append(badInputs, string([]byte{'"', byte(i), '"'}))
 	}
 
 	for _, input := range badInputs {
