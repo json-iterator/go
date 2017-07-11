@@ -2,7 +2,11 @@ package jsoniter
 
 import (
 	"bytes"
+	"fmt"
+	"strconv"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func Test_bad_case(t *testing.T) {
@@ -31,5 +35,32 @@ func Test_bad_case(t *testing.T) {
 	}
 	if count != 32 {
 		t.Fatal(count)
+	}
+}
+
+func Test_iterator_use_number(t *testing.T) {
+	// Test UseNumber with iterator Read()
+	inputs := []string{`2147483647`, `-2147483648`}
+	for _, input := range inputs {
+		t.Run(fmt.Sprintf("%v", input), func(t *testing.T) {
+			should := require.New(t)
+			iter := ParseString(Config{UseNumber: true}.Froze(), input)
+			expected, err := strconv.ParseInt(input, 10, 32)
+			should.Nil(err)
+			should.Equal(int(expected), iter.Read())
+		})
+	}
+}
+
+func Test_iterator_without_number(t *testing.T) {
+	inputs := []string{`2147483647`, `-2147483648`}
+	for _, input := range inputs {
+		t.Run(fmt.Sprintf("%v", input), func(t *testing.T) {
+			should := require.New(t)
+			iter := ParseString(ConfigDefault, input)
+			expected, err := strconv.ParseInt(input, 10, 32)
+			should.Nil(err)
+			should.Equal(float64(expected), iter.Read())
+		})
 	}
 }
