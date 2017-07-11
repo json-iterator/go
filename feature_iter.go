@@ -273,6 +273,9 @@ func (iter *Iterator) Read() interface{} {
 	case String:
 		return iter.ReadString()
 	case Number:
+		if iter.cfg.configBeforeFrozen.UseNumber {
+			return iter.ReadInt()
+		}
 		return iter.ReadFloat64()
 	case Nil:
 		iter.skipFourBytes('n', 'u', 'l', 'l')
