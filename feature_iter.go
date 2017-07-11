@@ -1,8 +1,10 @@
 package jsoniter
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
+	"strconv"
 )
 
 // ValueType the type for JSON element
@@ -274,7 +276,8 @@ func (iter *Iterator) Read() interface{} {
 		return iter.ReadString()
 	case Number:
 		if iter.cfg.configBeforeFrozen.UseNumber {
-			return iter.ReadInt()
+			num := iter.ReadInt64()
+			return json.Number(strconv.FormatInt(num, 10))
 		}
 		return iter.ReadFloat64()
 	case Nil:

@@ -2,6 +2,7 @@ package jsoniter
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"testing"
@@ -45,9 +46,8 @@ func Test_iterator_use_number(t *testing.T) {
 		t.Run(fmt.Sprintf("%v", input), func(t *testing.T) {
 			should := require.New(t)
 			iter := ParseString(Config{UseNumber: true}.Froze(), input)
-			expected, err := strconv.ParseInt(input, 10, 32)
-			should.Nil(err)
-			should.Equal(int(expected), iter.Read())
+			expected := json.Number(input)
+			should.Equal(expected, iter.Read())
 		})
 	}
 }
