@@ -1,6 +1,7 @@
 package jsoniter
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 )
@@ -273,6 +274,9 @@ func (iter *Iterator) Read() interface{} {
 	case String:
 		return iter.ReadString()
 	case Number:
+		if iter.cfg.configBeforeFrozen.UseNumber {
+			return json.Number(iter.readNumberAsString())
+		}
 		return iter.ReadFloat64()
 	case Nil:
 		iter.skipFourBytes('n', 'u', 'l', 'l')
