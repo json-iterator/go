@@ -236,7 +236,7 @@ func (iter *Iterator) loadMore() bool {
 		}
 		return false
 	}
-	if iter.captureStartedAt != -1 {
+	if iter.captured != nil {
 		iter.captured = append(iter.captured,
 			iter.buf[iter.captureStartedAt:iter.tail]...)
 		iter.captureStartedAt = 0
