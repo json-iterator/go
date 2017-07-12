@@ -288,7 +288,7 @@ func (iter *Iterator) Read() interface{} {
 		return arr
 	case Object:
 		obj := map[string]interface{}{}
-		iter.ReadObjectCB(func(Iter *Iterator, field string) bool {
+		iter.ReadMapCB(func(Iter *Iterator, field string) bool {
 			obj[field] = iter.Read()
 			return true
 		})
