@@ -94,7 +94,16 @@ func Test_read_normal_string(t *testing.T) {
 func Test_read_exotic_string(t *testing.T) {
 	cases := map[string]string{
 		`"hel\"lo"`:      `hel"lo`,
-		`"hel\nlo"`:      "hel\nlo",
+		`"hel\\\/lo"`:    `hel\/lo`,
+		`"hel\\blo"`:     `hel\blo`,
+		`"hel\\\blo"`:    "hel\\\blo",
+		`"hel\\nlo"`:     `hel\nlo`,
+		`"hel\\\nlo"`:    "hel\\\nlo",
+		`"hel\\tlo"`:     `hel\tlo`,
+		`"hel\\flo"`:     `hel\flo`,
+		`"hel\\\flo"`:    "hel\\\flo",
+		`"hel\\\rlo"`:    "hel\\\rlo",
+		`"hel\\\tlo"`:    "hel\\\tlo",
 		`"\u4e2d\u6587"`: "中文",
 		`"\ud83d\udc4a"`: "\xf0\x9f\x91\x8a", // surrogate
 	}
