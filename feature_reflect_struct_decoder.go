@@ -13,7 +13,7 @@ func createStructDecoder(typ reflect.Type, fields map[string]*structFieldDecoder
 	}
 	switch len(fields) {
 	case 0:
-		return &skipDecoder{typ}, nil
+		return &skipObjectDecoder{typ}, nil
 	case 1:
 		for fieldName, fieldDecoder := range fields {
 			fieldHash := calcHash(fieldName)
@@ -449,15 +449,17 @@ func (decoder *generalStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) 
 	}
 }
 
-type skipDecoder struct {
+type skipObjectDecoder struct {
 	typ reflect.Type
 }
 
-func (decoder *skipDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
-	iter.Skip()
-	if iter.Error != nil && iter.Error != io.EOF {
-		iter.Error = fmt.Errorf("%v: %s", decoder.typ, iter.Error.Error())
+func (decoder *skipObjectDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
+	valueType := iter.WhatIsNext()
+	if valueType != Object && valueType != Nil {
+		iter.ReportError("skipObjectDecoder", "expect object or null")
+		return
 	}
+	iter.Skip()
 }
 
 type oneFieldStructDecoder struct {

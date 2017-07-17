@@ -41,3 +41,27 @@ func Test_invalid_any(t *testing.T) {
 
 	should.Equal(Invalid, any.Get(0.1).Get(1).ValueType())
 }
+
+func Test_invalid_struct_input(t *testing.T) {
+	should := require.New(t)
+	type TestObject struct{}
+	input := []byte{54, 141, 30}
+	obj := TestObject{}
+	should.NotNil(Unmarshal(input, &obj))
+}
+
+func Test_invalid_slice_input(t *testing.T) {
+	should := require.New(t)
+	type TestObject struct{}
+	input := []byte{93}
+	obj := []string{}
+	should.NotNil(Unmarshal(input, &obj))
+}
+
+func Test_invalid_array_input(t *testing.T) {
+	should := require.New(t)
+	type TestObject struct{}
+	input := []byte{93}
+	obj := [0]string{}
+	should.NotNil(Unmarshal(input, &obj))
+}

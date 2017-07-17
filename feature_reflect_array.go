@@ -87,11 +87,13 @@ func (decoder *arrayDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 
 func (decoder *arrayDecoder) doDecode(ptr unsafe.Pointer, iter *Iterator) {
 	offset := uintptr(0)
-	for ; iter.ReadArray(); offset += decoder.elemType.Size() {
+	iter.ReadArrayCB(func(iter *Iterator) bool {
 		if offset < decoder.arrayType.Size() {
 			decoder.elemDecoder.Decode(unsafe.Pointer(uintptr(ptr)+offset), iter)
+			offset += decoder.elemType.Size()
 		} else {
 			iter.Skip()
 		}
-	}
+		return true
+	})
 }

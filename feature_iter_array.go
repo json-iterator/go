@@ -34,10 +34,16 @@ func (iter *Iterator) ReadArrayCB(callback func(*Iterator) bool) (ret bool) {
 			if !callback(iter) {
 				return false
 			}
-			for iter.nextToken() == ',' {
+			c = iter.nextToken()
+			for c == ',' {
 				if !callback(iter) {
 					return false
 				}
+				c = iter.nextToken()
+			}
+			if c != ']' {
+				iter.ReportError("ReadArrayCB", "expect ] in the end")
+				return false
 			}
 			return true
 		}

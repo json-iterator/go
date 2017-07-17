@@ -94,35 +94,14 @@ func (decoder *sliceDecoder) doDecode(ptr unsafe.Pointer, iter *Iterator) {
 		return
 	}
 	reuseSlice(slice, decoder.sliceType, 4)
-	if !iter.ReadArray() {
-		return
-	}
+	slice.Len = 0
 	offset := uintptr(0)
-	decoder.elemDecoder.Decode(unsafe.Pointer(uintptr(slice.Data)+offset), iter)
-	if !iter.ReadArray() {
-		slice.Len = 1
-		return
-	}
-	offset += decoder.elemType.Size()
-	decoder.elemDecoder.Decode(unsafe.Pointer(uintptr(slice.Data)+offset), iter)
-	if !iter.ReadArray() {
-		slice.Len = 2
-		return
-	}
-	offset += decoder.elemType.Size()
-	decoder.elemDecoder.Decode(unsafe.Pointer(uintptr(slice.Data)+offset), iter)
-	if !iter.ReadArray() {
-		slice.Len = 3
-		return
-	}
-	offset += decoder.elemType.Size()
-	decoder.elemDecoder.Decode(unsafe.Pointer(uintptr(slice.Data)+offset), iter)
-	slice.Len = 4
-	for iter.ReadArray() {
+	iter.ReadArrayCB(func(iter *Iterator) bool {
 		growOne(slice, decoder.sliceType, decoder.elemType)
-		offset += decoder.elemType.Size()
 		decoder.elemDecoder.Decode(unsafe.Pointer(uintptr(slice.Data)+offset), iter)
-	}
+		offset += decoder.elemType.Size()
+		return true
+	})
 }
 
 // grow grows the slice s so that it can hold extra more values, allocating

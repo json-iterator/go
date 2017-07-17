@@ -1,10 +1,10 @@
 package jsoniter
 
 import (
+	"github.com/stretchr/testify/require"
+	"strings"
 	"testing"
 	"time"
-	"strings"
-	"github.com/stretchr/testify/require"
 )
 
 func Test_reader_and_load_more(t *testing.T) {

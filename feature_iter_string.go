@@ -1,8 +1,8 @@
 package jsoniter
 
 import (
-	"unicode/utf16"
 	"fmt"
+	"unicode/utf16"
 )
 
 // ReadString read string from iterator

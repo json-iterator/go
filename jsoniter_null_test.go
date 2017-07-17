@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/stretchr/testify/require"
-	"testing"
 	"io"
+	"testing"
 )
 
 func Test_read_null(t *testing.T) {
