@@ -60,9 +60,10 @@ func Test_read_float(t *testing.T) {
 		t.Run(fmt.Sprintf("%v", input), func(t *testing.T) {
 			should := require.New(t)
 			iter := Parse(ConfigDefault, bytes.NewBufferString(input+","), 2)
-			expected, err := strconv.ParseFloat(input, 64)
+			val := float64(0)
+			err := json.Unmarshal([]byte(input), &val)
 			should.Nil(err)
-			should.Equal(expected, iter.ReadFloat64())
+			should.Equal(val, iter.ReadFloat64())
 		})
 	}
 }

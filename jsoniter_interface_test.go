@@ -81,6 +81,15 @@ func Test_read_interface(t *testing.T) {
 	err := UnmarshalFromString(`"hello"`, &val)
 	should.Nil(err)
 	should.Equal("hello", val)
+	err = UnmarshalFromString(`1e1`, &val)
+	should.Nil(err)
+	should.Equal(float64(10), val)
+	err = UnmarshalFromString(`1.0e1`, &val)
+	should.Nil(err)
+	should.Equal(float64(10), val)
+	err = json.Unmarshal([]byte(`1.0e1`), &val)
+	should.Nil(err)
+	should.Equal(float64(10), val)
 }
 
 func Test_read_custom_interface(t *testing.T) {
