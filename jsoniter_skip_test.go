@@ -8,15 +8,24 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_skip_number(t *testing.T) {
+func Test_skip_number_in_array(t *testing.T) {
+	should := require.New(t)
 	iter := ParseString(ConfigDefault, `[-0.12, "stream"]`)
 	iter.ReadArray()
 	iter.Skip()
 	iter.ReadArray()
-	if iter.ReadString() != "stream" {
-		t.FailNow()
-	}
+	should.Nil(iter.Error)
+	should.Equal("stream", iter.ReadString())
+}
 
+func Test_skip_string_in_array(t *testing.T) {
+	should := require.New(t)
+	iter := ParseString(ConfigDefault, `["hello", "stream"]`)
+	iter.ReadArray()
+	iter.Skip()
+	iter.ReadArray()
+	should.Nil(iter.Error)
+	should.Equal("stream", iter.ReadString())
 }
 
 func Test_skip_null(t *testing.T) {

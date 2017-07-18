@@ -1,3 +1,5 @@
+//+build jsoniter-sloppy
+
 package jsoniter
 
 import (
