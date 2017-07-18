@@ -42,64 +42,73 @@ func (iter *Iterator) readStringSlowPath() (ret string) {
 		}
 		if c == '\\' {
 			c = iter.readByte()
-			switch c {
-			case 'u', 'U':
-				r := iter.readU4()
-				if utf16.IsSurrogate(r) {
-					c = iter.readByte()
-					if iter.Error != nil {
-						return
-					}
-					if c != '\\' {
-						iter.ReportError("ReadString",
-							`expects \u after utf16 surrogate, but \ not found`)
-						return
-					}
-					c = iter.readByte()
-					if iter.Error != nil {
-						return
-					}
-					if c != 'u' && c != 'U' {
-						iter.ReportError("ReadString",
-							`expects \u after utf16 surrogate, but \u not found`)
-						return
-					}
-					r2 := iter.readU4()
-					if iter.Error != nil {
-						return
-					}
-					combined := utf16.DecodeRune(r, r2)
-					str = appendRune(str, combined)
-				} else {
-					str = appendRune(str, r)
-				}
-			case '"':
-				str = append(str, '"')
-			case '\\':
-				str = append(str, '\\')
-			case '/':
-				str = append(str, '/')
-			case 'b':
-				str = append(str, '\b')
-			case 'f':
-				str = append(str, '\f')
-			case 'n':
-				str = append(str, '\n')
-			case 'r':
-				str = append(str, '\r')
-			case 't':
-				str = append(str, '\t')
-			default:
-				iter.ReportError("ReadString",
-					`invalid escape char after \`)
-				return
-			}
+			str = iter.readEscapedChar(c, str)
 		} else {
 			str = append(str, c)
 		}
 	}
 	iter.ReportError("ReadString", "unexpected end of input")
 	return
+}
+
+func (iter *Iterator) readEscapedChar(c byte, str []byte) []byte {
+	switch c {
+	case 'u':
+		r := iter.readU4()
+		if utf16.IsSurrogate(r) {
+			c = iter.readByte()
+			if iter.Error != nil {
+				return nil
+			}
+			if c != '\\' {
+				iter.unreadByte()
+				str = appendRune(str, r)
+				return str
+			}
+			c = iter.readByte()
+			if iter.Error != nil {
+				return nil
+			}
+			if c != 'u' {
+				str = appendRune(str, r)
+				return iter.readEscapedChar(c, str)
+			}
+			r2 := iter.readU4()
+			if iter.Error != nil {
+				return nil
+			}
+			combined := utf16.DecodeRune(r, r2)
+			if combined == '\uFFFD' {
+				str = appendRune(str, r)
+				str = appendRune(str, r2)
+			} else {
+				str = appendRune(str, combined)
+			}
+		} else {
+			str = appendRune(str, r)
+		}
+	case '"':
+		str = append(str, '"')
+	case '\\':
+		str = append(str, '\\')
+	case '/':
+		str = append(str, '/')
+	case 'b':
+		str = append(str, '\b')
+	case 'f':
+		str = append(str, '\f')
+	case 'n':
+		str = append(str, '\n')
+	case 'r':
+		str = append(str, '\r')
+	case 't':
+		str = append(str, '\t')
+	default:
+		iter.ReportError("ReadString",
+			`invalid escape char after \`)
+		return nil
+	}
+	return str
 }
 
 // ReadStringAsSlice read string from iterator without copying into string form.

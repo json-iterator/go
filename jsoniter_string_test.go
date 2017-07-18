@@ -19,6 +19,8 @@ func Test_read_string(t *testing.T) {
 		`"\"`,
 		`"\\\"`,
 		"\"\n\"",
+		`"\U0001f64f"`,
+		`"\uD83D\u00"`,
 	}
 	for i := 0; i < 32; i++ {
 		// control characters are invalid
@@ -39,6 +41,11 @@ func Test_read_string(t *testing.T) {
 		{`"a"`, "a"},
 		{`null`, ""},
 		{`"Iñtërnâtiônàlizætiøn,💝🐹🌇⛔"`, "Iñtërnâtiônàlizætiøn,💝🐹🌇⛔"},
+		{`"\uD83D"`, string([]byte{239, 191, 189})},
+		{`"\uD83D\\"`, string([]byte{239, 191, 189, '\\'})},
+		{`"\uD83D\ub000"`, string([]byte{239, 191, 189, 235, 128, 128})},
+		{`"\uD83D\ude04"`, "😄"},
+		{`"\uDEADBEEF"`, string([]byte{239, 191, 189, 66, 69, 69, 70})},
 	}
 
 	for _, tc := range goodInputs {
@@ -111,7 +118,9 @@ func Test_read_exotic_string(t *testing.T) {
 		t.Run(fmt.Sprintf("%v:%v", input, output), func(t *testing.T) {
 			should := require.New(t)
 			iter := ParseString(ConfigDefault, input)
-			should.Equal(output, iter.ReadString())
+			var v string
+			should.Nil(json.Unmarshal([]byte(input), &v))
+			should.Equal(v, iter.ReadString())
 		})
 		t.Run(fmt.Sprintf("%v:%v", input, output), func(t *testing.T) {
 			should := require.New(t)
