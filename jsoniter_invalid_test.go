@@ -3,6 +3,7 @@ package jsoniter
 import (
 	"github.com/stretchr/testify/require"
 	"testing"
+	"encoding/json"
 )
 
 func Test_missing_object_end(t *testing.T) {
@@ -64,4 +65,16 @@ func Test_invalid_array_input(t *testing.T) {
 	input := []byte{93}
 	obj := [0]string{}
 	should.NotNil(Unmarshal(input, &obj))
+}
+
+func Test_double_negative(t *testing.T) {
+	should := require.New(t)
+	var v interface{}
+	should.NotNil(json.Unmarshal([]byte(`--2`), &v))
+	var vFloat64 float64
+	should.NotNil(UnmarshalFromString(`--2`, &vFloat64))
+	var vFloat32 float32
+	should.NotNil(UnmarshalFromString(`--2`, &vFloat32))
+	var vInt int
+	should.NotNil(UnmarshalFromString(`--2`, &vInt))
 }

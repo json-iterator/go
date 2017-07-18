@@ -159,6 +159,14 @@ func (iter *Iterator) readFloat32SlowPath() (ret float32) {
 	if iter.Error != nil && iter.Error != io.EOF {
 		return
 	}
+	if len(str) == 0 {
+		iter.ReportError("readFloat32SlowPath", "empty number")
+		return
+	}
+	if str[0] == '-' {
+		iter.ReportError("readFloat32SlowPath", "-- is not valid")
+		return
+	}
 	val, err := strconv.ParseFloat(str, 32)
 	if err != nil {
 		iter.Error = err
@@ -231,6 +239,14 @@ non_decimal_loop:
 func (iter *Iterator) readFloat64SlowPath() (ret float64) {
 	str := iter.readNumberAsString()
 	if iter.Error != nil && iter.Error != io.EOF {
+		return
+	}
+	if len(str) == 0 {
+		iter.ReportError("readFloat64SlowPath", "empty number")
+		return
+	}
+	if str[0] == '-' {
+		iter.ReportError("readFloat64SlowPath", "-- is not valid")
 		return
 	}
 	val, err := strconv.ParseFloat(str, 64)
