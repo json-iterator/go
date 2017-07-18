@@ -13,4 +13,5 @@ var inputs = []string{
 	"1E1",   // valid, e or E
 	"1ee1",  // invalid
 	"100a",  // invalid
+	"10.",   // invalid
 }

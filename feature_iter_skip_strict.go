@@ -21,9 +21,18 @@ func (iter *Iterator) trySkipNumber() bool {
 			if dotFound {
 				iter.ReportError("validateNumber", `more than one dot found in number`)
 				return true // already failed
-			} else {
-				dotFound = true
 			}
+			if i+1 == iter.tail {
+				return false
+			}
+			c = iter.buf[i+1]
+			switch c {
+			case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+			default:
+				iter.ReportError("validateNumber", `missing digit after dot`)
+				return true // already failed
+			}
+			dotFound = true
 		default:
 			switch c {
 			case ',', ']', '}', ' ', '\t', '\n', '\r':

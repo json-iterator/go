@@ -1,6 +1,7 @@
 package jsoniter
 
 import (
+	"fmt"
 	"io"
 	"math/big"
 	"strconv"
@@ -129,6 +130,9 @@ non_decimal_loop:
 	if c == '.' {
 		i++
 		decimalPlaces := 0
+		if i == iter.tail {
+			return iter.readFloat32SlowPath()
+		}
 		for ; i < iter.tail; i++ {
 			c = iter.buf[i]
 			ind := floatDigits[c]
@@ -195,6 +199,10 @@ func (iter *Iterator) readFloat32SlowPath() (ret float32) {
 	}
 	if str[0] == '-' {
 		iter.ReportError("readFloat32SlowPath", "-- is not valid")
+		return
+	}
+	if str[len(str)-1] == '.' {
+		iter.ReportError("readFloat32SlowPath", "dot can not be last character")
 		return
 	}
 	val, err := strconv.ParseFloat(str, 32)
@@ -270,6 +278,9 @@ non_decimal_loop:
 	if c == '.' {
 		i++
 		decimalPlaces := 0
+		if i == iter.tail {
+			return iter.readFloat64SlowPath()
+		}
 		for ; i < iter.tail; i++ {
 			c = iter.buf[i]
 			ind := floatDigits[c]
@@ -309,10 +320,15 @@ func (iter *Iterator) readFloat64SlowPath() (ret float64) {
 		iter.ReportError("readFloat64SlowPath", "-- is not valid")
 		return
 	}
+	if str[len(str)-1] == '.' {
+		iter.ReportError("readFloat64SlowPath", "dot can not be last character")
+		return
+	}
 	val, err := strconv.ParseFloat(str, 64)
 	if err != nil {
 		iter.Error = err
 		return
 	}
+	fmt.Println(str)
 	return val
 }

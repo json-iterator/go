@@ -111,3 +111,21 @@ func Test_empty_as_number(t *testing.T) {
 	should.NotEqual(io.EOF, iter.Error)
 	should.NotNil(iter.Error)
 }
+
+func Test_missing_digit_after_dot(t *testing.T) {
+	should := require.New(t)
+	iter := ParseString(ConfigDefault, `1.,`)
+	iter.Skip()
+	should.NotEqual(io.EOF, iter.Error)
+	should.NotNil(iter.Error)
+	v := float64(0)
+	should.NotNil(json.Unmarshal([]byte(`1.`), &v))
+	iter = ParseString(ConfigDefault, `1.`)
+	iter.ReadFloat64()
+	should.NotEqual(io.EOF, iter.Error)
+	should.NotNil(iter.Error)
+	iter = ParseString(ConfigDefault, `1.`)
+	iter.ReadFloat32()
+	should.NotEqual(io.EOF, iter.Error)
+	should.NotNil(iter.Error)
+}
