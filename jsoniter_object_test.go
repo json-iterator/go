@@ -32,6 +32,7 @@ func Test_one_field(t *testing.T) {
 	iter = ParseString(ConfigDefault, `{"a": "stream"}`)
 	should.True(iter.ReadObjectCB(func(iter *Iterator, field string) bool {
 		should.Equal("a", field)
+		iter.Skip()
 		return true
 	}))
 

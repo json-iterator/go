@@ -80,9 +80,9 @@ func (iter *Iterator) Skip() {
 	case '-', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
 		iter.skipNumber()
 	case '[':
-		panic("not implemented")
+		iter.skipArray()
 	case '{':
-		panic("not implemented")
+		iter.skipObject()
 	default:
 		iter.ReportError("Skip", fmt.Sprintf("do not know how to skip: %v", c))
 		return

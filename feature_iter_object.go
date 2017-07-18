@@ -88,11 +88,17 @@ func (iter *Iterator) ReadObjectCB(callback func(*Iterator, string) bool) bool {
 			if !callback(iter, *(*string)(unsafe.Pointer(&field))) {
 				return false
 			}
-			for iter.nextToken() == ',' {
+			c = iter.nextToken()
+			for c == ',' {
 				field = iter.readObjectFieldAsBytes()
 				if !callback(iter, *(*string)(unsafe.Pointer(&field))) {
 					return false
 				}
+				c = iter.nextToken()
+			}
+			if c != '}' {
+				iter.ReportError("ReadObjectCB", `object not ended with }`)
+				return false
 			}
 			return true
 		}
@@ -125,7 +131,8 @@ func (iter *Iterator) ReadMapCB(callback func(*Iterator, string) bool) bool {
 			if !callback(iter, field) {
 				return false
 			}
-			for iter.nextToken() == ',' {
+			c = iter.nextToken()
+			for c == ',' {
 				field = iter.ReadString()
 				if iter.nextToken() != ':' {
 					iter.ReportError("ReadMapCB", "expect : after object field")
@@ -134,6 +141,11 @@ func (iter *Iterator) ReadMapCB(callback func(*Iterator, string) bool) bool {
 				if !callback(iter, field) {
 					return false
 				}
+				c = iter.nextToken()
+			}
+			if c != '}' {
+				iter.ReportError("ReadMapCB", `object not ended with }`)
+				return false
 			}
 			return true
 		}

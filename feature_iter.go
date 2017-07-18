@@ -259,8 +259,7 @@ func (iter *Iterator) loadMore() bool {
 }
 
 func (iter *Iterator) unreadByte() {
-	if iter.head == 0 {
-		iter.ReportError("unreadByte", "unread too many bytes")
+	if iter.Error != nil {
 		return
 	}
 	iter.head--

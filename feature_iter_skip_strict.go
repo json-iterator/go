@@ -61,7 +61,17 @@ func (iter *Iterator) trySkipString() bool {
 }
 
 func (iter *Iterator) skipObject() {
+	iter.unreadByte()
+	iter.ReadObjectCB(func(iter *Iterator, field string) bool {
+		iter.Skip()
+		return true
+	})
 }
 
 func (iter *Iterator) skipArray() {
+	iter.unreadByte()
+	iter.ReadArrayCB(func(iter *Iterator) bool {
+		iter.Skip()
+		return true
+	})
 }

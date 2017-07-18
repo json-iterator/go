@@ -20,11 +20,6 @@ func Test_read_by_one(t *testing.T) {
 	if iter.Error != nil {
 		t.Fatal(iter.Error)
 	}
-	iter.unreadByte()
-	if iter.Error == nil {
-		t.FailNow()
-	}
-	iter.Error = nil
 	b = iter.readByte()
 	if iter.Error != nil {
 		t.Fatal(iter.Error)
