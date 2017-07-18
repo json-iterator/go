@@ -1,7 +1,6 @@
 package jsoniter
 
 import (
-	"fmt"
 	"io"
 	"math/big"
 	"strconv"
@@ -329,6 +328,5 @@ func (iter *Iterator) readFloat64SlowPath() (ret float64) {
 		iter.Error = err
 		return
 	}
-	fmt.Println(str)
 	return val
 }
