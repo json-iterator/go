@@ -78,6 +78,35 @@ func (iter *Iterator) readPositiveFloat32() (ret float32) {
 	value := uint64(0)
 	c := byte(' ')
 	i := iter.head
+	// first char
+	if i == iter.tail {
+		return iter.readFloat32SlowPath()
+	}
+	c = iter.buf[i]
+	i++
+	ind := floatDigits[c]
+	switch ind {
+	case invalidCharForNumber:
+		return iter.readFloat32SlowPath()
+	case endOfNumber:
+		iter.ReportError("readFloat32", "empty number")
+		return
+	case dotInNumber:
+		iter.ReportError("readFloat32", "leading dot is invalid")
+		return
+	case 0:
+		if i == iter.tail {
+			return iter.readFloat32SlowPath()
+		}
+		c = iter.buf[i]
+		switch c {
+		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+			iter.ReportError("readFloat32", "leading zero is invalid")
+			return
+		}
+	}
+	value = uint64(ind)
+	// chars before dot
 non_decimal_loop:
 	for ; i < iter.tail; i++ {
 		c = iter.buf[i]
@@ -96,6 +125,7 @@ non_decimal_loop:
 		}
 		value = (value << 3) + (value << 1) + uint64(ind) // value = value * 10 + ind;
 	}
+	// chars after dot
 	if c == '.' {
 		i++
 		decimalPlaces := 0
@@ -189,6 +219,35 @@ func (iter *Iterator) readPositiveFloat64() (ret float64) {
 	value := uint64(0)
 	c := byte(' ')
 	i := iter.head
+	// first char
+	if i == iter.tail {
+		return iter.readFloat64SlowPath()
+	}
+	c = iter.buf[i]
+	i++
+	ind := floatDigits[c]
+	switch ind {
+	case invalidCharForNumber:
+		return iter.readFloat64SlowPath()
+	case endOfNumber:
+		iter.ReportError("readFloat64", "empty number")
+		return
+	case dotInNumber:
+		iter.ReportError("readFloat64", "leading dot is invalid")
+		return
+	case 0:
+		if i == iter.tail {
+			return iter.readFloat64SlowPath()
+		}
+		c = iter.buf[i]
+		switch c {
+		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+			iter.ReportError("readFloat64", "leading zero is invalid")
+			return
+		}
+	}
+	value = uint64(ind)
+	// chars before dot
 non_decimal_loop:
 	for ; i < iter.tail; i++ {
 		c = iter.buf[i]
@@ -207,6 +266,7 @@ non_decimal_loop:
 		}
 		value = (value << 3) + (value << 1) + uint64(ind) // value = value * 10 + ind;
 	}
+	// chars after dot
 	if c == '.' {
 		i++
 		decimalPlaces := 0

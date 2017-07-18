@@ -4,6 +4,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"testing"
 	"encoding/json"
+	"io"
 )
 
 func Test_missing_object_end(t *testing.T) {
@@ -77,4 +78,36 @@ func Test_double_negative(t *testing.T) {
 	should.NotNil(UnmarshalFromString(`--2`, &vFloat32))
 	var vInt int
 	should.NotNil(UnmarshalFromString(`--2`, &vInt))
+	iter := ParseString(ConfigDefault, `--2`)
+	iter.Skip()
+	should.NotEqual(io.EOF, iter.Error)
+	should.NotNil(iter.Error)
+}
+
+func Test_leading_zero(t *testing.T) {
+	should := require.New(t)
+	var v interface{}
+	should.NotNil(json.Unmarshal([]byte(`01`), &v))
+	var vFloat64 float64
+	should.NotNil(UnmarshalFromString(`01`, &vFloat64))
+	var vFloat32 float32
+	should.NotNil(UnmarshalFromString(`01`, &vFloat32))
+	var vInt int
+	should.NotNil(UnmarshalFromString(`01`, &vInt))
+	iter := ParseString(ConfigDefault, `01,`)
+	iter.Skip()
+	should.NotEqual(io.EOF, iter.Error)
+	should.NotNil(iter.Error)
+}
+
+func Test_empty_as_number(t *testing.T) {
+	should := require.New(t)
+	iter := ParseString(ConfigDefault, `,`)
+	iter.ReadFloat64()
+	should.NotEqual(io.EOF, iter.Error)
+	should.NotNil(iter.Error)
+	iter = ParseString(ConfigDefault, `,`)
+	iter.ReadFloat32()
+	should.NotEqual(io.EOF, iter.Error)
+	should.NotNil(iter.Error)
 }
