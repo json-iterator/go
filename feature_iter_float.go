@@ -4,6 +4,7 @@ import (
 	"io"
 	"math/big"
 	"strconv"
+	"strings"
 	"unsafe"
 )
 
@@ -192,16 +193,9 @@ func (iter *Iterator) readFloat32SlowPath() (ret float32) {
 	if iter.Error != nil && iter.Error != io.EOF {
 		return
 	}
-	if len(str) == 0 {
-		iter.ReportError("readFloat32SlowPath", "empty number")
-		return
-	}
-	if str[0] == '-' {
-		iter.ReportError("readFloat32SlowPath", "-- is not valid")
-		return
-	}
-	if str[len(str)-1] == '.' {
-		iter.ReportError("readFloat32SlowPath", "dot can not be last character")
+	errMsg := validateFloat(str)
+	if errMsg != "" {
+		iter.ReportError("readFloat32SlowPath", errMsg)
 		return
 	}
 	val, err := strconv.ParseFloat(str, 32)
@@ -311,16 +305,9 @@ func (iter *Iterator) readFloat64SlowPath() (ret float64) {
 	if iter.Error != nil && iter.Error != io.EOF {
 		return
 	}
-	if len(str) == 0 {
-		iter.ReportError("readFloat64SlowPath", "empty number")
-		return
-	}
-	if str[0] == '-' {
-		iter.ReportError("readFloat64SlowPath", "-- is not valid")
-		return
-	}
-	if str[len(str)-1] == '.' {
-		iter.ReportError("readFloat64SlowPath", "dot can not be last character")
+	errMsg := validateFloat(str)
+	if errMsg != "" {
+		iter.ReportError("readFloat64SlowPath", errMsg)
 		return
 	}
 	val, err := strconv.ParseFloat(str, 64)
@@ -329,4 +316,26 @@ func (iter *Iterator) readFloat64SlowPath() (ret float64) {
 		return
 	}
 	return val
+}
+
+func validateFloat(str string) string {
+	// strconv.ParseFloat is not validating `1.` or `1.e1`
+	if len(str) == 0 {
+		return "empty number"
+	}
+	if str[0] == '-' {
+		return "-- is not valid"
+	}
+	dotPos := strings.IndexByte(str, '.')
+	if dotPos != -1 {
+		if dotPos == len(str)-1 {
+			return "dot can not be last character"
+		}
+		switch str[dotPos+1] {
+		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+		default:
+			return "missing digit after dot"
+		}
+	}
+	return ""
 }

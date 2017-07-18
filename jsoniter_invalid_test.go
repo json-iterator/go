@@ -68,64 +68,33 @@ func Test_invalid_array_input(t *testing.T) {
 	should.NotNil(Unmarshal(input, &obj))
 }
 
-func Test_double_negative(t *testing.T) {
-	should := require.New(t)
-	var v interface{}
-	should.NotNil(json.Unmarshal([]byte(`--2`), &v))
-	var vFloat64 float64
-	should.NotNil(UnmarshalFromString(`--2`, &vFloat64))
-	var vFloat32 float32
-	should.NotNil(UnmarshalFromString(`--2`, &vFloat32))
-	var vInt int
-	should.NotNil(UnmarshalFromString(`--2`, &vInt))
-	iter := ParseString(ConfigDefault, `--2`)
-	iter.Skip()
-	should.NotEqual(io.EOF, iter.Error)
-	should.NotNil(iter.Error)
-}
-
-func Test_leading_zero(t *testing.T) {
-	should := require.New(t)
-	var v interface{}
-	should.NotNil(json.Unmarshal([]byte(`01`), &v))
-	var vFloat64 float64
-	should.NotNil(UnmarshalFromString(`01`, &vFloat64))
-	var vFloat32 float32
-	should.NotNil(UnmarshalFromString(`01`, &vFloat32))
-	var vInt int
-	should.NotNil(UnmarshalFromString(`01`, &vInt))
-	iter := ParseString(ConfigDefault, `01,`)
-	iter.Skip()
-	should.NotEqual(io.EOF, iter.Error)
-	should.NotNil(iter.Error)
-}
-
-func Test_empty_as_number(t *testing.T) {
-	should := require.New(t)
-	iter := ParseString(ConfigDefault, `,`)
-	iter.ReadFloat64()
-	should.NotEqual(io.EOF, iter.Error)
-	should.NotNil(iter.Error)
-	iter = ParseString(ConfigDefault, `,`)
-	iter.ReadFloat32()
-	should.NotEqual(io.EOF, iter.Error)
-	should.NotNil(iter.Error)
-}
-
-func Test_missing_digit_after_dot(t *testing.T) {
-	should := require.New(t)
-	iter := ParseString(ConfigDefault, `1.,`)
-	iter.Skip()
-	should.NotEqual(io.EOF, iter.Error)
-	should.NotNil(iter.Error)
-	v := float64(0)
-	should.NotNil(json.Unmarshal([]byte(`1.`), &v))
-	iter = ParseString(ConfigDefault, `1.`)
-	iter.ReadFloat64()
-	should.NotEqual(io.EOF, iter.Error)
-	should.NotNil(iter.Error)
-	iter = ParseString(ConfigDefault, `1.`)
-	iter.ReadFloat32()
-	should.NotEqual(io.EOF, iter.Error)
-	should.NotNil(iter.Error)
+func Test_invalid_float(t *testing.T) {
+	inputs := []string{
+		`1.e1`, // dot without following digit
+		`1.`,   // dot can not be the last char
+		``,     // empty number
+		`01`,   // extra leading zero
+		`-`,    // negative without digit
+		`--`,   // double negative
+		`--2`,  // double negative
+	}
+	for _, input := range inputs {
+		t.Run(input, func(t *testing.T) {
+			should := require.New(t)
+			iter := ParseString(ConfigDefault, input+",")
+			iter.Skip()
+			should.NotEqual(io.EOF, iter.Error)
+			should.NotNil(iter.Error)
+			v := float64(0)
+			should.NotNil(json.Unmarshal([]byte(input), &v))
+			iter = ParseString(ConfigDefault, input+",")
+			iter.ReadFloat64()
+			should.NotEqual(io.EOF, iter.Error)
+			should.NotNil(iter.Error)
+			iter = ParseString(ConfigDefault, input+",")
+			iter.ReadFloat32()
+			should.NotEqual(io.EOF, iter.Error)
+			should.NotNil(iter.Error)
+		})
+	}
 }

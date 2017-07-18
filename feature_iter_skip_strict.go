@@ -36,6 +36,9 @@ func (iter *Iterator) trySkipNumber() bool {
 		default:
 			switch c {
 			case ',', ']', '}', ' ', '\t', '\n', '\r':
+				if iter.head == i {
+					return false // if - without following digits
+				}
 				iter.head = i
 				return true // must be valid
 			}
