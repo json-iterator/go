@@ -281,7 +281,11 @@ func createDecoderOfType(cfg *frozenConfig, typ reflect.Type) (ValDecoder, error
 		return &jsonNumberCodec{}, nil
 	}
 	if typ.Kind() == reflect.Slice && typ.Elem().Kind() == reflect.Uint8 {
-		return &base64Codec{}, nil
+		sliceDecoder, err := prefix("[slice]").addToDecoder(decoderOfSlice(cfg, typ))
+		if err != nil {
+			return nil, err
+		}
+		return &base64Codec{sliceDecoder: sliceDecoder}, nil
 	}
 	if typ.Implements(unmarshalerType) {
 		templateInterface := reflect.New(typ).Elem().Interface()
@@ -440,7 +444,7 @@ func createEncoderOfType(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error
 		return &jsonNumberCodec{}, nil
 	}
 	if typ.Kind() == reflect.Slice && typ.Elem().Kind() == reflect.Uint8 {
-		return &base64Codec{typ}, nil
+		return &base64Codec{}, nil
 	}
 	if typ.Implements(marshalerType) {
 		checkIsEmpty, err := createCheckIsEmpty(typ)

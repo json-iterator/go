@@ -156,13 +156,24 @@ func Test_encode_byte_array(t *testing.T) {
 	should.Equal(`"AQID"`, string(bytes))
 }
 
-func Test_decode_byte_array(t *testing.T) {
+func Test_decode_byte_array_from_base64(t *testing.T) {
 	should := require.New(t)
 	data := []byte{}
 	err := json.Unmarshal([]byte(`"AQID"`), &data)
 	should.Nil(err)
 	should.Equal([]byte{1, 2, 3}, data)
 	err = Unmarshal([]byte(`"AQID"`), &data)
+	should.Nil(err)
+	should.Equal([]byte{1, 2, 3}, data)
+}
+
+func Test_decode_byte_array_from_array(t *testing.T) {
+	should := require.New(t)
+	data := []byte{}
+	err := json.Unmarshal([]byte(`[1,2,3]`), &data)
+	should.Nil(err)
+	should.Equal([]byte{1, 2, 3}, data)
+	err = Unmarshal([]byte(`[1,2,3]`), &data)
 	should.Nil(err)
 	should.Equal([]byte{1, 2, 3}, data)
 }

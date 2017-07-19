@@ -4,7 +4,6 @@ import (
 	"encoding"
 	"encoding/base64"
 	"encoding/json"
-	"reflect"
 	"unsafe"
 )
 
@@ -425,7 +424,7 @@ func (codec *jsoniterRawMessageCodec) IsEmpty(ptr unsafe.Pointer) bool {
 }
 
 type base64Codec struct {
-	actualType reflect.Type
+	sliceDecoder ValDecoder
 }
 
 func (codec *base64Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
@@ -436,21 +435,28 @@ func (codec *base64Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 		ptrSlice.Data = nil
 		return
 	}
-	encoding := base64.StdEncoding
-	src := iter.SkipAndReturnBytes()
-	src = src[1 : len(src)-1]
-	decodedLen := encoding.DecodedLen(len(src))
-	dst := make([]byte, decodedLen)
-	len, err := encoding.Decode(dst, src)
-	if err != nil {
-		iter.ReportError("decode base64", err.Error())
-	} else {
-		dst = dst[:len]
-		dstSlice := (*sliceHeader)(unsafe.Pointer(&dst))
-		ptrSlice := (*sliceHeader)(ptr)
-		ptrSlice.Data = dstSlice.Data
-		ptrSlice.Cap = dstSlice.Cap
-		ptrSlice.Len = dstSlice.Len
+	switch iter.WhatIsNext() {
+	case String:
+		encoding := base64.StdEncoding
+		src := iter.SkipAndReturnBytes()
+		src = src[1 : len(src)-1]
+		decodedLen := encoding.DecodedLen(len(src))
+		dst := make([]byte, decodedLen)
+		len, err := encoding.Decode(dst, src)
+		if err != nil {
+			iter.ReportError("decode base64", err.Error())
+		} else {
+			dst = dst[:len]
+			dstSlice := (*sliceHeader)(unsafe.Pointer(&dst))
+			ptrSlice := (*sliceHeader)(ptr)
+			ptrSlice.Data = dstSlice.Data
+			ptrSlice.Cap = dstSlice.Cap
+			ptrSlice.Len = dstSlice.Len
+		}
+	case Array:
+		codec.sliceDecoder.Decode(ptr, iter)
+	default:
+		iter.ReportError("base64Codec", "invalid input")
 	}
 }
 

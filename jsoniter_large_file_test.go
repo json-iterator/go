@@ -122,7 +122,7 @@ func init() {
 /*
 200000	      8886 ns/op	    4336 B/op	       6 allocs/op
 50000	     34244 ns/op	    6744 B/op	      14 allocs/op
- */
+*/
 func Benchmark_jsoniter_large_file(b *testing.B) {
 	b.ReportAllocs()
 	for n := 0; n < b.N; n++ {
