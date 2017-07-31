@@ -5,6 +5,7 @@ import (
 	"io"
 	"reflect"
 	"unsafe"
+	"strings"
 )
 
 func encoderOfStruct(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error) {
@@ -101,7 +102,7 @@ func decoderOfStruct(cfg *frozenConfig, typ reflect.Type) (ValDecoder, error) {
 	}
 	fields := map[string]*structFieldDecoder{}
 	for k, binding := range bindings {
-		fields[k] = binding.Decoder.(*structFieldDecoder)
+		fields[strings.ToLower(k)] = binding.Decoder.(*structFieldDecoder)
 	}
 	return createStructDecoder(typ, fields)
 }
