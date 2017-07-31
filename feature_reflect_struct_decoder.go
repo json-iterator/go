@@ -429,7 +429,7 @@ func (decoder *generalStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) 
 	}
 	fieldBytes := iter.readObjectFieldAsBytes()
 	field := *(*string)(unsafe.Pointer(&fieldBytes))
-	fieldDecoder := decoder.fields[field]
+	fieldDecoder := decoder.fields[strings.ToLower(field)]
 	if fieldDecoder == nil {
 		iter.Skip()
 	} else {
