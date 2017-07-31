@@ -8,6 +8,10 @@
 
 A high-performance 100% compatible drop-in replacement of "encoding/json"
 
+```
+Go开发者们请加入我们，滴滴出行平台技术部 taowen@didichuxing.com
+```
+
 # Benchmark
 
 ![benchmark](http://jsoniter.com/benchmarks/go-benchmark.png)
