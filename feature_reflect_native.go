@@ -385,6 +385,25 @@ func (codec *jsonNumberCodec) IsEmpty(ptr unsafe.Pointer) bool {
 	return len(*((*json.Number)(ptr))) == 0
 }
 
+type jsoniterNumberCodec struct {
+}
+
+func (codec *jsoniterNumberCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
+	*((*Number)(ptr)) = Number([]byte(iter.readNumberAsString()))
+}
+
+func (codec *jsoniterNumberCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
+	stream.WriteRaw(string(*((*Number)(ptr))))
+}
+
+func (codec *jsoniterNumberCodec) EncodeInterface(val interface{}, stream *Stream) {
+	stream.WriteRaw(string(val.(Number)))
+}
+
+func (codec *jsoniterNumberCodec) IsEmpty(ptr unsafe.Pointer) bool {
+	return len(*((*Number)(ptr))) == 0
+}
+
 type jsonRawMessageCodec struct {
 }
 

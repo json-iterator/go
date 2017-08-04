@@ -457,6 +457,17 @@ func Test_json_number(t *testing.T) {
 	should.Equal(`[1]`, str)
 }
 
+func Test_jsoniter_number(t *testing.T) {
+	should := require.New(t)
+	var arr []Number
+	err := Unmarshal([]byte(`[1]`), &arr)
+	should.Nil(err)
+	should.Equal(Number("1"), arr[0])
+	str, isNumber := CastJsonNumber(arr[0])
+	should.True(isNumber)
+	should.Equal("1", str)
+}
+
 func Benchmark_jsoniter_encode_int(b *testing.B) {
 	stream := NewStream(ConfigDefault, ioutil.Discard, 64)
 	for n := 0; n < b.N; n++ {
