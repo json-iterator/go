@@ -9,10 +9,10 @@ import (
 func Test_read_empty_array_as_any(t *testing.T) {
 	should := require.New(t)
 	any := Get([]byte("[]"))
-	should.Equal(Array, any.Get().ValueType())
-	should.Equal(Invalid, any.Get(0.3).ValueType())
+	should.Equal(ArrayValue, any.Get().ValueType())
+	should.Equal(InvalidValue, any.Get(0.3).ValueType())
 	should.Equal(0, any.Size())
-	should.Equal(Array, any.ValueType())
+	should.Equal(ArrayValue, any.ValueType())
 	should.Nil(any.LastError())
 	should.Equal(0, any.ToInt())
 	should.Equal(int32(0), any.ToInt32())
@@ -101,7 +101,7 @@ func Test_array_wrapper_any_get_all(t *testing.T) {
 		{5, 6},
 	})
 	should.Equal("[1,3,5]", any.Get('*', 0).ToString())
-	should.Equal(Array, any.ValueType())
+	should.Equal(ArrayValue, any.ValueType())
 	should.True(any.ToBool())
 	should.Equal(1, any.Get(0, 0).ToInt())
 }
@@ -109,14 +109,14 @@ func Test_array_wrapper_any_get_all(t *testing.T) {
 func Test_array_lazy_any_get_invalid(t *testing.T) {
 	should := require.New(t)
 	any := Get([]byte("[]"))
-	should.Equal(Invalid, any.Get(1, 1).ValueType())
+	should.Equal(InvalidValue, any.Get(1, 1).ValueType())
 	should.NotNil(any.Get(1, 1).LastError())
-	should.Equal(Invalid, any.Get("1").ValueType())
+	should.Equal(InvalidValue, any.Get("1").ValueType())
 	should.NotNil(any.Get("1").LastError())
 }
 
 func Test_invalid_array(t *testing.T) {
 	should := require.New(t)
 	any := Get([]byte("["), 0)
-	should.Equal(Invalid, any.ValueType())
+	should.Equal(InvalidValue, any.ValueType())
 }

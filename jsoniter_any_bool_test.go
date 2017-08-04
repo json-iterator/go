@@ -53,12 +53,12 @@ func Test_write_bool_to_stream(t *testing.T) {
 	stream := NewStream(ConfigDefault, nil, 32)
 	any.WriteTo(stream)
 	should.Equal("true", string(stream.Buffer()))
-	should.Equal(any.ValueType(), Bool)
+	should.Equal(any.ValueType(), BoolValue)
 
 	any = Get([]byte("false"))
 	stream = NewStream(ConfigDefault, nil, 32)
 	any.WriteTo(stream)
 	should.Equal("false", string(stream.Buffer()))
 
-	should.Equal(any.ValueType(), Bool)
+	should.Equal(any.ValueType(), BoolValue)
 }

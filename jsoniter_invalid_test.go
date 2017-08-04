@@ -25,7 +25,7 @@ func Test_missing_array_end(t *testing.T) {
 func Test_invalid_any(t *testing.T) {
 	should := require.New(t)
 	any := Get([]byte("[]"))
-	should.Equal(Invalid, any.Get(0.3).ValueType())
+	should.Equal(InvalidValue, any.Get(0.3).ValueType())
 	// is nil correct ?
 	should.Equal(nil, any.Get(0.3).GetInterface())
 
@@ -41,7 +41,7 @@ func Test_invalid_any(t *testing.T) {
 	should.Equal(float64(0), any.ToFloat64())
 	should.Equal("", any.ToString())
 
-	should.Equal(Invalid, any.Get(0.1).Get(1).ValueType())
+	should.Equal(InvalidValue, any.Get(0.1).Get(1).ValueType())
 }
 
 func Test_invalid_struct_input(t *testing.T) {

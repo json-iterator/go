@@ -14,7 +14,7 @@ func (iter *Iterator) ReadNil() (ret bool) {
 	return false
 }
 
-// ReadBool reads a json object as Bool
+// ReadBool reads a json object as BoolValue
 func (iter *Iterator) ReadBool() (ret bool) {
 	c := iter.nextToken()
 	if c == 't' {

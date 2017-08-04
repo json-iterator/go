@@ -436,7 +436,7 @@ func (codec *base64Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 		return
 	}
 	switch iter.WhatIsNext() {
-	case String:
+	case StringValue:
 		encoding := base64.StdEncoding
 		src := iter.SkipAndReturnBytes()
 		src = src[1 : len(src)-1]
@@ -453,7 +453,7 @@ func (codec *base64Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 			ptrSlice.Cap = dstSlice.Cap
 			ptrSlice.Len = dstSlice.Len
 		}
-	case Array:
+	case ArrayValue:
 		codec.sliceDecoder.Decode(ptr, iter)
 	default:
 		iter.ReportError("base64Codec", "invalid input")

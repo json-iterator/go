@@ -88,7 +88,7 @@ func (cfg Config) Froze() API {
 
 func (cfg *frozenConfig) useNumber() {
 	cfg.addDecoderToCache(reflect.TypeOf((*interface{})(nil)).Elem(), &funcDecoder{func(ptr unsafe.Pointer, iter *Iterator) {
-		if iter.WhatIsNext() == Number {
+		if iter.WhatIsNext() == NumberValue {
 			*((*interface{})(ptr)) = json.Number(iter.readNumberAsString())
 		} else {
 			*((*interface{})(ptr)) = iter.Read()

@@ -20,7 +20,7 @@ func Test_read_object_as_any(t *testing.T) {
 	should.Equal(2, any.Size())
 	should.True(any.ToBool())
 	should.Equal(0, any.ToInt())
-	should.Equal(Object, any.ValueType())
+	should.Equal(ObjectValue, any.ValueType())
 	should.Nil(any.LastError())
 	obj := struct {
 		A string
@@ -44,8 +44,8 @@ func Test_object_lazy_any_get_all(t *testing.T) {
 func Test_object_lazy_any_get_invalid(t *testing.T) {
 	should := require.New(t)
 	any := Get([]byte(`{}`))
-	should.Equal(Invalid, any.Get("a", "stream", "c").ValueType())
-	should.Equal(Invalid, any.Get(1).ValueType())
+	should.Equal(InvalidValue, any.Get("a", "stream", "c").ValueType())
+	should.Equal(InvalidValue, any.Get(1).ValueType())
 }
 
 func Test_wrap_map_and_convert_to_any(t *testing.T) {

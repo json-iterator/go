@@ -96,7 +96,7 @@ func Test_read_float_to_any(t *testing.T) {
 	should.Equal(uint(0), any2.ToUint())
 	should.Equal(uint32(0), any2.ToUint32())
 	should.Equal(uint64(0), any2.ToUint64())
-	should.Equal(any.ValueType(), Number)
+	should.Equal(any.ValueType(), NumberValue)
 
 	should.Equal("1.23E+01", any.ToString())
 }

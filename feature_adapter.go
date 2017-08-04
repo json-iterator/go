@@ -90,7 +90,7 @@ func (adapter *Decoder) Buffered() io.Reader {
 	return bytes.NewReader(remaining)
 }
 
-// UseNumber for number JSON element, use float64 or json.Number (alias of string)
+// UseNumber for number JSON element, use float64 or json.NumberValue (alias of string)
 func (adapter *Decoder) UseNumber() {
 	origCfg := adapter.iter.cfg.configBeforeFrozen
 	origCfg.UseNumber = true
