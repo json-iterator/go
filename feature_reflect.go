@@ -285,13 +285,6 @@ func createDecoderOfType(cfg *frozenConfig, typ reflect.Type) (ValDecoder, error
 	if typ.AssignableTo(jsoniterNumberType) {
 		return &jsoniterNumberCodec{}, nil
 	}
-	if typ.Kind() == reflect.Slice && typ.Elem().Kind() == reflect.Uint8 {
-		sliceDecoder, err := prefix("[slice]").addToDecoder(decoderOfSlice(cfg, typ))
-		if err != nil {
-			return nil, err
-		}
-		return &base64Codec{sliceDecoder: sliceDecoder}, nil
-	}
 	if typ.Implements(unmarshalerType) {
 		templateInterface := reflect.New(typ).Elem().Interface()
 		var decoder ValDecoder = &unmarshalerDecoder{extractInterface(templateInterface)}
@@ -317,6 +310,13 @@ func createDecoderOfType(cfg *frozenConfig, typ reflect.Type) (ValDecoder, error
 		templateInterface := reflect.New(typ).Interface()
 		var decoder ValDecoder = &textUnmarshalerDecoder{extractInterface(templateInterface)}
 		return decoder, nil
+	}
+	if typ.Kind() == reflect.Slice && typ.Elem().Kind() == reflect.Uint8 {
+		sliceDecoder, err := prefix("[slice]").addToDecoder(decoderOfSlice(cfg, typ))
+		if err != nil {
+			return nil, err
+		}
+		return &base64Codec{sliceDecoder: sliceDecoder}, nil
 	}
 	if typ.Implements(anyType) {
 		return &anyCodec{}, nil
@@ -451,9 +451,6 @@ func createEncoderOfType(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error
 	if typ.AssignableTo(jsoniterNumberType) {
 		return &jsoniterNumberCodec{}, nil
 	}
-	if typ.Kind() == reflect.Slice && typ.Elem().Kind() == reflect.Uint8 {
-		return &base64Codec{}, nil
-	}
 	if typ.Implements(marshalerType) {
 		checkIsEmpty, err := createCheckIsEmpty(typ)
 		if err != nil {
@@ -483,6 +480,9 @@ func createEncoderOfType(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error
 			encoder = &optionalEncoder{encoder}
 		}
 		return encoder, nil
+	}
+	if typ.Kind() == reflect.Slice && typ.Elem().Kind() == reflect.Uint8 {
+		return &base64Codec{}, nil
 	}
 	if typ.Implements(anyType) {
 		return &anyCodec{}, nil
