@@ -7,8 +7,6 @@ import (
 	"testing"
 	"time"
 	"unsafe"
-	"fmt"
-	"reflect"
 )
 
 func Test_customize_type_decoder(t *testing.T) {
@@ -306,4 +304,18 @@ func Test_unmarshal_empty_interface_as_int64(t *testing.T) {
 	var arr []interface{}
 	Unmarshal([]byte("[100]"), &arr)
 	should.Equal(int64(100), arr[0])
+}
+
+
+func Test_customize_tag_key(t *testing.T) {
+
+	type TestObject struct {
+		Field string `orm:"field"`
+	}
+
+	should := require.New(t)
+	json := Config{TagKey: "orm"}.Froze()
+	str, err := json.MarshalToString(TestObject{"hello"})
+	should.Nil(err)
+	should.Equal(`{"field":"hello"}`, str)
 }

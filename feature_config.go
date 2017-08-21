@@ -17,6 +17,7 @@ type Config struct {
 	EscapeHTML              bool
 	SortMapKeys             bool
 	UseNumber               bool
+	TagKey					string
 }
 
 type frozenConfig struct {
@@ -94,6 +95,13 @@ func (cfg *frozenConfig) useNumber() {
 			*((*interface{})(ptr)) = iter.Read()
 		}
 	}})
+}
+func (cfg *frozenConfig) getTagKey() string {
+	tagKey := cfg.configBeforeFrozen.TagKey
+	if tagKey == "" {
+		return "json"
+	}
+	return tagKey
 }
 
 func (cfg *frozenConfig) registerExtension(extension Extension) {
