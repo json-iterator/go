@@ -98,3 +98,18 @@ func Test_invalid_float(t *testing.T) {
 		})
 	}
 }
+
+func Test_chan(t *testing.T) {
+	t.Skip("do not support chan")
+
+	type TestObject struct {
+		MyChan chan bool
+		MyField int
+	}
+
+	should := require.New(t)
+	obj := TestObject{}
+	str, err := json.Marshal(obj)
+	should.Nil(err)
+	should.Equal(``, str)
+}

@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 	"unsafe"
+	"fmt"
+	"reflect"
 )
 
 func Test_customize_type_decoder(t *testing.T) {
@@ -284,4 +286,24 @@ func Test_marshal_json_with_time(t *testing.T) {
 	obj = TestObject{}
 	should.Nil(Unmarshal([]byte(`{"TF1":{"F1":"fake","F2":"fake"}}`), &obj))
 	should.NotNil(obj.TF1.F2)
+}
+
+func Test_unmarshal_empty_interface_as_int64(t *testing.T) {
+	var obj interface{}
+	RegisterTypeDecoderFunc("interface {}", func(ptr unsafe.Pointer, iter *Iterator) {
+		switch iter.WhatIsNext() {
+		case NumberValue:
+			*(*interface{})(ptr) = iter.ReadInt64()
+		default:
+			*(*interface{})(ptr) = iter.Read()
+		}
+	})
+	should := require.New(t)
+	Unmarshal([]byte("100"), &obj)
+	should.Equal(int64(100), obj)
+	Unmarshal([]byte(`"hello"`), &obj)
+	should.Equal("hello", obj)
+	var arr []interface{}
+	Unmarshal([]byte("[100]"), &arr)
+	should.Equal(int64(100), arr[0])
 }
