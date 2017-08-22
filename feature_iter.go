@@ -285,14 +285,18 @@ func (iter *Iterator) Read() interface{} {
 	case ArrayValue:
 		arr := []interface{}{}
 		iter.ReadArrayCB(func(iter *Iterator) bool {
-			arr = append(arr, iter.Read())
+			var elem interface{}
+			iter.ReadVal(&elem)
+			arr = append(arr, elem)
 			return true
 		})
 		return arr
 	case ObjectValue:
 		obj := map[string]interface{}{}
 		iter.ReadMapCB(func(Iter *Iterator, field string) bool {
-			obj[field] = iter.Read()
+			var elem interface{}
+			iter.ReadVal(&elem)
+			obj[field] = elem
 			return true
 		})
 		return obj
