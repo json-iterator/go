@@ -103,7 +103,7 @@ func Test_chan(t *testing.T) {
 	t.Skip("do not support chan")
 
 	type TestObject struct {
-		MyChan chan bool
+		MyChan  chan bool
 		MyField int
 	}
 

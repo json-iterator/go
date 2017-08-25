@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"io"
 	"reflect"
-	"unsafe"
 	"strings"
+	"unsafe"
 )
 
 func encoderOfStruct(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error) {

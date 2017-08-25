@@ -17,7 +17,7 @@ type Config struct {
 	EscapeHTML              bool
 	SortMapKeys             bool
 	UseNumber               bool
-	TagKey					string
+	TagKey                  string
 }
 
 type frozenConfig struct {

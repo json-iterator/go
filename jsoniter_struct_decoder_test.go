@@ -1,8 +1,8 @@
 package jsoniter
 
 import (
-	"testing"
 	"github.com/stretchr/testify/require"
+	"testing"
 )
 
 func Test_decode_one_field_struct(t *testing.T) {

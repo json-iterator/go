@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"io"
 	"reflect"
-	"unsafe"
 	"strings"
+	"unsafe"
 )
 
 func createStructDecoder(typ reflect.Type, fields map[string]*structFieldDecoder) (ValDecoder, error) {
