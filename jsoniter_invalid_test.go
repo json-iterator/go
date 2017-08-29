@@ -122,8 +122,11 @@ func Test_invalid_number(t *testing.T) {
 	obj := Message{}
 	decoder := ConfigCompatibleWithStandardLibrary.NewDecoder(bytes.NewBufferString(`{"number":"5"}`))
 	err := decoder.Decode(&obj)
-	result, err := ConfigCompatibleWithStandardLibrary.Marshal(err.Error())
+	invalidStr := err.Error()
+	result, err := ConfigCompatibleWithStandardLibrary.Marshal(invalidStr)
 	should := require.New(t)
 	should.Nil(err)
-	should.Contains(string(result), "\xff")
+	result2, err := json.Marshal(invalidStr)
+	should.Nil(err)
+	should.Equal(string(result2), string(result))
 }

@@ -286,8 +286,11 @@ func writeStringSlowPathWithHTMLEscaped(stream *Stream, i int, s string, valLen 
 		}
 		c, size := utf8.DecodeRuneInString(s[i:])
 		if c == utf8.RuneError && size == 1 {
+			if start < i {
+				stream.WriteRaw(s[start:i])
+			}
+			stream.WriteRaw(`\ufffd`)
 			i++
-			stream.WriteRaw(s[start:i])
 			start = i
 			continue
 		}
