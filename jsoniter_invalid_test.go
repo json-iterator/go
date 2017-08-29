@@ -5,6 +5,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"io"
 	"testing"
+	"bytes"
 )
 
 func Test_missing_object_end(t *testing.T) {
@@ -112,4 +113,17 @@ func Test_chan(t *testing.T) {
 	str, err := json.Marshal(obj)
 	should.Nil(err)
 	should.Equal(``, str)
+}
+
+func Test_invalid_number(t *testing.T) {
+	type Message struct {
+		Number int `json:"number"`
+	}
+	obj := Message{}
+	decoder := ConfigCompatibleWithStandardLibrary.NewDecoder(bytes.NewBufferString(`{"number":"5"}`))
+	err := decoder.Decode(&obj)
+	result, err := ConfigCompatibleWithStandardLibrary.Marshal(err.Error())
+	should := require.New(t)
+	should.Nil(err)
+	should.Contains(string(result), "\xff")
 }
