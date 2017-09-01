@@ -314,3 +314,27 @@ func Test_recursive_empty_interface_customization(t *testing.T) {
 	Unmarshal([]byte("[100]"), &obj)
 	should.Equal([]interface{}{int64(100)}, obj)
 }
+
+type GeoLocation struct {
+	Id             string     `json:"id,omitempty" db:"id"`
+}
+
+func (p *GeoLocation) MarshalJSON() ([]byte, error) {
+	return []byte(`{}`), nil
+}
+
+func (p *GeoLocation) UnmarshalJSON(input []byte) error {
+	p.Id = "hello"
+	return nil
+}
+
+func Test_marshal_and_unmarshal_on_non_pointer(t *testing.T) {
+	should := require.New(t)
+	locations := []GeoLocation{{"000"}}
+	bytes, err := Marshal(locations)
+	should.Nil(err)
+	should.Equal("[{}]", string(bytes))
+	err = Unmarshal([]byte("[1]"), &locations)
+	should.Nil(err)
+	should.Equal("hello", locations[0].Id)
+}
