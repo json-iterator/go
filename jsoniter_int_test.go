@@ -20,7 +20,45 @@ func Test_read_uint64_invalid(t *testing.T) {
 	should.NotNil(iter.Error)
 }
 
-func Test_read_int8(t *testing.T) {
+func Test_read_int_from_null(t *testing.T) {
+
+	type TestObject struct {
+		F1  int8
+		F2  int16
+		F3  int32
+		F4  int64
+		F5  int
+		F6  uint8
+		F7  uint16
+		F8  uint32
+		F9  uint64
+		F10 uint
+		F11 float32
+		F12 float64
+		F13 uintptr
+	}
+
+	should := require.New(t)
+	obj := TestObject{}
+	err := Unmarshal([]byte(`{
+	"f1":null,
+	"f2":null,
+	"f3":null,
+	"f4":null,
+	"f5":null,
+	"f6":null,
+	"f7":null,
+	"f8":null,
+	"f9":null,
+	"f10":null,
+	"f11":null,
+	"f12":null,
+	"f13":null
+	}`), &obj)
+	should.Nil(err)
+}
+
+func _int8(t *testing.T) {
 	inputs := []string{`127`, `-128`}
 	for _, input := range inputs {
 		t.Run(fmt.Sprintf("%v", input), func(t *testing.T) {

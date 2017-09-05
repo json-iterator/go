@@ -316,7 +316,7 @@ func Test_recursive_empty_interface_customization(t *testing.T) {
 }
 
 type GeoLocation struct {
-	Id             string     `json:"id,omitempty" db:"id"`
+	Id string `json:"id,omitempty" db:"id"`
 }
 
 func (p *GeoLocation) MarshalJSON() ([]byte, error) {

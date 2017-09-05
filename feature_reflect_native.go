@@ -31,6 +31,10 @@ type intCodec struct {
 }
 
 func (codec *intCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
+	if iter.ReadNil() {
+		*((*int)(ptr)) = 0
+		return
+	}
 	*((*int)(ptr)) = iter.ReadInt()
 }
 
@@ -50,6 +54,10 @@ type uintptrCodec struct {
 }
 
 func (codec *uintptrCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
+	if iter.ReadNil() {
+		*((*uintptr)(ptr)) = 0
+		return
+	}
 	*((*uintptr)(ptr)) = uintptr(iter.ReadUint64())
 }
 
@@ -69,6 +77,10 @@ type int8Codec struct {
 }
 
 func (codec *int8Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
+	if iter.ReadNil() {
+		*((*uint8)(ptr)) = 0
+		return
+	}
 	*((*int8)(ptr)) = iter.ReadInt8()
 }
 
@@ -88,6 +100,10 @@ type int16Codec struct {
 }
 
 func (codec *int16Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
+	if iter.ReadNil() {
+		*((*int16)(ptr)) = 0
+		return
+	}
 	*((*int16)(ptr)) = iter.ReadInt16()
 }
 
@@ -107,6 +123,10 @@ type int32Codec struct {
 }
 
 func (codec *int32Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
+	if iter.ReadNil() {
+		*((*int32)(ptr)) = 0
+		return
+	}
 	*((*int32)(ptr)) = iter.ReadInt32()
 }
 
@@ -126,6 +146,10 @@ type int64Codec struct {
 }
 
 func (codec *int64Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
+	if iter.ReadNil() {
+		*((*int64)(ptr)) = 0
+		return
+	}
 	*((*int64)(ptr)) = iter.ReadInt64()
 }
 
@@ -145,6 +169,10 @@ type uintCodec struct {
 }
 
 func (codec *uintCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
+	if iter.ReadNil() {
+		*((*uint)(ptr)) = 0
+		return
+	}
 	*((*uint)(ptr)) = iter.ReadUint()
 }
 
@@ -164,6 +192,10 @@ type uint8Codec struct {
 }
 
 func (codec *uint8Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
+	if iter.ReadNil() {
+		*((*uint8)(ptr)) = 0
+		return
+	}
 	*((*uint8)(ptr)) = iter.ReadUint8()
 }
 
@@ -183,6 +215,10 @@ type uint16Codec struct {
 }
 
 func (codec *uint16Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
+	if iter.ReadNil() {
+		*((*uint16)(ptr)) = 0
+		return
+	}
 	*((*uint16)(ptr)) = iter.ReadUint16()
 }
 
@@ -202,6 +238,10 @@ type uint32Codec struct {
 }
 
 func (codec *uint32Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
+	if iter.ReadNil() {
+		*((*uint32)(ptr)) = 0
+		return
+	}
 	*((*uint32)(ptr)) = iter.ReadUint32()
 }
 
@@ -221,6 +261,10 @@ type uint64Codec struct {
 }
 
 func (codec *uint64Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
+	if iter.ReadNil() {
+		*((*uint64)(ptr)) = 0
+		return
+	}
 	*((*uint64)(ptr)) = iter.ReadUint64()
 }
 
@@ -240,6 +284,10 @@ type float32Codec struct {
 }
 
 func (codec *float32Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
+	if iter.ReadNil() {
+		*((*float32)(ptr)) = 0
+		return
+	}
 	*((*float32)(ptr)) = iter.ReadFloat32()
 }
 
@@ -259,6 +307,10 @@ type float64Codec struct {
 }
 
 func (codec *float64Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
+	if iter.ReadNil() {
+		*((*float64)(ptr)) = 0
+		return
+	}
 	*((*float64)(ptr)) = iter.ReadFloat64()
 }
 
