@@ -257,3 +257,24 @@ func Test_empty_array_as_object(t *testing.T) {
 	should.Nil(jsoniter.UnmarshalFromString(`[]`, &val))
 	should.Equal(struct{}{}, val)
 }
+
+func Test_bad_case(t *testing.T) {
+	var jsonstr = `
+{
+    "extra_type": 181760,
+    "combo_type": 0,
+    "trigger_time_ms": 1498800398000,
+    "_create_time": "2017-06-16 11:21:39",
+    "_msg_type": 41000
+}
+`
+
+	type OrderEventRequestParams struct {
+		ExtraType uint64 `json:"extra_type"`
+	}
+
+	var a OrderEventRequestParams
+	err := jsoniter.UnmarshalFromString(jsonstr, &a)
+	should := require.New(t)
+	should.Nil(err)
+}

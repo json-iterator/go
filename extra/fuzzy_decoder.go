@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"strings"
 	"unsafe"
+	"io"
 )
 
 const maxUint = ^uint(0)
@@ -206,7 +207,7 @@ func (decoder *fuzzyIntegerDecoder) Decode(ptr unsafe.Pointer, iter *jsoniter.It
 	defer iter.Pool().ReturnIterator(newIter)
 	isFloat := strings.IndexByte(str, '.') != -1
 	decoder.fun(isFloat, ptr, newIter)
-	if newIter.Error != nil {
+	if newIter.Error != nil && newIter.Error != io.EOF {
 		iter.Error = newIter.Error
 	}
 }
@@ -225,7 +226,7 @@ func (decoder *fuzzyFloat32Decoder) Decode(ptr unsafe.Pointer, iter *jsoniter.It
 		newIter := iter.Pool().BorrowIterator([]byte(str))
 		defer iter.Pool().ReturnIterator(newIter)
 		*((*float32)(ptr)) = newIter.ReadFloat32()
-		if newIter.Error != nil {
+		if newIter.Error != nil && newIter.Error != io.EOF {
 			iter.Error = newIter.Error
 		}
 	default:
@@ -247,7 +248,7 @@ func (decoder *fuzzyFloat64Decoder) Decode(ptr unsafe.Pointer, iter *jsoniter.It
 		newIter := iter.Pool().BorrowIterator([]byte(str))
 		defer iter.Pool().ReturnIterator(newIter)
 		*((*float64)(ptr)) = newIter.ReadFloat64()
-		if newIter.Error != nil {
+		if newIter.Error != nil && newIter.Error != io.EOF {
 			iter.Error = newIter.Error
 		}
 	default:
