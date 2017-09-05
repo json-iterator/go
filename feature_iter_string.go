@@ -27,8 +27,14 @@ func (iter *Iterator) ReadString() (ret string) {
 	} else if c == 'n' {
 		iter.skipThreeBytes('u', 'l', 'l')
 		return ""
+	} else if c == 't' {
+		iter.skipThreeBytes('r', 'u', 'e')
+		return "true"
+	} else if c == 'f' {
+		iter.skipFourBytes('a', 'l', 's', 'e')
+		return "false"
 	}
-	iter.ReportError("ReadString", `expects " or n`)
+	iter.ReportError("ReadString", `expects ", n, f, or t`)
 	return
 }
 
