@@ -2,12 +2,13 @@ package extra
 
 import (
 	"encoding/json"
-	"github.com/json-iterator/go"
+	"io"
 	"math"
 	"reflect"
 	"strings"
 	"unsafe"
-	"io"
+
+	"github.com/json-iterator/go"
 )
 
 const maxUint = ^uint(0)
@@ -200,6 +201,12 @@ func (decoder *fuzzyIntegerDecoder) Decode(ptr unsafe.Pointer, iter *jsoniter.It
 		str = string(number)
 	case jsoniter.StringValue:
 		str = iter.ReadString()
+	case jsoniter.BoolValue:
+		if iter.ReadBool() {
+			str = "1"
+		} else {
+			str = "0"
+		}
 	default:
 		iter.ReportError("fuzzyIntegerDecoder", "not number or string")
 	}
@@ -229,6 +236,13 @@ func (decoder *fuzzyFloat32Decoder) Decode(ptr unsafe.Pointer, iter *jsoniter.It
 		if newIter.Error != nil && newIter.Error != io.EOF {
 			iter.Error = newIter.Error
 		}
+	case jsoniter.BoolValue:
+		// support bool to float32
+		if iter.ReadBool() {
+			*((*float32)(ptr)) = 1
+		} else {
+			*((*float32)(ptr)) = 0
+		}
 	default:
 		iter.ReportError("fuzzyFloat32Decoder", "not number or string")
 	}
@@ -250,6 +264,13 @@ func (decoder *fuzzyFloat64Decoder) Decode(ptr unsafe.Pointer, iter *jsoniter.It
 		*((*float64)(ptr)) = newIter.ReadFloat64()
 		if newIter.Error != nil && newIter.Error != io.EOF {
 			iter.Error = newIter.Error
+		}
+	case jsoniter.BoolValue:
+		// support bool to float64
+		if iter.ReadBool() {
+			*((*float64)(ptr)) = 1
+		} else {
+			*((*float64)(ptr)) = 0
 		}
 	default:
 		iter.ReportError("fuzzyFloat32Decoder", "not number or string")
