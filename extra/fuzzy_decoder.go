@@ -202,8 +202,7 @@ func (decoder *fuzzyIntegerDecoder) Decode(ptr unsafe.Pointer, iter *jsoniter.It
 	case jsoniter.StringValue:
 		str = iter.ReadString()
 	case jsoniter.BoolValue:
-		b := iter.ReadBool()
-		if b == true {
+		if iter.ReadBool() {
 			str = "1"
 		} else {
 			str = "0"
@@ -239,8 +238,7 @@ func (decoder *fuzzyFloat32Decoder) Decode(ptr unsafe.Pointer, iter *jsoniter.It
 		}
 	case jsoniter.BoolValue:
 		// support bool to float32
-		b := iter.ReadBool()
-		if b == true {
+		if iter.ReadBool() {
 			*((*float32)(ptr)) = 1
 		} else {
 			*((*float32)(ptr)) = 0
@@ -269,8 +267,7 @@ func (decoder *fuzzyFloat64Decoder) Decode(ptr unsafe.Pointer, iter *jsoniter.It
 		}
 	case jsoniter.BoolValue:
 		// support bool to float64
-		b := iter.ReadBool()
-		if b == true {
+		if iter.ReadBool() {
 			*((*float64)(ptr)) = 1
 		} else {
 			*((*float64)(ptr)) = 0
