@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"unsafe"
+	"reflect"
 )
 
 type stringCodec struct {
@@ -349,7 +350,12 @@ type emptyInterfaceCodec struct {
 }
 
 func (codec *emptyInterfaceCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
-	*((*interface{})(ptr)) = iter.Read()
+	existing := *((*interface{})(ptr))
+	if existing != nil && reflect.TypeOf(existing).Kind() == reflect.Ptr {
+		iter.ReadVal(existing)
+	} else {
+		*((*interface{})(ptr)) = iter.Read()
+	}
 }
 
 func (codec *emptyInterfaceCodec) Encode(ptr unsafe.Pointer, stream *Stream) {

@@ -5,6 +5,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"testing"
 	"unsafe"
+	"fmt"
 )
 
 func Test_write_array_of_interface(t *testing.T) {
@@ -296,4 +297,19 @@ func Test_array_with_nothing(t *testing.T) {
 	output, err := MarshalToString(obj)
 	should.Nil(err)
 	should.Equal(`[null,null]`, output)
+}
+
+func Test_unmarshal_ptr_to_interface(t *testing.T) {
+	type TestData struct {
+		Name string `json:"name"`
+	}
+	should := require.New(t)
+	var obj interface{} = &TestData{}
+	err := json.Unmarshal([]byte(`{"name":"value"}`), &obj)
+	should.Nil(err)
+	should.Equal("&{value}", fmt.Sprintf("%v", obj))
+	obj = interface{}(&TestData{})
+	err = Unmarshal([]byte(`{"name":"value"}`), &obj)
+	should.Nil(err)
+	should.Equal("&{value}", fmt.Sprintf("%v", obj))
 }
