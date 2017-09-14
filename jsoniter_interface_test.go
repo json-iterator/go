@@ -3,9 +3,10 @@ package jsoniter
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"testing"
 	"unsafe"
+
+	"github.com/stretchr/testify/require"
 )
 
 func Test_write_array_of_interface(t *testing.T) {
@@ -312,4 +313,41 @@ func Test_unmarshal_ptr_to_interface(t *testing.T) {
 	err = Unmarshal([]byte(`{"name":"value"}`), &obj)
 	should.Nil(err)
 	should.Equal("&{value}", fmt.Sprintf("%v", obj))
+}
+
+func Test_nil_out_null_interface(t *testing.T) {
+	type TestData struct {
+		Field interface{} `json:"field"`
+	}
+	should := require.New(t)
+
+	var boolVar bool
+	obj := TestData{
+		Field: &boolVar,
+	}
+
+	data1 := []byte(`{"field": true}`)
+
+	err := Unmarshal(data1, &obj)
+	should.Equal(nil, err)
+	should.Equal(true, *(obj.Field.(*bool)))
+
+	data2 := []byte(`{"field": null}`)
+
+	err = Unmarshal(data2, &obj)
+	should.Equal(nil, err)
+	should.Equal(nil, obj.Field)
+
+	// Checking stdlib behavior matches.
+	obj2 := TestData{
+		Field: &boolVar,
+	}
+
+	err = json.Unmarshal(data1, &obj2)
+	should.Equal(nil, err)
+	should.Equal(true, *(obj2.Field.(*bool)))
+
+	err = json.Unmarshal(data2, &obj2)
+	should.Equal(nil, err)
+	should.Equal(nil, obj2.Field)
 }
