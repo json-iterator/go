@@ -4,8 +4,8 @@ import (
 	"encoding"
 	"encoding/base64"
 	"encoding/json"
-	"unsafe"
 	"reflect"
+	"unsafe"
 )
 
 type stringCodec struct {

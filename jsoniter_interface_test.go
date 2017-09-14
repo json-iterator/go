@@ -2,10 +2,10 @@ package jsoniter
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/stretchr/testify/require"
 	"testing"
 	"unsafe"
-	"fmt"
 )
 
 func Test_write_array_of_interface(t *testing.T) {

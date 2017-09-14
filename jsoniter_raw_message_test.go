@@ -72,3 +72,17 @@ func Test_encode_map_of_jsoniter_raw_message(t *testing.T) {
 	should.Nil(err)
 	should.Equal(`{"hello":[]}`, output)
 }
+
+func Test_marshal_invalid_json_raw_message(t *testing.T) {
+	type A struct {
+		Raw json.RawMessage `json:"raw"`
+	}
+	message := []byte(`{}`)
+
+	a := A{}
+	should := require.New(t)
+	should.Nil(ConfigCompatibleWithStandardLibrary.Unmarshal(message, &a))
+	aout, aouterr := ConfigCompatibleWithStandardLibrary.Marshal(&a)
+	should.Equal(`{"raw":null}`, string(aout))
+	should.Nil(aouterr)
+}
