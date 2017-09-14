@@ -154,11 +154,11 @@ func (encoder *placeholderEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 }
 
 func (encoder *placeholderEncoder) getRealEncoder() ValEncoder {
-	for i := 0; i < 30; i++ {
+	for i := 0; i < 500; i++ {
 		realDecoder := encoder.cfg.getEncoderFromCache(encoder.cacheKey)
 		_, isPlaceholder := realDecoder.(*placeholderEncoder)
 		if isPlaceholder {
-			time.Sleep(time.Second)
+			time.Sleep(10 * time.Millisecond)
 		} else {
 			return realDecoder
 		}
@@ -172,11 +172,11 @@ type placeholderDecoder struct {
 }
 
 func (decoder *placeholderDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
-	for i := 0; i < 30; i++ {
+	for i := 0; i < 500; i++ {
 		realDecoder := decoder.cfg.getDecoderFromCache(decoder.cacheKey)
 		_, isPlaceholder := realDecoder.(*placeholderDecoder)
 		if isPlaceholder {
-			time.Sleep(time.Second)
+			time.Sleep(10 * time.Millisecond)
 		} else {
 			realDecoder.Decode(ptr, iter)
 			return
