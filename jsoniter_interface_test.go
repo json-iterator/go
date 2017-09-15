@@ -437,3 +437,124 @@ func Test_marshal_nil_nonempty_interface(t *testing.T) {
 	should.NoError(err)
 	should.Equal(nil, obj.Field)
 }
+
+func Test_overwrite_interface_ptr_value_with_nil(t *testing.T) {
+	type Wrapper struct {
+		Payload interface{} `json:"payload,omitempty"`
+	}
+	type Payload struct {
+		Value int `json:"val,omitempty"`
+	}
+
+	should := require.New(t)
+
+	payload := &Payload{}
+	wrapper := &Wrapper{
+		Payload: &payload,
+	}
+
+	err := json.Unmarshal([]byte(`{"payload": {"val": 42}}`), &wrapper)
+	should.Equal(nil, err)
+	should.Equal(&payload, wrapper.Payload)
+	should.Equal(42, (*(wrapper.Payload.(**Payload))).Value)
+
+	err = json.Unmarshal([]byte(`{"payload": null}`), &wrapper)
+	should.Equal(nil, err)
+	should.Equal(&payload, wrapper.Payload)
+	should.Equal((*Payload)(nil), payload)
+
+	payload = &Payload{}
+	wrapper = &Wrapper{
+		Payload: &payload,
+	}
+
+	err = Unmarshal([]byte(`{"payload": {"val": 42}}`), &wrapper)
+	should.Equal(nil, err)
+	should.Equal(&payload, wrapper.Payload)
+	should.Equal(42, (*(wrapper.Payload.(**Payload))).Value)
+
+	err = Unmarshal([]byte(`{"payload": null}`), &wrapper)
+	should.Equal(nil, err)
+	should.Equal(&payload, wrapper.Payload)
+	should.Equal((*Payload)(nil), payload)
+}
+
+func Test_overwrite_interface_value_with_nil(t *testing.T) {
+	type Wrapper struct {
+		Payload interface{} `json:"payload,omitempty"`
+	}
+	type Payload struct {
+		Value int `json:"val,omitempty"`
+	}
+
+	should := require.New(t)
+
+	payload := &Payload{}
+	wrapper := &Wrapper{
+		Payload: payload,
+	}
+
+	err := json.Unmarshal([]byte(`{"payload": {"val": 42}}`), &wrapper)
+	should.Equal(nil, err)
+	should.Equal(42, (*(wrapper.Payload.(*Payload))).Value)
+
+	err = json.Unmarshal([]byte(`{"payload": null}`), &wrapper)
+	should.Equal(nil, err)
+	should.Equal(nil, wrapper.Payload)
+	should.Equal(42, payload.Value)
+
+	payload = &Payload{}
+	wrapper = &Wrapper{
+		Payload: payload,
+	}
+
+	err = Unmarshal([]byte(`{"payload": {"val": 42}}`), &wrapper)
+	should.Equal(nil, err)
+	should.Equal(42, (*(wrapper.Payload.(*Payload))).Value)
+
+	err = Unmarshal([]byte(`{"payload": null}`), &wrapper)
+	should.Equal(nil, err)
+	should.Equal(nil, wrapper.Payload)
+	should.Equal(42, payload.Value)
+}
+
+func Test_unmarshal_into_nil(t *testing.T) {
+	type Payload struct {
+		Value int `json:"val,omitempty"`
+	}
+	type Wrapper struct {
+		Payload interface{} `json:"payload,omitempty"`
+	}
+
+	should := require.New(t)
+
+	var payload *Payload
+	wrapper := &Wrapper{
+		Payload: payload,
+	}
+
+	err := json.Unmarshal([]byte(`{"payload": {"val": 42}}`), &wrapper)
+	should.Nil(err)
+	should.NotNil(wrapper.Payload)
+	should.Nil(payload)
+
+	err = json.Unmarshal([]byte(`{"payload": null}`), &wrapper)
+	should.Nil(err)
+	should.Nil(wrapper.Payload)
+	should.Nil(payload)
+
+	payload = nil
+	wrapper = &Wrapper{
+		Payload: payload,
+	}
+
+	err = Unmarshal([]byte(`{"payload": {"val": 42}}`), &wrapper)
+	should.Nil(err)
+	should.NotNil(wrapper.Payload)
+	should.Nil(payload)
+
+	err = Unmarshal([]byte(`{"payload": null}`), &wrapper)
+	should.Nil(err)
+	should.Nil(wrapper.Payload)
+	should.Nil(payload)
+}
