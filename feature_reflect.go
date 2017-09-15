@@ -476,7 +476,6 @@ func createEncoderOfType(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error
 			templateInterface: extractInterface(templateInterface),
 			checkIsEmpty:      checkIsEmpty,
 		}
-		encoder = &optionalEncoder{encoder}
 		return encoder, nil
 	}
 	if typ.Implements(textMarshalerType) {
