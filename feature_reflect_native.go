@@ -373,7 +373,8 @@ func (codec *emptyInterfaceCodec) EncodeInterface(val interface{}, stream *Strea
 }
 
 func (codec *emptyInterfaceCodec) IsEmpty(ptr unsafe.Pointer) bool {
-	return ptr == nil
+	emptyInterface := (*emptyInterface)(ptr)
+	return emptyInterface.typ == nil
 }
 
 type nonEmptyInterfaceCodec struct {
