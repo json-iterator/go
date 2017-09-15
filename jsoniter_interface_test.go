@@ -351,3 +351,22 @@ func Test_nil_out_null_interface(t *testing.T) {
 	should.Equal(nil, err)
 	should.Equal(nil, obj2.Field)
 }
+
+func Test_omitempty_nil_interface(t *testing.T) {
+	type TestData struct {
+		Field interface{} `json:"field,omitempty"`
+	}
+	should := require.New(t)
+
+	obj := TestData{
+		Field: nil,
+	}
+
+	js, err := json.Marshal(obj)
+	should.Equal(nil, err)
+	should.Equal("{}", string(js))
+
+	str, err := MarshalToString(obj)
+	should.Equal(nil, err)
+	should.Equal(string(js), str)
+}
