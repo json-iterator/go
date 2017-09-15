@@ -331,7 +331,9 @@ type boolCodec struct {
 }
 
 func (codec *boolCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
-	*((*bool)(ptr)) = iter.ReadBool()
+	if !iter.ReadNil() {
+		*((*bool)(ptr)) = iter.ReadBool()
+	}
 }
 
 func (codec *boolCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
@@ -350,6 +352,10 @@ type emptyInterfaceCodec struct {
 }
 
 func (codec *emptyInterfaceCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
+	if iter.ReadNil() {
+		*((*interface{})(ptr)) = nil
+		return
+	}
 	existing := *((*interface{})(ptr))
 	if existing != nil && reflect.TypeOf(existing).Kind() == reflect.Ptr {
 		iter.ReadVal(existing)
