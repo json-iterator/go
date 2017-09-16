@@ -391,6 +391,9 @@ func (codec *nonEmptyInterfaceCodec) Decode(ptr unsafe.Pointer, iter *Iterator) 
 	e.typ = nonEmptyInterface.itab.typ
 	e.word = nonEmptyInterface.word
 	iter.ReadVal(&i)
+	if e.word == nil {
+		nonEmptyInterface.itab = nil
+	}
 	nonEmptyInterface.word = e.word
 }
 
