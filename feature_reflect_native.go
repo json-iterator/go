@@ -662,7 +662,11 @@ func (encoder *marshalerEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	templateInterface := encoder.templateInterface
 	templateInterface.word = ptr
 	realInterface := (*interface{})(unsafe.Pointer(&templateInterface))
-	marshaler := (*realInterface).(json.Marshaler)
+	marshaler, ok := (*realInterface).(json.Marshaler)
+	if !ok {
+		stream.WriteVal(nil)
+		return
+	}
 
 	bytes, err := marshaler.MarshalJSON()
 	if err != nil {
