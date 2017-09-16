@@ -40,11 +40,11 @@ func Test_custom_marshaler_on_enum(t *testing.T) {
 	w := Wrapper{Payload: MyEnumB}
 
 	jb, err := Marshal(w)
-	should.Equal(nil, err)
+	should.NoError(err)
 	should.Equal(`{"Payload":"foo-1"}`, string(jb))
 
 	var w2 Wrapper2
 	err = Unmarshal(jb, &w2)
-	should.Equal(nil, err)
+	should.NoError(err)
 	should.Equal(MyEnumB, w2.Payload)
 }

@@ -329,13 +329,13 @@ func Test_nil_out_null_interface(t *testing.T) {
 	data1 := []byte(`{"field": true}`)
 
 	err := Unmarshal(data1, &obj)
-	should.Equal(nil, err)
+	should.NoError(err)
 	should.Equal(true, *(obj.Field.(*bool)))
 
 	data2 := []byte(`{"field": null}`)
 
 	err = Unmarshal(data2, &obj)
-	should.Equal(nil, err)
+	should.NoError(err)
 	should.Equal(nil, obj.Field)
 
 	// Checking stdlib behavior matches.
@@ -344,11 +344,11 @@ func Test_nil_out_null_interface(t *testing.T) {
 	}
 
 	err = json.Unmarshal(data1, &obj2)
-	should.Equal(nil, err)
+	should.NoError(err)
 	should.Equal(true, *(obj2.Field.(*bool)))
 
 	err = json.Unmarshal(data2, &obj2)
-	should.Equal(nil, err)
+	should.NoError(err)
 	should.Equal(nil, obj2.Field)
 }
 
@@ -363,10 +363,77 @@ func Test_omitempty_nil_interface(t *testing.T) {
 	}
 
 	js, err := json.Marshal(obj)
-	should.Equal(nil, err)
+	should.NoError(err)
 	should.Equal("{}", string(js))
 
 	str, err := MarshalToString(obj)
-	should.Equal(nil, err)
+	should.NoError(err)
 	should.Equal(string(js), str)
+}
+
+func Test_omitempty_nil_nonempty_interface(t *testing.T) {
+	type TestData struct {
+		Field MyInterface `json:"field,omitempty"`
+	}
+	should := require.New(t)
+
+	obj := TestData{
+		Field: nil,
+	}
+
+	js, err := json.Marshal(obj)
+	should.NoError(err)
+	should.Equal("{}", string(js))
+
+	str, err := MarshalToString(obj)
+	should.NoError(err)
+	should.Equal(string(js), str)
+
+	obj.Field = MyString("hello")
+	err = UnmarshalFromString(`{"field":null}`, &obj)
+	should.NoError(err)
+	should.Equal(nil, obj.Field)
+}
+
+func Test_marshal_nil_marshaler_interface(t *testing.T) {
+	type TestData struct {
+		Field json.Marshaler `json:"field"`
+	}
+	should := require.New(t)
+
+	obj := TestData{
+		Field: nil,
+	}
+
+	js, err := json.Marshal(obj)
+	should.NoError(err)
+	should.Equal(`{"field":null}`, string(js))
+
+	str, err := MarshalToString(obj)
+	should.NoError(err)
+	should.Equal(string(js), str)
+}
+
+func Test_marshal_nil_nonempty_interface(t *testing.T) {
+	type TestData struct {
+		Field MyInterface `json:"field"`
+	}
+	should := require.New(t)
+
+	obj := TestData{
+		Field: nil,
+	}
+
+	js, err := json.Marshal(obj)
+	should.NoError(err)
+	should.Equal(`{"field":null}`, string(js))
+
+	str, err := MarshalToString(obj)
+	should.NoError(err)
+	should.Equal(string(js), str)
+
+	obj.Field = MyString("hello")
+	err = Unmarshal(js, &obj)
+	should.NoError(err)
+	should.Equal(nil, obj.Field)
 }

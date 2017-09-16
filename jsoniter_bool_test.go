@@ -92,22 +92,22 @@ func Test_bool_can_be_null(t *testing.T) {
 	obj := TestData{}
 	data1 := []byte(`{"field": true}`)
 	err := Unmarshal(data1, &obj)
-	should.Equal(nil, err)
+	should.NoError(err)
 	should.Equal(true, obj.Field)
 
 	data2 := []byte(`{"field": null}`)
 	err = Unmarshal(data2, &obj)
-	should.Equal(nil, err)
+	should.NoError(err)
 	// Same behavior as stdlib, not touching the existing value.
 	should.Equal(true, obj.Field)
 
 	// Checking stdlib behavior as well
 	obj2 := TestData{}
 	err = json.Unmarshal(data1, &obj2)
-	should.Equal(nil, err)
+	should.NoError(err)
 	should.Equal(true, obj2.Field)
 
 	err = json.Unmarshal(data2, &obj2)
-	should.Equal(nil, err)
+	should.NoError(err)
 	should.Equal(true, obj2.Field)
 }
