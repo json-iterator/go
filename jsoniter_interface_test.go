@@ -371,6 +371,29 @@ func Test_omitempty_nil_interface(t *testing.T) {
 	should.Equal(string(js), str)
 }
 
+func Test_omitempty_nil_nonempty_interface(t *testing.T) {
+	type TestData struct {
+		Field MyInterface `json:"field,omitempty"`
+	}
+	should := require.New(t)
+
+	obj := TestData{
+		Field: nil,
+	}
+
+	js, err := json.Marshal(obj)
+	should.Equal(nil, err)
+	should.Equal("{}", string(js))
+
+	str, err := MarshalToString(obj)
+	should.Equal(nil, err)
+	should.Equal(string(js), str)
+
+	err = Unmarshal(js, &obj)
+	should.Equal(nil, err)
+	should.Equal(nil, obj.Field)
+}
+
 func Test_marshal_nil_marshaler_interface(t *testing.T) {
 	type TestData struct {
 		Field json.Marshaler `json:"field"`
@@ -407,4 +430,9 @@ func Test_marshal_nil_nonempty_interface(t *testing.T) {
 	str, err := MarshalToString(obj)
 	should.Equal(nil, err)
 	should.Equal(string(js), str)
+
+	obj.Field = MyString("hello")
+	err = Unmarshal(js, &obj)
+	should.Equal(nil, err)
+	should.Equal(nil, obj.Field)
 }
