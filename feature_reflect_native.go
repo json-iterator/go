@@ -397,9 +397,11 @@ func (codec *nonEmptyInterfaceCodec) Decode(ptr unsafe.Pointer, iter *Iterator) 
 func (codec *nonEmptyInterfaceCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	nonEmptyInterface := (*nonEmptyInterface)(ptr)
 	var i interface{}
-	e := (*emptyInterface)(unsafe.Pointer(&i))
-	e.typ = nonEmptyInterface.itab.typ
-	e.word = nonEmptyInterface.word
+	if nonEmptyInterface.itab != nil {
+		e := (*emptyInterface)(unsafe.Pointer(&i))
+		e.typ = nonEmptyInterface.itab.typ
+		e.word = nonEmptyInterface.word
+	}
 	stream.WriteVal(i)
 }
 
