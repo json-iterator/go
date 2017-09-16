@@ -389,7 +389,8 @@ func Test_omitempty_nil_nonempty_interface(t *testing.T) {
 	should.Equal(nil, err)
 	should.Equal(string(js), str)
 
-	err = Unmarshal(js, &obj)
+	obj.Field = MyString("hello")
+	err = UnmarshalFromString(`{"field":null}`, &obj)
 	should.Equal(nil, err)
 	should.Equal(nil, obj.Field)
 }
