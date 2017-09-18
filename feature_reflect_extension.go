@@ -227,6 +227,9 @@ func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, err
 	bindings := []*Binding{}
 	for i := 0; i < typ.NumField(); i++ {
 		field := typ.Field(i)
+		if unicode.IsLower([]rune(field.Name)[0]) {
+			continue
+		}
 		tag := field.Tag.Get(cfg.getTagKey())
 		tagParts := strings.Split(tag, ",")
 		if tag == "-" {
