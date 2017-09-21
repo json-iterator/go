@@ -191,6 +191,9 @@ func (stream *Stream) ensure(minimal int) {
 func (stream *Stream) growAtLeast(minimal int) {
 	if stream.out != nil {
 		stream.Flush()
+		if stream.Available() >= minimal {
+			return
+		}
 	}
 	toGrow := len(stream.buf)
 	if toGrow < minimal {
