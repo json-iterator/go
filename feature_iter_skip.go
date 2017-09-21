@@ -59,7 +59,9 @@ func (iter *Iterator) stopCapture() []byte {
 	iter.captureStartedAt = -1
 	iter.captured = nil
 	if len(captured) == 0 {
-		return remaining
+		copied := make([]byte, len(remaining))
+		copy(copied, remaining)
+		return copied
 	}
 	captured = append(captured, remaining...)
 	return captured
