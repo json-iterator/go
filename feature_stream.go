@@ -283,8 +283,7 @@ func (stream *Stream) WriteArrayStart() {
 
 // WriteEmptyArray write []
 func (stream *Stream) WriteEmptyArray() {
-	stream.writeByte('[')
-	stream.writeByte(']')
+	stream.writeTwoBytes('[', ']')
 }
 
 // WriteArrayEnd write ] with possible indention
