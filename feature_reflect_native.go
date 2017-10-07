@@ -441,9 +441,13 @@ type jsonNumberCodec struct {
 }
 
 func (codec *jsonNumberCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
-	if iter.WhatIsNext() == StringValue {
+	switch iter.WhatIsNext() {
+	case StringValue:
 		*((*json.Number)(ptr)) = json.Number(iter.ReadString())
-	} else {
+	case NilValue:
+		iter.skipFourBytes('n', 'u', 'l', 'l')
+		*((*json.Number)(ptr)) = ""
+	default:
 		*((*json.Number)(ptr)) = json.Number([]byte(iter.readNumberAsString()))
 	}
 }
@@ -464,9 +468,13 @@ type jsoniterNumberCodec struct {
 }
 
 func (codec *jsoniterNumberCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
-	if iter.WhatIsNext() == StringValue {
+	switch iter.WhatIsNext() {
+	case StringValue:
 		*((*Number)(ptr)) = Number(iter.ReadString())
-	} else {
+	case NilValue:
+		iter.skipFourBytes('n', 'u', 'l', 'l')
+		*((*Number)(ptr)) = ""
+	default:
 		*((*Number)(ptr)) = Number([]byte(iter.readNumberAsString()))
 	}
 }
