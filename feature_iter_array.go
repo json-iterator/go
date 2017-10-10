@@ -42,7 +42,7 @@ func (iter *Iterator) ReadArrayCB(callback func(*Iterator) bool) (ret bool) {
 				c = iter.nextToken()
 			}
 			if c != ']' {
-				iter.ReportError("ReadArrayCB", "expect ] in the end, but found " + string([]byte{c}))
+				iter.ReportError("ReadArrayCB", "expect ] in the end, but found "+string([]byte{c}))
 				return false
 			}
 			return true

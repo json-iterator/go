@@ -215,7 +215,7 @@ func (iter *Iterator) ReportError(operation string, msg string) {
 	}
 	context := string(iter.buf[contextStart:contextEnd])
 	iter.Error = fmt.Errorf("%s: %s, error found in #%v byte of ...|%s|..., bigger context ...|%s|...",
-		operation, msg, iter.head - peekStart, parsing, context)
+		operation, msg, iter.head-peekStart, parsing, context)
 }
 
 // CurrentBuffer gets current buffer as string for debugging purpose
