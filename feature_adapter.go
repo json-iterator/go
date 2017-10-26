@@ -110,6 +110,9 @@ type Encoder struct {
 // Encode encode interface{} as JSON to io.Writer
 func (adapter *Encoder) Encode(val interface{}) error {
 	adapter.stream.WriteVal(val)
+	if adapter.stream.cfg.addNewline {
+		adapter.stream.WriteRaw("\n")
+	}
 	adapter.stream.Flush()
 	return adapter.stream.Error
 }

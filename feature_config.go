@@ -19,11 +19,13 @@ type Config struct {
 	UseNumber               bool
 	TagKey                  string
 	ValidateJsonRawMessage  bool
+	AddNewline              bool
 }
 
 type frozenConfig struct {
 	configBeforeFrozen Config
 	sortMapKeys        bool
+	addNewline         bool
 	indentionStep      int
 	decoderCache       unsafe.Pointer
 	encoderCache       unsafe.Pointer
@@ -58,6 +60,7 @@ var ConfigCompatibleWithStandardLibrary = Config{
 	EscapeHTML:             true,
 	SortMapKeys:            true,
 	ValidateJsonRawMessage: true,
+	AddNewline:             true,
 }.Froze()
 
 // ConfigFastest marshals float with only 6 digits precision
@@ -72,6 +75,7 @@ func (cfg Config) Froze() API {
 	frozenConfig := &frozenConfig{
 		sortMapKeys:   cfg.SortMapKeys,
 		indentionStep: cfg.IndentionStep,
+		addNewline:    cfg.AddNewline,
 		streamPool:    make(chan *Stream, 16),
 		iteratorPool:  make(chan *Iterator, 16),
 	}
