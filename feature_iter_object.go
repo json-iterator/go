@@ -19,7 +19,16 @@ func (iter *Iterator) ReadObject() (ret string) {
 		c = iter.nextToken()
 		if c == '"' {
 			iter.unreadByte()
-			return string(iter.readObjectFieldAsBytes())
+			if iter.cfg.objectFieldMustBeSimpleString {
+				return string(iter.readObjectFieldAsBytes())
+			} else {
+				field := iter.ReadString()
+				c = iter.nextToken()
+				if c != ':' {
+					iter.ReportError("ReadObject", "expect : after object field, but found "+string([]byte{c}))
+				}
+				return field
+			}
 		}
 		if c == '}' {
 			return "" // end of object
@@ -27,7 +36,16 @@ func (iter *Iterator) ReadObject() (ret string) {
 		iter.ReportError("ReadObject", `expect " after {, but found `+string([]byte{c}))
 		return
 	case ',':
-		return string(iter.readObjectFieldAsBytes())
+		if iter.cfg.objectFieldMustBeSimpleString {
+			return string(iter.readObjectFieldAsBytes())
+		} else {
+			field := iter.ReadString()
+			c = iter.nextToken()
+			if c != ':' {
+				iter.ReportError("ReadObject", "expect : after object field, but found "+string([]byte{c}))
+			}
+			return field
+		}
 	case '}':
 		return "" // end of object
 	default:
@@ -44,16 +62,33 @@ func (iter *Iterator) readFieldHash() int32 {
 			for i := iter.head; i < iter.tail; i++ {
 				// require ascii string and no escape
 				b := iter.buf[i]
-				if 'A' <= b && b <= 'Z' {
-					b += 'a' - 'A'
+				if !iter.cfg.objectFieldMustBeSimpleString && b == '\\' {
+					iter.head = i
+					for _, b := range iter.readStringSlowPath() {
+						if 'A' <= b && b <= 'Z' {
+							b += 'a' - 'A'
+						}
+						hash ^= int64(b)
+						hash *= 0x1000193
+					}
+					c = iter.nextToken()
+					if c != ':' {
+						iter.ReportError("readFieldHash", `expect :, but found `+string([]byte{c}))
+						return 0
+					}
+					return int32(hash)
 				}
 				if b == '"' {
 					iter.head = i + 1
 					c = iter.nextToken()
 					if c != ':' {
 						iter.ReportError("readFieldHash", `expect :, but found `+string([]byte{c}))
+						return 0
 					}
 					return int32(hash)
+				}
+				if 'A' <= b && b <= 'Z' {
+					b += 'a' - 'A'
 				}
 				hash ^= int64(b)
 				hash *= 0x1000193
@@ -80,18 +115,38 @@ func calcHash(str string) int32 {
 // ReadObjectCB read object with callback, the key is ascii only and field name not copied
 func (iter *Iterator) ReadObjectCB(callback func(*Iterator, string) bool) bool {
 	c := iter.nextToken()
+	var fieldBytes []byte
+	var field string
 	if c == '{' {
 		c = iter.nextToken()
 		if c == '"' {
 			iter.unreadByte()
-			field := iter.readObjectFieldAsBytes()
-			if !callback(iter, *(*string)(unsafe.Pointer(&field))) {
+			if iter.cfg.objectFieldMustBeSimpleString {
+				fieldBytes = iter.readObjectFieldAsBytes()
+				field = *(*string)(unsafe.Pointer(&fieldBytes))
+			} else {
+				field = iter.ReadString()
+				c = iter.nextToken()
+				if c != ':' {
+					iter.ReportError("ReadObject", "expect : after object field, but found "+string([]byte{c}))
+				}
+			}
+			if !callback(iter, field) {
 				return false
 			}
 			c = iter.nextToken()
 			for c == ',' {
-				field = iter.readObjectFieldAsBytes()
-				if !callback(iter, *(*string)(unsafe.Pointer(&field))) {
+				if iter.cfg.objectFieldMustBeSimpleString {
+					fieldBytes = iter.readObjectFieldAsBytes()
+					field = *(*string)(unsafe.Pointer(&fieldBytes))
+				} else {
+					field = iter.ReadString()
+					c = iter.nextToken()
+					if c != ':' {
+						iter.ReportError("ReadObject", "expect : after object field, but found "+string([]byte{c}))
+					}
+				}
+				if !callback(iter, field) {
 					return false
 				}
 				c = iter.nextToken()
