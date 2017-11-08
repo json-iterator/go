@@ -21,7 +21,7 @@ func encoderOfSlice(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error) {
 		return nil, err
 	}
 	if typ.Elem().Kind() == reflect.Map {
-		encoder = &optionalEncoder{encoder}
+		encoder = &OptionalEncoder{encoder}
 	}
 	return &sliceEncoder{typ, typ.Elem(), encoder}, nil
 }

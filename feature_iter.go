@@ -77,6 +77,7 @@ type Iterator struct {
 	captureStartedAt int
 	captured         []byte
 	Error            error
+	Attachment       interface{} // open for customized decoder
 }
 
 // NewIterator creates an empty Iterator instance

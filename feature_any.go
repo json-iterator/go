@@ -1,10 +1,10 @@
 package jsoniter
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"reflect"
-	"errors"
 )
 
 // Any generic object representation.
