@@ -168,7 +168,7 @@ func (iter *Iterator) isObjectEnd() bool {
 	if c == '}' {
 		return true
 	}
-	iter.ReportError("isObjectEnd", "object ended prematurely")
+	iter.ReportError("isObjectEnd", "object ended prematurely, unexpected char " + string([]byte{c}))
 	return true
 }
 
