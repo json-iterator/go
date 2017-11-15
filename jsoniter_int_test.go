@@ -530,6 +530,12 @@ func Test_null_as_number(t *testing.T) {
 	should.Equal("", string(v2))
 }
 
+func Test_float_as_int(t *testing.T) {
+	should := require.New(t)
+	var i int
+	should.NotNil(Unmarshal([]byte(`1.1`), &i))
+}
+
 func Benchmark_jsoniter_encode_int(b *testing.B) {
 	stream := NewStream(ConfigDefault, ioutil.Discard, 64)
 	for n := 0; n < b.N; n++ {

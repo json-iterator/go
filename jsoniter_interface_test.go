@@ -13,10 +13,10 @@ import (
 func Test_write_empty_interface_via_placeholder(t *testing.T) {
 	fmt.Println(^uint(0) >> 1)
 	should := require.New(t)
-	m := map[uint32]interface{}{1:"hello"}
+	m := map[uint32]interface{}{1: "hello"}
 	inf := reflect.ValueOf(m).MapIndex(reflect.ValueOf(uint32(1))).Interface()
 	encoder := &placeholderEncoder{
-		cfg: ConfigFastest.(*frozenConfig),
+		cfg:      ConfigFastest.(*frozenConfig),
 		cacheKey: reflect.TypeOf(m).Elem(),
 	}
 	stream := ConfigFastest.BorrowStream(nil)
