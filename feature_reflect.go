@@ -164,7 +164,7 @@ func (encoder *placeholderEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 }
 
 func (encoder *placeholderEncoder) EncodeInterface(val interface{}, stream *Stream) {
-	WriteToStream(val, stream, encoder)
+	encoder.getRealEncoder().EncodeInterface(val, stream)
 }
 
 func (encoder *placeholderEncoder) IsEmpty(ptr unsafe.Pointer) bool {

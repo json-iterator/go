@@ -7,7 +7,22 @@ import (
 	"unsafe"
 
 	"github.com/stretchr/testify/require"
+	"reflect"
 )
+
+func Test_write_empty_interface_via_placeholder(t *testing.T) {
+	should := require.New(t)
+	m := map[uint32]interface{}{1:"hello"}
+	inf := reflect.ValueOf(m).MapIndex(reflect.ValueOf(uint32(1))).Interface()
+	encoder := &placeholderEncoder{
+		cfg: ConfigFastest.(*frozenConfig),
+		cacheKey: reflect.TypeOf(m).Elem(),
+	}
+	stream := ConfigFastest.BorrowStream(nil)
+	encoderOfType(ConfigFastest.(*frozenConfig), reflect.TypeOf(m).Elem())
+	encoder.EncodeInterface(inf, stream)
+	should.Equal(`"hello"`, string(stream.Buffer()))
+}
 
 func Test_write_array_of_interface(t *testing.T) {
 	should := require.New(t)
