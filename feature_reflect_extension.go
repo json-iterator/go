@@ -161,17 +161,26 @@ func RegisterExtension(extension Extension) {
 	extensions = append(extensions, extension)
 }
 
-func getTypeDecoderFromExtension(typ reflect.Type) ValDecoder {
-	decoder := _getTypeDecoderFromExtension(typ)
+func getTypeDecoderFromExtension(cfg *frozenConfig, typ reflect.Type) ValDecoder {
+	decoder := _getTypeDecoderFromExtension(cfg, typ)
 	if decoder != nil {
 		for _, extension := range extensions {
+			decoder = extension.DecorateDecoder(typ, decoder)
+		}
+		for _, extension := range cfg.extensions {
 			decoder = extension.DecorateDecoder(typ, decoder)
 		}
 	}
 	return decoder
 }
-func _getTypeDecoderFromExtension(typ reflect.Type) ValDecoder {
+func _getTypeDecoderFromExtension(cfg *frozenConfig, typ reflect.Type) ValDecoder {
 	for _, extension := range extensions {
+		decoder := extension.CreateDecoder(typ)
+		if decoder != nil {
+			return decoder
+		}
+	}
+	for _, extension := range cfg.extensions {
 		decoder := extension.CreateDecoder(typ)
 		if decoder != nil {
 			return decoder
@@ -191,18 +200,27 @@ func _getTypeDecoderFromExtension(typ reflect.Type) ValDecoder {
 	return nil
 }
 
-func getTypeEncoderFromExtension(typ reflect.Type) ValEncoder {
-	encoder := _getTypeEncoderFromExtension(typ)
+func getTypeEncoderFromExtension(cfg *frozenConfig, typ reflect.Type) ValEncoder {
+	encoder := _getTypeEncoderFromExtension(cfg, typ)
 	if encoder != nil {
 		for _, extension := range extensions {
+			encoder = extension.DecorateEncoder(typ, encoder)
+		}
+		for _, extension := range cfg.extensions {
 			encoder = extension.DecorateEncoder(typ, encoder)
 		}
 	}
 	return encoder
 }
 
-func _getTypeEncoderFromExtension(typ reflect.Type) ValEncoder {
+func _getTypeEncoderFromExtension(cfg *frozenConfig, typ reflect.Type) ValEncoder {
 	for _, extension := range extensions {
+		encoder := extension.CreateEncoder(typ)
+		if encoder != nil {
+			return encoder
+		}
+	}
+	for _, extension := range cfg.extensions {
 		encoder := extension.CreateEncoder(typ)
 		if encoder != nil {
 			return encoder
@@ -322,6 +340,9 @@ func createStructDescriptor(cfg *frozenConfig, typ reflect.Type, bindings []*Bin
 		Fields:             bindings,
 	}
 	for _, extension := range extensions {
+		extension.UpdateStructDescriptor(structDescriptor)
+	}
+	for _, extension := range cfg.extensions {
 		extension.UpdateStructDescriptor(structDescriptor)
 	}
 	processTags(structDescriptor, cfg)
