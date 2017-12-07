@@ -700,7 +700,7 @@ func (encoder *marshalerEncoder) EncodeInterface(val interface{}, stream *Stream
 }
 
 func (encoder *marshalerEncoder) IsEmpty(ptr unsafe.Pointer) bool {
-	return encoder.checkIsEmpty.IsEmpty(ptr)
+	return false
 }
 
 type textMarshalerEncoder struct {
@@ -726,7 +726,7 @@ func (encoder *textMarshalerEncoder) EncodeInterface(val interface{}, stream *St
 }
 
 func (encoder *textMarshalerEncoder) IsEmpty(ptr unsafe.Pointer) bool {
-	return encoder.checkIsEmpty.IsEmpty(ptr)
+	return false
 }
 
 type unmarshalerDecoder struct {
