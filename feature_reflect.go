@@ -476,7 +476,7 @@ func createEncoderOfType(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error
 		return &jsoniterNumberCodec{}, nil
 	}
 	if typ.Implements(marshalerType) {
-		checkIsEmpty, err := createCheckIsEmpty(typ)
+		checkIsEmpty, err := createCheckIsEmpty(cfg, typ)
 		if err != nil {
 			return nil, err
 		}
@@ -491,7 +491,7 @@ func createEncoderOfType(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error
 		return encoder, nil
 	}
 	if reflect.PtrTo(typ).Implements(marshalerType) {
-		checkIsEmpty, err := createCheckIsEmpty(reflect.PtrTo(typ))
+		checkIsEmpty, err := createCheckIsEmpty(cfg, reflect.PtrTo(typ))
 		if err != nil {
 			return nil, err
 		}
@@ -503,7 +503,7 @@ func createEncoderOfType(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error
 		return encoder, nil
 	}
 	if typ.Implements(textMarshalerType) {
-		checkIsEmpty, err := createCheckIsEmpty(typ)
+		checkIsEmpty, err := createCheckIsEmpty(cfg, typ)
 		if err != nil {
 			return nil, err
 		}
@@ -526,7 +526,7 @@ func createEncoderOfType(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error
 	return createEncoderOfSimpleType(cfg, typ)
 }
 
-func createCheckIsEmpty(typ reflect.Type) (checkIsEmpty, error) {
+func createCheckIsEmpty(cfg *frozenConfig, typ reflect.Type) (checkIsEmpty, error) {
 	kind := typ.Kind()
 	switch kind {
 	case reflect.String:
@@ -571,7 +571,7 @@ func createCheckIsEmpty(typ reflect.Type) (checkIsEmpty, error) {
 	case reflect.Slice:
 		return &sliceEncoder{}, nil
 	case reflect.Map:
-		return &mapEncoder{}, nil
+		return encoderOfMap(cfg, typ)
 	case reflect.Ptr:
 		return &OptionalEncoder{}, nil
 	default:
