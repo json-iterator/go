@@ -136,3 +136,14 @@ func Test_valid(t *testing.T) {
 	should.True(Valid([]byte(`{}`)))
 	should.False(Valid([]byte(`{`)))
 }
+
+func Test_nil_pointer(t *testing.T) {
+	should := require.New(t)
+	data := []byte(`{"A":0}`)
+	type T struct {
+		X int
+	}
+	var obj *T
+	err := Unmarshal(data, obj)
+	should.NotNil(err)
+}

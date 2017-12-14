@@ -233,6 +233,10 @@ func (iter *Iterator) ReadVal(obj interface{}) {
 		return
 	}
 	e := (*emptyInterface)(unsafe.Pointer(&obj))
+	if e.word == nil {
+		iter.ReportError("ReadVal", "can not read into nil pointer")
+		return
+	}
 	decoder.Decode(e.word, iter)
 }
 
