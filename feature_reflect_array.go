@@ -7,23 +7,17 @@ import (
 	"unsafe"
 )
 
-func decoderOfArray(cfg *frozenConfig, typ reflect.Type) (ValDecoder, error) {
-	decoder, err := decoderOfType(cfg, typ.Elem())
-	if err != nil {
-		return nil, err
-	}
-	return &arrayDecoder{typ, typ.Elem(), decoder}, nil
+func decoderOfArray(cfg *frozenConfig, prefix string, typ reflect.Type) ValDecoder {
+	decoder := decoderOfType(cfg, prefix+"[array]->", typ.Elem())
+	return &arrayDecoder{typ, typ.Elem(), decoder}
 }
 
-func encoderOfArray(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error) {
-	encoder, err := encoderOfType(cfg, typ.Elem())
-	if err != nil {
-		return nil, err
-	}
+func encoderOfArray(cfg *frozenConfig, prefix string, typ reflect.Type) ValEncoder {
+	encoder := encoderOfType(cfg, prefix+"[array]->", typ.Elem())
 	if typ.Elem().Kind() == reflect.Map {
 		encoder = &OptionalEncoder{encoder}
 	}
-	return &arrayEncoder{typ, typ.Elem(), encoder}, nil
+	return &arrayEncoder{typ, typ.Elem(), encoder}
 }
 
 type arrayEncoder struct {

@@ -109,12 +109,13 @@ func (extension *testExtension) UpdateStructDescriptor(structDescriptor *StructD
 
 func Test_customize_field_by_extension(t *testing.T) {
 	should := require.New(t)
-	RegisterExtension(&testExtension{})
+	cfg := Config{}.Froze()
+	cfg.RegisterExtension(&testExtension{})
 	obj := TestObject1{}
-	err := UnmarshalFromString(`{"field-1": 100}`, &obj)
+	err := cfg.UnmarshalFromString(`{"field-1": 100}`, &obj)
 	should.Nil(err)
 	should.Equal("100", obj.Field1)
-	str, err := MarshalToString(obj)
+	str, err := cfg.MarshalToString(obj)
 	should.Nil(err)
 	should.Equal(`{"field-1":100}`, str)
 }

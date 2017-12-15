@@ -20,7 +20,7 @@ func Test_write_empty_interface_via_placeholder(t *testing.T) {
 		cacheKey: reflect.TypeOf(m).Elem(),
 	}
 	stream := ConfigFastest.BorrowStream(nil)
-	encoderOfType(ConfigFastest.(*frozenConfig), reflect.TypeOf(m).Elem())
+	encoderOfType(ConfigFastest.(*frozenConfig), "", reflect.TypeOf(m).Elem())
 	encoder.EncodeInterface(inf, stream)
 	should.Equal(`"hello"`, string(stream.Buffer()))
 }

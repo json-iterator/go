@@ -7,23 +7,17 @@ import (
 	"unsafe"
 )
 
-func decoderOfSlice(cfg *frozenConfig, typ reflect.Type) (ValDecoder, error) {
-	decoder, err := decoderOfType(cfg, typ.Elem())
-	if err != nil {
-		return nil, err
-	}
-	return &sliceDecoder{typ, typ.Elem(), decoder}, nil
+func decoderOfSlice(cfg *frozenConfig, prefix string, typ reflect.Type) ValDecoder {
+	decoder := decoderOfType(cfg, prefix+"[slice]->", typ.Elem())
+	return &sliceDecoder{typ, typ.Elem(), decoder}
 }
 
-func encoderOfSlice(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error) {
-	encoder, err := encoderOfType(cfg, typ.Elem())
-	if err != nil {
-		return nil, err
-	}
+func encoderOfSlice(cfg *frozenConfig, prefix string, typ reflect.Type) ValEncoder {
+	encoder := encoderOfType(cfg, prefix+"[slice]->", typ.Elem())
 	if typ.Elem().Kind() == reflect.Map {
 		encoder = &OptionalEncoder{encoder}
 	}
-	return &sliceEncoder{typ, typ.Elem(), encoder}, nil
+	return &sliceEncoder{typ, typ.Elem(), encoder}
 }
 
 type sliceEncoder struct {

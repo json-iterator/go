@@ -240,7 +240,7 @@ func _getTypeEncoderFromExtension(cfg *frozenConfig, typ reflect.Type) ValEncode
 	return nil
 }
 
-func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, error) {
+func describeStruct(cfg *frozenConfig, prefix string, typ reflect.Type) *StructDescriptor {
 	embeddedBindings := []*Binding{}
 	bindings := []*Binding{}
 	for i := 0; i < typ.NumField(); i++ {
@@ -252,10 +252,7 @@ func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, err
 		}
 		if field.Anonymous && (tag == "" || tagParts[0] == "") {
 			if field.Type.Kind() == reflect.Struct {
-				structDescriptor, err := describeStruct(cfg, field.Type)
-				if err != nil {
-					return nil, err
-				}
+				structDescriptor := describeStruct(cfg, prefix, field.Type)
 				for _, binding := range structDescriptor.Fields {
 					binding.levels = append([]int{i}, binding.levels...)
 					omitempty := binding.Encoder.(*structFieldEncoder).omitempty
@@ -265,10 +262,7 @@ func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, err
 				}
 				continue
 			} else if field.Type.Kind() == reflect.Ptr && field.Type.Elem().Kind() == reflect.Struct {
-				structDescriptor, err := describeStruct(cfg, field.Type.Elem())
-				if err != nil {
-					return nil, err
-				}
+				structDescriptor := describeStruct(cfg, prefix, field.Type.Elem())
 				for _, binding := range structDescriptor.Fields {
 					binding.levels = append([]int{i}, binding.levels...)
 					omitempty := binding.Encoder.(*structFieldEncoder).omitempty
@@ -285,19 +279,11 @@ func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, err
 		fieldCacheKey := fmt.Sprintf("%s/%s", typ.String(), field.Name)
 		decoder := fieldDecoders[fieldCacheKey]
 		if decoder == nil {
-			var err error
-			decoder, err = decoderOfType(cfg, field.Type)
-			if len(fieldNames) > 0 && err != nil {
-				return nil, err
-			}
+			decoder = decoderOfType(cfg, prefix+typ.String()+"."+field.Name+"->", field.Type)
 		}
 		encoder := fieldEncoders[fieldCacheKey]
 		if encoder == nil {
-			var err error
-			encoder, err = encoderOfType(cfg, field.Type)
-			if len(fieldNames) > 0 && err != nil {
-				return nil, err
-			}
+			encoder = encoderOfType(cfg, prefix+typ.String()+"."+field.Name+"->", field.Type)
 			// map is stored as pointer in the struct,
 			// and treat nil or empty map as empty field
 			if encoder != nil && field.Type.Kind() == reflect.Map {
@@ -314,7 +300,7 @@ func describeStruct(cfg *frozenConfig, typ reflect.Type) (*StructDescriptor, err
 		binding.levels = []int{i}
 		bindings = append(bindings, binding)
 	}
-	return createStructDescriptor(cfg, typ, bindings, embeddedBindings), nil
+	return createStructDescriptor(cfg, typ, bindings, embeddedBindings)
 }
 func createStructDescriptor(cfg *frozenConfig, typ reflect.Type, bindings []*Binding, embeddedBindings []*Binding) *StructDescriptor {
 	onePtrEmbedded := false

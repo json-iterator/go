@@ -72,86 +72,427 @@ func init() {
 	textUnmarshalerType = reflect.TypeOf((*encoding.TextUnmarshaler)(nil)).Elem()
 }
 
-type OptionalDecoder struct {
-	ValueType    reflect.Type
-	ValueDecoder ValDecoder
+// ReadVal copy the underlying JSON into go interface, same as json.Unmarshal
+func (iter *Iterator) ReadVal(obj interface{}) {
+	typ := reflect.TypeOf(obj)
+	cacheKey := typ.Elem()
+	decoder := decoderOfType(iter.cfg, "", cacheKey)
+	e := (*emptyInterface)(unsafe.Pointer(&obj))
+	if e.word == nil {
+		iter.ReportError("ReadVal", "can not read into nil pointer")
+		return
+	}
+	decoder.Decode(e.word, iter)
 }
 
-func (decoder *OptionalDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
-	if iter.ReadNil() {
-		*((*unsafe.Pointer)(ptr)) = nil
-	} else {
-		if *((*unsafe.Pointer)(ptr)) == nil {
-			//pointer to null, we have to allocate memory to hold the value
-			value := reflect.New(decoder.ValueType)
-			newPtr := extractInterface(value.Interface()).word
-			decoder.ValueDecoder.Decode(newPtr, iter)
-			*((*uintptr)(ptr)) = uintptr(newPtr)
-		} else {
-			//reuse existing instance
-			decoder.ValueDecoder.Decode(*((*unsafe.Pointer)(ptr)), iter)
+// WriteVal copy the go interface into underlying JSON, same as json.Marshal
+func (stream *Stream) WriteVal(val interface{}) {
+	if nil == val {
+		stream.WriteNil()
+		return
+	}
+	typ := reflect.TypeOf(val)
+	cacheKey := typ
+	encoder := encoderOfType(stream.cfg, "", cacheKey)
+	encoder.EncodeInterface(val, stream)
+}
+
+func decoderOfType(cfg *frozenConfig, prefix string, typ reflect.Type) ValDecoder {
+	cacheKey := typ
+	decoder := cfg.getDecoderFromCache(cacheKey)
+	if decoder != nil {
+		return decoder
+	}
+	decoder = getTypeDecoderFromExtension(cfg, typ)
+	if decoder != nil {
+		cfg.addDecoderToCache(cacheKey, decoder)
+		return decoder
+	}
+	decoder = &placeholderDecoder{cfg: cfg, cacheKey: cacheKey}
+	cfg.addDecoderToCache(cacheKey, decoder)
+	decoder = createDecoderOfType(cfg, prefix, typ)
+	for _, extension := range extensions {
+		decoder = extension.DecorateDecoder(typ, decoder)
+	}
+	for _, extension := range cfg.extensions {
+		decoder = extension.DecorateDecoder(typ, decoder)
+	}
+	cfg.addDecoderToCache(cacheKey, decoder)
+	return decoder
+}
+
+func createDecoderOfType(cfg *frozenConfig, prefix string, typ reflect.Type) ValDecoder {
+	typeName := typ.String()
+	if typ == jsonRawMessageType {
+		return &jsonRawMessageCodec{}
+	}
+	if typ == jsoniterRawMessageType {
+		return &jsoniterRawMessageCodec{}
+	}
+	if typ.AssignableTo(jsonNumberType) {
+		return &jsonNumberCodec{}
+	}
+	if typ.AssignableTo(jsoniterNumberType) {
+		return &jsoniterNumberCodec{}
+	}
+	if typ.Implements(unmarshalerType) {
+		templateInterface := reflect.New(typ).Elem().Interface()
+		var decoder ValDecoder = &unmarshalerDecoder{extractInterface(templateInterface)}
+		if typ.Kind() == reflect.Ptr {
+			decoder = &OptionalDecoder{typ.Elem(), decoder}
 		}
+		return decoder
+	}
+	if reflect.PtrTo(typ).Implements(unmarshalerType) {
+		templateInterface := reflect.New(typ).Interface()
+		var decoder ValDecoder = &unmarshalerDecoder{extractInterface(templateInterface)}
+		return decoder
+	}
+	if typ.Implements(textUnmarshalerType) {
+		templateInterface := reflect.New(typ).Elem().Interface()
+		var decoder ValDecoder = &textUnmarshalerDecoder{extractInterface(templateInterface)}
+		if typ.Kind() == reflect.Ptr {
+			decoder = &OptionalDecoder{typ.Elem(), decoder}
+		}
+		return decoder
+	}
+	if reflect.PtrTo(typ).Implements(textUnmarshalerType) {
+		templateInterface := reflect.New(typ).Interface()
+		var decoder ValDecoder = &textUnmarshalerDecoder{extractInterface(templateInterface)}
+		return decoder
+	}
+	if typ.Kind() == reflect.Slice && typ.Elem().Kind() == reflect.Uint8 {
+		sliceDecoder := decoderOfSlice(cfg, prefix, typ)
+		return &base64Codec{sliceDecoder: sliceDecoder}
+	}
+	if typ.Implements(anyType) {
+		return &anyCodec{}
+	}
+	switch typ.Kind() {
+	case reflect.String:
+		if typeName != "string" {
+			return decoderOfType(cfg, prefix, reflect.TypeOf((*string)(nil)).Elem())
+		}
+		return &stringCodec{}
+	case reflect.Int:
+		if typeName != "int" {
+			return decoderOfType(cfg, prefix, reflect.TypeOf((*int)(nil)).Elem())
+		}
+		return &intCodec{}
+	case reflect.Int8:
+		if typeName != "int8" {
+			return decoderOfType(cfg, prefix, reflect.TypeOf((*int8)(nil)).Elem())
+		}
+		return &int8Codec{}
+	case reflect.Int16:
+		if typeName != "int16" {
+			return decoderOfType(cfg, prefix, reflect.TypeOf((*int16)(nil)).Elem())
+		}
+		return &int16Codec{}
+	case reflect.Int32:
+		if typeName != "int32" {
+			return decoderOfType(cfg, prefix, reflect.TypeOf((*int32)(nil)).Elem())
+		}
+		return &int32Codec{}
+	case reflect.Int64:
+		if typeName != "int64" {
+			return decoderOfType(cfg, prefix, reflect.TypeOf((*int64)(nil)).Elem())
+		}
+		return &int64Codec{}
+	case reflect.Uint:
+		if typeName != "uint" {
+			return decoderOfType(cfg, prefix, reflect.TypeOf((*uint)(nil)).Elem())
+		}
+		return &uintCodec{}
+	case reflect.Uint8:
+		if typeName != "uint8" {
+			return decoderOfType(cfg, prefix, reflect.TypeOf((*uint8)(nil)).Elem())
+		}
+		return &uint8Codec{}
+	case reflect.Uint16:
+		if typeName != "uint16" {
+			return decoderOfType(cfg, prefix, reflect.TypeOf((*uint16)(nil)).Elem())
+		}
+		return &uint16Codec{}
+	case reflect.Uint32:
+		if typeName != "uint32" {
+			return decoderOfType(cfg, prefix, reflect.TypeOf((*uint32)(nil)).Elem())
+		}
+		return &uint32Codec{}
+	case reflect.Uintptr:
+		if typeName != "uintptr" {
+			return decoderOfType(cfg, prefix, reflect.TypeOf((*uintptr)(nil)).Elem())
+		}
+		return &uintptrCodec{}
+	case reflect.Uint64:
+		if typeName != "uint64" {
+			return decoderOfType(cfg, prefix, reflect.TypeOf((*uint64)(nil)).Elem())
+		}
+		return &uint64Codec{}
+	case reflect.Float32:
+		if typeName != "float32" {
+			return decoderOfType(cfg, prefix, reflect.TypeOf((*float32)(nil)).Elem())
+		}
+		return &float32Codec{}
+	case reflect.Float64:
+		if typeName != "float64" {
+			return decoderOfType(cfg, prefix, reflect.TypeOf((*float64)(nil)).Elem())
+		}
+		return &float64Codec{}
+	case reflect.Bool:
+		if typeName != "bool" {
+			return decoderOfType(cfg, prefix, reflect.TypeOf((*bool)(nil)).Elem())
+		}
+		return &boolCodec{}
+	case reflect.Interface:
+		if typ.NumMethod() == 0 {
+			return &emptyInterfaceCodec{}
+		}
+		return &nonEmptyInterfaceCodec{}
+	case reflect.Struct:
+		return decoderOfStruct(cfg, prefix, typ)
+	case reflect.Array:
+		return decoderOfArray(cfg, prefix, typ)
+	case reflect.Slice:
+		return decoderOfSlice(cfg, prefix, typ)
+	case reflect.Map:
+		return decoderOfMap(cfg, prefix, typ)
+	case reflect.Ptr:
+		return decoderOfOptional(cfg, prefix, typ)
+	default:
+		return &lazyErrorDecoder{err: fmt.Errorf("%s%s is unsupported type", prefix, typ.String())}
 	}
 }
 
-type deferenceDecoder struct {
-	// only to deference a pointer
-	valueType    reflect.Type
-	valueDecoder ValDecoder
+func encoderOfType(cfg *frozenConfig, prefix string, typ reflect.Type) ValEncoder {
+	cacheKey := typ
+	encoder := cfg.getEncoderFromCache(cacheKey)
+	if encoder != nil {
+		return encoder
+	}
+	encoder = getTypeEncoderFromExtension(cfg, typ)
+	if encoder != nil {
+		cfg.addEncoderToCache(cacheKey, encoder)
+		return encoder
+	}
+	encoder = &placeholderEncoder{cfg: cfg, cacheKey: cacheKey}
+	cfg.addEncoderToCache(cacheKey, encoder)
+	encoder = createEncoderOfType(cfg, prefix, typ)
+	for _, extension := range extensions {
+		encoder = extension.DecorateEncoder(typ, encoder)
+	}
+	for _, extension := range cfg.extensions {
+		encoder = extension.DecorateEncoder(typ, encoder)
+	}
+	cfg.addEncoderToCache(cacheKey, encoder)
+	return encoder
 }
 
-func (decoder *deferenceDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
-	if *((*unsafe.Pointer)(ptr)) == nil {
-		//pointer to null, we have to allocate memory to hold the value
-		value := reflect.New(decoder.valueType)
-		newPtr := extractInterface(value.Interface()).word
-		decoder.valueDecoder.Decode(newPtr, iter)
-		*((*uintptr)(ptr)) = uintptr(newPtr)
-	} else {
-		//reuse existing instance
-		decoder.valueDecoder.Decode(*((*unsafe.Pointer)(ptr)), iter)
+func createEncoderOfType(cfg *frozenConfig, prefix string, typ reflect.Type) ValEncoder {
+	if typ == jsonRawMessageType {
+		return &jsonRawMessageCodec{}
+	}
+	if typ == jsoniterRawMessageType {
+		return &jsoniterRawMessageCodec{}
+	}
+	if typ.AssignableTo(jsonNumberType) {
+		return &jsonNumberCodec{}
+	}
+	if typ.AssignableTo(jsoniterNumberType) {
+		return &jsoniterNumberCodec{}
+	}
+	if typ.Implements(marshalerType) {
+		checkIsEmpty := createCheckIsEmpty(cfg, typ)
+		templateInterface := reflect.New(typ).Elem().Interface()
+		var encoder ValEncoder = &marshalerEncoder{
+			templateInterface: extractInterface(templateInterface),
+			checkIsEmpty:      checkIsEmpty,
+		}
+		if typ.Kind() == reflect.Ptr {
+			encoder = &OptionalEncoder{encoder}
+		}
+		return encoder
+	}
+	if reflect.PtrTo(typ).Implements(marshalerType) {
+		checkIsEmpty := createCheckIsEmpty(cfg, reflect.PtrTo(typ))
+		templateInterface := reflect.New(typ).Interface()
+		var encoder ValEncoder = &marshalerEncoder{
+			templateInterface: extractInterface(templateInterface),
+			checkIsEmpty:      checkIsEmpty,
+		}
+		return encoder
+	}
+	if typ.Implements(textMarshalerType) {
+		checkIsEmpty := createCheckIsEmpty(cfg, typ)
+		templateInterface := reflect.New(typ).Elem().Interface()
+		var encoder ValEncoder = &textMarshalerEncoder{
+			templateInterface: extractInterface(templateInterface),
+			checkIsEmpty:      checkIsEmpty,
+		}
+		if typ.Kind() == reflect.Ptr {
+			encoder = &OptionalEncoder{encoder}
+		}
+		return encoder
+	}
+	if typ.Kind() == reflect.Slice && typ.Elem().Kind() == reflect.Uint8 {
+		return &base64Codec{}
+	}
+	if typ.Implements(anyType) {
+		return &anyCodec{}
+	}
+	return createEncoderOfSimpleType(cfg, prefix, typ)
+}
+
+func createCheckIsEmpty(cfg *frozenConfig, typ reflect.Type) checkIsEmpty {
+	kind := typ.Kind()
+	switch kind {
+	case reflect.String:
+		return &stringCodec{}
+	case reflect.Int:
+		return &intCodec{}
+	case reflect.Int8:
+		return &int8Codec{}
+	case reflect.Int16:
+		return &int16Codec{}
+	case reflect.Int32:
+		return &int32Codec{}
+	case reflect.Int64:
+		return &int64Codec{}
+	case reflect.Uint:
+		return &uintCodec{}
+	case reflect.Uint8:
+		return &uint8Codec{}
+	case reflect.Uint16:
+		return &uint16Codec{}
+	case reflect.Uint32:
+		return &uint32Codec{}
+	case reflect.Uintptr:
+		return &uintptrCodec{}
+	case reflect.Uint64:
+		return &uint64Codec{}
+	case reflect.Float32:
+		return &float32Codec{}
+	case reflect.Float64:
+		return &float64Codec{}
+	case reflect.Bool:
+		return &boolCodec{}
+	case reflect.Interface:
+		if typ.NumMethod() == 0 {
+			return &emptyInterfaceCodec{}
+		}
+		return &nonEmptyInterfaceCodec{}
+	case reflect.Struct:
+		return &structEncoder{typ: typ}
+	case reflect.Array:
+		return &arrayEncoder{}
+	case reflect.Slice:
+		return &sliceEncoder{}
+	case reflect.Map:
+		return encoderOfMap(cfg, "", typ)
+	case reflect.Ptr:
+		return &OptionalEncoder{}
+	default:
+		return &lazyErrorEncoder{err: fmt.Errorf("unsupported type: %v", typ)}
 	}
 }
 
-type OptionalEncoder struct {
-	ValueEncoder ValEncoder
-}
-
-func (encoder *OptionalEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
-	if *((*unsafe.Pointer)(ptr)) == nil {
-		stream.WriteNil()
-	} else {
-		encoder.ValueEncoder.Encode(*((*unsafe.Pointer)(ptr)), stream)
+func createEncoderOfSimpleType(cfg *frozenConfig, prefix string, typ reflect.Type) ValEncoder {
+	typeName := typ.String()
+	kind := typ.Kind()
+	switch kind {
+	case reflect.String:
+		if typeName != "string" {
+			return encoderOfType(cfg, prefix, reflect.TypeOf((*string)(nil)).Elem())
+		}
+		return &stringCodec{}
+	case reflect.Int:
+		if typeName != "int" {
+			return encoderOfType(cfg, prefix, reflect.TypeOf((*int)(nil)).Elem())
+		}
+		return &intCodec{}
+	case reflect.Int8:
+		if typeName != "int8" {
+			return encoderOfType(cfg, prefix, reflect.TypeOf((*int8)(nil)).Elem())
+		}
+		return &int8Codec{}
+	case reflect.Int16:
+		if typeName != "int16" {
+			return encoderOfType(cfg, prefix, reflect.TypeOf((*int16)(nil)).Elem())
+		}
+		return &int16Codec{}
+	case reflect.Int32:
+		if typeName != "int32" {
+			return encoderOfType(cfg, prefix, reflect.TypeOf((*int32)(nil)).Elem())
+		}
+		return &int32Codec{}
+	case reflect.Int64:
+		if typeName != "int64" {
+			return encoderOfType(cfg, prefix, reflect.TypeOf((*int64)(nil)).Elem())
+		}
+		return &int64Codec{}
+	case reflect.Uint:
+		if typeName != "uint" {
+			return encoderOfType(cfg, prefix, reflect.TypeOf((*uint)(nil)).Elem())
+		}
+		return &uintCodec{}
+	case reflect.Uint8:
+		if typeName != "uint8" {
+			return encoderOfType(cfg, prefix, reflect.TypeOf((*uint8)(nil)).Elem())
+		}
+		return &uint8Codec{}
+	case reflect.Uint16:
+		if typeName != "uint16" {
+			return encoderOfType(cfg, prefix, reflect.TypeOf((*uint16)(nil)).Elem())
+		}
+		return &uint16Codec{}
+	case reflect.Uint32:
+		if typeName != "uint32" {
+			return encoderOfType(cfg, prefix, reflect.TypeOf((*uint32)(nil)).Elem())
+		}
+		return &uint32Codec{}
+	case reflect.Uintptr:
+		if typeName != "uintptr" {
+			return encoderOfType(cfg, prefix, reflect.TypeOf((*uintptr)(nil)).Elem())
+		}
+		return &uintptrCodec{}
+	case reflect.Uint64:
+		if typeName != "uint64" {
+			return encoderOfType(cfg, prefix, reflect.TypeOf((*uint64)(nil)).Elem())
+		}
+		return &uint64Codec{}
+	case reflect.Float32:
+		if typeName != "float32" {
+			return encoderOfType(cfg, prefix, reflect.TypeOf((*float32)(nil)).Elem())
+		}
+		return &float32Codec{}
+	case reflect.Float64:
+		if typeName != "float64" {
+			return encoderOfType(cfg, prefix, reflect.TypeOf((*float64)(nil)).Elem())
+		}
+		return &float64Codec{}
+	case reflect.Bool:
+		if typeName != "bool" {
+			return encoderOfType(cfg, prefix, reflect.TypeOf((*bool)(nil)).Elem())
+		}
+		return &boolCodec{}
+	case reflect.Interface:
+		if typ.NumMethod() == 0 {
+			return &emptyInterfaceCodec{}
+		}
+		return &nonEmptyInterfaceCodec{}
+	case reflect.Struct:
+		return encoderOfStruct(cfg, prefix, typ)
+	case reflect.Array:
+		return encoderOfArray(cfg, prefix, typ)
+	case reflect.Slice:
+		return encoderOfSlice(cfg, prefix, typ)
+	case reflect.Map:
+		return encoderOfMap(cfg, prefix, typ)
+	case reflect.Ptr:
+		return encoderOfOptional(cfg, prefix, typ)
+	default:
+		return &lazyErrorEncoder{err: fmt.Errorf("%s%s is unsupported type", prefix, typ.String())}
 	}
-}
-
-func (encoder *OptionalEncoder) EncodeInterface(val interface{}, stream *Stream) {
-	WriteToStream(val, stream, encoder)
-}
-
-func (encoder *OptionalEncoder) IsEmpty(ptr unsafe.Pointer) bool {
-	return *((*unsafe.Pointer)(ptr)) == nil
-}
-
-type optionalMapEncoder struct {
-	valueEncoder ValEncoder
-}
-
-func (encoder *optionalMapEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
-	if *((*unsafe.Pointer)(ptr)) == nil {
-		stream.WriteNil()
-	} else {
-		encoder.valueEncoder.Encode(*((*unsafe.Pointer)(ptr)), stream)
-	}
-}
-
-func (encoder *optionalMapEncoder) EncodeInterface(val interface{}, stream *Stream) {
-	WriteToStream(val, stream, encoder)
-}
-
-func (encoder *optionalMapEncoder) IsEmpty(ptr unsafe.Pointer) bool {
-	p := *((*unsafe.Pointer)(ptr))
-	return p == nil || encoder.valueEncoder.IsEmpty(p)
 }
 
 type placeholderEncoder struct {
@@ -203,6 +544,48 @@ func (decoder *placeholderDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	panic(fmt.Sprintf("real decoder not found for cache key: %v", decoder.cacheKey))
 }
 
+type lazyErrorDecoder struct {
+	err error
+}
+
+func (decoder *lazyErrorDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
+	if iter.WhatIsNext() != NilValue {
+		if iter.Error == nil {
+			iter.Error = decoder.err
+		}
+	} else {
+		iter.Skip()
+	}
+}
+
+type lazyErrorEncoder struct {
+	err error
+}
+
+func (encoder *lazyErrorEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
+	if ptr == nil {
+		stream.WriteNil()
+	} else if stream.Error == nil {
+		stream.Error = encoder.err
+	}
+}
+
+func (encoder *lazyErrorEncoder) EncodeInterface(val interface{}, stream *Stream) {
+	if val == nil {
+		stream.WriteNil()
+	} else if stream.Error == nil {
+		stream.Error = encoder.err
+	}
+}
+
+func (encoder *lazyErrorEncoder) IsEmpty(ptr unsafe.Pointer) bool {
+	return false
+}
+
+func extractInterface(val interface{}) emptyInterface {
+	return *((*emptyInterface)(unsafe.Pointer(&val)))
+}
+
 // emptyInterface is the header for an interface{} value.
 type emptyInterface struct {
 	typ  unsafe.Pointer
@@ -221,511 +604,4 @@ type nonEmptyInterface struct {
 		fun    [100000]unsafe.Pointer // method table
 	}
 	word unsafe.Pointer
-}
-
-// ReadVal copy the underlying JSON into go interface, same as json.Unmarshal
-func (iter *Iterator) ReadVal(obj interface{}) {
-	typ := reflect.TypeOf(obj)
-	cacheKey := typ.Elem()
-	decoder, err := decoderOfType(iter.cfg, cacheKey)
-	if err != nil {
-		iter.Error = err
-		return
-	}
-	e := (*emptyInterface)(unsafe.Pointer(&obj))
-	if e.word == nil {
-		iter.ReportError("ReadVal", "can not read into nil pointer")
-		return
-	}
-	decoder.Decode(e.word, iter)
-}
-
-// WriteVal copy the go interface into underlying JSON, same as json.Marshal
-func (stream *Stream) WriteVal(val interface{}) {
-	if nil == val {
-		stream.WriteNil()
-		return
-	}
-	typ := reflect.TypeOf(val)
-	cacheKey := typ
-	encoder, err := encoderOfType(stream.cfg, cacheKey)
-	if err != nil {
-		stream.Error = err
-		return
-	}
-	encoder.EncodeInterface(val, stream)
-}
-
-type prefix string
-
-func (p prefix) addToDecoder(decoder ValDecoder, err error) (ValDecoder, error) {
-	if err != nil {
-		return nil, fmt.Errorf("%s: %s", p, err.Error())
-	}
-	return decoder, err
-}
-
-func (p prefix) addToEncoder(encoder ValEncoder, err error) (ValEncoder, error) {
-	if err != nil {
-		return nil, fmt.Errorf("%s: %s", p, err.Error())
-	}
-	return encoder, err
-}
-
-func decoderOfType(cfg *frozenConfig, typ reflect.Type) (ValDecoder, error) {
-	cacheKey := typ
-	decoder := cfg.getDecoderFromCache(cacheKey)
-	if decoder != nil {
-		return decoder, nil
-	}
-	decoder = getTypeDecoderFromExtension(cfg, typ)
-	if decoder != nil {
-		cfg.addDecoderToCache(cacheKey, decoder)
-		return decoder, nil
-	}
-	decoder = &placeholderDecoder{cfg: cfg, cacheKey: cacheKey}
-	cfg.addDecoderToCache(cacheKey, decoder)
-	decoder, err := createDecoderOfType(cfg, typ)
-	for _, extension := range extensions {
-		decoder = extension.DecorateDecoder(typ, decoder)
-	}
-	for _, extension := range cfg.extensions {
-		decoder = extension.DecorateDecoder(typ, decoder)
-	}
-	cfg.addDecoderToCache(cacheKey, decoder)
-	return decoder, err
-}
-
-func createDecoderOfType(cfg *frozenConfig, typ reflect.Type) (ValDecoder, error) {
-	typeName := typ.String()
-	if typ == jsonRawMessageType {
-		return &jsonRawMessageCodec{}, nil
-	}
-	if typ == jsoniterRawMessageType {
-		return &jsoniterRawMessageCodec{}, nil
-	}
-	if typ.AssignableTo(jsonNumberType) {
-		return &jsonNumberCodec{}, nil
-	}
-	if typ.AssignableTo(jsoniterNumberType) {
-		return &jsoniterNumberCodec{}, nil
-	}
-	if typ.Implements(unmarshalerType) {
-		templateInterface := reflect.New(typ).Elem().Interface()
-		var decoder ValDecoder = &unmarshalerDecoder{extractInterface(templateInterface)}
-		if typ.Kind() == reflect.Ptr {
-			decoder = &OptionalDecoder{typ.Elem(), decoder}
-		}
-		return decoder, nil
-	}
-	if reflect.PtrTo(typ).Implements(unmarshalerType) {
-		templateInterface := reflect.New(typ).Interface()
-		var decoder ValDecoder = &unmarshalerDecoder{extractInterface(templateInterface)}
-		return decoder, nil
-	}
-	if typ.Implements(textUnmarshalerType) {
-		templateInterface := reflect.New(typ).Elem().Interface()
-		var decoder ValDecoder = &textUnmarshalerDecoder{extractInterface(templateInterface)}
-		if typ.Kind() == reflect.Ptr {
-			decoder = &OptionalDecoder{typ.Elem(), decoder}
-		}
-		return decoder, nil
-	}
-	if reflect.PtrTo(typ).Implements(textUnmarshalerType) {
-		templateInterface := reflect.New(typ).Interface()
-		var decoder ValDecoder = &textUnmarshalerDecoder{extractInterface(templateInterface)}
-		return decoder, nil
-	}
-	if typ.Kind() == reflect.Slice && typ.Elem().Kind() == reflect.Uint8 {
-		sliceDecoder, err := prefix("[slice]").addToDecoder(decoderOfSlice(cfg, typ))
-		if err != nil {
-			return nil, err
-		}
-		return &base64Codec{sliceDecoder: sliceDecoder}, nil
-	}
-	if typ.Implements(anyType) {
-		return &anyCodec{}, nil
-	}
-	switch typ.Kind() {
-	case reflect.String:
-		if typeName != "string" {
-			return decoderOfType(cfg, reflect.TypeOf((*string)(nil)).Elem())
-		}
-		return &stringCodec{}, nil
-	case reflect.Int:
-		if typeName != "int" {
-			return decoderOfType(cfg, reflect.TypeOf((*int)(nil)).Elem())
-		}
-		return &intCodec{}, nil
-	case reflect.Int8:
-		if typeName != "int8" {
-			return decoderOfType(cfg, reflect.TypeOf((*int8)(nil)).Elem())
-		}
-		return &int8Codec{}, nil
-	case reflect.Int16:
-		if typeName != "int16" {
-			return decoderOfType(cfg, reflect.TypeOf((*int16)(nil)).Elem())
-		}
-		return &int16Codec{}, nil
-	case reflect.Int32:
-		if typeName != "int32" {
-			return decoderOfType(cfg, reflect.TypeOf((*int32)(nil)).Elem())
-		}
-		return &int32Codec{}, nil
-	case reflect.Int64:
-		if typeName != "int64" {
-			return decoderOfType(cfg, reflect.TypeOf((*int64)(nil)).Elem())
-		}
-		return &int64Codec{}, nil
-	case reflect.Uint:
-		if typeName != "uint" {
-			return decoderOfType(cfg, reflect.TypeOf((*uint)(nil)).Elem())
-		}
-		return &uintCodec{}, nil
-	case reflect.Uint8:
-		if typeName != "uint8" {
-			return decoderOfType(cfg, reflect.TypeOf((*uint8)(nil)).Elem())
-		}
-		return &uint8Codec{}, nil
-	case reflect.Uint16:
-		if typeName != "uint16" {
-			return decoderOfType(cfg, reflect.TypeOf((*uint16)(nil)).Elem())
-		}
-		return &uint16Codec{}, nil
-	case reflect.Uint32:
-		if typeName != "uint32" {
-			return decoderOfType(cfg, reflect.TypeOf((*uint32)(nil)).Elem())
-		}
-		return &uint32Codec{}, nil
-	case reflect.Uintptr:
-		if typeName != "uintptr" {
-			return decoderOfType(cfg, reflect.TypeOf((*uintptr)(nil)).Elem())
-		}
-		return &uintptrCodec{}, nil
-	case reflect.Uint64:
-		if typeName != "uint64" {
-			return decoderOfType(cfg, reflect.TypeOf((*uint64)(nil)).Elem())
-		}
-		return &uint64Codec{}, nil
-	case reflect.Float32:
-		if typeName != "float32" {
-			return decoderOfType(cfg, reflect.TypeOf((*float32)(nil)).Elem())
-		}
-		return &float32Codec{}, nil
-	case reflect.Float64:
-		if typeName != "float64" {
-			return decoderOfType(cfg, reflect.TypeOf((*float64)(nil)).Elem())
-		}
-		return &float64Codec{}, nil
-	case reflect.Bool:
-		if typeName != "bool" {
-			return decoderOfType(cfg, reflect.TypeOf((*bool)(nil)).Elem())
-		}
-		return &boolCodec{}, nil
-	case reflect.Interface:
-		if typ.NumMethod() == 0 {
-			return &emptyInterfaceCodec{}, nil
-		}
-		return &nonEmptyInterfaceCodec{}, nil
-	case reflect.Struct:
-		return prefix(fmt.Sprintf("[%s]", typeName)).addToDecoder(decoderOfStruct(cfg, typ))
-	case reflect.Array:
-		return prefix("[array]").addToDecoder(decoderOfArray(cfg, typ))
-	case reflect.Slice:
-		return prefix("[slice]").addToDecoder(decoderOfSlice(cfg, typ))
-	case reflect.Map:
-		return prefix("[map]").addToDecoder(decoderOfMap(cfg, typ))
-	case reflect.Ptr:
-		return prefix("[optional]").addToDecoder(decoderOfOptional(cfg, typ))
-	default:
-		return nil, fmt.Errorf("unsupported type: %v", typ)
-	}
-}
-
-func encoderOfType(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error) {
-	cacheKey := typ
-	encoder := cfg.getEncoderFromCache(cacheKey)
-	if encoder != nil {
-		return encoder, nil
-	}
-	encoder = getTypeEncoderFromExtension(cfg, typ)
-	if encoder != nil {
-		cfg.addEncoderToCache(cacheKey, encoder)
-		return encoder, nil
-	}
-	encoder = &placeholderEncoder{cfg: cfg, cacheKey: cacheKey}
-	cfg.addEncoderToCache(cacheKey, encoder)
-	encoder, err := createEncoderOfType(cfg, typ)
-	for _, extension := range extensions {
-		encoder = extension.DecorateEncoder(typ, encoder)
-	}
-	for _, extension := range cfg.extensions {
-		encoder = extension.DecorateEncoder(typ, encoder)
-	}
-	cfg.addEncoderToCache(cacheKey, encoder)
-	return encoder, err
-}
-
-func createEncoderOfType(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error) {
-	if typ == jsonRawMessageType {
-		return &jsonRawMessageCodec{}, nil
-	}
-	if typ == jsoniterRawMessageType {
-		return &jsoniterRawMessageCodec{}, nil
-	}
-	if typ.AssignableTo(jsonNumberType) {
-		return &jsonNumberCodec{}, nil
-	}
-	if typ.AssignableTo(jsoniterNumberType) {
-		return &jsoniterNumberCodec{}, nil
-	}
-	if typ.Implements(marshalerType) {
-		checkIsEmpty, err := createCheckIsEmpty(cfg, typ)
-		if err != nil {
-			return nil, err
-		}
-		templateInterface := reflect.New(typ).Elem().Interface()
-		var encoder ValEncoder = &marshalerEncoder{
-			templateInterface: extractInterface(templateInterface),
-			checkIsEmpty:      checkIsEmpty,
-		}
-		if typ.Kind() == reflect.Ptr {
-			encoder = &OptionalEncoder{encoder}
-		}
-		return encoder, nil
-	}
-	if reflect.PtrTo(typ).Implements(marshalerType) {
-		checkIsEmpty, err := createCheckIsEmpty(cfg, reflect.PtrTo(typ))
-		if err != nil {
-			return nil, err
-		}
-		templateInterface := reflect.New(typ).Interface()
-		var encoder ValEncoder = &marshalerEncoder{
-			templateInterface: extractInterface(templateInterface),
-			checkIsEmpty:      checkIsEmpty,
-		}
-		return encoder, nil
-	}
-	if typ.Implements(textMarshalerType) {
-		checkIsEmpty, err := createCheckIsEmpty(cfg, typ)
-		if err != nil {
-			return nil, err
-		}
-		templateInterface := reflect.New(typ).Elem().Interface()
-		var encoder ValEncoder = &textMarshalerEncoder{
-			templateInterface: extractInterface(templateInterface),
-			checkIsEmpty:      checkIsEmpty,
-		}
-		if typ.Kind() == reflect.Ptr {
-			encoder = &OptionalEncoder{encoder}
-		}
-		return encoder, nil
-	}
-	if typ.Kind() == reflect.Slice && typ.Elem().Kind() == reflect.Uint8 {
-		return &base64Codec{}, nil
-	}
-	if typ.Implements(anyType) {
-		return &anyCodec{}, nil
-	}
-	return createEncoderOfSimpleType(cfg, typ)
-}
-
-func createCheckIsEmpty(cfg *frozenConfig, typ reflect.Type) (checkIsEmpty, error) {
-	kind := typ.Kind()
-	switch kind {
-	case reflect.String:
-		return &stringCodec{}, nil
-	case reflect.Int:
-		return &intCodec{}, nil
-	case reflect.Int8:
-		return &int8Codec{}, nil
-	case reflect.Int16:
-		return &int16Codec{}, nil
-	case reflect.Int32:
-		return &int32Codec{}, nil
-	case reflect.Int64:
-		return &int64Codec{}, nil
-	case reflect.Uint:
-		return &uintCodec{}, nil
-	case reflect.Uint8:
-		return &uint8Codec{}, nil
-	case reflect.Uint16:
-		return &uint16Codec{}, nil
-	case reflect.Uint32:
-		return &uint32Codec{}, nil
-	case reflect.Uintptr:
-		return &uintptrCodec{}, nil
-	case reflect.Uint64:
-		return &uint64Codec{}, nil
-	case reflect.Float32:
-		return &float32Codec{}, nil
-	case reflect.Float64:
-		return &float64Codec{}, nil
-	case reflect.Bool:
-		return &boolCodec{}, nil
-	case reflect.Interface:
-		if typ.NumMethod() == 0 {
-			return &emptyInterfaceCodec{}, nil
-		}
-		return &nonEmptyInterfaceCodec{}, nil
-	case reflect.Struct:
-		return &structEncoder{}, nil
-	case reflect.Array:
-		return &arrayEncoder{}, nil
-	case reflect.Slice:
-		return &sliceEncoder{}, nil
-	case reflect.Map:
-		return encoderOfMap(cfg, typ)
-	case reflect.Ptr:
-		return &OptionalEncoder{}, nil
-	default:
-		return nil, fmt.Errorf("unsupported type: %v", typ)
-	}
-}
-
-func createEncoderOfSimpleType(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error) {
-	typeName := typ.String()
-	kind := typ.Kind()
-	switch kind {
-	case reflect.String:
-		if typeName != "string" {
-			return encoderOfType(cfg, reflect.TypeOf((*string)(nil)).Elem())
-		}
-		return &stringCodec{}, nil
-	case reflect.Int:
-		if typeName != "int" {
-			return encoderOfType(cfg, reflect.TypeOf((*int)(nil)).Elem())
-		}
-		return &intCodec{}, nil
-	case reflect.Int8:
-		if typeName != "int8" {
-			return encoderOfType(cfg, reflect.TypeOf((*int8)(nil)).Elem())
-		}
-		return &int8Codec{}, nil
-	case reflect.Int16:
-		if typeName != "int16" {
-			return encoderOfType(cfg, reflect.TypeOf((*int16)(nil)).Elem())
-		}
-		return &int16Codec{}, nil
-	case reflect.Int32:
-		if typeName != "int32" {
-			return encoderOfType(cfg, reflect.TypeOf((*int32)(nil)).Elem())
-		}
-		return &int32Codec{}, nil
-	case reflect.Int64:
-		if typeName != "int64" {
-			return encoderOfType(cfg, reflect.TypeOf((*int64)(nil)).Elem())
-		}
-		return &int64Codec{}, nil
-	case reflect.Uint:
-		if typeName != "uint" {
-			return encoderOfType(cfg, reflect.TypeOf((*uint)(nil)).Elem())
-		}
-		return &uintCodec{}, nil
-	case reflect.Uint8:
-		if typeName != "uint8" {
-			return encoderOfType(cfg, reflect.TypeOf((*uint8)(nil)).Elem())
-		}
-		return &uint8Codec{}, nil
-	case reflect.Uint16:
-		if typeName != "uint16" {
-			return encoderOfType(cfg, reflect.TypeOf((*uint16)(nil)).Elem())
-		}
-		return &uint16Codec{}, nil
-	case reflect.Uint32:
-		if typeName != "uint32" {
-			return encoderOfType(cfg, reflect.TypeOf((*uint32)(nil)).Elem())
-		}
-		return &uint32Codec{}, nil
-	case reflect.Uintptr:
-		if typeName != "uintptr" {
-			return encoderOfType(cfg, reflect.TypeOf((*uintptr)(nil)).Elem())
-		}
-		return &uintptrCodec{}, nil
-	case reflect.Uint64:
-		if typeName != "uint64" {
-			return encoderOfType(cfg, reflect.TypeOf((*uint64)(nil)).Elem())
-		}
-		return &uint64Codec{}, nil
-	case reflect.Float32:
-		if typeName != "float32" {
-			return encoderOfType(cfg, reflect.TypeOf((*float32)(nil)).Elem())
-		}
-		return &float32Codec{}, nil
-	case reflect.Float64:
-		if typeName != "float64" {
-			return encoderOfType(cfg, reflect.TypeOf((*float64)(nil)).Elem())
-		}
-		return &float64Codec{}, nil
-	case reflect.Bool:
-		if typeName != "bool" {
-			return encoderOfType(cfg, reflect.TypeOf((*bool)(nil)).Elem())
-		}
-		return &boolCodec{}, nil
-	case reflect.Interface:
-		if typ.NumMethod() == 0 {
-			return &emptyInterfaceCodec{}, nil
-		}
-		return &nonEmptyInterfaceCodec{}, nil
-	case reflect.Struct:
-		return prefix(fmt.Sprintf("[%s]", typeName)).addToEncoder(encoderOfStruct(cfg, typ))
-	case reflect.Array:
-		return prefix("[array]").addToEncoder(encoderOfArray(cfg, typ))
-	case reflect.Slice:
-		return prefix("[slice]").addToEncoder(encoderOfSlice(cfg, typ))
-	case reflect.Map:
-		return prefix("[map]").addToEncoder(encoderOfMap(cfg, typ))
-	case reflect.Ptr:
-		return prefix("[optional]").addToEncoder(encoderOfOptional(cfg, typ))
-	default:
-		return nil, fmt.Errorf("unsupported type: %v", typ)
-	}
-}
-
-func decoderOfOptional(cfg *frozenConfig, typ reflect.Type) (ValDecoder, error) {
-	elemType := typ.Elem()
-	decoder, err := decoderOfType(cfg, elemType)
-	if err != nil {
-		return nil, err
-	}
-	return &OptionalDecoder{elemType, decoder}, nil
-}
-
-func encoderOfOptional(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error) {
-	elemType := typ.Elem()
-	elemEncoder, err := encoderOfType(cfg, elemType)
-	if err != nil {
-		return nil, err
-	}
-	encoder := &OptionalEncoder{elemEncoder}
-	if elemType.Kind() == reflect.Map {
-		encoder = &OptionalEncoder{encoder}
-	}
-	return encoder, nil
-}
-
-func decoderOfMap(cfg *frozenConfig, typ reflect.Type) (ValDecoder, error) {
-	decoder, err := decoderOfType(cfg, typ.Elem())
-	if err != nil {
-		return nil, err
-	}
-	mapInterface := reflect.New(typ).Interface()
-	return &mapDecoder{typ, typ.Key(), typ.Elem(), decoder, extractInterface(mapInterface)}, nil
-}
-
-func extractInterface(val interface{}) emptyInterface {
-	return *((*emptyInterface)(unsafe.Pointer(&val)))
-}
-
-func encoderOfMap(cfg *frozenConfig, typ reflect.Type) (ValEncoder, error) {
-	elemType := typ.Elem()
-	encoder, err := encoderOfType(cfg, elemType)
-	if err != nil {
-		return nil, err
-	}
-	mapInterface := reflect.New(typ).Elem().Interface()
-	if cfg.sortMapKeys {
-		return &sortKeysMapEncoder{typ, elemType, encoder, *((*emptyInterface)(unsafe.Pointer(&mapInterface)))}, nil
-	}
-	return &mapEncoder{typ, elemType, encoder, *((*emptyInterface)(unsafe.Pointer(&mapInterface)))}, nil
 }

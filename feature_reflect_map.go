@@ -9,6 +9,22 @@ import (
 	"unsafe"
 )
 
+func decoderOfMap(cfg *frozenConfig, prefix string, typ reflect.Type) ValDecoder {
+	decoder := decoderOfType(cfg, prefix+"[map]->", typ.Elem())
+	mapInterface := reflect.New(typ).Interface()
+	return &mapDecoder{typ, typ.Key(), typ.Elem(), decoder, extractInterface(mapInterface)}
+}
+
+func encoderOfMap(cfg *frozenConfig, prefix string, typ reflect.Type) ValEncoder {
+	elemType := typ.Elem()
+	encoder := encoderOfType(cfg, prefix+"[map]->", elemType)
+	mapInterface := reflect.New(typ).Elem().Interface()
+	if cfg.sortMapKeys {
+		return &sortKeysMapEncoder{typ, elemType, encoder, *((*emptyInterface)(unsafe.Pointer(&mapInterface)))}
+	}
+	return &mapEncoder{typ, elemType, encoder, *((*emptyInterface)(unsafe.Pointer(&mapInterface)))}
+}
+
 type mapDecoder struct {
 	mapType      reflect.Type
 	keyType      reflect.Type
