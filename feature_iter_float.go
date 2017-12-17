@@ -1,6 +1,7 @@
 package jsoniter
 
 import (
+	"encoding/json"
 	"io"
 	"math/big"
 	"strconv"
@@ -338,4 +339,9 @@ func validateFloat(str string) string {
 		}
 	}
 	return ""
+}
+
+// ReadNumber read json.Number
+func (iter *Iterator) ReadNumber() (ret json.Number) {
+	return json.Number(iter.readNumberAsString())
 }

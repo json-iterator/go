@@ -192,6 +192,13 @@ func Test_lossy_float_marshal(t *testing.T) {
 	should.Equal("0.123457", output)
 }
 
+func Test_read_number(t *testing.T) {
+	should := require.New(t)
+	iter := ParseString(ConfigDefault, `92233720368547758079223372036854775807`)
+	val := iter.ReadNumber()
+	should.Equal(`92233720368547758079223372036854775807`, string(val))
+}
+
 func Benchmark_jsoniter_float(b *testing.B) {
 	b.ReportAllocs()
 	input := []byte(`1.1123,`)
