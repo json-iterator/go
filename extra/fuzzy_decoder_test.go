@@ -2,6 +2,7 @@ package extra
 
 import (
 	"testing"
+	"time"
 
 	"github.com/json-iterator/go"
 	"github.com/stretchr/testify/require"
@@ -356,4 +357,17 @@ func Test_bad_case(t *testing.T) {
 	err := jsoniter.UnmarshalFromString(jsonstr, &a)
 	should := require.New(t)
 	should.Nil(err)
+}
+
+func Test_multiple_register_fuzzy(t *testing.T) {
+	start := time.Now()
+	go func() {
+		for time.Since(start) < time.Second*4 {
+			RegisterFuzzyDecoders()
+		}
+	}()
+
+	for time.Since(start) < time.Second*4 {
+		RegisterFuzzyDecoders()
+	}
 }
