@@ -6,6 +6,7 @@ import (
 	"math"
 	"reflect"
 	"strings"
+	"sync"
 	"unsafe"
 
 	"github.com/json-iterator/go"
@@ -15,9 +16,16 @@ const maxUint = ^uint(0)
 const maxInt = int(maxUint >> 1)
 const minInt = -maxInt - 1
 
+// avoid multiple FuzzyRegisterDecoders Call
+var fuzzyRegisterDecodersOnce = sync.Once{}
+
 // RegisterFuzzyDecoders decode input from PHP with tolerance.
 // It will handle string/number auto conversation, and treat empty [] as empty struct.
 func RegisterFuzzyDecoders() {
+	fuzzyRegisterDecodersOnce.Do(registerFuzzyDecoders)
+}
+
+func registerFuzzyDecoders() {
 	jsoniter.RegisterExtension(&tolerateEmptyArrayExtension{})
 	jsoniter.RegisterTypeDecoder("string", &fuzzyStringDecoder{})
 	jsoniter.RegisterTypeDecoder("float32", &fuzzyFloat32Decoder{})
