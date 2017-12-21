@@ -3,6 +3,7 @@ package jsoniter
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
 	"testing"
@@ -183,4 +184,10 @@ func Test_func_pointer_type(t *testing.T) {
 		should.NotNil(json.Unmarshal([]byte(`{"Obj":{"F": "hello"}}`), &obj))
 		should.NotNil(Unmarshal([]byte(`{"Obj":{"F": "hello"}}`), &obj))
 	})
+}
+
+func TestEOF(t *testing.T) {
+	var s string
+	err := ConfigCompatibleWithStandardLibrary.NewDecoder(&bytes.Buffer{}).Decode(&s)
+	assert.Equal(t, io.EOF, err)
 }

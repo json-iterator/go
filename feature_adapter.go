@@ -71,6 +71,9 @@ type Decoder struct {
 
 // Decode decode JSON into interface{}
 func (adapter *Decoder) Decode(obj interface{}) error {
+	if adapter.iter.Error == io.EOF {
+		return io.EOF
+	}
 	adapter.iter.ReadVal(obj)
 	err := adapter.iter.Error
 	if err == io.EOF {

@@ -337,6 +337,11 @@ func (cfg *frozenConfig) NewEncoder(writer io.Writer) *Encoder {
 
 func (cfg *frozenConfig) NewDecoder(reader io.Reader) *Decoder {
 	iter := Parse(cfg, reader, 512)
+	if reader != nil {
+		if !iter.loadMore() {
+			iter.Error = io.EOF
+		}
+	}
 	return &Decoder{iter}
 }
 
