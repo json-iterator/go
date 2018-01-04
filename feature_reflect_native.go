@@ -382,6 +382,10 @@ type nonEmptyInterfaceCodec struct {
 }
 
 func (codec *nonEmptyInterfaceCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
+	if iter.WhatIsNext() == NilValue {
+		iter.skipFourBytes('n', 'u', 'l', 'l')
+		return
+	}
 	nonEmptyInterface := (*nonEmptyInterface)(ptr)
 	if nonEmptyInterface.itab == nil {
 		iter.ReportError("read non-empty interface", "do not know which concrete type to decode to")

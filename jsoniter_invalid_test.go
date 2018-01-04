@@ -191,3 +191,10 @@ func TestEOF(t *testing.T) {
 	err := ConfigCompatibleWithStandardLibrary.NewDecoder(&bytes.Buffer{}).Decode(&s)
 	assert.Equal(t, io.EOF, err)
 }
+
+func TestDecodeErrorType(t *testing.T) {
+	should := require.New(t)
+	var err error
+	should.Nil(Unmarshal([]byte("null"), &err))
+	should.NotNil(Unmarshal([]byte("123"), &err))
+}
