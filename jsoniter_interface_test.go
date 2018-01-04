@@ -408,7 +408,7 @@ func Test_omitempty_nil_nonempty_interface(t *testing.T) {
 	obj.Field = MyString("hello")
 	err = UnmarshalFromString(`{"field":null}`, &obj)
 	should.NoError(err)
-	should.Equal(nil, obj.Field)
+	should.Nil(obj.Field)
 }
 
 func Test_marshal_nil_marshaler_interface(t *testing.T) {

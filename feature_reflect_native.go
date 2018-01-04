@@ -384,6 +384,7 @@ type nonEmptyInterfaceCodec struct {
 func (codec *nonEmptyInterfaceCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	if iter.WhatIsNext() == NilValue {
 		iter.skipFourBytes('n', 'u', 'l', 'l')
+		*((*interface{})(ptr)) = nil
 		return
 	}
 	nonEmptyInterface := (*nonEmptyInterface)(ptr)
