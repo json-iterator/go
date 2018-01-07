@@ -266,9 +266,9 @@ func describeStruct(cfg *frozenConfig, prefix string, typ reflect.Type) *StructD
 				for _, binding := range structDescriptor.Fields {
 					binding.levels = append([]int{i}, binding.levels...)
 					omitempty := binding.Encoder.(*structFieldEncoder).omitempty
-					binding.Encoder = &OptionalEncoder{binding.Encoder}
+					binding.Encoder = &dereferenceEncoder{binding.Encoder}
 					binding.Encoder = &structFieldEncoder{&field, binding.Encoder, omitempty}
-					binding.Decoder = &deferenceDecoder{field.Type.Elem(), binding.Decoder}
+					binding.Decoder = &dereferenceDecoder{field.Type.Elem(), binding.Decoder}
 					binding.Decoder = &structFieldDecoder{&field, binding.Decoder}
 					embeddedBindings = append(embeddedBindings, binding)
 				}

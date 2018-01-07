@@ -43,13 +43,13 @@ func (decoder *OptionalDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	}
 }
 
-type deferenceDecoder struct {
+type dereferenceDecoder struct {
 	// only to deference a pointer
 	valueType    reflect.Type
 	valueDecoder ValDecoder
 }
 
-func (decoder *deferenceDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
+func (decoder *dereferenceDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	if *((*unsafe.Pointer)(ptr)) == nil {
 		//pointer to null, we have to allocate memory to hold the value
 		value := reflect.New(decoder.valueType)
@@ -80,6 +80,26 @@ func (encoder *OptionalEncoder) EncodeInterface(val interface{}, stream *Stream)
 
 func (encoder *OptionalEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	return *((*unsafe.Pointer)(ptr)) == nil
+}
+
+type dereferenceEncoder struct {
+	ValueEncoder ValEncoder
+}
+
+func (encoder *dereferenceEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
+	if *((*unsafe.Pointer)(ptr)) == nil {
+		stream.WriteNil()
+	} else {
+		encoder.ValueEncoder.Encode(*((*unsafe.Pointer)(ptr)), stream)
+	}
+}
+
+func (encoder *dereferenceEncoder) EncodeInterface(val interface{}, stream *Stream) {
+	WriteToStream(val, stream, encoder)
+}
+
+func (encoder *dereferenceEncoder) IsEmpty(ptr unsafe.Pointer) bool {
+	return encoder.ValueEncoder.IsEmpty(*((*unsafe.Pointer)(ptr)))
 }
 
 type optionalMapEncoder struct {
