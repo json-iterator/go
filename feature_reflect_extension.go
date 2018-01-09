@@ -245,7 +245,10 @@ func describeStruct(cfg *frozenConfig, prefix string, typ reflect.Type) *StructD
 	bindings := []*Binding{}
 	for i := 0; i < typ.NumField(); i++ {
 		field := typ.Field(i)
-		tag := field.Tag.Get(cfg.getTagKey())
+		tag, hastag := field.Tag.Lookup(cfg.getTagKey())
+		if cfg.onlyTaggedField && !hastag {
+			continue
+		}
 		tagParts := strings.Split(tag, ",")
 		if tag == "-" {
 			continue
