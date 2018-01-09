@@ -18,6 +18,7 @@ type Config struct {
 	SortMapKeys                   bool
 	UseNumber                     bool
 	TagKey                        string
+	OnlyTaggedField               bool
 	ValidateJsonRawMessage        bool
 	ObjectFieldMustBeSimpleString bool
 }
@@ -27,6 +28,7 @@ type frozenConfig struct {
 	sortMapKeys                   bool
 	indentionStep                 int
 	objectFieldMustBeSimpleString bool
+	onlyTaggedField               bool
 	decoderCache                  unsafe.Pointer
 	encoderCache                  unsafe.Pointer
 	extensions                    []Extension
@@ -77,6 +79,7 @@ func (cfg Config) Froze() API {
 		sortMapKeys:                   cfg.SortMapKeys,
 		indentionStep:                 cfg.IndentionStep,
 		objectFieldMustBeSimpleString: cfg.ObjectFieldMustBeSimpleString,
+		onlyTaggedField:               cfg.OnlyTaggedField,
 		streamPool:                    make(chan *Stream, 16),
 		iteratorPool:                  make(chan *Iterator, 16),
 	}
