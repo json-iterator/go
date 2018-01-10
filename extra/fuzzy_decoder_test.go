@@ -24,6 +24,8 @@ func Test_any_to_string(t *testing.T) {
 	should.Equal("10.1", val)
 	should.NotNil(jsoniter.UnmarshalFromString("{}", &val))
 	should.NotNil(jsoniter.UnmarshalFromString("[]", &val))
+	should.Nil(jsoniter.UnmarshalFromString(`""`, &val))
+	should.Equal("", val)
 }
 func Test_any_to_int64(t *testing.T) {
 	should := require.New(t)
@@ -37,6 +39,8 @@ func Test_any_to_int64(t *testing.T) {
 	should.Equal(int64(10), val)
 	should.Nil(jsoniter.UnmarshalFromString(`10`, &val))
 	should.Equal(int64(10), val)
+	should.Nil(jsoniter.UnmarshalFromString(``, &val))
+	should.Equal(int64(0), val)
 
 	// bool part
 	should.Nil(jsoniter.UnmarshalFromString(`false`, &val))
@@ -50,6 +54,9 @@ func Test_any_to_int64(t *testing.T) {
 	should.NotNil(jsoniter.UnmarshalFromString("[]", &val))
 	// large float to int
 	should.NotNil(jsoniter.UnmarshalFromString(`1234512345123451234512345.0`, &val))
+	// empty string to 0
+	should.Nil(jsoniter.UnmarshalFromString(``, &val))
+	should.Equal(int64(0), val)
 }
 
 func Test_any_to_int(t *testing.T) {
@@ -74,6 +81,9 @@ func Test_any_to_int(t *testing.T) {
 	should.NotNil(jsoniter.UnmarshalFromString("[]", &val))
 	// large float to int
 	should.NotNil(jsoniter.UnmarshalFromString(`1234512345123451234512345.0`, &val))
+	// empty string to 0
+	should.Nil(jsoniter.UnmarshalFromString(``, &val))
+	should.Equal(0, val)
 }
 
 func Test_any_to_int16(t *testing.T) {
@@ -98,6 +108,9 @@ func Test_any_to_int16(t *testing.T) {
 	should.NotNil(jsoniter.UnmarshalFromString("[]", &val))
 	// large float to int
 	should.NotNil(jsoniter.UnmarshalFromString(`1234512345123451234512345.0`, &val))
+	// empty string to 0
+	should.Nil(jsoniter.UnmarshalFromString(``, &val))
+	should.Equal(int16(0), val)
 }
 
 func Test_any_to_int32(t *testing.T) {
@@ -122,6 +135,9 @@ func Test_any_to_int32(t *testing.T) {
 	should.NotNil(jsoniter.UnmarshalFromString("[]", &val))
 	// large float to int
 	should.NotNil(jsoniter.UnmarshalFromString(`1234512345123451234512345.0`, &val))
+	// empty string to 0
+	should.Nil(jsoniter.UnmarshalFromString(``, &val))
+	should.Equal(int32(0), val)
 }
 
 func Test_any_to_int8(t *testing.T) {
@@ -146,6 +162,9 @@ func Test_any_to_int8(t *testing.T) {
 	should.NotNil(jsoniter.UnmarshalFromString("[]", &val))
 	// large float to int
 	should.NotNil(jsoniter.UnmarshalFromString(`1234512345123451234512345.0`, &val))
+	// empty string to 0
+	should.Nil(jsoniter.UnmarshalFromString(``, &val))
+	should.Equal(int8(0), val)
 }
 
 func Test_any_to_uint8(t *testing.T) {
@@ -170,6 +189,9 @@ func Test_any_to_uint8(t *testing.T) {
 	should.NotNil(jsoniter.UnmarshalFromString("[]", &val))
 	// large float to int
 	should.NotNil(jsoniter.UnmarshalFromString(`1234512345123451234512345.0`, &val))
+	// empty string to 0
+	should.Nil(jsoniter.UnmarshalFromString(``, &val))
+	should.Equal(uint8(0), val)
 }
 
 func Test_any_to_uint64(t *testing.T) {
@@ -198,6 +220,9 @@ func Test_any_to_uint64(t *testing.T) {
 	should.NotNil(jsoniter.UnmarshalFromString("[]", &val))
 	// large float to int
 	should.NotNil(jsoniter.UnmarshalFromString(`1234512345123451234512345.0`, &val))
+	// empty string to 0
+	should.Nil(jsoniter.UnmarshalFromString(``, &val))
+	should.Equal(uint64(0), val)
 }
 func Test_any_to_uint32(t *testing.T) {
 	should := require.New(t)
@@ -225,6 +250,10 @@ func Test_any_to_uint32(t *testing.T) {
 	should.NotNil(jsoniter.UnmarshalFromString("[]", &val))
 	// large float to int
 	should.NotNil(jsoniter.UnmarshalFromString(`1234512345123451234512345.0`, &val))
+	// empty string to 0
+	should.Nil(jsoniter.UnmarshalFromString(``, &val))
+	should.Equal(uint32(0), val)
+
 }
 func Test_any_to_uint16(t *testing.T) {
 	should := require.New(t)
@@ -252,6 +281,9 @@ func Test_any_to_uint16(t *testing.T) {
 	should.NotNil(jsoniter.UnmarshalFromString("[]", &val))
 	// large float to int
 	should.NotNil(jsoniter.UnmarshalFromString(`1234512345123451234512345.0`, &val))
+	// empty string to 0
+	should.Nil(jsoniter.UnmarshalFromString(``, &val))
+	should.Equal(uint16(0), val)
 }
 func Test_any_to_uint(t *testing.T) {
 	should := require.New(t)
@@ -274,6 +306,9 @@ func Test_any_to_uint(t *testing.T) {
 	should.NotNil(jsoniter.UnmarshalFromString("[]", &val))
 	// large float to int
 	should.NotNil(jsoniter.UnmarshalFromString(`1234512345123451234512345.0`, &val))
+	// empty string to 0
+	should.Nil(jsoniter.UnmarshalFromString(``, &val))
+	should.Equal(uint(0), val)
 }
 
 func Test_any_to_float32(t *testing.T) {
@@ -297,6 +332,9 @@ func Test_any_to_float32(t *testing.T) {
 
 	should.NotNil(jsoniter.UnmarshalFromString("{}", &val))
 	should.NotNil(jsoniter.UnmarshalFromString("[]", &val))
+	// empty string to 0
+	should.Nil(jsoniter.UnmarshalFromString(``, &val))
+	should.Equal(float32(0), val)
 }
 
 func Test_any_to_float64(t *testing.T) {
@@ -321,6 +359,10 @@ func Test_any_to_float64(t *testing.T) {
 
 	should.NotNil(jsoniter.UnmarshalFromString("{}", &val))
 	should.NotNil(jsoniter.UnmarshalFromString("[]", &val))
+
+	// empty string to 0
+	should.Nil(jsoniter.UnmarshalFromString(``, &val))
+	should.Equal(float64(0), val)
 }
 
 func Test_empty_array_as_map(t *testing.T) {
