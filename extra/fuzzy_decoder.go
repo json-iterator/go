@@ -19,6 +19,7 @@ const minInt = -maxInt - 1
 // RegisterFuzzyDecoders decode input from PHP with tolerance.
 // It will handle string/number auto conversation, and treat empty [] as empty struct.
 func RegisterFuzzyDecoders() {
+	jsoniter.RegisterExtension(&tolerateEmptyArrayExtension{})
 	jsoniter.RegisterTypeDecoder("string", &fuzzyStringDecoder{})
 	jsoniter.RegisterTypeDecoder("bool", &fuzzyBoolDecoder{})
 	jsoniter.RegisterTypeDecoder("float32", &fuzzyFloat32Decoder{})
