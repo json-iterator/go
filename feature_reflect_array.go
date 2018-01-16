@@ -27,6 +27,10 @@ type arrayEncoder struct {
 }
 
 func (encoder *arrayEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
+	if encoder.arrayType.Len() == 0 {
+		stream.WriteEmptyArray()
+		return
+	}
 	stream.WriteArrayStart()
 	elemPtr := unsafe.Pointer(ptr)
 	encoder.elemEncoder.Encode(elemPtr, stream)
