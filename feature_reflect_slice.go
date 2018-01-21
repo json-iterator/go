@@ -118,8 +118,9 @@ func growOne(slice *sliceHeader, sliceType reflect.Type, elementType reflect.Typ
 			}
 		}
 	}
-	newVal := reflect.MakeSlice(sliceType, newLen, newCap)
-	dst := unsafe.Pointer(newVal.Pointer())
+	newVal := reflect.MakeSlice(sliceType, newLen, newCap).Interface()
+	newValPtr := extractInterface(newVal).word
+	dst := (*sliceHeader)(newValPtr).Data
 	// copy old array into new array
 	originalBytesCount := slice.Len * int(elementType.Size())
 	srcSliceHeader := (unsafe.Pointer)(&sliceHeader{slice.Data, originalBytesCount, originalBytesCount})
@@ -134,8 +135,9 @@ func reuseSlice(slice *sliceHeader, sliceType reflect.Type, expectedCap int) {
 	if expectedCap <= slice.Cap {
 		return
 	}
-	newVal := reflect.MakeSlice(sliceType, 0, expectedCap)
-	dst := unsafe.Pointer(newVal.Pointer())
+	newVal := reflect.MakeSlice(sliceType, 0, expectedCap).Interface()
+	newValPtr := extractInterface(newVal).word
+	dst := (*sliceHeader)(newValPtr).Data
 	slice.Data = dst
 	slice.Cap = expectedCap
 }

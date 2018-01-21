@@ -48,7 +48,7 @@ func (decoder *mapDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	}
 	iter.ReadMapCB(func(iter *Iterator, keyStr string) bool {
 		elem := reflect.New(decoder.elemType)
-		decoder.elemDecoder.Decode(unsafe.Pointer(elem.Pointer()), iter)
+		decoder.elemDecoder.Decode(extractInterface(elem.Interface()).word, iter)
 		// to put into map, we have to use reflection
 		keyType := decoder.keyType
 		// TODO: remove this from loop
