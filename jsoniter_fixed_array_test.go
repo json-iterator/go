@@ -15,6 +15,15 @@ func Test_encode_fixed_array(t *testing.T) {
 	should.Equal("[0.1,1]", output)
 }
 
+func Test_encode_fixed_array_empty(t *testing.T) {
+	should := require.New(t)
+	type FixedArray [0]float64
+	fixed := FixedArray{}
+	output, err := MarshalToString(fixed)
+	should.Nil(err)
+	should.Equal("[]", output)
+}
+
 func Test_encode_fixed_array_of_map(t *testing.T) {
 	should := require.New(t)
 	type FixedArray [2]map[string]string

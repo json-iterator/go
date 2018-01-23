@@ -13,11 +13,28 @@ func decoderOfArray(cfg *frozenConfig, prefix string, typ reflect.Type) ValDecod
 }
 
 func encoderOfArray(cfg *frozenConfig, prefix string, typ reflect.Type) ValEncoder {
+	if typ.Len() == 0 {
+		return emptyArrayEncoder{}
+	}
 	encoder := encoderOfType(cfg, prefix+"[array]->", typ.Elem())
 	if typ.Elem().Kind() == reflect.Map {
 		encoder = &OptionalEncoder{encoder}
 	}
 	return &arrayEncoder{typ, typ.Elem(), encoder}
+}
+
+type emptyArrayEncoder struct{}
+
+func (encoder emptyArrayEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
+	stream.WriteEmptyArray()
+}
+
+func (encoder emptyArrayEncoder) EncodeInterface(val interface{}, stream *Stream) {
+	stream.WriteEmptyArray()
+}
+
+func (encoder emptyArrayEncoder) IsEmpty(ptr unsafe.Pointer) bool {
+	return true
 }
 
 type arrayEncoder struct {
