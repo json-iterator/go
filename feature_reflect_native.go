@@ -458,11 +458,21 @@ func (codec *jsonNumberCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 }
 
 func (codec *jsonNumberCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
-	stream.WriteRaw(string(*((*json.Number)(ptr))))
+	number := *((*json.Number)(ptr))
+	if len(number) == 0 {
+		stream.WriteRaw("0")
+	} else {
+		stream.WriteRaw(string(number))
+	}
 }
 
 func (codec *jsonNumberCodec) EncodeInterface(val interface{}, stream *Stream) {
-	stream.WriteRaw(string(val.(json.Number)))
+	number := val.(json.Number)
+	if len(number) == 0 {
+		stream.WriteRaw("0")
+	} else {
+		stream.WriteRaw(string(number))
+	}
 }
 
 func (codec *jsonNumberCodec) IsEmpty(ptr unsafe.Pointer) bool {
@@ -485,11 +495,21 @@ func (codec *jsoniterNumberCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 }
 
 func (codec *jsoniterNumberCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
-	stream.WriteRaw(string(*((*Number)(ptr))))
+	number := *((*Number)(ptr))
+	if len(number) == 0 {
+		stream.WriteRaw("0")
+	} else {
+		stream.WriteRaw(string(number))
+	}
 }
 
 func (codec *jsoniterNumberCodec) EncodeInterface(val interface{}, stream *Stream) {
-	stream.WriteRaw(string(val.(Number)))
+	number := val.(Number)
+	if len(number) == 0 {
+		stream.WriteRaw("0")
+	} else {
+		stream.WriteRaw(string(number))
+	}
 }
 
 func (codec *jsoniterNumberCodec) IsEmpty(ptr unsafe.Pointer) bool {

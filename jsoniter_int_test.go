@@ -524,10 +524,16 @@ func Test_null_as_number(t *testing.T) {
 	err := json.Unmarshal([]byte(`null`), &v1)
 	should.Nil(err)
 	should.Equal("", string(v1))
+	output, err := json.Marshal(v1)
+	should.NoError(err)
+	should.Equal("0", string(output))
 	var v2 Number
 	err = Unmarshal([]byte(`null`), &v2)
 	should.Nil(err)
 	should.Equal("", string(v2))
+	output, err = Marshal(v2)
+	should.NoError(err)
+	should.Equal("0", string(output))
 }
 
 func Test_float_as_int(t *testing.T) {
