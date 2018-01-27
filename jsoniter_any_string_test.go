@@ -51,6 +51,7 @@ func Test_read_string_as_any(t *testing.T) {
 
 func Test_wrap_string(t *testing.T) {
 	should := require.New(t)
-	any := WrapString("123")
-	should.Equal(123, any.ToInt())
+	any := Get([]byte("-32000")).MustBeValid()
+	should.Equal(-32000, any.ToInt())
+	should.NoError(any.LastError())
 }
