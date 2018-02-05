@@ -1,9 +1,9 @@
 package test
 
 import (
-	"testing"
-	"github.com/json-iterator/go"
 	"bytes"
+	"github.com/json-iterator/go"
+	"testing"
 )
 
 func Benchmark_encode_string_with_SetEscapeHTML(b *testing.B) {

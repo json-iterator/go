@@ -1,8 +1,8 @@
 package jsoniter
 
 import (
-	"unsafe"
 	"io"
+	"unsafe"
 )
 
 type numberLazyAny struct {

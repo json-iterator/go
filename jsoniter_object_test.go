@@ -169,7 +169,7 @@ func Test_nested_field_omit_empty(t *testing.T) {
 		F2 string `json:",omitempty"`
 	}
 	s1 := &S1{
-		//F1: "abc",
+	//F1: "abc",
 	}
 	s2 := &S2{
 		S1: s1,

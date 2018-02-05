@@ -25,7 +25,6 @@ func (cfg *frozenConfig) initCache() {
 	cfg.encoderCache = sync.Map{}
 }
 
-
 func (cfg *frozenConfig) addDecoderToCache(cacheKey reflect.Type, decoder ValDecoder) {
 	cfg.decoderCache.Store(cacheKey, decoder)
 }
