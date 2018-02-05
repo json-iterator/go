@@ -97,9 +97,9 @@ func (adapter *Decoder) Buffered() io.Reader {
 
 // UseNumber for number JSON element, use float64 or json.NumberValue (alias of string)
 func (adapter *Decoder) UseNumber() {
-	origCfg := adapter.iter.cfg.configBeforeFrozen
-	origCfg.UseNumber = true
-	adapter.iter.cfg = origCfg.Froze().(*frozenConfig)
+	cfg := adapter.iter.cfg.configBeforeFrozen
+	cfg.UseNumber = true
+	adapter.iter.cfg = cfg.frozeWithCacheReuse()
 }
 
 // NewEncoder same as json.NewEncoder
@@ -122,14 +122,16 @@ func (adapter *Encoder) Encode(val interface{}) error {
 
 // SetIndent set the indention. Prefix is not supported
 func (adapter *Encoder) SetIndent(prefix, indent string) {
-	adapter.stream.cfg.indentionStep = len(indent)
+	config := adapter.stream.cfg.configBeforeFrozen
+	config.IndentionStep = len(indent)
+	adapter.stream.cfg = config.frozeWithCacheReuse()
 }
 
 // SetEscapeHTML escape html by default, set to false to disable
 func (adapter *Encoder) SetEscapeHTML(escapeHTML bool) {
 	config := adapter.stream.cfg.configBeforeFrozen
 	config.EscapeHTML = escapeHTML
-	adapter.stream.cfg = config.Froze().(*frozenConfig)
+	adapter.stream.cfg = config.frozeWithCacheReuse()
 }
 
 // Valid reports whether data is a valid JSON encoding.

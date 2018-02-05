@@ -60,11 +60,7 @@ var ConfigFastest = Config{
 
 // Froze forge API from config
 func (cfg Config) Froze() API {
-	api := getFrozenConfigFromCache(cfg)
-	if api != nil {
-		return api
-	}
-	api = &frozenConfig{
+	api := &frozenConfig{
 		sortMapKeys:                   cfg.SortMapKeys,
 		indentionStep:                 cfg.IndentionStep,
 		objectFieldMustBeSimpleString: cfg.ObjectFieldMustBeSimpleString,
@@ -86,6 +82,15 @@ func (cfg Config) Froze() API {
 		api.validateJsonRawMessage()
 	}
 	api.configBeforeFrozen = cfg
+	return api
+}
+
+func (cfg Config) frozeWithCacheReuse() *frozenConfig {
+	api := getFrozenConfigFromCache(cfg)
+	if api != nil {
+		return api
+	}
+	api = cfg.Froze().(*frozenConfig)
 	addFrozenConfigToCache(cfg, api)
 	return api
 }
@@ -233,7 +238,7 @@ func (cfg *frozenConfig) MarshalIndent(v interface{}, prefix, indent string) ([]
 	}
 	newCfg := cfg.configBeforeFrozen
 	newCfg.IndentionStep = len(indent)
-	return newCfg.Froze().Marshal(v)
+	return newCfg.frozeWithCacheReuse().Marshal(v)
 }
 
 func (cfg *frozenConfig) UnmarshalFromString(str string, v interface{}) error {
