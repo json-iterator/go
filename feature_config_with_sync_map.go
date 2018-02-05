@@ -13,6 +13,7 @@ type frozenConfig struct {
 	indentionStep                 int
 	objectFieldMustBeSimpleString bool
 	onlyTaggedField               bool
+	disallowUnknownFields         bool
 	decoderCache                  sync.Map
 	encoderCache                  sync.Map
 	extensions                    []Extension
