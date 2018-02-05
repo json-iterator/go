@@ -99,7 +99,7 @@ func decoderOfStruct(cfg *frozenConfig, prefix string, typ reflect.Type) ValDeco
 	for k, binding := range bindings {
 		fields[strings.ToLower(k)] = binding.Decoder.(*structFieldDecoder)
 	}
-	return createStructDecoder(typ, fields)
+	return createStructDecoder(cfg, typ, fields)
 }
 
 type structFieldEncoder struct {

@@ -13,6 +13,7 @@ type frozenConfig struct {
 	indentionStep                 int
 	objectFieldMustBeSimpleString bool
 	onlyTaggedField               bool
+	disallowUnknownFields         bool
 	cacheLock                     *sync.RWMutex
 	decoderCache                  map[reflect.Type]ValDecoder
 	encoderCache                  map[reflect.Type]ValEncoder

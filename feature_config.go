@@ -16,6 +16,7 @@ type Config struct {
 	EscapeHTML                    bool
 	SortMapKeys                   bool
 	UseNumber                     bool
+	DisallowUnknownFields         bool
 	TagKey                        string
 	OnlyTaggedField               bool
 	ValidateJsonRawMessage        bool
@@ -65,6 +66,7 @@ func (cfg Config) Froze() API {
 		indentionStep:                 cfg.IndentionStep,
 		objectFieldMustBeSimpleString: cfg.ObjectFieldMustBeSimpleString,
 		onlyTaggedField:               cfg.OnlyTaggedField,
+		disallowUnknownFields:         cfg.DisallowUnknownFields,
 		streamPool:                    make(chan *Stream, 16),
 		iteratorPool:                  make(chan *Iterator, 16),
 	}

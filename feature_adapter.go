@@ -95,10 +95,20 @@ func (adapter *Decoder) Buffered() io.Reader {
 	return bytes.NewReader(remaining)
 }
 
-// UseNumber for number JSON element, use float64 or json.NumberValue (alias of string)
+// UseNumber causes the Decoder to unmarshal a number into an interface{} as a
+// Number instead of as a float64.
 func (adapter *Decoder) UseNumber() {
 	cfg := adapter.iter.cfg.configBeforeFrozen
 	cfg.UseNumber = true
+	adapter.iter.cfg = cfg.frozeWithCacheReuse()
+}
+
+// DisallowUnknownFields causes the Decoder to return an error when the destination
+// is a struct and the input contains object keys which do not match any
+// non-ignored, exported fields in the destination.
+func (adapter *Decoder) DisallowUnknownFields() {
+	cfg := adapter.iter.cfg.configBeforeFrozen
+	cfg.DisallowUnknownFields = true
 	adapter.iter.cfg = cfg.frozeWithCacheReuse()
 }
 
