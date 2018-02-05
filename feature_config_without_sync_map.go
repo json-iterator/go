@@ -52,3 +52,19 @@ func (cfg *frozenConfig) getEncoderFromCache(cacheKey reflect.Type) ValEncoder {
 	cfg.cacheLock.RUnlock()
 	return encoder
 }
+
+var cfgCacheLock = &sync.RWMutex{}
+var cfgCache = map[Config]*frozenConfig{}
+
+func getFrozenConfigFromCache(cfg Config) *frozenConfig {
+	cfgCacheLock.RLock()
+	frozenConfig := cfgCache[cfg]
+	cfgCacheLock.RUnlock()
+	return frozenConfig
+}
+
+func addFrozenConfigToCache(cfg Config, frozenConfig *frozenConfig) {
+	cfgCacheLock.Lock()
+	cfgCache[cfg] = frozenConfig
+	cfgCacheLock.Unlock()
+}

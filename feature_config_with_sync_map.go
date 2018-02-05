@@ -49,3 +49,17 @@ func (cfg *frozenConfig) getEncoderFromCache(cacheKey reflect.Type) ValEncoder {
 	}
 	return nil
 }
+
+var cfgCache = &sync.Map{}
+
+func getFrozenConfigFromCache(cfg Config) *frozenConfig {
+	obj, found := cfgCache.Load(cfg)
+	if found {
+		return obj.(*frozenConfig)
+	}
+	return nil
+}
+
+func addFrozenConfigToCache(cfg Config, frozenConfig *frozenConfig) {
+	cfgCache.Store(cfg, frozenConfig)
+}
