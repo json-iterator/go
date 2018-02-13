@@ -137,6 +137,11 @@ func init() {
 			F1 uint32 `json:"F1"`
 			F2 uint32 `json:"F2,string"`
 		})(nil),
+		(*struct {
+			A           string            `json:"a,omitempty"`
+			B           string            `json:"b,omitempty"`
+			Annotations map[string]string `json:"annotations,omitempty"`
+		})(nil),
 	)
 }
 
@@ -192,7 +197,6 @@ type StringFieldName struct {
 	F6 string        `json:""`
 	StringFieldNameE `json:"e"`
 }
-
 
 type StructFieldNameS1 struct {
 	S1F string

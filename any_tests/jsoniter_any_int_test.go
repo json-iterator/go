@@ -1,10 +1,11 @@
-package jsoniter
+package any_tests
 
 import (
 	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"github.com/json-iterator/go"
 )
 
 var intConvertMap = map[string]int{
@@ -41,19 +42,19 @@ func Test_read_any_to_int(t *testing.T) {
 
 	// int
 	for k, v := range intConvertMap {
-		any := Get([]byte(k))
+		any := jsoniter.Get([]byte(k))
 		should.Equal(v, any.ToInt(), fmt.Sprintf("origin val %v", k))
 	}
 
 	// int32
 	for k, v := range intConvertMap {
-		any := Get([]byte(k))
+		any := jsoniter.Get([]byte(k))
 		should.Equal(int32(v), any.ToInt32(), fmt.Sprintf("original val is %v", k))
 	}
 
 	// int64
 	for k, v := range intConvertMap {
-		any := Get([]byte(k))
+		any := jsoniter.Get([]byte(k))
 		should.Equal(int64(v), any.ToInt64(), fmt.Sprintf("original val is %v", k))
 	}
 
@@ -94,17 +95,17 @@ func Test_read_any_to_uint(t *testing.T) {
 	should := require.New(t)
 
 	for k, v := range uintConvertMap {
-		any := Get([]byte(k))
+		any := jsoniter.Get([]byte(k))
 		should.Equal(uint64(v), any.ToUint64(), fmt.Sprintf("origin val %v", k))
 	}
 
 	for k, v := range uintConvertMap {
-		any := Get([]byte(k))
+		any := jsoniter.Get([]byte(k))
 		should.Equal(uint32(v), any.ToUint32(), fmt.Sprintf("origin val %v", k))
 	}
 
 	for k, v := range uintConvertMap {
-		any := Get([]byte(k))
+		any := jsoniter.Get([]byte(k))
 		should.Equal(uint(v), any.ToUint(), fmt.Sprintf("origin val %v", k))
 	}
 
@@ -112,7 +113,7 @@ func Test_read_any_to_uint(t *testing.T) {
 
 func Test_read_int64_to_any(t *testing.T) {
 	should := require.New(t)
-	any := WrapInt64(12345)
+	any := jsoniter.WrapInt64(12345)
 	should.Equal(12345, any.ToInt())
 	should.Equal(int32(12345), any.ToInt32())
 	should.Equal(int64(12345), any.ToInt64())
@@ -123,14 +124,14 @@ func Test_read_int64_to_any(t *testing.T) {
 	should.Equal(float64(12345), any.ToFloat64())
 	should.Equal("12345", any.ToString())
 	should.Equal(true, any.ToBool())
-	should.Equal(any.ValueType(), NumberValue)
-	stream := NewStream(ConfigDefault, nil, 32)
+	should.Equal(any.ValueType(), jsoniter.NumberValue)
+	stream := jsoniter.NewStream(jsoniter.ConfigDefault, nil, 32)
 	any.WriteTo(stream)
 	should.Equal("12345", string(stream.Buffer()))
 }
 func Test_read_int32_to_any(t *testing.T) {
 	should := require.New(t)
-	any := WrapInt32(12345)
+	any := jsoniter.WrapInt32(12345)
 	should.Equal(12345, any.ToInt())
 	should.Equal(int32(12345), any.ToInt32())
 	should.Equal(int64(12345), any.ToInt64())
@@ -141,15 +142,15 @@ func Test_read_int32_to_any(t *testing.T) {
 	should.Equal(float64(12345), any.ToFloat64())
 	should.Equal("12345", any.ToString())
 	should.Equal(true, any.ToBool())
-	should.Equal(any.ValueType(), NumberValue)
-	stream := NewStream(ConfigDefault, nil, 32)
+	should.Equal(any.ValueType(), jsoniter.NumberValue)
+	stream := jsoniter.NewStream(jsoniter.ConfigDefault, nil, 32)
 	any.WriteTo(stream)
 	should.Equal("12345", string(stream.Buffer()))
 }
 
 func Test_read_uint32_to_any(t *testing.T) {
 	should := require.New(t)
-	any := WrapUint32(12345)
+	any := jsoniter.WrapUint32(12345)
 	should.Equal(12345, any.ToInt())
 	should.Equal(int32(12345), any.ToInt32())
 	should.Equal(int64(12345), any.ToInt64())
@@ -160,15 +161,15 @@ func Test_read_uint32_to_any(t *testing.T) {
 	should.Equal(float64(12345), any.ToFloat64())
 	should.Equal("12345", any.ToString())
 	should.Equal(true, any.ToBool())
-	should.Equal(any.ValueType(), NumberValue)
-	stream := NewStream(ConfigDefault, nil, 32)
+	should.Equal(any.ValueType(), jsoniter.NumberValue)
+	stream := jsoniter.NewStream(jsoniter.ConfigDefault, nil, 32)
 	any.WriteTo(stream)
 	should.Equal("12345", string(stream.Buffer()))
 }
 
 func Test_read_uint64_to_any(t *testing.T) {
 	should := require.New(t)
-	any := WrapUint64(12345)
+	any := jsoniter.WrapUint64(12345)
 	should.Equal(12345, any.ToInt())
 	should.Equal(int32(12345), any.ToInt32())
 	should.Equal(int64(12345), any.ToInt64())
@@ -179,19 +180,19 @@ func Test_read_uint64_to_any(t *testing.T) {
 	should.Equal(float64(12345), any.ToFloat64())
 	should.Equal("12345", any.ToString())
 	should.Equal(true, any.ToBool())
-	should.Equal(any.ValueType(), NumberValue)
-	stream := NewStream(ConfigDefault, nil, 32)
+	should.Equal(any.ValueType(), jsoniter.NumberValue)
+	stream := jsoniter.NewStream(jsoniter.ConfigDefault, nil, 32)
 	any.WriteTo(stream)
 	should.Equal("12345", string(stream.Buffer()))
-	stream = NewStream(ConfigDefault, nil, 32)
+	stream = jsoniter.NewStream(jsoniter.ConfigDefault, nil, 32)
 	stream.WriteUint(uint(123))
 	should.Equal("123", string(stream.Buffer()))
 }
 
 func Test_int_lazy_any_get(t *testing.T) {
 	should := require.New(t)
-	any := Get([]byte("1234"))
+	any := jsoniter.Get([]byte("1234"))
 	// panic!!
 	//should.Equal(any.LastError(), io.EOF)
-	should.Equal(InvalidValue, any.Get(1, "2").ValueType())
+	should.Equal(jsoniter.InvalidValue, any.Get(1, "2").ValueType())
 }

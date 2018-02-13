@@ -1,18 +1,19 @@
-package jsoniter
+package any_tests
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"github.com/json-iterator/go"
 )
 
 func Test_read_empty_array_as_any(t *testing.T) {
 	should := require.New(t)
-	any := Get([]byte("[]"))
-	should.Equal(ArrayValue, any.Get().ValueType())
-	should.Equal(InvalidValue, any.Get(0.3).ValueType())
+	any := jsoniter.Get([]byte("[]"))
+	should.Equal(jsoniter.ArrayValue, any.Get().ValueType())
+	should.Equal(jsoniter.InvalidValue, any.Get(0.3).ValueType())
 	should.Equal(0, any.Size())
-	should.Equal(ArrayValue, any.ValueType())
+	should.Equal(jsoniter.ArrayValue, any.ValueType())
 	should.Nil(any.LastError())
 	should.Equal(0, any.ToInt())
 	should.Equal(int32(0), any.ToInt32())
@@ -26,19 +27,19 @@ func Test_read_empty_array_as_any(t *testing.T) {
 
 func Test_read_one_element_array_as_any(t *testing.T) {
 	should := require.New(t)
-	any := Get([]byte("[1]"))
+	any := jsoniter.Get([]byte("[1]"))
 	should.Equal(1, any.Size())
 }
 
 func Test_read_two_element_array_as_any(t *testing.T) {
 	should := require.New(t)
-	any := Get([]byte("[1,2]"))
+	any := jsoniter.Get([]byte("[1,2]"))
 	should.Equal(1, any.Get(0).ToInt())
 	should.Equal(2, any.Size())
 	should.True(any.ToBool())
 	should.Equal(1, any.ToInt())
 	should.Equal([]interface{}{float64(1), float64(2)}, any.GetInterface())
-	stream := NewStream(ConfigDefault, nil, 32)
+	stream := jsoniter.NewStream(jsoniter.ConfigDefault, nil, 32)
 	any.WriteTo(stream)
 	should.Equal("[1,2]", string(stream.Buffer()))
 	arr := []int{}
@@ -48,8 +49,8 @@ func Test_read_two_element_array_as_any(t *testing.T) {
 
 func Test_wrap_array_and_convert_to_any(t *testing.T) {
 	should := require.New(t)
-	any := Wrap([]int{1, 2, 3})
-	any2 := Wrap([]int{})
+	any := jsoniter.Wrap([]int{1, 2, 3})
+	any2 := jsoniter.Wrap([]int{})
 
 	should.Equal("[1,2,3]", any.ToString())
 	should.True(any.ToBool())
@@ -80,43 +81,43 @@ func Test_wrap_array_and_convert_to_any(t *testing.T) {
 
 func Test_array_lazy_any_get(t *testing.T) {
 	should := require.New(t)
-	any := Get([]byte("[1,[2,3],4]"))
+	any := jsoniter.Get([]byte("[1,[2,3],4]"))
 	should.Equal(3, any.Get(1, 1).ToInt())
 	should.Equal("[1,[2,3],4]", any.ToString())
 }
 
 func Test_array_lazy_any_get_all(t *testing.T) {
 	should := require.New(t)
-	any := Get([]byte("[[1],[2],[3,4]]"))
+	any := jsoniter.Get([]byte("[[1],[2],[3,4]]"))
 	should.Equal("[1,2,3]", any.Get('*', 0).ToString())
-	any = Get([]byte("[[[1],[2],[3,4]]]"), 0, '*', 0)
+	any = jsoniter.Get([]byte("[[[1],[2],[3,4]]]"), 0, '*', 0)
 	should.Equal("[1,2,3]", any.ToString())
 }
 
 func Test_array_wrapper_any_get_all(t *testing.T) {
 	should := require.New(t)
-	any := wrapArray([][]int{
+	any := jsoniter.Wrap([][]int{
 		{1, 2},
 		{3, 4},
 		{5, 6},
 	})
 	should.Equal("[1,3,5]", any.Get('*', 0).ToString())
-	should.Equal(ArrayValue, any.ValueType())
+	should.Equal(jsoniter.ArrayValue, any.ValueType())
 	should.True(any.ToBool())
 	should.Equal(1, any.Get(0, 0).ToInt())
 }
 
 func Test_array_lazy_any_get_invalid(t *testing.T) {
 	should := require.New(t)
-	any := Get([]byte("[]"))
-	should.Equal(InvalidValue, any.Get(1, 1).ValueType())
+	any := jsoniter.Get([]byte("[]"))
+	should.Equal(jsoniter.InvalidValue, any.Get(1, 1).ValueType())
 	should.NotNil(any.Get(1, 1).LastError())
-	should.Equal(InvalidValue, any.Get("1").ValueType())
+	should.Equal(jsoniter.InvalidValue, any.Get("1").ValueType())
 	should.NotNil(any.Get("1").LastError())
 }
 
 func Test_invalid_array(t *testing.T) {
 	should := require.New(t)
-	any := Get([]byte("["), 0)
-	should.Equal(InvalidValue, any.ValueType())
+	any := jsoniter.Get([]byte("["), 0)
+	should.Equal(jsoniter.InvalidValue, any.ValueType())
 }

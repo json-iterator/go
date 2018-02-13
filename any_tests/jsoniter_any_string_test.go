@@ -1,9 +1,10 @@
-package jsoniter
+package any_tests
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"github.com/json-iterator/go"
 )
 
 var stringConvertMap = map[string]string{
@@ -31,27 +32,27 @@ var stringConvertMap = map[string]string{
 func Test_read_any_to_string(t *testing.T) {
 	should := require.New(t)
 	for k, v := range stringConvertMap {
-		any := Get([]byte(k))
+		any := jsoniter.Get([]byte(k))
 		should.Equal(v, any.ToString(), "original val "+k)
 	}
 }
 
 func Test_read_string_as_any(t *testing.T) {
 	should := require.New(t)
-	any := Get([]byte(`"hello"`))
+	any := jsoniter.Get([]byte(`"hello"`))
 	should.Equal("hello", any.ToString())
 	should.True(any.ToBool())
-	any = Get([]byte(`" "`))
+	any = jsoniter.Get([]byte(`" "`))
 	should.False(any.ToBool())
-	any = Get([]byte(`"false"`))
+	any = jsoniter.Get([]byte(`"false"`))
 	should.True(any.ToBool())
-	any = Get([]byte(`"123"`))
+	any = jsoniter.Get([]byte(`"123"`))
 	should.Equal(123, any.ToInt())
 }
 
 func Test_wrap_string(t *testing.T) {
 	should := require.New(t)
-	any := Get([]byte("-32000")).MustBeValid()
+	any := jsoniter.Get([]byte("-32000")).MustBeValid()
 	should.Equal(-32000, any.ToInt())
 	should.NoError(any.LastError())
 }

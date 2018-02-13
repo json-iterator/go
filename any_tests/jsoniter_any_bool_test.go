@@ -1,10 +1,11 @@
-package jsoniter
+package any_tests
 
 import (
 	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"github.com/json-iterator/go"
 )
 
 var boolConvertMap = map[string]bool{
@@ -35,9 +36,9 @@ var boolConvertMap = map[string]bool{
 func Test_read_bool_as_any(t *testing.T) {
 	should := require.New(t)
 
-	var any Any
+	var any jsoniter.Any
 	for k, v := range boolConvertMap {
-		any = Get([]byte(k))
+		any = jsoniter.Get([]byte(k))
 		if v {
 			should.True(any.ToBool(), fmt.Sprintf("origin val is %v", k))
 		} else {
@@ -49,16 +50,16 @@ func Test_read_bool_as_any(t *testing.T) {
 
 func Test_write_bool_to_stream(t *testing.T) {
 	should := require.New(t)
-	any := Get([]byte("true"))
-	stream := NewStream(ConfigDefault, nil, 32)
+	any := jsoniter.Get([]byte("true"))
+	stream := jsoniter.NewStream(jsoniter.ConfigDefault, nil, 32)
 	any.WriteTo(stream)
 	should.Equal("true", string(stream.Buffer()))
-	should.Equal(any.ValueType(), BoolValue)
+	should.Equal(any.ValueType(), jsoniter.BoolValue)
 
-	any = Get([]byte("false"))
-	stream = NewStream(ConfigDefault, nil, 32)
+	any = jsoniter.Get([]byte("false"))
+	stream = jsoniter.NewStream(jsoniter.ConfigDefault, nil, 32)
 	any.WriteTo(stream)
 	should.Equal("false", string(stream.Buffer()))
 
-	should.Equal(any.ValueType(), BoolValue)
+	should.Equal(any.ValueType(), jsoniter.BoolValue)
 }

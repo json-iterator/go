@@ -28,6 +28,23 @@ func init() {
 		(*uint32Alias)(nil),
 		(*uintptr)(nil),
 		(*uintptrAlias)(nil),
+		(*struct {
+			A int8Alias    `json:"a"`
+			B int16Alias   `json:"stream"`
+			C int32Alias   `json:"c"`
+			D int64Alias   `json:"d"`
+			E uintAlias    `json:"e"`
+			F uint16Alias  `json:"f"`
+			G uint32Alias  `json:"g"`
+			H uint64Alias  `json:"h"`
+			I float32Alias `json:"i"`
+			J float64Alias `json:"j"`
+			K stringAlias  `json:"k"`
+			L intAlias     `json:"l"`
+			M uintAlias    `json:"m"`
+			N boolAlias    `json:"n"`
+			O uintptrAlias `json:"o"`
+		})(nil),
 	)
 }
 
@@ -47,3 +64,6 @@ type uint8Alias uint8
 type uint16Alias uint16
 type uint32Alias uint32
 type uintptrAlias uintptr
+type uintAlias uint
+type uint64Alias uint64
+type intAlias int
