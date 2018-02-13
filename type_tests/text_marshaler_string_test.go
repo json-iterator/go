@@ -1,16 +1,16 @@
 package test
 
 import (
-	"bytes"
-	"encoding"
-	"encoding/base64"
 	"strings"
+	"encoding"
+	"bytes"
+	"encoding/base64"
 )
 
-// MarshalerForTest TEST ONLY
-type MarshalerForTest string
+// StringTextMarshaler TEST ONLY
+type StringTextMarshaler string
 
-func encode(str string) string {
+func (m StringTextMarshaler) encode(str string) string {
 	buf := bytes.Buffer{}
 	b64 := base64.NewEncoder(base64.StdEncoding, &buf)
 	if _, err := b64.Write([]byte(str)); err != nil {
@@ -22,7 +22,7 @@ func encode(str string) string {
 	return buf.String()
 }
 
-func decode(str string) string {
+func (m StringTextMarshaler) decode(str string) string {
 	if len(str) == 0 {
 		return ""
 	}
@@ -37,21 +37,15 @@ func decode(str string) string {
 }
 
 // MarshalText TEST ONLY
-func (m MarshalerForTest) MarshalText() ([]byte, error) {
-	return []byte(`MANUAL__` + encode(string(m))), nil
+func (m StringTextMarshaler) MarshalText() ([]byte, error) {
+	return []byte(`MANUAL__` + m.encode(string(m))), nil
 }
 
 // UnmarshalText TEST ONLY
-func (m *MarshalerForTest) UnmarshalText(text []byte) error {
-	*m = MarshalerForTest(decode(strings.TrimPrefix(string(text), "MANUAL__")))
+func (m *StringTextMarshaler) UnmarshalText(text []byte) error {
+	*m = StringTextMarshaler(m.decode(strings.TrimPrefix(string(text), "MANUAL__")))
 	return nil
 }
 
-var _ encoding.TextMarshaler = *new(MarshalerForTest)
-var _ encoding.TextUnmarshaler = new(MarshalerForTest)
-
-type typeForTest struct {
-	F1 float64
-	MarshalerForTest
-	F2 int32
-}
+var _ encoding.TextMarshaler = *new(StringTextMarshaler)
+var _ encoding.TextUnmarshaler = new(StringTextMarshaler)

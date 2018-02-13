@@ -60,3 +60,4 @@ func init() {
 }
 
 type structEmpty struct{}
+type arrayAlis [4]stringAlias

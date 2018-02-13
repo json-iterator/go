@@ -35,11 +35,14 @@ type boolAlias bool
 type byteAlias byte
 type float32Alias float32
 type float64Alias float64
+type ptrFloat64Alias *float64
 type int8Alias int8
 type int16Alias int16
 type int32Alias int32
+type ptrInt32Alias *int32
 type int64Alias int64
 type stringAlias string
+type ptrStringAlias *string
 type uint8Alias uint8
 type uint16Alias uint16
 type uint32Alias uint32
