@@ -7,6 +7,12 @@ import (
 	"encoding/base64"
 )
 
+func init() {
+	testCases = append(testCases,
+		(*StringTextMarshaler)(nil),
+	)
+}
+
 // StringTextMarshaler TEST ONLY
 type StringTextMarshaler string
 
