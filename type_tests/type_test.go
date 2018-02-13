@@ -18,53 +18,55 @@ var asymmetricTestCases [][2]interface{}
 func Test_symmetric(t *testing.T) {
 	for _, testCase := range testCases {
 		valType := reflect.TypeOf(testCase).Elem()
-		fz := fuzz.New().MaxDepth(10).NilChance(0.3)
-		for i := 0; i < 100; i++ {
-			beforePtrVal := reflect.New(valType)
-			beforePtr := beforePtrVal.Interface()
-			fz.Fuzz(beforePtr)
-			before := beforePtrVal.Elem().Interface()
+		t.Run(valType.String(), func(t *testing.T) {
+			fz := fuzz.New().MaxDepth(10).NilChance(0.3)
+			for i := 0; i < 100; i++ {
+				beforePtrVal := reflect.New(valType)
+				beforePtr := beforePtrVal.Interface()
+				fz.Fuzz(beforePtr)
+				before := beforePtrVal.Elem().Interface()
 
-			jbStd, err := json.Marshal(before)
-			if err != nil {
-				t.Fatalf("failed to marshal with stdlib: %v", err)
-			}
-			if len(strings.TrimSpace(string(jbStd))) == 0 {
-				t.Fatal("stdlib marshal produced empty result and no error")
-			}
-			jbIter, err := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(before)
-			if err != nil {
-				t.Fatalf("failed to marshal with jsoniter: %v", err)
-			}
-			if len(strings.TrimSpace(string(jbIter))) == 0 {
-				t.Fatal("jsoniter marshal produced empty result and no error")
-			}
-			if string(jbStd) != string(jbIter) {
-				t.Fatalf("marshal expected:\n    %s\ngot:\n    %s\nobj:\n    %s",
-					indent(jbStd, "    "), indent(jbIter, "    "), dump(before))
-			}
+				jbStd, err := json.Marshal(before)
+				if err != nil {
+					t.Fatalf("failed to marshal with stdlib: %v", err)
+				}
+				if len(strings.TrimSpace(string(jbStd))) == 0 {
+					t.Fatal("stdlib marshal produced empty result and no error")
+				}
+				jbIter, err := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(before)
+				if err != nil {
+					t.Fatalf("failed to marshal with jsoniter: %v", err)
+				}
+				if len(strings.TrimSpace(string(jbIter))) == 0 {
+					t.Fatal("jsoniter marshal produced empty result and no error")
+				}
+				if string(jbStd) != string(jbIter) {
+					t.Fatalf("marshal expected:\n    %s\ngot:\n    %s\nobj:\n    %s",
+						indent(jbStd, "    "), indent(jbIter, "    "), dump(before))
+				}
 
-			afterStdPtrVal := reflect.New(valType)
-			afterStdPtr := afterStdPtrVal.Interface()
-			err = json.Unmarshal(jbIter, afterStdPtr)
-			if err != nil {
-				t.Fatalf("failed to unmarshal with stdlib: %v\nvia:\n    %s",
-					err, indent(jbIter, "    "))
+				afterStdPtrVal := reflect.New(valType)
+				afterStdPtr := afterStdPtrVal.Interface()
+				err = json.Unmarshal(jbIter, afterStdPtr)
+				if err != nil {
+					t.Fatalf("failed to unmarshal with stdlib: %v\nvia:\n    %s",
+						err, indent(jbIter, "    "))
+				}
+				afterIterPtrVal := reflect.New(valType)
+				afterIterPtr := afterIterPtrVal.Interface()
+				err = jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(jbIter, afterIterPtr)
+				if err != nil {
+					t.Fatalf("failed to unmarshal with jsoniter: %v\nvia:\n    %s",
+						err, indent(jbIter, "    "))
+				}
+				afterStd := afterStdPtrVal.Elem().Interface()
+				afterIter := afterIterPtrVal.Elem().Interface()
+				if fingerprint(afterStd) != fingerprint(afterIter) {
+					t.Fatalf("unmarshal expected:\n    %s\ngot:\n    %s\nvia:\n    %s",
+						dump(afterStd), dump(afterIter), indent(jbIter, "    "))
+				}
 			}
-			afterIterPtrVal := reflect.New(valType)
-			afterIterPtr := afterIterPtrVal.Interface()
-			err = jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(jbIter, afterIterPtr)
-			if err != nil {
-				t.Fatalf("failed to unmarshal with jsoniter: %v\nvia:\n    %s",
-					err, indent(jbIter, "    "))
-			}
-			afterStd := afterStdPtrVal.Elem().Interface()
-			afterIter := afterIterPtrVal.Elem().Interface()
-			if fingerprint(afterStd) != fingerprint(afterIter) {
-				t.Fatalf("unmarshal expected:\n    %s\ngot:\n    %s\nvia:\n    %s",
-					dump(afterStd), dump(afterIter), indent(jbIter, "    "))
-			}
-		}
+		})
 	}
 }
 

@@ -1,32 +1,14 @@
-// +build go1.8
-
-package jsoniter
+package test
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"strconv"
 	"testing"
-
 	"github.com/stretchr/testify/require"
+	"strconv"
+	"bytes"
+	"github.com/json-iterator/go"
+	"encoding/json"
 )
-
-func Test_read_big_float(t *testing.T) {
-	should := require.New(t)
-	iter := ParseString(ConfigDefault, `12.3`)
-	val := iter.ReadBigFloat()
-	val64, _ := val.Float64()
-	should.Equal(12.3, val64)
-}
-
-func Test_read_big_int(t *testing.T) {
-	should := require.New(t)
-	iter := ParseString(ConfigDefault, `92233720368547758079223372036854775807`)
-	val := iter.ReadBigInt()
-	should.NotNil(val)
-	should.Equal(`92233720368547758079223372036854775807`, val.String())
-}
 
 func Test_read_float(t *testing.T) {
 	inputs := []string{
@@ -37,14 +19,14 @@ func Test_read_float(t *testing.T) {
 		// non-streaming
 		t.Run(fmt.Sprintf("%v", input), func(t *testing.T) {
 			should := require.New(t)
-			iter := ParseString(ConfigDefault, input+",")
+			iter := jsoniter.ParseString(jsoniter.ConfigDefault, input+",")
 			expected, err := strconv.ParseFloat(input, 32)
 			should.Nil(err)
 			should.Equal(float32(expected), iter.ReadFloat32())
 		})
 		t.Run(fmt.Sprintf("%v", input), func(t *testing.T) {
 			should := require.New(t)
-			iter := ParseString(ConfigDefault, input+",")
+			iter := jsoniter.ParseString(jsoniter.ConfigDefault, input+",")
 			expected, err := strconv.ParseFloat(input, 64)
 			should.Nil(err)
 			should.Equal(expected, iter.ReadFloat64())
@@ -52,14 +34,14 @@ func Test_read_float(t *testing.T) {
 		// streaming
 		t.Run(fmt.Sprintf("%v", input), func(t *testing.T) {
 			should := require.New(t)
-			iter := Parse(ConfigDefault, bytes.NewBufferString(input+","), 2)
+			iter := jsoniter.Parse(jsoniter.ConfigDefault, bytes.NewBufferString(input+","), 2)
 			expected, err := strconv.ParseFloat(input, 32)
 			should.Nil(err)
 			should.Equal(float32(expected), iter.ReadFloat32())
 		})
 		t.Run(fmt.Sprintf("%v", input), func(t *testing.T) {
 			should := require.New(t)
-			iter := Parse(ConfigDefault, bytes.NewBufferString(input+","), 2)
+			iter := jsoniter.Parse(jsoniter.ConfigDefault, bytes.NewBufferString(input+","), 2)
 			val := float64(0)
 			err := json.Unmarshal([]byte(input), &val)
 			should.Nil(err)
@@ -68,18 +50,6 @@ func Test_read_float(t *testing.T) {
 	}
 }
 
-func Test_read_float_as_interface(t *testing.T) {
-	should := require.New(t)
-	iter := ParseString(ConfigDefault, `12.3`)
-	should.Equal(float64(12.3), iter.Read())
-}
-
-func Test_wrap_float(t *testing.T) {
-	should := require.New(t)
-	str, err := MarshalToString(WrapFloat64(12.3))
-	should.Nil(err)
-	should.Equal("12.3", str)
-}
 
 func Test_write_float32(t *testing.T) {
 	vals := []float32{0, 1, -1, 99, 0xff, 0xfff, 0xffff, 0xfffff, 0xffffff, 0x4ffffff, 0xfffffff,
@@ -88,7 +58,7 @@ func Test_write_float32(t *testing.T) {
 		t.Run(fmt.Sprintf("%v", val), func(t *testing.T) {
 			should := require.New(t)
 			buf := &bytes.Buffer{}
-			stream := NewStream(ConfigDefault, buf, 4096)
+			stream := jsoniter.NewStream(jsoniter.ConfigDefault, buf, 4096)
 			stream.WriteFloat32Lossy(val)
 			stream.Flush()
 			should.Nil(stream.Error)
@@ -99,7 +69,7 @@ func Test_write_float32(t *testing.T) {
 		t.Run(fmt.Sprintf("%v", val), func(t *testing.T) {
 			should := require.New(t)
 			buf := &bytes.Buffer{}
-			stream := NewStream(ConfigDefault, buf, 4096)
+			stream := jsoniter.NewStream(jsoniter.ConfigDefault, buf, 4096)
 			stream.WriteVal(val)
 			stream.Flush()
 			should.Nil(stream.Error)
@@ -110,16 +80,16 @@ func Test_write_float32(t *testing.T) {
 	}
 	should := require.New(t)
 	buf := &bytes.Buffer{}
-	stream := NewStream(ConfigDefault, buf, 10)
+	stream := jsoniter.NewStream(jsoniter.ConfigDefault, buf, 10)
 	stream.WriteRaw("abcdefg")
 	stream.WriteFloat32Lossy(1.123456)
 	stream.Flush()
 	should.Nil(stream.Error)
 	should.Equal("abcdefg1.123456", buf.String())
 
-	stream = NewStream(ConfigDefault, nil, 0)
+	stream = jsoniter.NewStream(jsoniter.ConfigDefault, nil, 0)
 	stream.WriteFloat32(float32(0.0000001))
-	should.Equal("1e-07", string(stream.buf))
+	should.Equal("1e-07", string(stream.Buffer()))
 }
 
 func Test_write_float64(t *testing.T) {
@@ -129,7 +99,7 @@ func Test_write_float64(t *testing.T) {
 		t.Run(fmt.Sprintf("%v", val), func(t *testing.T) {
 			should := require.New(t)
 			buf := &bytes.Buffer{}
-			stream := NewStream(ConfigDefault, buf, 4096)
+			stream := jsoniter.NewStream(jsoniter.ConfigDefault, buf, 4096)
 			stream.WriteFloat64Lossy(val)
 			stream.Flush()
 			should.Nil(stream.Error)
@@ -138,7 +108,7 @@ func Test_write_float64(t *testing.T) {
 		t.Run(fmt.Sprintf("%v", val), func(t *testing.T) {
 			should := require.New(t)
 			buf := &bytes.Buffer{}
-			stream := NewStream(ConfigDefault, buf, 4096)
+			stream := jsoniter.NewStream(jsoniter.ConfigDefault, buf, 4096)
 			stream.WriteVal(val)
 			stream.Flush()
 			should.Nil(stream.Error)
@@ -147,71 +117,14 @@ func Test_write_float64(t *testing.T) {
 	}
 	should := require.New(t)
 	buf := &bytes.Buffer{}
-	stream := NewStream(ConfigDefault, buf, 10)
+	stream := jsoniter.NewStream(jsoniter.ConfigDefault, buf, 10)
 	stream.WriteRaw("abcdefg")
 	stream.WriteFloat64Lossy(1.123456)
 	stream.Flush()
 	should.Nil(stream.Error)
 	should.Equal("abcdefg1.123456", buf.String())
 
-	stream = NewStream(ConfigDefault, nil, 0)
+	stream = jsoniter.NewStream(jsoniter.ConfigDefault, nil, 0)
 	stream.WriteFloat64(float64(0.0000001))
-	should.Equal("1e-07", string(stream.buf))
-}
-
-func Test_read_float64_cursor(t *testing.T) {
-	should := require.New(t)
-	iter := ParseString(ConfigDefault, "[1.23456789\n,2,3]")
-	should.True(iter.ReadArray())
-	should.Equal(1.23456789, iter.Read())
-	should.True(iter.ReadArray())
-	should.Equal(float64(2), iter.Read())
-}
-
-func Test_read_float_scientific(t *testing.T) {
-	should := require.New(t)
-	var obj interface{}
-	should.Nil(UnmarshalFromString(`1e1`, &obj))
-	should.Equal(float64(10), obj)
-	should.Nil(json.Unmarshal([]byte(`1e1`), &obj))
-	should.Equal(float64(10), obj)
-	should.Nil(UnmarshalFromString(`1.0e1`, &obj))
-	should.Equal(float64(10), obj)
-	should.Nil(json.Unmarshal([]byte(`1.0e1`), &obj))
-	should.Equal(float64(10), obj)
-}
-
-func Test_lossy_float_marshal(t *testing.T) {
-	should := require.New(t)
-	api := Config{MarshalFloatWith6Digits: true}.Froze()
-	output, err := api.MarshalToString(float64(0.1234567))
-	should.Nil(err)
-	should.Equal("0.123457", output)
-	output, err = api.MarshalToString(float32(0.1234567))
-	should.Nil(err)
-	should.Equal("0.123457", output)
-}
-
-func Test_read_number(t *testing.T) {
-	should := require.New(t)
-	iter := ParseString(ConfigDefault, `92233720368547758079223372036854775807`)
-	val := iter.ReadNumber()
-	should.Equal(`92233720368547758079223372036854775807`, string(val))
-}
-
-func Benchmark_jsoniter_float(b *testing.B) {
-	b.ReportAllocs()
-	input := []byte(`1.1123,`)
-	iter := NewIterator(ConfigDefault)
-	for n := 0; n < b.N; n++ {
-		iter.ResetBytes(input)
-		iter.ReadFloat64()
-	}
-}
-
-func Benchmark_json_float(b *testing.B) {
-	for n := 0; n < b.N; n++ {
-		result := float64(0)
-		json.Unmarshal([]byte(`1.1`), &result)
-	}
+	should.Equal("1e-07", string(stream.Buffer()))
 }

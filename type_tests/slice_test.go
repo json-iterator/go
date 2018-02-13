@@ -71,5 +71,19 @@ func init() {
 			Map   map[string]string
 		})(nil),
 		(*[]uint8)(nil),
+		(*[]GeoLocation)(nil),
 	)
+}
+
+type GeoLocation struct {
+	Id string `json:"id,omitempty" db:"id"`
+}
+
+func (p *GeoLocation) MarshalJSON() ([]byte, error) {
+	return []byte(`{}`), nil
+}
+
+func (p *GeoLocation) UnmarshalJSON(input []byte) error {
+	p.Id = "hello"
+	return nil
 }

@@ -1,6 +1,7 @@
 package test
 
 func init() {
+	// TODO: fix this
 	//testCases = append(testCases,
 	//	(*struct {
 	//		Upper bool `json:"M"`

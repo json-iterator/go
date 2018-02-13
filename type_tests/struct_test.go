@@ -1,5 +1,7 @@
 package test
 
+import "time"
+
 func init() {
 	testCases = append(testCases,
 		(*struct1Alias)(nil),
@@ -246,6 +248,13 @@ func init() {
 		(*struct {
 			F struct3
 		})(nil),
+		(*struct {
+			TF1 struct {
+				F1 withTime
+				F2 *withTime
+			}
+		})(nil),
+		(*DeeplyNested)(nil),
 	)
 }
 
@@ -274,4 +283,28 @@ type struct3 struct {
 	F1 stringAlias
 	F2 stringAlias
 	F3 stringAlias
+}
+
+type withTime struct {
+	time.Time
+}
+
+func (t *withTime) UnmarshalJSON(b []byte) error {
+	return nil
+}
+func (t withTime) MarshalJSON() ([]byte, error) {
+	return []byte(`"fake"`), nil
+}
+
+type YetYetAnotherObject struct {
+	Field string
+}
+type YetAnotherObject struct {
+	Field *YetYetAnotherObject
+}
+type AnotherObject struct {
+	Field *YetAnotherObject
+}
+type DeeplyNested struct {
+	Me *AnotherObject
 }

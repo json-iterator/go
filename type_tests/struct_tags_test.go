@@ -142,6 +142,9 @@ func init() {
 			B           string            `json:"b,omitempty"`
 			Annotations map[string]string `json:"annotations,omitempty"`
 		})(nil),
+		(*struct {
+			Field bool `json:",omitempty,string"`
+		})(nil),
 	)
 }
 

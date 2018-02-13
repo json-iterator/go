@@ -59,6 +59,7 @@ func init() {
 		(*SameLevel2BothTagged)(nil),
 		(*SameLevel2NoTags)(nil),
 		(*SameLevel2Tagged)(nil),
+		(*EmbeddedPtr)(nil),
 	)
 }
 
@@ -217,4 +218,16 @@ type SameLevel2TaggedE2 struct {
 type SameLevel2Tagged struct {
 	SameLevel2TaggedE1
 	SameLevel2TaggedE2
+}
+
+type EmbeddedPtrO1 struct {
+	O1F string
+}
+
+type EmbeddedPtrOption struct {
+	O1 *EmbeddedPtrO1
+}
+
+type EmbeddedPtr struct {
+	EmbeddedPtrOption `json:","`
 }
