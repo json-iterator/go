@@ -3,7 +3,6 @@ package jsoniter
 import (
 	"fmt"
 	"unicode"
-	"unsafe"
 )
 
 // ReadObject read one field from object.
@@ -19,26 +18,6 @@ func (iter *Iterator) ReadObject() (ret string) {
 		c = iter.nextToken()
 		if c == '"' {
 			iter.unreadByte()
-			if iter.cfg.objectFieldMustBeSimpleString {
-				return string(iter.readObjectFieldAsBytes())
-			} else {
-				field := iter.ReadString()
-				c = iter.nextToken()
-				if c != ':' {
-					iter.ReportError("ReadObject", "expect : after object field, but found "+string([]byte{c}))
-				}
-				return field
-			}
-		}
-		if c == '}' {
-			return "" // end of object
-		}
-		iter.ReportError("ReadObject", `expect " after {, but found `+string([]byte{c}))
-		return
-	case ',':
-		if iter.cfg.objectFieldMustBeSimpleString {
-			return string(iter.readObjectFieldAsBytes())
-		} else {
 			field := iter.ReadString()
 			c = iter.nextToken()
 			if c != ':' {
@@ -46,6 +25,18 @@ func (iter *Iterator) ReadObject() (ret string) {
 			}
 			return field
 		}
+		if c == '}' {
+			return "" // end of object
+		}
+		iter.ReportError("ReadObject", `expect " after {, but found `+string([]byte{c}))
+		return
+	case ',':
+		field := iter.ReadString()
+		c = iter.nextToken()
+		if c != ':' {
+			iter.ReportError("ReadObject", "expect : after object field, but found "+string([]byte{c}))
+		}
+		return field
 	case '}':
 		return "" // end of object
 	default:
@@ -115,36 +106,25 @@ func calcHash(str string) int32 {
 // ReadObjectCB read object with callback, the key is ascii only and field name not copied
 func (iter *Iterator) ReadObjectCB(callback func(*Iterator, string) bool) bool {
 	c := iter.nextToken()
-	var fieldBytes []byte
 	var field string
 	if c == '{' {
 		c = iter.nextToken()
 		if c == '"' {
 			iter.unreadByte()
-			if iter.cfg.objectFieldMustBeSimpleString {
-				fieldBytes = iter.readObjectFieldAsBytes()
-				field = *(*string)(unsafe.Pointer(&fieldBytes))
-			} else {
-				field = iter.ReadString()
-				c = iter.nextToken()
-				if c != ':' {
-					iter.ReportError("ReadObject", "expect : after object field, but found "+string([]byte{c}))
-				}
+			field = iter.ReadString()
+			c = iter.nextToken()
+			if c != ':' {
+				iter.ReportError("ReadObject", "expect : after object field, but found "+string([]byte{c}))
 			}
 			if !callback(iter, field) {
 				return false
 			}
 			c = iter.nextToken()
 			for c == ',' {
-				if iter.cfg.objectFieldMustBeSimpleString {
-					fieldBytes = iter.readObjectFieldAsBytes()
-					field = *(*string)(unsafe.Pointer(&fieldBytes))
-				} else {
-					field = iter.ReadString()
-					c = iter.nextToken()
-					if c != ':' {
-						iter.ReportError("ReadObject", "expect : after object field, but found "+string([]byte{c}))
-					}
+				field = iter.ReadString()
+				c = iter.nextToken()
+				if c != ':' {
+					iter.ReportError("ReadObject", "expect : after object field, but found "+string([]byte{c}))
 				}
 				if !callback(iter, field) {
 					return false
