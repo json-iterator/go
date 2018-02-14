@@ -14,6 +14,7 @@ type Stream struct {
 	Error      error
 	indention  int
 	Attachment interface{} // open for customized encoder
+	floatBuf   []byte
 }
 
 // NewStream create new stream instance.
@@ -28,6 +29,7 @@ func NewStream(cfg API, out io.Writer, bufSize int) *Stream {
 		n:         0,
 		Error:     nil,
 		indention: 0,
+		floatBuf:  make([]byte, 0, 32),
 	}
 }
 

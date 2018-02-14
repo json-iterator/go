@@ -21,7 +21,9 @@ func (stream *Stream) WriteFloat32(val float32) {
 			fmt = 'e'
 		}
 	}
-	stream.WriteRaw(strconv.FormatFloat(float64(val), fmt, -1, 32))
+	stream.floatBuf = strconv.AppendFloat(stream.floatBuf, float64(val), fmt, -1, 32)
+	stream.Write(stream.floatBuf)
+	stream.floatBuf = stream.floatBuf[:0]
 }
 
 // WriteFloat32Lossy write float32 to stream with ONLY 6 digits precision although much much faster
@@ -63,7 +65,9 @@ func (stream *Stream) WriteFloat64(val float64) {
 			fmt = 'e'
 		}
 	}
-	stream.WriteRaw(strconv.FormatFloat(float64(val), fmt, -1, 64))
+	stream.floatBuf = strconv.AppendFloat(stream.floatBuf, float64(val), fmt, -1, 64)
+	stream.Write(stream.floatBuf)
+	stream.floatBuf = stream.floatBuf[:0]
 }
 
 // WriteFloat64Lossy write float64 to stream with ONLY 6 digits precision although much much faster
