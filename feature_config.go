@@ -13,6 +13,7 @@ import (
 type Config struct {
 	IndentionStep                 int
 	MarshalFloatWith6Digits       bool
+	MarshalBytesWithString        bool
 	EscapeHTML                    bool
 	SortMapKeys                   bool
 	UseNumber                     bool
@@ -73,6 +74,9 @@ func (cfg Config) Froze() API {
 	api.initCache()
 	if cfg.MarshalFloatWith6Digits {
 		api.marshalFloatWith6Digits()
+	}
+	if cfg.MarshalBytesWithString {
+		api.marshalBytesWithString()
 	}
 	if cfg.EscapeHTML {
 		api.escapeHTML()
@@ -172,6 +176,10 @@ func (cfg *frozenConfig) marshalFloatWith6Digits() {
 	// for better performance
 	cfg.addEncoderToCache(reflect.TypeOf((*float32)(nil)).Elem(), &lossyFloat32Encoder{})
 	cfg.addEncoderToCache(reflect.TypeOf((*float64)(nil)).Elem(), &lossyFloat64Encoder{})
+}
+
+func (cfg *frozenConfig) marshalBytesWithString() {
+	cfg.addEncoderToCache(reflect.TypeOf(([]byte)(nil)), &stringCodec{})
 }
 
 type htmlEscapedStringEncoder struct {
