@@ -49,6 +49,14 @@ func init() {
 			Field2 json.RawMessage
 		})(nil),
 		input: `{"field1": "hello", "field2":[1,2,3]}`,
+	}, unmarshalCase{
+		ptr: (*struct {
+			a int
+			b <-chan int
+			C int
+			d *time.Timer
+		})(nil),
+		input: `{"a": 444, "b":"bad", "C":256, "d":{"not":"a timer"}}`,
 	})
 	marshalCases = append(marshalCases,
 		struct {
@@ -135,6 +143,17 @@ func init() {
 			Field1 *string
 			Field2 *string
 		}{Field2: pString("world")},
+		struct {
+			a int
+			b <-chan int
+			C int
+			d *time.Timer
+		}{
+			a: 42,
+			b: make(<-chan int, 10),
+			C: 21,
+			d: time.NewTimer(10 * time.Second),
+		},
 	)
 }
 

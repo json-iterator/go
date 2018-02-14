@@ -3,6 +3,7 @@ package test
 import "time"
 
 func init() {
+	structFields1To11()
 	testCases = append(testCases,
 		(*struct1Alias)(nil),
 		(*struct {
@@ -255,6 +256,99 @@ func init() {
 			}
 		})(nil),
 		(*DeeplyNested)(nil),
+	)
+}
+
+func structFields1To11() {
+	testCases = append(testCases,
+		(*struct {
+			Field1 string
+		})(nil),
+		(*struct {
+			Field1 string
+			Field2 string
+		})(nil),
+		(*struct {
+			Field1 string
+			Field2 string
+			Field3 string
+		})(nil),
+		(*struct {
+			Field1 string
+			Field2 string
+			Field3 string
+			Field4 string
+		})(nil),
+		(*struct {
+			Field1 string
+			Field2 string
+			Field3 string
+			Field4 string
+			Field5 string
+		})(nil),
+		(*struct {
+			Field1 string
+			Field2 string
+			Field3 string
+			Field4 string
+			Field5 string
+			Field6 string
+		})(nil),
+		(*struct {
+			Field1 string
+			Field2 string
+			Field3 string
+			Field4 string
+			Field5 string
+			Field6 string
+			Field7 string
+		})(nil),
+		(*struct {
+			Field1 string
+			Field2 string
+			Field3 string
+			Field4 string
+			Field5 string
+			Field6 string
+			Field7 string
+			Field8 string
+		})(nil),
+		(*struct {
+			Field1 string
+			Field2 string
+			Field3 string
+			Field4 string
+			Field5 string
+			Field6 string
+			Field7 string
+			Field8 string
+			Field9 string
+		})(nil),
+		(*struct {
+			Field1 string
+			Field2 string
+			Field3 string
+			Field4 string
+			Field5 string
+			Field6 string
+			Field7 string
+			Field8 string
+			Field9 string
+			Field10 string
+		})(nil),
+		(*struct {
+			Field1 string
+			Field2 string
+			Field3 string
+			Field4 string
+			Field5 string
+			Field6 string
+			Field7 string
+			Field8 string
+			Field9 string
+			Field10 string
+			Field11 string
+		})(nil),
 	)
 }
 

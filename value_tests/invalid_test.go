@@ -199,3 +199,28 @@ func TestDecodeErrorType(t *testing.T) {
 	should.Nil(jsoniter.Unmarshal([]byte("null"), &err))
 	should.NotNil(jsoniter.Unmarshal([]byte("123"), &err))
 }
+
+func Test_decode_slash(t *testing.T) {
+	should := require.New(t)
+	var obj interface{}
+	should.NotNil(json.Unmarshal([]byte("\\"), &obj))
+	should.NotNil(jsoniter.UnmarshalFromString("\\", &obj))
+}
+
+func Test_NilInput(t *testing.T) {
+	var jb []byte // nil
+	var out string
+	err := jsoniter.Unmarshal(jb, &out)
+	if err == nil {
+		t.Errorf("Expected error")
+	}
+}
+
+func Test_EmptyInput(t *testing.T) {
+	jb := []byte("")
+	var out string
+	err := jsoniter.Unmarshal(jb, &out)
+	if err == nil {
+		t.Errorf("Expected error")
+	}
+}
