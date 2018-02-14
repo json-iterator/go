@@ -15,7 +15,9 @@ type unmarshalCase struct {
 
 var unmarshalCases []unmarshalCase
 
-var marshalCases []interface{}
+var marshalCases = []interface{}{
+	nil,
+}
 
 func Test_unmarshal(t *testing.T) {
 	should := require.New(t)

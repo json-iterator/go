@@ -1,5 +1,14 @@
 package test
 
 func init() {
-	marshalCases = append(marshalCases, []interface{}{"hello"})
+	nilSlice := []string(nil)
+	marshalCases = append(marshalCases,
+		[]interface{}{"hello"},
+		nilSlice,
+		&nilSlice,
+	)
+	unmarshalCases = append(unmarshalCases, unmarshalCase{
+		ptr:   (*[]string)(nil),
+		input: "null",
+	})
 }

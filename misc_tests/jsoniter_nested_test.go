@@ -1,9 +1,10 @@
-package jsoniter
+package misc_tests
 
 import (
 	"encoding/json"
 	"reflect"
 	"testing"
+	"github.com/json-iterator/go"
 )
 
 type Level1 struct {
@@ -15,7 +16,7 @@ type Level2 struct {
 }
 
 func Test_nested(t *testing.T) {
-	iter := ParseString(ConfigDefault, `{"hello": [{"world": "value1"}, {"world": "value2"}]}`)
+	iter := jsoniter.ParseString(jsoniter.ConfigDefault, `{"hello": [{"world": "value1"}, {"world": "value2"}]}`)
 	l1 := Level1{}
 	for l1Field := iter.ReadObject(); l1Field != ""; l1Field = iter.ReadObject() {
 		switch l1Field {
@@ -50,7 +51,7 @@ func Test_nested(t *testing.T) {
 
 func Benchmark_jsoniter_nested(b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		iter := ParseString(ConfigDefault, `{"hello": [{"world": "value1"}, {"world": "value2"}]}`)
+		iter := jsoniter.ParseString(jsoniter.ConfigDefault, `{"hello": [{"world": "value1"}, {"world": "value2"}]}`)
 		l1 := Level1{}
 		for l1Field := iter.ReadObject(); l1Field != ""; l1Field = iter.ReadObject() {
 			switch l1Field {
@@ -63,7 +64,7 @@ func Benchmark_jsoniter_nested(b *testing.B) {
 	}
 }
 
-func readLevel1Hello(iter *Iterator) []Level2 {
+func readLevel1Hello(iter *jsoniter.Iterator) []Level2 {
 	l2Array := make([]Level2, 0, 2)
 	for iter.ReadArray() {
 		l2 := Level2{}

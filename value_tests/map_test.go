@@ -3,6 +3,7 @@ package test
 import "math/big"
 
 func init() {
+	nilMap := map[string]string(nil)
 	marshalCases = append(marshalCases,
 		map[string]interface{}{"abc": 1},
 		map[string]MyInterface{"hello": MyString("world")},
@@ -17,10 +18,15 @@ func init() {
 			uint64(2): "a",
 			uint64(4): "a",
 		},
+		nilMap,
+		&nilMap,
 	)
 	unmarshalCases = append(unmarshalCases, unmarshalCase{
 		ptr: (*map[string]string)(nil),
 		input: `{"k\"ey": "val"}`,
+	}, unmarshalCase{
+		ptr: (*map[string]string)(nil),
+		input: `null`,
 	})
 }
 
