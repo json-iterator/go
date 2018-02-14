@@ -25,7 +25,7 @@ func Test_unmarshal(t *testing.T) {
 		err1 := json.Unmarshal([]byte(testCase.input), ptr1Val.Interface())
 		should.NoError(err1)
 		ptr2Val := reflect.New(valType)
-		err2 := jsoniter.Unmarshal([]byte(testCase.input), ptr2Val.Interface())
+		err2 := jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal([]byte(testCase.input), ptr2Val.Interface())
 		should.NoError(err2)
 		should.Equal(ptr1Val.Interface(), ptr2Val.Interface())
 	}
@@ -36,7 +36,7 @@ func Test_marshal(t *testing.T) {
 	for _, testCase := range marshalCases {
 		output1, err1 := json.Marshal(testCase)
 		should.NoError(err1)
-		output2, err2 := jsoniter.Marshal(testCase)
+		output2, err2 := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(testCase)
 		should.NoError(err2)
 		should.Equal(string(output1), string(output2))
 	}

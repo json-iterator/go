@@ -1,10 +1,11 @@
-package jsoniter
+package test
 
 import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
 	"testing"
+	"github.com/json-iterator/go"
 )
 
 //func Test_large_file(t *testing.T) {
@@ -127,9 +128,9 @@ func Benchmark_jsoniter_large_file(b *testing.B) {
 	b.ReportAllocs()
 	for n := 0; n < b.N; n++ {
 		file, _ := os.Open("/tmp/large-file.json")
-		iter := Parse(ConfigDefault, file, 4096)
+		iter := jsoniter.Parse(jsoniter.ConfigDefault, file, 4096)
 		count := 0
-		iter.ReadArrayCB(func(iter *Iterator) bool {
+		iter.ReadArrayCB(func(iter *jsoniter.Iterator) bool {
 			// Skip() is strict by default, use --tags jsoniter-sloppy to skip without validation
 			iter.Skip()
 			count++
