@@ -219,34 +219,22 @@ var hex = "0123456789abcdef"
 
 // WriteStringWithHTMLEscaped write string to stream with html special characters escaped
 func (stream *Stream) WriteStringWithHTMLEscaped(s string) {
-	stream.ensure(32)
 	valLen := len(s)
-	toWriteLen := valLen
-	bufLengthMinusTwo := len(stream.buf) - 2 // make room for the quotes
-	if stream.n+toWriteLen > bufLengthMinusTwo {
-		toWriteLen = bufLengthMinusTwo - stream.n
-	}
-	n := stream.n
-	stream.buf[n] = '"'
-	n++
+	stream.buf = append(stream.buf, '"')
 	// write string, the fast path, without utf8 and escape support
 	i := 0
-	for ; i < toWriteLen; i++ {
+	for ; i < valLen; i++ {
 		c := s[i]
 		if c < utf8.RuneSelf && htmlSafeSet[c] {
-			stream.buf[n] = c
-			n++
+			stream.buf = append(stream.buf, c)
 		} else {
 			break
 		}
 	}
 	if i == valLen {
-		stream.buf[n] = '"'
-		n++
-		stream.n = n
+		stream.buf = append(stream.buf, '"')
 		return
 	}
-	stream.n = n
 	writeStringSlowPathWithHTMLEscaped(stream, i, s, valLen)
 }
 
@@ -321,34 +309,22 @@ func writeStringSlowPathWithHTMLEscaped(stream *Stream, i int, s string, valLen 
 
 // WriteString write string to stream without html escape
 func (stream *Stream) WriteString(s string) {
-	stream.ensure(32)
 	valLen := len(s)
-	toWriteLen := valLen
-	bufLengthMinusTwo := len(stream.buf) - 2 // make room for the quotes
-	if stream.n+toWriteLen > bufLengthMinusTwo {
-		toWriteLen = bufLengthMinusTwo - stream.n
-	}
-	n := stream.n
-	stream.buf[n] = '"'
-	n++
+	stream.buf = append(stream.buf, '"')
 	// write string, the fast path, without utf8 and escape support
 	i := 0
-	for ; i < toWriteLen; i++ {
+	for ; i < valLen; i++ {
 		c := s[i]
 		if c > 31 && c != '"' && c != '\\' {
-			stream.buf[n] = c
-			n++
+			stream.buf = append(stream.buf, c)
 		} else {
 			break
 		}
 	}
 	if i == valLen {
-		stream.buf[n] = '"'
-		n++
-		stream.n = n
+		stream.buf = append(stream.buf, '"')
 		return
 	}
-	stream.n = n
 	writeStringSlowPath(stream, i, s, valLen)
 }
 

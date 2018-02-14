@@ -599,10 +599,10 @@ func (codec *base64Codec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	}
 	encoding := base64.StdEncoding
 	stream.writeByte('"')
-	toGrow := encoding.EncodedLen(len(src))
-	stream.ensure(toGrow)
-	encoding.Encode(stream.buf[stream.n:], src)
-	stream.n += toGrow
+	size := encoding.EncodedLen(len(src))
+	buf := make([]byte, size)
+	encoding.Encode(buf, src)
+	stream.buf = append(stream.buf, buf...)
 	stream.writeByte('"')
 }
 
@@ -615,10 +615,10 @@ func (codec *base64Codec) EncodeInterface(val interface{}, stream *Stream) {
 	}
 	encoding := base64.StdEncoding
 	stream.writeByte('"')
-	toGrow := encoding.EncodedLen(len(src))
-	stream.ensure(toGrow)
-	encoding.Encode(stream.buf[stream.n:], src)
-	stream.n += toGrow
+	size := encoding.EncodedLen(len(src))
+	buf := make([]byte, size)
+	encoding.Encode(buf, src)
+	stream.buf = append(stream.buf, buf...)
 	stream.writeByte('"')
 }
 

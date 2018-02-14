@@ -10,11 +10,9 @@ type Stream struct {
 	cfg        *frozenConfig
 	out        io.Writer
 	buf        []byte
-	n          int
 	Error      error
 	indention  int
 	Attachment interface{} // open for customized encoder
-	floatBuf   []byte
 }
 
 // NewStream create new stream instance.
@@ -25,11 +23,9 @@ func NewStream(cfg API, out io.Writer, bufSize int) *Stream {
 	return &Stream{
 		cfg:       cfg.(*frozenConfig),
 		out:       out,
-		buf:       make([]byte, bufSize),
-		n:         0,
+		buf:       make([]byte, 0, bufSize),
 		Error:     nil,
 		indention: 0,
-		floatBuf:  make([]byte, 0, 32),
 	}
 }
 
@@ -41,22 +37,22 @@ func (stream *Stream) Pool() StreamPool {
 // Reset reuse this stream instance by assign a new writer
 func (stream *Stream) Reset(out io.Writer) {
 	stream.out = out
-	stream.n = 0
+	stream.buf = stream.buf[:0]
 }
 
 // Available returns how many bytes are unused in the buffer.
 func (stream *Stream) Available() int {
-	return len(stream.buf) - stream.n
+	return cap(stream.buf) - len(stream.buf)
 }
 
 // Buffered returns the number of bytes that have been written into the current buffer.
 func (stream *Stream) Buffered() int {
-	return stream.n
+	return len(stream.buf)
 }
 
 // Buffer if writer is nil, use this method to take the result
 func (stream *Stream) Buffer() []byte {
-	return stream.buf[:stream.n]
+	return stream.buf
 }
 
 // Write writes the contents of p into the buffer.
@@ -64,97 +60,34 @@ func (stream *Stream) Buffer() []byte {
 // If nn < len(p), it also returns an error explaining
 // why the write is short.
 func (stream *Stream) Write(p []byte) (nn int, err error) {
-	for len(p) > stream.Available() && stream.Error == nil {
-		if stream.out == nil {
-			stream.growAtLeast(len(p))
-		} else {
-			var n int
-			if stream.Buffered() == 0 {
-				// Large write, empty buffer.
-				// Write directly from p to avoid copy.
-				n, stream.Error = stream.out.Write(p)
-			} else {
-				n = copy(stream.buf[stream.n:], p)
-				stream.n += n
-				stream.Flush()
-			}
-			nn += n
-			p = p[n:]
-		}
+	stream.buf = append(stream.buf, p...)
+	if stream.out != nil {
+		nn, err = stream.out.Write(stream.buf)
+		stream.buf = stream.buf[nn:]
+		return
 	}
-	if stream.Error != nil {
-		return nn, stream.Error
-	}
-	n := copy(stream.buf[stream.n:], p)
-	stream.n += n
-	nn += n
-	return nn, nil
+	return len(p), nil
 }
 
 // WriteByte writes a single byte.
 func (stream *Stream) writeByte(c byte) {
-	if stream.Error != nil {
-		return
-	}
-	if stream.Available() < 1 {
-		stream.growAtLeast(1)
-	}
-	stream.buf[stream.n] = c
-	stream.n++
+	stream.buf = append(stream.buf, c)
 }
 
 func (stream *Stream) writeTwoBytes(c1 byte, c2 byte) {
-	if stream.Error != nil {
-		return
-	}
-	if stream.Available() < 2 {
-		stream.growAtLeast(2)
-	}
-	stream.buf[stream.n] = c1
-	stream.buf[stream.n+1] = c2
-	stream.n += 2
+	stream.buf = append(stream.buf, c1, c2)
 }
 
 func (stream *Stream) writeThreeBytes(c1 byte, c2 byte, c3 byte) {
-	if stream.Error != nil {
-		return
-	}
-	if stream.Available() < 3 {
-		stream.growAtLeast(3)
-	}
-	stream.buf[stream.n] = c1
-	stream.buf[stream.n+1] = c2
-	stream.buf[stream.n+2] = c3
-	stream.n += 3
+	stream.buf = append(stream.buf, c1, c2, c3)
 }
 
 func (stream *Stream) writeFourBytes(c1 byte, c2 byte, c3 byte, c4 byte) {
-	if stream.Error != nil {
-		return
-	}
-	if stream.Available() < 4 {
-		stream.growAtLeast(4)
-	}
-	stream.buf[stream.n] = c1
-	stream.buf[stream.n+1] = c2
-	stream.buf[stream.n+2] = c3
-	stream.buf[stream.n+3] = c4
-	stream.n += 4
+	stream.buf = append(stream.buf, c1, c2, c3, c4)
 }
 
 func (stream *Stream) writeFiveBytes(c1 byte, c2 byte, c3 byte, c4 byte, c5 byte) {
-	if stream.Error != nil {
-		return
-	}
-	if stream.Available() < 5 {
-		stream.growAtLeast(5)
-	}
-	stream.buf[stream.n] = c1
-	stream.buf[stream.n+1] = c2
-	stream.buf[stream.n+2] = c3
-	stream.buf[stream.n+3] = c4
-	stream.buf[stream.n+4] = c5
-	stream.n += 5
+	stream.buf = append(stream.buf, c1, c2, c3, c4, c5)
 }
 
 // Flush writes any buffered data to the underlying io.Writer.
@@ -165,56 +98,20 @@ func (stream *Stream) Flush() error {
 	if stream.Error != nil {
 		return stream.Error
 	}
-	if stream.n == 0 {
-		return nil
-	}
-	n, err := stream.out.Write(stream.buf[0:stream.n])
-	if n < stream.n && err == nil {
-		err = io.ErrShortWrite
-	}
+	n, err := stream.out.Write(stream.buf)
 	if err != nil {
-		if n > 0 && n < stream.n {
-			copy(stream.buf[0:stream.n-n], stream.buf[n:stream.n])
+		if stream.Error == nil {
+			stream.Error = err
 		}
-		stream.n -= n
-		stream.Error = err
 		return err
 	}
-	stream.n = 0
+	stream.buf = stream.buf[n:]
 	return nil
-}
-
-func (stream *Stream) ensure(minimal int) {
-	available := stream.Available()
-	if available < minimal {
-		stream.growAtLeast(minimal)
-	}
-}
-
-func (stream *Stream) growAtLeast(minimal int) {
-	if stream.out != nil {
-		stream.Flush()
-		if stream.Available() >= minimal {
-			return
-		}
-	}
-	toGrow := len(stream.buf)
-	if toGrow < minimal {
-		toGrow = minimal
-	}
-	newBuf := make([]byte, len(stream.buf)+toGrow)
-	copy(newBuf, stream.Buffer())
-	stream.buf = newBuf
 }
 
 // WriteRaw write string out without quotes, just like []byte
 func (stream *Stream) WriteRaw(s string) {
-	stream.ensure(len(s))
-	if stream.Error != nil {
-		return
-	}
-	n := copy(stream.buf[stream.n:], s)
-	stream.n += n
+	stream.buf = append(stream.buf, s...)
 }
 
 // WriteNil write null to stream
@@ -275,6 +172,7 @@ func (stream *Stream) WriteEmptyObject() {
 func (stream *Stream) WriteMore() {
 	stream.writeByte(',')
 	stream.writeIndention(0)
+	stream.Flush()
 }
 
 // WriteArrayStart write [ with possible indention
@@ -302,9 +200,7 @@ func (stream *Stream) writeIndention(delta int) {
 	}
 	stream.writeByte('\n')
 	toWrite := stream.indention - delta
-	stream.ensure(toWrite)
-	for i := 0; i < toWrite && stream.n < len(stream.buf); i++ {
-		stream.buf[stream.n] = ' '
-		stream.n++
+	for i := 0; i < toWrite; i++ {
+		stream.buf = append(stream.buf, ' ')
 	}
 }

@@ -23,10 +23,10 @@ func Test_writeBytes_should_grow_buffer(t *testing.T) {
 	stream := NewStream(ConfigDefault, nil, 1)
 	stream.Write([]byte{'1', '2'})
 	should.Equal("12", string(stream.Buffer()))
-	should.Equal(3, len(stream.buf))
+	should.Equal(2, len(stream.buf))
 	stream.Write([]byte{'3', '4', '5', '6', '7'})
 	should.Equal("1234567", string(stream.Buffer()))
-	should.Equal(8, len(stream.buf))
+	should.Equal(7, len(stream.buf))
 }
 
 func Test_writeIndention_should_grow_buffer(t *testing.T) {
@@ -65,5 +65,5 @@ func Test_flush_buffer_should_stop_grow_buffer(t *testing.T) {
 	writer := new(NopWriter)
 	NewEncoder(writer).Encode(make([]int, 10000000))
 	should := require.New(t)
-	should.Equal(512, writer.bufferSize)
+	should.Equal(8, writer.bufferSize)
 }

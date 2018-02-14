@@ -21,9 +21,7 @@ func (stream *Stream) WriteFloat32(val float32) {
 			fmt = 'e'
 		}
 	}
-	stream.floatBuf = strconv.AppendFloat(stream.floatBuf, float64(val), fmt, -1, 32)
-	stream.Write(stream.floatBuf)
-	stream.floatBuf = stream.floatBuf[:0]
+	stream.buf = strconv.AppendFloat(stream.buf, float64(val), fmt, -1, 32)
 }
 
 // WriteFloat32Lossy write float32 to stream with ONLY 6 digits precision although much much faster
@@ -45,13 +43,12 @@ func (stream *Stream) WriteFloat32Lossy(val float32) {
 		return
 	}
 	stream.writeByte('.')
-	stream.ensure(10)
 	for p := precision - 1; p > 0 && fval < pow10[p]; p-- {
 		stream.writeByte('0')
 	}
 	stream.WriteUint64(fval)
-	for stream.buf[stream.n-1] == '0' {
-		stream.n--
+	for stream.buf[len(stream.buf)-1] == '0' {
+		stream.buf = stream.buf[:len(stream.buf)-1]
 	}
 }
 
@@ -65,9 +62,7 @@ func (stream *Stream) WriteFloat64(val float64) {
 			fmt = 'e'
 		}
 	}
-	stream.floatBuf = strconv.AppendFloat(stream.floatBuf, float64(val), fmt, -1, 64)
-	stream.Write(stream.floatBuf)
-	stream.floatBuf = stream.floatBuf[:0]
+	stream.buf = strconv.AppendFloat(stream.buf, float64(val), fmt, -1, 64)
 }
 
 // WriteFloat64Lossy write float64 to stream with ONLY 6 digits precision although much much faster
@@ -89,12 +84,11 @@ func (stream *Stream) WriteFloat64Lossy(val float64) {
 		return
 	}
 	stream.writeByte('.')
-	stream.ensure(10)
 	for p := precision - 1; p > 0 && fval < pow10[p]; p-- {
 		stream.writeByte('0')
 	}
 	stream.WriteUint64(fval)
-	for stream.buf[stream.n-1] == '0' {
-		stream.n--
+	for stream.buf[len(stream.buf)-1] == '0' {
+		stream.buf = stream.buf[:len(stream.buf)-1]
 	}
 }
