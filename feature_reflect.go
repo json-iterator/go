@@ -29,25 +29,10 @@ type ValDecoder interface {
 type ValEncoder interface {
 	IsEmpty(ptr unsafe.Pointer) bool
 	Encode(ptr unsafe.Pointer, stream *Stream)
-	EncodeInterface(val interface{}, stream *Stream)
 }
 
 type checkIsEmpty interface {
 	IsEmpty(ptr unsafe.Pointer) bool
-}
-
-// WriteToStream the default implementation for TypeEncoder method EncodeInterface
-func WriteToStream(val interface{}, stream *Stream, encoder ValEncoder) {
-	e := (*emptyInterface)(unsafe.Pointer(&val))
-	if e.word == nil {
-		stream.WriteNil()
-		return
-	}
-	if reflect.TypeOf(val).Kind() == reflect.Ptr {
-		encoder.Encode(unsafe.Pointer(&e.word), stream)
-	} else {
-		encoder.Encode(e.word, stream)
-	}
 }
 
 var jsonNumberType reflect.Type
@@ -92,9 +77,8 @@ func (stream *Stream) WriteVal(val interface{}) {
 		return
 	}
 	typ := reflect.TypeOf(val)
-	cacheKey := typ
-	encoder := encoderOfType(stream.cfg, "", cacheKey)
-	encoder.EncodeInterface(val, stream)
+	encoder := stream.cfg.EncoderOf(typ)
+	encoder.Encode((*emptyInterface)(unsafe.Pointer(&val)).word, stream)
 }
 
 func decoderOfType(cfg *frozenConfig, prefix string, typ reflect.Type) ValDecoder {
@@ -264,19 +248,64 @@ func createDecoderOfType(cfg *frozenConfig, prefix string, typ reflect.Type) Val
 	}
 }
 
-func encoderOfType(cfg *frozenConfig, prefix string, typ reflect.Type) ValEncoder {
+func (cfg *frozenConfig) EncoderOf(typ reflect.Type) ValEncoder {
 	cacheKey := typ
 	encoder := cfg.getEncoderFromCache(cacheKey)
 	if encoder != nil {
 		return encoder
 	}
-	encoder = getTypeEncoderFromExtension(cfg, typ)
+	encoder = encoderOfType(cfg, "", typ)
+	if shouldFixOnePtr(typ) {
+		encoder = &onePtrEncoder{encoder}
+	}
+	cfg.addEncoderToCache(cacheKey, encoder)
+	return encoder
+}
+
+type onePtrEncoder struct {
+	encoder ValEncoder
+}
+
+func (encoder *onePtrEncoder) IsEmpty(ptr unsafe.Pointer) bool {
+	return encoder.encoder.IsEmpty(unsafe.Pointer(&ptr))
+}
+
+func (encoder *onePtrEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
+	encoder.encoder.Encode(unsafe.Pointer(&ptr), stream)
+}
+
+func shouldFixOnePtr(typ reflect.Type) bool {
+	if isPtrKind(typ.Kind()) {
+		return true
+	}
+	if typ.Kind() == reflect.Struct {
+		if typ.NumField() != 1 {
+			return false
+		}
+		return shouldFixOnePtr(typ.Field(0).Type)
+	}
+	if typ.Kind() == reflect.Array {
+		if typ.Len() != 1 {
+			return false
+		}
+		return shouldFixOnePtr(typ.Elem())
+	}
+	return false
+}
+
+func isPtrKind(kind reflect.Kind) bool {
+	switch kind {
+	case reflect.Ptr, reflect.Map, reflect.Chan, reflect.Func:
+		return true
+	}
+	return false
+}
+
+func encoderOfType(cfg *frozenConfig, prefix string, typ reflect.Type) ValEncoder {
+	encoder := getTypeEncoderFromExtension(cfg, typ)
 	if encoder != nil {
-		cfg.addEncoderToCache(cacheKey, encoder)
 		return encoder
 	}
-	encoder = &placeholderEncoder{cfg: cfg, cacheKey: cacheKey}
-	cfg.addEncoderToCache(cacheKey, encoder)
 	encoder = createEncoderOfType(cfg, prefix, typ)
 	for _, extension := range extensions {
 		encoder = extension.DecorateEncoder(typ, encoder)
@@ -284,7 +313,6 @@ func encoderOfType(cfg *frozenConfig, prefix string, typ reflect.Type) ValEncode
 	for _, extension := range cfg.extensions {
 		encoder = extension.DecorateEncoder(typ, encoder)
 	}
-	cfg.addEncoderToCache(cacheKey, encoder)
 	return encoder
 }
 
@@ -495,36 +523,6 @@ func createEncoderOfSimpleType(cfg *frozenConfig, prefix string, typ reflect.Typ
 	}
 }
 
-type placeholderEncoder struct {
-	cfg      *frozenConfig
-	cacheKey reflect.Type
-}
-
-func (encoder *placeholderEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
-	encoder.getRealEncoder().Encode(ptr, stream)
-}
-
-func (encoder *placeholderEncoder) EncodeInterface(val interface{}, stream *Stream) {
-	encoder.getRealEncoder().EncodeInterface(val, stream)
-}
-
-func (encoder *placeholderEncoder) IsEmpty(ptr unsafe.Pointer) bool {
-	return encoder.getRealEncoder().IsEmpty(ptr)
-}
-
-func (encoder *placeholderEncoder) getRealEncoder() ValEncoder {
-	for i := 0; i < 500; i++ {
-		realDecoder := encoder.cfg.getEncoderFromCache(encoder.cacheKey)
-		_, isPlaceholder := realDecoder.(*placeholderEncoder)
-		if isPlaceholder {
-			time.Sleep(10 * time.Millisecond)
-		} else {
-			return realDecoder
-		}
-	}
-	panic(fmt.Sprintf("real encoder not found for cache key: %v", encoder.cacheKey))
-}
-
 type placeholderDecoder struct {
 	cfg      *frozenConfig
 	cacheKey reflect.Type
@@ -564,14 +562,6 @@ type lazyErrorEncoder struct {
 
 func (encoder *lazyErrorEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	if ptr == nil {
-		stream.WriteNil()
-	} else if stream.Error == nil {
-		stream.Error = encoder.err
-	}
-}
-
-func (encoder *lazyErrorEncoder) EncodeInterface(val interface{}, stream *Stream) {
-	if val == nil {
 		stream.WriteNil()
 	} else if stream.Error == nil {
 		stream.Error = encoder.err

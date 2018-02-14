@@ -143,10 +143,6 @@ func (encoder *lossyFloat32Encoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteFloat32Lossy(*((*float32)(ptr)))
 }
 
-func (encoder *lossyFloat32Encoder) EncodeInterface(val interface{}, stream *Stream) {
-	WriteToStream(val, stream, encoder)
-}
-
 func (encoder *lossyFloat32Encoder) IsEmpty(ptr unsafe.Pointer) bool {
 	return *((*float32)(ptr)) == 0
 }
@@ -156,10 +152,6 @@ type lossyFloat64Encoder struct {
 
 func (encoder *lossyFloat64Encoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteFloat64Lossy(*((*float64)(ptr)))
-}
-
-func (encoder *lossyFloat64Encoder) EncodeInterface(val interface{}, stream *Stream) {
-	WriteToStream(val, stream, encoder)
 }
 
 func (encoder *lossyFloat64Encoder) IsEmpty(ptr unsafe.Pointer) bool {
@@ -180,10 +172,6 @@ type htmlEscapedStringEncoder struct {
 func (encoder *htmlEscapedStringEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	str := *((*string)(ptr))
 	stream.WriteStringWithHTMLEscaped(str)
-}
-
-func (encoder *htmlEscapedStringEncoder) EncodeInterface(val interface{}, stream *Stream) {
-	WriteToStream(val, stream, encoder)
 }
 
 func (encoder *htmlEscapedStringEncoder) IsEmpty(ptr unsafe.Pointer) bool {

@@ -20,10 +20,6 @@ func (codec *stringCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteString(str)
 }
 
-func (codec *stringCodec) EncodeInterface(val interface{}, stream *Stream) {
-	WriteToStream(val, stream, codec)
-}
-
 func (codec *stringCodec) IsEmpty(ptr unsafe.Pointer) bool {
 	return *((*string)(ptr)) == ""
 }
@@ -39,10 +35,6 @@ func (codec *intCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 
 func (codec *intCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteInt(*((*int)(ptr)))
-}
-
-func (codec *intCodec) EncodeInterface(val interface{}, stream *Stream) {
-	WriteToStream(val, stream, codec)
 }
 
 func (codec *intCodec) IsEmpty(ptr unsafe.Pointer) bool {
@@ -62,10 +54,6 @@ func (codec *uintptrCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteUint64(uint64(*((*uintptr)(ptr))))
 }
 
-func (codec *uintptrCodec) EncodeInterface(val interface{}, stream *Stream) {
-	WriteToStream(val, stream, codec)
-}
-
 func (codec *uintptrCodec) IsEmpty(ptr unsafe.Pointer) bool {
 	return *((*uintptr)(ptr)) == 0
 }
@@ -81,10 +69,6 @@ func (codec *int8Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 
 func (codec *int8Codec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteInt8(*((*int8)(ptr)))
-}
-
-func (codec *int8Codec) EncodeInterface(val interface{}, stream *Stream) {
-	WriteToStream(val, stream, codec)
 }
 
 func (codec *int8Codec) IsEmpty(ptr unsafe.Pointer) bool {
@@ -104,10 +88,6 @@ func (codec *int16Codec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteInt16(*((*int16)(ptr)))
 }
 
-func (codec *int16Codec) EncodeInterface(val interface{}, stream *Stream) {
-	WriteToStream(val, stream, codec)
-}
-
 func (codec *int16Codec) IsEmpty(ptr unsafe.Pointer) bool {
 	return *((*int16)(ptr)) == 0
 }
@@ -125,10 +105,6 @@ func (codec *int32Codec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteInt32(*((*int32)(ptr)))
 }
 
-func (codec *int32Codec) EncodeInterface(val interface{}, stream *Stream) {
-	WriteToStream(val, stream, codec)
-}
-
 func (codec *int32Codec) IsEmpty(ptr unsafe.Pointer) bool {
 	return *((*int32)(ptr)) == 0
 }
@@ -144,10 +120,6 @@ func (codec *int64Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 
 func (codec *int64Codec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteInt64(*((*int64)(ptr)))
-}
-
-func (codec *int64Codec) EncodeInterface(val interface{}, stream *Stream) {
-	WriteToStream(val, stream, codec)
 }
 
 func (codec *int64Codec) IsEmpty(ptr unsafe.Pointer) bool {
@@ -168,10 +140,6 @@ func (codec *uintCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteUint(*((*uint)(ptr)))
 }
 
-func (codec *uintCodec) EncodeInterface(val interface{}, stream *Stream) {
-	WriteToStream(val, stream, codec)
-}
-
 func (codec *uintCodec) IsEmpty(ptr unsafe.Pointer) bool {
 	return *((*uint)(ptr)) == 0
 }
@@ -187,10 +155,6 @@ func (codec *uint8Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 
 func (codec *uint8Codec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteUint8(*((*uint8)(ptr)))
-}
-
-func (codec *uint8Codec) EncodeInterface(val interface{}, stream *Stream) {
-	WriteToStream(val, stream, codec)
 }
 
 func (codec *uint8Codec) IsEmpty(ptr unsafe.Pointer) bool {
@@ -210,10 +174,6 @@ func (codec *uint16Codec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteUint16(*((*uint16)(ptr)))
 }
 
-func (codec *uint16Codec) EncodeInterface(val interface{}, stream *Stream) {
-	WriteToStream(val, stream, codec)
-}
-
 func (codec *uint16Codec) IsEmpty(ptr unsafe.Pointer) bool {
 	return *((*uint16)(ptr)) == 0
 }
@@ -229,10 +189,6 @@ func (codec *uint32Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 
 func (codec *uint32Codec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteUint32(*((*uint32)(ptr)))
-}
-
-func (codec *uint32Codec) EncodeInterface(val interface{}, stream *Stream) {
-	WriteToStream(val, stream, codec)
 }
 
 func (codec *uint32Codec) IsEmpty(ptr unsafe.Pointer) bool {
@@ -252,10 +208,6 @@ func (codec *uint64Codec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteUint64(*((*uint64)(ptr)))
 }
 
-func (codec *uint64Codec) EncodeInterface(val interface{}, stream *Stream) {
-	WriteToStream(val, stream, codec)
-}
-
 func (codec *uint64Codec) IsEmpty(ptr unsafe.Pointer) bool {
 	return *((*uint64)(ptr)) == 0
 }
@@ -271,10 +223,6 @@ func (codec *float32Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 
 func (codec *float32Codec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteFloat32(*((*float32)(ptr)))
-}
-
-func (codec *float32Codec) EncodeInterface(val interface{}, stream *Stream) {
-	WriteToStream(val, stream, codec)
 }
 
 func (codec *float32Codec) IsEmpty(ptr unsafe.Pointer) bool {
@@ -294,10 +242,6 @@ func (codec *float64Codec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteFloat64(*((*float64)(ptr)))
 }
 
-func (codec *float64Codec) EncodeInterface(val interface{}, stream *Stream) {
-	WriteToStream(val, stream, codec)
-}
-
 func (codec *float64Codec) IsEmpty(ptr unsafe.Pointer) bool {
 	return *((*float64)(ptr)) == 0
 }
@@ -313,10 +257,6 @@ func (codec *boolCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 
 func (codec *boolCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteBool(*((*bool)(ptr)))
-}
-
-func (codec *boolCodec) EncodeInterface(val interface{}, stream *Stream) {
-	WriteToStream(val, stream, codec)
 }
 
 func (codec *boolCodec) IsEmpty(ptr unsafe.Pointer) bool {
@@ -366,11 +306,8 @@ func (codec *emptyInterfaceCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 }
 
 func (codec *emptyInterfaceCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
-	stream.WriteVal(*((*interface{})(ptr)))
-}
-
-func (codec *emptyInterfaceCodec) EncodeInterface(val interface{}, stream *Stream) {
-	stream.WriteVal(val)
+	obj := *((*interface{})(ptr))
+	stream.WriteVal(obj)
 }
 
 func (codec *emptyInterfaceCodec) IsEmpty(ptr unsafe.Pointer) bool {
@@ -414,10 +351,6 @@ func (codec *nonEmptyInterfaceCodec) Encode(ptr unsafe.Pointer, stream *Stream) 
 	stream.WriteVal(i)
 }
 
-func (codec *nonEmptyInterfaceCodec) EncodeInterface(val interface{}, stream *Stream) {
-	stream.WriteVal(val)
-}
-
 func (codec *nonEmptyInterfaceCodec) IsEmpty(ptr unsafe.Pointer) bool {
 	nonEmptyInterface := (*nonEmptyInterface)(ptr)
 	return nonEmptyInterface.word == nil
@@ -432,10 +365,6 @@ func (codec *anyCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 
 func (codec *anyCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	(*((*Any)(ptr))).WriteTo(stream)
-}
-
-func (codec *anyCodec) EncodeInterface(val interface{}, stream *Stream) {
-	(val.(Any)).WriteTo(stream)
 }
 
 func (codec *anyCodec) IsEmpty(ptr unsafe.Pointer) bool {
@@ -459,15 +388,6 @@ func (codec *jsonNumberCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 
 func (codec *jsonNumberCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	number := *((*json.Number)(ptr))
-	if len(number) == 0 {
-		stream.WriteRaw("0")
-	} else {
-		stream.WriteRaw(string(number))
-	}
-}
-
-func (codec *jsonNumberCodec) EncodeInterface(val interface{}, stream *Stream) {
-	number := val.(json.Number)
 	if len(number) == 0 {
 		stream.WriteRaw("0")
 	} else {
@@ -503,15 +423,6 @@ func (codec *jsoniterNumberCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	}
 }
 
-func (codec *jsoniterNumberCodec) EncodeInterface(val interface{}, stream *Stream) {
-	number := val.(Number)
-	if len(number) == 0 {
-		stream.WriteRaw("0")
-	} else {
-		stream.WriteRaw(string(number))
-	}
-}
-
 func (codec *jsoniterNumberCodec) IsEmpty(ptr unsafe.Pointer) bool {
 	return len(*((*Number)(ptr))) == 0
 }
@@ -527,10 +438,6 @@ func (codec *jsonRawMessageCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteRaw(string(*((*json.RawMessage)(ptr))))
 }
 
-func (codec *jsonRawMessageCodec) EncodeInterface(val interface{}, stream *Stream) {
-	stream.WriteRaw(string(val.(json.RawMessage)))
-}
-
 func (codec *jsonRawMessageCodec) IsEmpty(ptr unsafe.Pointer) bool {
 	return len(*((*json.RawMessage)(ptr))) == 0
 }
@@ -544,10 +451,6 @@ func (codec *jsoniterRawMessageCodec) Decode(ptr unsafe.Pointer, iter *Iterator)
 
 func (codec *jsoniterRawMessageCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteRaw(string(*((*RawMessage)(ptr))))
-}
-
-func (codec *jsoniterRawMessageCodec) EncodeInterface(val interface{}, stream *Stream) {
-	stream.WriteRaw(string(val.(RawMessage)))
 }
 
 func (codec *jsoniterRawMessageCodec) IsEmpty(ptr unsafe.Pointer) bool {
@@ -592,22 +495,6 @@ func (codec *base64Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 }
 
 func (codec *base64Codec) Encode(ptr unsafe.Pointer, stream *Stream) {
-	src := *((*[]byte)(ptr))
-	if len(src) == 0 {
-		stream.WriteNil()
-		return
-	}
-	encoding := base64.StdEncoding
-	stream.writeByte('"')
-	size := encoding.EncodedLen(len(src))
-	buf := make([]byte, size)
-	encoding.Encode(buf, src)
-	stream.buf = append(stream.buf, buf...)
-	stream.writeByte('"')
-}
-
-func (codec *base64Codec) EncodeInterface(val interface{}, stream *Stream) {
-	ptr := extractInterface(val).word
 	src := *((*[]byte)(ptr))
 	if len(src) == 0 {
 		stream.WriteNil()
@@ -670,10 +557,6 @@ func (encoder *stringModeNumberEncoder) Encode(ptr unsafe.Pointer, stream *Strea
 	stream.writeByte('"')
 }
 
-func (encoder *stringModeNumberEncoder) EncodeInterface(val interface{}, stream *Stream) {
-	WriteToStream(val, stream, encoder)
-}
-
 func (encoder *stringModeNumberEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	return encoder.elemEncoder.IsEmpty(ptr)
 }
@@ -688,10 +571,6 @@ func (encoder *stringModeStringEncoder) Encode(ptr unsafe.Pointer, stream *Strea
 	defer encoder.cfg.ReturnStream(tempStream)
 	encoder.elemEncoder.Encode(ptr, tempStream)
 	stream.WriteString(string(tempStream.Buffer()))
-}
-
-func (encoder *stringModeStringEncoder) EncodeInterface(val interface{}, stream *Stream) {
-	WriteToStream(val, stream, encoder)
 }
 
 func (encoder *stringModeStringEncoder) IsEmpty(ptr unsafe.Pointer) bool {
@@ -720,9 +599,6 @@ func (encoder *marshalerEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 		stream.Write(bytes)
 	}
 }
-func (encoder *marshalerEncoder) EncodeInterface(val interface{}, stream *Stream) {
-	WriteToStream(val, stream, encoder)
-}
 
 func (encoder *marshalerEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	return encoder.checkIsEmpty.IsEmpty(ptr)
@@ -744,10 +620,6 @@ func (encoder *textMarshalerEncoder) Encode(ptr unsafe.Pointer, stream *Stream) 
 	} else {
 		stream.WriteString(string(bytes))
 	}
-}
-
-func (encoder *textMarshalerEncoder) EncodeInterface(val interface{}, stream *Stream) {
-	WriteToStream(val, stream, encoder)
 }
 
 func (encoder *textMarshalerEncoder) IsEmpty(ptr unsafe.Pointer) bool {

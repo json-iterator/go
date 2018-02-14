@@ -15,9 +15,6 @@ func encoderOfOptional(cfg *frozenConfig, prefix string, typ reflect.Type) ValEn
 	elemType := typ.Elem()
 	elemEncoder := encoderOfType(cfg, prefix, elemType)
 	encoder := &OptionalEncoder{elemEncoder}
-	if elemType.Kind() == reflect.Map {
-		encoder = &OptionalEncoder{encoder}
-	}
 	return encoder
 }
 
@@ -74,10 +71,6 @@ func (encoder *OptionalEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	}
 }
 
-func (encoder *OptionalEncoder) EncodeInterface(val interface{}, stream *Stream) {
-	WriteToStream(val, stream, encoder)
-}
-
 func (encoder *OptionalEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	return *((*unsafe.Pointer)(ptr)) == nil
 }
@@ -94,31 +87,6 @@ func (encoder *dereferenceEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	}
 }
 
-func (encoder *dereferenceEncoder) EncodeInterface(val interface{}, stream *Stream) {
-	WriteToStream(val, stream, encoder)
-}
-
 func (encoder *dereferenceEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	return encoder.ValueEncoder.IsEmpty(*((*unsafe.Pointer)(ptr)))
-}
-
-type optionalMapEncoder struct {
-	valueEncoder ValEncoder
-}
-
-func (encoder *optionalMapEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
-	if *((*unsafe.Pointer)(ptr)) == nil {
-		stream.WriteNil()
-	} else {
-		encoder.valueEncoder.Encode(*((*unsafe.Pointer)(ptr)), stream)
-	}
-}
-
-func (encoder *optionalMapEncoder) EncodeInterface(val interface{}, stream *Stream) {
-	WriteToStream(val, stream, encoder)
-}
-
-func (encoder *optionalMapEncoder) IsEmpty(ptr unsafe.Pointer) bool {
-	p := *((*unsafe.Pointer)(ptr))
-	return p == nil || encoder.valueEncoder.IsEmpty(p)
 }

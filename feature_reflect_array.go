@@ -17,19 +17,12 @@ func encoderOfArray(cfg *frozenConfig, prefix string, typ reflect.Type) ValEncod
 		return emptyArrayEncoder{}
 	}
 	encoder := encoderOfType(cfg, prefix+"[array]->", typ.Elem())
-	if typ.Elem().Kind() == reflect.Map {
-		encoder = &OptionalEncoder{encoder}
-	}
 	return &arrayEncoder{typ, typ.Elem(), encoder}
 }
 
 type emptyArrayEncoder struct{}
 
 func (encoder emptyArrayEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
-	stream.WriteEmptyArray()
-}
-
-func (encoder emptyArrayEncoder) EncodeInterface(val interface{}, stream *Stream) {
 	stream.WriteEmptyArray()
 }
 
@@ -55,27 +48,6 @@ func (encoder *arrayEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteArrayEnd()
 	if stream.Error != nil && stream.Error != io.EOF {
 		stream.Error = fmt.Errorf("%v: %s", encoder.arrayType, stream.Error.Error())
-	}
-}
-
-func (encoder *arrayEncoder) EncodeInterface(val interface{}, stream *Stream) {
-	// special optimization for interface{}
-	e := (*emptyInterface)(unsafe.Pointer(&val))
-	if e.word == nil {
-		stream.WriteArrayStart()
-		stream.WriteNil()
-		stream.WriteArrayEnd()
-		return
-	}
-	elemType := encoder.arrayType.Elem()
-	if encoder.arrayType.Len() == 1 && (elemType.Kind() == reflect.Ptr || elemType.Kind() == reflect.Map) {
-		ptr := uintptr(e.word)
-		e.word = unsafe.Pointer(&ptr)
-	}
-	if reflect.TypeOf(val).Kind() == reflect.Ptr {
-		encoder.Encode(unsafe.Pointer(&e.word), stream)
-	} else {
-		encoder.Encode(e.word, stream)
 	}
 }
 

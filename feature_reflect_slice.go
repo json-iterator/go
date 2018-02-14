@@ -14,9 +14,6 @@ func decoderOfSlice(cfg *frozenConfig, prefix string, typ reflect.Type) ValDecod
 
 func encoderOfSlice(cfg *frozenConfig, prefix string, typ reflect.Type) ValEncoder {
 	encoder := encoderOfType(cfg, prefix+"[slice]->", typ.Elem())
-	if typ.Elem().Kind() == reflect.Map {
-		encoder = &OptionalEncoder{encoder}
-	}
 	return &sliceEncoder{typ, typ.Elem(), encoder}
 }
 
@@ -48,10 +45,6 @@ func (encoder *sliceEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	if stream.Error != nil && stream.Error != io.EOF {
 		stream.Error = fmt.Errorf("%v: %s", encoder.sliceType, stream.Error.Error())
 	}
-}
-
-func (encoder *sliceEncoder) EncodeInterface(val interface{}, stream *Stream) {
-	WriteToStream(val, stream, encoder)
 }
 
 func (encoder *sliceEncoder) IsEmpty(ptr unsafe.Pointer) bool {

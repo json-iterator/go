@@ -115,10 +115,6 @@ func (encoder *structFieldEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	}
 }
 
-func (encoder *structFieldEncoder) EncodeInterface(val interface{}, stream *Stream) {
-	WriteToStream(val, stream, encoder)
-}
-
 func (encoder *structFieldEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	fieldPtr := unsafe.Pointer(uintptr(ptr) + encoder.field.Offset)
 	return encoder.fieldEncoder.IsEmpty(fieldPtr)
@@ -156,24 +152,6 @@ func (encoder *structEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	}
 }
 
-func (encoder *structEncoder) EncodeInterface(val interface{}, stream *Stream) {
-	e := (*emptyInterface)(unsafe.Pointer(&val))
-	if encoder.onePtrOptimization {
-		if e.word == nil && encoder.onePtrEmbedded {
-			stream.WriteObjectStart()
-			stream.WriteObjectEnd()
-			return
-		}
-		ptr := uintptr(e.word)
-		e.word = unsafe.Pointer(&ptr)
-	}
-	if reflect.TypeOf(val).Kind() == reflect.Ptr {
-		encoder.Encode(unsafe.Pointer(&e.word), stream)
-	} else {
-		encoder.Encode(e.word, stream)
-	}
-}
-
 func (encoder *structEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	return false
 }
@@ -183,10 +161,6 @@ type emptyStructEncoder struct {
 
 func (encoder *emptyStructEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteEmptyObject()
-}
-
-func (encoder *emptyStructEncoder) EncodeInterface(val interface{}, stream *Stream) {
-	WriteToStream(val, stream, encoder)
 }
 
 func (encoder *emptyStructEncoder) IsEmpty(ptr unsafe.Pointer) bool {

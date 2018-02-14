@@ -2,7 +2,7 @@ package test
 
 func init() {
 	marshalCases = append(marshalCases,
-		//withChan{}, TODO: fix this
+		withChan{},
 	)
 }
 

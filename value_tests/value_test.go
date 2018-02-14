@@ -34,12 +34,18 @@ func Test_unmarshal(t *testing.T) {
 }
 
 func Test_marshal(t *testing.T) {
-	should := require.New(t)
 	for _, testCase := range marshalCases {
-		output1, err1 := json.Marshal(testCase)
-		should.NoError(err1)
-		output2, err2 := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(testCase)
-		should.NoError(err2)
-		should.Equal(string(output1), string(output2))
+		var name string
+		if testCase != nil {
+			name = reflect.TypeOf(testCase).String()
+		}
+		t.Run(name, func(t *testing.T) {
+			should := require.New(t)
+			output1, err1 := json.Marshal(testCase)
+			should.NoError(err1)
+			output2, err2 := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(testCase)
+			should.NoError(err2)
+			should.Equal(string(output1), string(output2))
+		})
 	}
 }

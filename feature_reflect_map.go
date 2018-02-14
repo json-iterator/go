@@ -17,7 +17,7 @@ func decoderOfMap(cfg *frozenConfig, prefix string, typ reflect.Type) ValDecoder
 
 func encoderOfMap(cfg *frozenConfig, prefix string, typ reflect.Type) ValEncoder {
 	elemType := typ.Elem()
-	encoder := encoderOfType(cfg, prefix+"[map]->", elemType)
+	encoder := &emptyInterfaceCodec{}
 	mapInterface := reflect.New(typ).Elem().Interface()
 	if cfg.sortMapKeys {
 		return &sortKeysMapEncoder{typ, elemType, encoder, *((*emptyInterface)(unsafe.Pointer(&mapInterface)))}
@@ -123,7 +123,7 @@ func (encoder *mapEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 			stream.writeByte(':')
 		}
 		val := realVal.MapIndex(key).Interface()
-		encoder.elemEncoder.EncodeInterface(val, stream)
+		encoder.elemEncoder.Encode(unsafe.Pointer(&val), stream)
 	}
 	stream.WriteObjectEnd()
 }
@@ -159,10 +159,6 @@ func encodeMapKey(key reflect.Value, stream *Stream) {
 	stream.Error = &json.UnsupportedTypeError{Type: key.Type()}
 }
 
-func (encoder *mapEncoder) EncodeInterface(val interface{}, stream *Stream) {
-	WriteToStream(val, stream, encoder)
-}
-
 func (encoder *mapEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	mapInterface := encoder.mapInterface
 	mapInterface.word = ptr
@@ -179,6 +175,7 @@ type sortKeysMapEncoder struct {
 }
 
 func (encoder *sortKeysMapEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
+	ptr = *(*unsafe.Pointer)(ptr)
 	mapInterface := encoder.mapInterface
 	mapInterface.word = ptr
 	realInterface := (*interface{})(unsafe.Pointer(&mapInterface))
@@ -208,7 +205,7 @@ func (encoder *sortKeysMapEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 			stream.writeByte(':')
 		}
 		val := realVal.MapIndex(key.v).Interface()
-		encoder.elemEncoder.EncodeInterface(val, stream)
+		encoder.elemEncoder.Encode(unsafe.Pointer(&val), stream)
 	}
 	stream.WriteObjectEnd()
 }
@@ -246,10 +243,6 @@ func (w *reflectWithString) resolve() error {
 func (sv stringValues) Len() int           { return len(sv) }
 func (sv stringValues) Swap(i, j int)      { sv[i], sv[j] = sv[j], sv[i] }
 func (sv stringValues) Less(i, j int) bool { return sv[i].s < sv[j].s }
-
-func (encoder *sortKeysMapEncoder) EncodeInterface(val interface{}, stream *Stream) {
-	WriteToStream(val, stream, encoder)
-}
 
 func (encoder *sortKeysMapEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	mapInterface := encoder.mapInterface

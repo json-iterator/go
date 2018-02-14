@@ -99,10 +99,6 @@ func (encoder *funcEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	encoder.fun(ptr, stream)
 }
 
-func (encoder *funcEncoder) EncodeInterface(val interface{}, stream *Stream) {
-	WriteToStream(val, stream, encoder)
-}
-
 func (encoder *funcEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	if encoder.isEmptyFunc == nil {
 		return false
@@ -287,11 +283,6 @@ func describeStruct(cfg *frozenConfig, prefix string, typ reflect.Type) *StructD
 		encoder := fieldEncoders[fieldCacheKey]
 		if encoder == nil {
 			encoder = encoderOfType(cfg, prefix+typ.String()+"."+field.Name+"->", field.Type)
-			// map is stored as pointer in the struct,
-			// and treat nil or empty map as empty field
-			if encoder != nil && field.Type.Kind() == reflect.Map {
-				encoder = &optionalMapEncoder{encoder}
-			}
 		}
 		binding := &Binding{
 			Field:     &field,

@@ -25,7 +25,6 @@ type Any interface {
 	ToString() string
 	ToVal(val interface{})
 	Get(path ...interface{}) Any
-	// TODO: add Set
 	Size() int
 	Keys() []string
 	GetInterface() interface{}

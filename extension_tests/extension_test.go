@@ -63,10 +63,6 @@ func (encoder *funcEncoder) Encode(ptr unsafe.Pointer, stream *jsoniter.Stream) 
 	encoder.fun(ptr, stream)
 }
 
-func (encoder *funcEncoder) EncodeInterface(val interface{}, stream *jsoniter.Stream) {
-	jsoniter.WriteToStream(val, stream, encoder)
-}
-
 func (encoder *funcEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	if encoder.isEmptyFunc == nil {
 		return false
