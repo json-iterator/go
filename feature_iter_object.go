@@ -45,62 +45,63 @@ func (iter *Iterator) ReadObject() (ret string) {
 	}
 }
 
-func (iter *Iterator) readFieldHash() int32 {
+// CaseInsensitive
+func (iter *Iterator) readFieldHash() int64 {
 	hash := int64(0x811c9dc5)
 	c := iter.nextToken()
-	if c == '"' {
-		for {
-			for i := iter.head; i < iter.tail; i++ {
-				// require ascii string and no escape
-				b := iter.buf[i]
-				if !iter.cfg.objectFieldMustBeSimpleString && b == '\\' {
-					iter.head = i
-					for _, b := range iter.readStringSlowPath() {
-						if 'A' <= b && b <= 'Z' {
-							b += 'a' - 'A'
-						}
-						hash ^= int64(b)
-						hash *= 0x1000193
+	if c != '"' {
+		iter.ReportError("readFieldHash", `expect ", but found `+string([]byte{c}))
+		return 0
+	}
+	for {
+		for i := iter.head; i < iter.tail; i++ {
+			// require ascii string and no escape
+			b := iter.buf[i]
+			if b == '\\' {
+				iter.head = i
+				for _, b := range iter.readStringSlowPath() {
+					if 'A' <= b && b <= 'Z' {
+						b += 'a' - 'A'
 					}
-					c = iter.nextToken()
-					if c != ':' {
-						iter.ReportError("readFieldHash", `expect :, but found `+string([]byte{c}))
-						return 0
-					}
-					return int32(hash)
+					hash ^= int64(b)
+					hash *= 0x1000193
 				}
-				if b == '"' {
-					iter.head = i + 1
-					c = iter.nextToken()
-					if c != ':' {
-						iter.ReportError("readFieldHash", `expect :, but found `+string([]byte{c}))
-						return 0
-					}
-					return int32(hash)
+				c = iter.nextToken()
+				if c != ':' {
+					iter.ReportError("readFieldHash", `expect :, but found `+string([]byte{c}))
+					return 0
 				}
-				if 'A' <= b && b <= 'Z' {
-					b += 'a' - 'A'
-				}
-				hash ^= int64(b)
-				hash *= 0x1000193
+				return hash
 			}
-			if !iter.loadMore() {
-				iter.ReportError("readFieldHash", `incomplete field name`)
-				return 0
+			if b == '"' {
+				iter.head = i + 1
+				c = iter.nextToken()
+				if c != ':' {
+					iter.ReportError("readFieldHash", `expect :, but found `+string([]byte{c}))
+					return 0
+				}
+				return hash
 			}
+			if 'A' <= b && b <= 'Z' {
+				b += 'a' - 'A'
+			}
+			hash ^= int64(b)
+			hash *= 0x1000193
+		}
+		if !iter.loadMore() {
+			iter.ReportError("readFieldHash", `incomplete field name`)
+			return 0
 		}
 	}
-	iter.ReportError("readFieldHash", `expect ", but found `+string([]byte{c}))
-	return 0
 }
 
-func calcHash(str string) int32 {
+func calcHash(str string) int64 {
 	hash := int64(0x811c9dc5)
 	for _, b := range str {
 		hash ^= int64(unicode.ToLower(b))
 		hash *= 0x1000193
 	}
-	return int32(hash)
+	return int64(hash)
 }
 
 // ReadObjectCB read object with callback, the key is ascii only and field name not copied

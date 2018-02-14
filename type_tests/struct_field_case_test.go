@@ -1,12 +1,12 @@
 package test
 
 func init() {
-	//testCases = append(testCases,
-	//	(*struct {
-	//		Upper bool `json:"M"`
-	//		Lower bool `json:"m"`
-	//	})(nil),
-	//)
+	testCases = append(testCases,
+		(*struct {
+			Upper bool `json:"M"`
+			Lower bool `json:"m"`
+		})(nil),
+	)
 	asymmetricTestCases = append(asymmetricTestCases, [][2]interface{}{
 		{
 			(*struct {

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"reflect"
-	"strings"
 	"unsafe"
 )
 
@@ -97,7 +96,7 @@ func decoderOfStruct(cfg *frozenConfig, prefix string, typ reflect.Type) ValDeco
 	}
 	fields := map[string]*structFieldDecoder{}
 	for k, binding := range bindings {
-		fields[strings.ToLower(k)] = binding.Decoder.(*structFieldDecoder)
+		fields[k] = binding.Decoder.(*structFieldDecoder)
 	}
 	return createStructDecoder(cfg, typ, fields)
 }
