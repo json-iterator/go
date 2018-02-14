@@ -106,3 +106,18 @@ func Test_any_within_struct(t *testing.T) {
 	should.Equal("hello", obj.Field1.ToString())
 	should.Equal("[1,2,3]", obj.Field2.ToString())
 }
+
+func Test_object_wrapper_any_get_all(t *testing.T) {
+	should := require.New(t)
+	type TestObject struct {
+		Field1 []int
+		Field2 []int
+	}
+	any := jsoniter.Wrap(TestObject{[]int{1, 2}, []int{3, 4}})
+	should.Contains(any.Get('*', 0).ToString(), `"Field2":3`)
+	should.Contains(any.Keys(), "Field1")
+	should.Contains(any.Keys(), "Field2")
+	should.NotContains(any.Keys(), "Field3")
+
+	//should.Contains(any.GetObject()["Field1"].GetArray()[0], 1)
+}
