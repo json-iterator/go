@@ -7,6 +7,9 @@ import (
 )
 
 func init() {
+	var pString = func(val string) *string {
+		return &val
+	}
 	unmarshalCases = append(unmarshalCases, unmarshalCase{
 		ptr: (*struct {
 			Field interface{}
@@ -34,6 +37,18 @@ func init() {
 			Field1 string
 		})(nil),
 		input: `{"\u0046ield1":"hello"}`,
+	}, unmarshalCase{
+		ptr: (*struct {
+			Field1 *string
+			Field2 *string
+		})(nil),
+		input: `{"field1": null, "field2": "world"}`,
+	}, unmarshalCase{
+		ptr: (*struct {
+			Field1 string
+			Field2 json.RawMessage
+		})(nil),
+		input: `{"field1": "hello", "field2":[1,2,3]}`,
 	})
 	marshalCases = append(marshalCases,
 		struct {
@@ -116,6 +131,10 @@ func init() {
 			MaxAge: 20,
 		},
 		structOrder{},
+		struct {
+			Field1 *string
+			Field2 *string
+		}{Field2: pString("world")},
 	)
 }
 

@@ -4,6 +4,9 @@ func init() {
 	var pEFace = func(val interface{}) *interface{} {
 		return &val
 	}
+	var pInt = func(val int) *int {
+		return &val
+	}
 	unmarshalCases = append(unmarshalCases, unmarshalCase{
 		ptr: (**interface{})(nil),
 		input: `"hello"`,
@@ -16,5 +19,7 @@ func init() {
 	})
 	marshalCases = append(marshalCases,
 		pEFace("hello"),
+		(*int)(nil),
+		pInt(100),
 	)
 }

@@ -1,8 +1,14 @@
 package test
 
-import "math/big"
+import (
+	"math/big"
+	"encoding/json"
+)
 
 func init() {
+	var pRawMessage = func(val json.RawMessage) *json.RawMessage {
+		return &val
+	}
 	nilMap := map[string]string(nil)
 	marshalCases = append(marshalCases,
 		map[string]interface{}{"abc": 1},
@@ -20,6 +26,7 @@ func init() {
 		},
 		nilMap,
 		&nilMap,
+		map[string]*json.RawMessage{"hello":pRawMessage(json.RawMessage("[]"))},
 	)
 	unmarshalCases = append(unmarshalCases, unmarshalCase{
 		ptr: (*map[string]string)(nil),
@@ -27,6 +34,9 @@ func init() {
 	}, unmarshalCase{
 		ptr: (*map[string]string)(nil),
 		input: `null`,
+	}, unmarshalCase{
+		ptr: (*map[string]*json.RawMessage)(nil),
+		input: "{\"test\":[{\"key\":\"value\"}]}",
 	})
 }
 
