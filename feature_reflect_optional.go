@@ -88,5 +88,22 @@ func (encoder *dereferenceEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 }
 
 func (encoder *dereferenceEncoder) IsEmpty(ptr unsafe.Pointer) bool {
-	return encoder.ValueEncoder.IsEmpty(*((*unsafe.Pointer)(ptr)))
+	dePtr := *((*unsafe.Pointer)(ptr))
+	if dePtr == nil {
+		return true
+	}
+	return encoder.ValueEncoder.IsEmpty(dePtr)
+}
+
+func (encoder *dereferenceEncoder) IsEmbeddedPtrNil(ptr unsafe.Pointer) bool {
+	deReferenced := *((*unsafe.Pointer)(ptr))
+	if deReferenced == nil {
+		return true
+	}
+	isEmbeddedPtrNil, converted := encoder.ValueEncoder.(IsEmbeddedPtrNil)
+	if !converted {
+		return false
+	}
+	fieldPtr := unsafe.Pointer(deReferenced)
+	return isEmbeddedPtrNil.IsEmbeddedPtrNil(fieldPtr)
 }

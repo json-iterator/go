@@ -42,8 +42,7 @@ func encoderOfStruct(cfg *frozenConfig, prefix string, typ reflect.Type) ValEnco
 			})
 		}
 	}
-	return &structEncoder{typ, structDescriptor.onePtrEmbedded,
-		structDescriptor.onePtrOptimization, finalOrderedFields}
+	return &structEncoder{typ, finalOrderedFields}
 }
 
 func resolveConflictBinding(cfg *frozenConfig, old, new *Binding) (ignoreOld, ignoreNew bool) {
@@ -120,11 +119,22 @@ func (encoder *structFieldEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	return encoder.fieldEncoder.IsEmpty(fieldPtr)
 }
 
+func (encoder *structFieldEncoder) IsEmbeddedPtrNil(ptr unsafe.Pointer) bool {
+	isEmbeddedPtrNil, converted := encoder.fieldEncoder.(IsEmbeddedPtrNil)
+	if !converted {
+		return false
+	}
+	fieldPtr := unsafe.Pointer(uintptr(ptr) + encoder.field.Offset)
+	return isEmbeddedPtrNil.IsEmbeddedPtrNil(fieldPtr)
+}
+
+type IsEmbeddedPtrNil interface {
+	IsEmbeddedPtrNil(ptr unsafe.Pointer) bool
+}
+
 type structEncoder struct {
-	typ                reflect.Type
-	onePtrEmbedded     bool
-	onePtrOptimization bool
-	fields             []structFieldTo
+	typ    reflect.Type
+	fields []structFieldTo
 }
 
 type structFieldTo struct {
@@ -137,6 +147,9 @@ func (encoder *structEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	isNotFirst := false
 	for _, field := range encoder.fields {
 		if field.encoder.omitempty && field.encoder.IsEmpty(ptr) {
+			continue
+		}
+		if field.encoder.IsEmbeddedPtrNil(ptr) {
 			continue
 		}
 		if isNotFirst {

@@ -340,13 +340,9 @@ func createEncoderOfType(cfg *frozenConfig, prefix string, typ reflect.Type) Val
 	}
 	if typ.Implements(textMarshalerType) {
 		checkIsEmpty := createCheckIsEmpty(cfg, typ)
-		templateInterface := reflect.New(typ).Elem().Interface()
 		var encoder ValEncoder = &textMarshalerEncoder{
-			templateInterface: extractInterface(templateInterface),
+			valType: reflect2.Type2(typ),
 			checkIsEmpty:      checkIsEmpty,
-		}
-		if typ.Kind() == reflect.Ptr {
-			encoder = &OptionalEncoder{encoder}
 		}
 		return encoder
 	}
@@ -393,10 +389,7 @@ func createCheckIsEmpty(cfg *frozenConfig, typ reflect.Type) checkIsEmpty {
 	case reflect.Bool:
 		return &boolCodec{}
 	case reflect.Interface:
-		if typ.NumMethod() == 0 {
-			return &emptyInterfaceCodec{}
-		}
-		return &nonEmptyInterfaceCodec{}
+		return &dynamicEncoder{reflect2.Type2(typ)}
 	case reflect.Struct:
 		return &structEncoder{typ: typ}
 	case reflect.Array:
@@ -492,10 +485,7 @@ func createEncoderOfSimpleType(cfg *frozenConfig, prefix string, typ reflect.Typ
 		}
 		return &boolCodec{}
 	case reflect.Interface:
-		if typ.NumMethod() == 0 {
-			return &emptyInterfaceCodec{}
-		}
-		return &nonEmptyInterfaceCodec{}
+		return &dynamicEncoder{reflect2.Type2(typ)}
 	case reflect.Struct:
 		return encoderOfStruct(cfg, prefix, typ)
 	case reflect.Array:

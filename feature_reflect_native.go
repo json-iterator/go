@@ -357,6 +357,20 @@ func (codec *nonEmptyInterfaceCodec) IsEmpty(ptr unsafe.Pointer) bool {
 	return nonEmptyInterface.word == nil
 }
 
+type dynamicEncoder struct {
+	valType reflect2.Type
+}
+
+func (encoder *dynamicEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
+	obj := encoder.valType.UnsafeIndirect(ptr)
+	stream.WriteVal(obj)
+}
+
+func (encoder *dynamicEncoder) IsEmpty(ptr unsafe.Pointer) bool {
+	return encoder.valType.UnsafeIndirect(ptr) == nil
+}
+
+
 type anyCodec struct {
 }
 
@@ -390,7 +404,7 @@ func (codec *jsonNumberCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 func (codec *jsonNumberCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	number := *((*json.Number)(ptr))
 	if len(number) == 0 {
-		stream.WriteRaw("0")
+		stream.writeByte('0')
 	} else {
 		stream.WriteRaw(string(number))
 	}
@@ -418,7 +432,7 @@ func (codec *jsoniterNumberCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 func (codec *jsoniterNumberCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
 	number := *((*Number)(ptr))
 	if len(number) == 0 {
-		stream.WriteRaw("0")
+		stream.writeByte('0')
 	} else {
 		stream.WriteRaw(string(number))
 	}
@@ -603,15 +617,17 @@ func (encoder *marshalerEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 }
 
 type textMarshalerEncoder struct {
-	templateInterface emptyInterface
+	valType			reflect2.Type
 	checkIsEmpty      checkIsEmpty
 }
 
 func (encoder *textMarshalerEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
-	templateInterface := encoder.templateInterface
-	templateInterface.word = ptr
-	realInterface := (*interface{})(unsafe.Pointer(&templateInterface))
-	marshaler := (*realInterface).(encoding.TextMarshaler)
+	obj := encoder.valType.UnsafeIndirect(ptr)
+	if obj == nil {
+		stream.WriteNil()
+		return
+	}
+	marshaler := (obj).(encoding.TextMarshaler)
 	bytes, err := marshaler.MarshalText()
 	if err != nil {
 		stream.Error = err

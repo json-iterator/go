@@ -92,7 +92,8 @@ func init() {
 		}{&StructVarious{}},
 		struct {
 			*StructVarious
-		}{},
+			Field int
+		}{nil, 10},
 		struct {
 			Field1 int
 			Field2 [1]*float64
@@ -171,7 +172,6 @@ type CacheItem struct {
 	Key    string `json:"key"`
 	MaxAge int    `json:"cacheAge"`
 }
-
 
 type orderA struct {
 	Field2 string

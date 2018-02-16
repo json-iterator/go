@@ -17,8 +17,6 @@ var extensions = []Extension{}
 
 // StructDescriptor describe how should we encode/decode the struct
 type StructDescriptor struct {
-	onePtrEmbedded     bool
-	onePtrOptimization bool
 	Type               reflect.Type
 	Fields             []*Binding
 }
@@ -297,25 +295,7 @@ func describeStruct(cfg *frozenConfig, prefix string, typ reflect.Type) *StructD
 	return createStructDescriptor(cfg, typ, bindings, embeddedBindings)
 }
 func createStructDescriptor(cfg *frozenConfig, typ reflect.Type, bindings []*Binding, embeddedBindings []*Binding) *StructDescriptor {
-	onePtrEmbedded := false
-	onePtrOptimization := false
-	if typ.NumField() == 1 {
-		firstField := typ.Field(0)
-		switch firstField.Type.Kind() {
-		case reflect.Ptr:
-			if firstField.Anonymous && firstField.Type.Elem().Kind() == reflect.Struct {
-				onePtrEmbedded = true
-			}
-			fallthrough
-		case reflect.Map:
-			onePtrOptimization = true
-		case reflect.Struct:
-			onePtrOptimization = isStructOnePtr(firstField.Type)
-		}
-	}
 	structDescriptor := &StructDescriptor{
-		onePtrEmbedded:     onePtrEmbedded,
-		onePtrOptimization: onePtrOptimization,
 		Type:               typ,
 		Fields:             bindings,
 	}
