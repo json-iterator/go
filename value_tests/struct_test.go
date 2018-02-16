@@ -10,6 +10,7 @@ func init() {
 	var pString = func(val string) *string {
 		return &val
 	}
+	epoch := time.Unix(0, 0)
 	unmarshalCases = append(unmarshalCases, unmarshalCase{
 		ptr: (*struct {
 			Field interface{}
@@ -83,13 +84,9 @@ func init() {
 		struct {
 			F *float64
 		}{},
-		// TODO: fix this
-		//struct {
-		//	*time.Time
-		//}{},
 		struct {
 			*time.Time
-		}{&time.Time{}},
+		}{&epoch},
 		struct {
 			*StructVarious
 		}{&StructVarious{}},

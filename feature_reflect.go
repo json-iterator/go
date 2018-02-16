@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"time"
 	"unsafe"
+	"github.com/v2pro/plz/reflect2"
 )
 
 // ValDecoder is an internal type registered to cache as needed.
@@ -331,21 +332,8 @@ func createEncoderOfType(cfg *frozenConfig, prefix string, typ reflect.Type) Val
 	}
 	if typ.Implements(marshalerType) {
 		checkIsEmpty := createCheckIsEmpty(cfg, typ)
-		templateInterface := reflect.New(typ).Elem().Interface()
 		var encoder ValEncoder = &marshalerEncoder{
-			templateInterface: extractInterface(templateInterface),
-			checkIsEmpty:      checkIsEmpty,
-		}
-		if typ.Kind() == reflect.Ptr {
-			encoder = &OptionalEncoder{encoder}
-		}
-		return encoder
-	}
-	if reflect.PtrTo(typ).Implements(marshalerType) {
-		checkIsEmpty := createCheckIsEmpty(cfg, reflect.PtrTo(typ))
-		templateInterface := reflect.New(typ).Interface()
-		var encoder ValEncoder = &marshalerEncoder{
-			templateInterface: extractInterface(templateInterface),
+			valType: reflect2.Type2(typ),
 			checkIsEmpty:      checkIsEmpty,
 		}
 		return encoder

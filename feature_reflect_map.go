@@ -176,6 +176,10 @@ type sortKeysMapEncoder struct {
 
 func (encoder *sortKeysMapEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	ptr = *(*unsafe.Pointer)(ptr)
+	if ptr == nil {
+		stream.WriteNil()
+		return
+	}
 	mapInterface := encoder.mapInterface
 	mapInterface.word = ptr
 	realInterface := (*interface{})(unsafe.Pointer(&mapInterface))

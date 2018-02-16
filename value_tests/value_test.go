@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"github.com/stretchr/testify/require"
 	"github.com/json-iterator/go"
+	"fmt"
 )
 
 type unmarshalCase struct {
@@ -17,6 +18,10 @@ var unmarshalCases []unmarshalCase
 
 var marshalCases = []interface{}{
 	nil,
+}
+
+type selectedMarshalCase struct  {
+	marshalCase interface{}
 }
 
 func Test_unmarshal(t *testing.T) {
@@ -35,9 +40,16 @@ func Test_unmarshal(t *testing.T) {
 
 func Test_marshal(t *testing.T) {
 	for _, testCase := range marshalCases {
+		selectedMarshalCase, found := testCase.(selectedMarshalCase)
+		if found {
+			marshalCases = []interface{}{selectedMarshalCase.marshalCase}
+			break
+		}
+	}
+	for i, testCase := range marshalCases {
 		var name string
 		if testCase != nil {
-			name = reflect.TypeOf(testCase).String()
+			name = fmt.Sprintf("[%v]%v/%s", i, testCase, reflect.TypeOf(testCase).String())
 		}
 		t.Run(name, func(t *testing.T) {
 			should := require.New(t)

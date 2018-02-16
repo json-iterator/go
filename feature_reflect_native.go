@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"reflect"
 	"unsafe"
+	"github.com/v2pro/plz/reflect2"
 )
 
 type stringCodec struct {
@@ -473,7 +474,7 @@ func (codec *base64Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	case StringValue:
 		encoding := base64.StdEncoding
 		src := iter.SkipAndReturnBytes()
-		src = src[1 : len(src)-1]
+		src = src[1: len(src)-1]
 		decodedLen := encoding.DecodedLen(len(src))
 		dst := make([]byte, decodedLen)
 		len, err := encoding.Decode(dst, src)
@@ -578,20 +579,17 @@ func (encoder *stringModeStringEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 }
 
 type marshalerEncoder struct {
-	templateInterface emptyInterface
-	checkIsEmpty      checkIsEmpty
+	checkIsEmpty checkIsEmpty
+	valType      reflect2.Type
 }
 
 func (encoder *marshalerEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
-	templateInterface := encoder.templateInterface
-	templateInterface.word = ptr
-	realInterface := (*interface{})(unsafe.Pointer(&templateInterface))
-	marshaler, ok := (*realInterface).(json.Marshaler)
-	if !ok {
-		stream.WriteVal(nil)
+	obj := encoder.valType.UnsafeIndirect(ptr)
+	if obj == nil {
+		stream.WriteNil()
 		return
 	}
-
+	marshaler := obj.(json.Marshaler)
 	bytes, err := marshaler.MarshalJSON()
 	if err != nil {
 		stream.Error = err
