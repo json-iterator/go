@@ -251,8 +251,8 @@ func init() {
 		})(nil),
 		(*struct {
 			TF1 struct {
-				F1 withTime
-				F2 *withTime
+				F2 int
+				F1 *withTime
 			}
 		})(nil),
 		(*DeeplyNested)(nil),

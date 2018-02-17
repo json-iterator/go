@@ -599,7 +599,7 @@ type marshalerEncoder struct {
 
 func (encoder *marshalerEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	obj := encoder.valType.UnsafeIndirect(ptr)
-	if obj == nil {
+	if reflect2.IsNil(obj) {
 		stream.WriteNil()
 		return
 	}
@@ -623,7 +623,7 @@ type textMarshalerEncoder struct {
 
 func (encoder *textMarshalerEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	obj := encoder.valType.UnsafeIndirect(ptr)
-	if obj == nil {
+	if reflect2.IsNil(obj) {
 		stream.WriteNil()
 		return
 	}
