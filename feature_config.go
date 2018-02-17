@@ -74,14 +74,18 @@ func (cfg Config) Froze() API {
 	if cfg.MarshalFloatWith6Digits {
 		api.marshalFloatWith6Digits()
 	}
+	encoderExtension := EncoderExtension{}
 	if cfg.EscapeHTML {
-		api.escapeHTML()
+		api.escapeHTML(encoderExtension)
 	}
 	if cfg.UseNumber {
 		api.useNumber()
 	}
 	if cfg.ValidateJsonRawMessage {
 		api.validateJsonRawMessage()
+	}
+	if len(encoderExtension) > 0 {
+		api.extensions = append(api.extensions, encoderExtension)
 	}
 	api.configBeforeFrozen = cfg
 	return api
@@ -178,8 +182,8 @@ func (encoder *htmlEscapedStringEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	return *((*string)(ptr)) == ""
 }
 
-func (cfg *frozenConfig) escapeHTML() {
-	cfg.addEncoderToCache(reflect.TypeOf((*string)(nil)).Elem(), &htmlEscapedStringEncoder{})
+func (cfg *frozenConfig) escapeHTML(encoderExtension EncoderExtension) {
+	encoderExtension[reflect.TypeOf((*string)(nil)).Elem()] = &htmlEscapedStringEncoder{}
 }
 
 func (cfg *frozenConfig) cleanDecoders() {

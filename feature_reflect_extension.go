@@ -80,6 +80,32 @@ func (extension *DummyExtension) DecorateEncoder(typ reflect.Type, encoder ValEn
 	return encoder
 }
 
+type EncoderExtension map[reflect.Type]ValEncoder
+
+// UpdateStructDescriptor No-op
+func (extension EncoderExtension) UpdateStructDescriptor(structDescriptor *StructDescriptor) {
+}
+
+// CreateDecoder No-op
+func (extension EncoderExtension) CreateDecoder(typ reflect.Type) ValDecoder {
+	return nil
+}
+
+// CreateEncoder get encoder from map
+func (extension EncoderExtension) CreateEncoder(typ reflect.Type) ValEncoder {
+	return extension[typ]
+}
+
+// DecorateDecoder No-op
+func (extension EncoderExtension) DecorateDecoder(typ reflect.Type, decoder ValDecoder) ValDecoder {
+	return decoder
+}
+
+// DecorateEncoder No-op
+func (extension EncoderExtension) DecorateEncoder(typ reflect.Type, encoder ValEncoder) ValEncoder {
+	return encoder
+}
+
 type funcDecoder struct {
 	fun DecoderFunc
 }
