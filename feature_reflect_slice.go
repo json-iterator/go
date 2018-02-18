@@ -5,6 +5,7 @@ import (
 	"io"
 	"reflect"
 	"unsafe"
+	"github.com/v2pro/plz/reflect2"
 )
 
 func decoderOfSlice(cfg *frozenConfig, prefix string, typ reflect.Type) ValDecoder {
@@ -14,32 +15,31 @@ func decoderOfSlice(cfg *frozenConfig, prefix string, typ reflect.Type) ValDecod
 
 func encoderOfSlice(cfg *frozenConfig, prefix string, typ reflect.Type) ValEncoder {
 	encoder := encoderOfType(cfg, prefix+"[slice]->", typ.Elem())
-	return &sliceEncoder{typ, typ.Elem(), encoder}
+	sliceType := reflect2.Type2(typ).(*reflect2.UnsafeSliceType)
+	return &sliceEncoder{sliceType, encoder}
 }
 
 type sliceEncoder struct {
-	sliceType   reflect.Type
-	elemType    reflect.Type
+	sliceType   *reflect2.UnsafeSliceType
 	elemEncoder ValEncoder
 }
 
 func (encoder *sliceEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
-	slice := (*sliceHeader)(ptr)
-	if slice.Data == nil {
+	if encoder.sliceType.UnsafeIsNil(ptr) {
 		stream.WriteNil()
 		return
 	}
-	if slice.Len == 0 {
+	length := encoder.sliceType.UnsafeLengthOf(ptr)
+	if length == 0 {
 		stream.WriteEmptyArray()
 		return
 	}
 	stream.WriteArrayStart()
-	elemPtr := unsafe.Pointer(slice.Data)
-	encoder.elemEncoder.Encode(unsafe.Pointer(elemPtr), stream)
-	for i := 1; i < slice.Len; i++ {
+	encoder.elemEncoder.Encode(encoder.sliceType.UnsafeGet(ptr, 0), stream)
+	for i := 1; i < length; i++ {
 		stream.WriteMore()
-		elemPtr = unsafe.Pointer(uintptr(elemPtr) + encoder.elemType.Size())
-		encoder.elemEncoder.Encode(unsafe.Pointer(elemPtr), stream)
+		elemPtr := encoder.sliceType.UnsafeGet(ptr, i)
+		encoder.elemEncoder.Encode(elemPtr, stream)
 	}
 	stream.WriteArrayEnd()
 	if stream.Error != nil && stream.Error != io.EOF {
