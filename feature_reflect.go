@@ -358,6 +358,7 @@ func createEncoderOfType(cfg *frozenConfig, prefix string, typ reflect.Type) Val
 		checkIsEmpty := createCheckIsEmpty(cfg, typ)
 		var encoder ValEncoder = &directTextMarshalerEncoder{
 			checkIsEmpty:      checkIsEmpty,
+			stringEncoder: cfg.EncoderOf(reflect.TypeOf("")),
 		}
 		return encoder
 	}
@@ -365,14 +366,16 @@ func createEncoderOfType(cfg *frozenConfig, prefix string, typ reflect.Type) Val
 		checkIsEmpty := createCheckIsEmpty(cfg, typ)
 		var encoder ValEncoder = &textMarshalerEncoder{
 			valType: reflect2.Type2(typ),
+			stringEncoder: cfg.EncoderOf(reflect.TypeOf("")),
 			checkIsEmpty:      checkIsEmpty,
 		}
 		return encoder
 	}
-	if ptrType.Implements(textMarshalerType) {
+	if typ.Kind() == reflect.Map && ptrType.Implements(textMarshalerType) {
 		checkIsEmpty := createCheckIsEmpty(cfg, ptrType)
 		var encoder ValEncoder = &textMarshalerEncoder{
 			valType: reflect2.Type2(ptrType),
+			stringEncoder: cfg.EncoderOf(reflect.TypeOf("")),
 			checkIsEmpty:      checkIsEmpty,
 		}
 		return &referenceEncoder{encoder}

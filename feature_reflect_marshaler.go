@@ -55,6 +55,7 @@ func (encoder *directMarshalerEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 
 type textMarshalerEncoder struct {
 	valType			reflect2.Type
+	stringEncoder   ValEncoder
 	checkIsEmpty      checkIsEmpty
 }
 
@@ -69,7 +70,8 @@ func (encoder *textMarshalerEncoder) Encode(ptr unsafe.Pointer, stream *Stream) 
 	if err != nil {
 		stream.Error = err
 	} else {
-		stream.WriteString(string(bytes))
+		str := string(bytes)
+		encoder.stringEncoder.Encode(unsafe.Pointer(&str), stream)
 	}
 }
 
@@ -78,6 +80,7 @@ func (encoder *textMarshalerEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 }
 
 type directTextMarshalerEncoder struct {
+	stringEncoder ValEncoder
 	checkIsEmpty checkIsEmpty
 }
 
@@ -91,7 +94,8 @@ func (encoder *directTextMarshalerEncoder) Encode(ptr unsafe.Pointer, stream *St
 	if err != nil {
 		stream.Error = err
 	} else {
-		stream.WriteString(string(bytes))
+		str := string(bytes)
+		encoder.stringEncoder.Encode(unsafe.Pointer(&str), stream)
 	}
 }
 

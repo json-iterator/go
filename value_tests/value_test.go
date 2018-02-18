@@ -54,9 +54,9 @@ func Test_marshal(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			should := require.New(t)
 			output1, err1 := json.Marshal(testCase)
-			should.NoError(err1)
+			should.NoError(err1, "json")
 			output2, err2 := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(testCase)
-			should.NoError(err2)
+			should.NoError(err2, "jsoniter")
 			should.Equal(string(output1), string(output2))
 		})
 	}
