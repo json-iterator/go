@@ -71,21 +71,25 @@ func (cfg Config) Froze() API {
 		iteratorPool:                  make(chan *Iterator, 16),
 	}
 	api.initCache()
-	if cfg.MarshalFloatWith6Digits {
-		api.marshalFloatWith6Digits()
-	}
 	encoderExtension := EncoderExtension{}
+	decoderExtension := DecoderExtension{}
+	if cfg.MarshalFloatWith6Digits {
+		api.marshalFloatWith6Digits(encoderExtension)
+	}
 	if cfg.EscapeHTML {
 		api.escapeHTML(encoderExtension)
 	}
 	if cfg.UseNumber {
-		api.useNumber()
+		api.useNumber(decoderExtension)
 	}
 	if cfg.ValidateJsonRawMessage {
-		api.validateJsonRawMessage()
+		api.validateJsonRawMessage(encoderExtension)
 	}
 	if len(encoderExtension) > 0 {
 		api.extensions = append(api.extensions, encoderExtension)
+	}
+	if len(decoderExtension) > 0 {
+		api.extensions = append(api.extensions, decoderExtension)
 	}
 	api.configBeforeFrozen = cfg
 	return api
@@ -101,7 +105,7 @@ func (cfg Config) frozeWithCacheReuse() *frozenConfig {
 	return api
 }
 
-func (cfg *frozenConfig) validateJsonRawMessage() {
+func (cfg *frozenConfig) validateJsonRawMessage(extension EncoderExtension) {
 	encoder := &funcEncoder{func(ptr unsafe.Pointer, stream *Stream) {
 		rawMessage := *(*json.RawMessage)(ptr)
 		iter := cfg.BorrowIterator([]byte(rawMessage))
@@ -115,18 +119,18 @@ func (cfg *frozenConfig) validateJsonRawMessage() {
 	}, func(ptr unsafe.Pointer) bool {
 		return false
 	}}
-	cfg.addEncoderToCache(reflect.TypeOf((*json.RawMessage)(nil)).Elem(), encoder)
-	cfg.addEncoderToCache(reflect.TypeOf((*RawMessage)(nil)).Elem(), encoder)
+	extension[reflect.TypeOf((*json.RawMessage)(nil)).Elem()] = encoder
+	extension[reflect.TypeOf((*RawMessage)(nil)).Elem()] = encoder
 }
 
-func (cfg *frozenConfig) useNumber() {
-	cfg.addDecoderToCache(reflect.TypeOf((*interface{})(nil)).Elem(), &funcDecoder{func(ptr unsafe.Pointer, iter *Iterator) {
+func (cfg *frozenConfig) useNumber(extension DecoderExtension) {
+	extension[reflect.TypeOf((*interface{})(nil)).Elem()] = &funcDecoder{func(ptr unsafe.Pointer, iter *Iterator) {
 		if iter.WhatIsNext() == NumberValue {
 			*((*interface{})(ptr)) = json.Number(iter.readNumberAsString())
 		} else {
 			*((*interface{})(ptr)) = iter.Read()
 		}
-	}})
+	}}
 }
 func (cfg *frozenConfig) getTagKey() string {
 	tagKey := cfg.configBeforeFrozen.TagKey
@@ -164,10 +168,10 @@ func (encoder *lossyFloat64Encoder) IsEmpty(ptr unsafe.Pointer) bool {
 
 // EnableLossyFloatMarshalling keeps 10**(-6) precision
 // for float variables for better performance.
-func (cfg *frozenConfig) marshalFloatWith6Digits() {
+func (cfg *frozenConfig) marshalFloatWith6Digits(extension EncoderExtension) {
 	// for better performance
-	cfg.addEncoderToCache(reflect.TypeOf((*float32)(nil)).Elem(), &lossyFloat32Encoder{})
-	cfg.addEncoderToCache(reflect.TypeOf((*float64)(nil)).Elem(), &lossyFloat64Encoder{})
+	extension[reflect.TypeOf((*float32)(nil)).Elem()] = &lossyFloat32Encoder{}
+	extension[reflect.TypeOf((*float64)(nil)).Elem()] = &lossyFloat64Encoder{}
 }
 
 type htmlEscapedStringEncoder struct {
