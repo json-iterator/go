@@ -1,19 +1,42 @@
 package test
 
+import (
+	"encoding/json"
+	"encoding"
+)
+
 func init() {
+	jsonMarshaler := json.Marshaler(fakeJsonMarshaler{})
+	textMarshaler := encoding.TextMarshaler(fakeTextMarshaler{})
 	marshalCases = append(marshalCases,
-		withChan{},
+		fakeJsonMarshaler{},
+		&jsonMarshaler,
+		fakeTextMarshaler{},
+		&textMarshaler,
 	)
 }
 
-type withChan struct {
+type fakeJsonMarshaler struct {
 	F2 chan []byte
 }
 
-func (q withChan) MarshalJSON() ([]byte, error) {
+func (q fakeJsonMarshaler) MarshalJSON() ([]byte, error) {
 	return []byte(`""`), nil
 }
 
-func (q *withChan) UnmarshalJSON(value []byte) error {
+func (q *fakeJsonMarshaler) UnmarshalJSON(value []byte) error {
+	return nil
+}
+
+
+type fakeTextMarshaler struct {
+	F2 chan []byte
+}
+
+func (q fakeTextMarshaler) MarshalText() ([]byte, error) {
+	return []byte(`""`), nil
+}
+
+func (q *fakeTextMarshaler) UnmarshalText(value []byte) error {
 	return nil
 }

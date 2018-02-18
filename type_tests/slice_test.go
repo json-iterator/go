@@ -71,19 +71,57 @@ func init() {
 			Map   map[string]string
 		})(nil),
 		(*[]uint8)(nil),
-		(*[]GeoLocation)(nil),
+		(*[]jsonMarshaler)(nil),
+		(*[]jsonMarshalerMap)(nil),
+		(*[]textMarshaler)(nil),
+		(*[]textMarshalerMap)(nil),
 	)
 }
 
-type GeoLocation struct {
+type jsonMarshaler struct {
 	Id string `json:"id,omitempty" db:"id"`
 }
 
-func (p *GeoLocation) MarshalJSON() ([]byte, error) {
+func (p *jsonMarshaler) MarshalJSON() ([]byte, error) {
 	return []byte(`{}`), nil
 }
 
-func (p *GeoLocation) UnmarshalJSON(input []byte) error {
+func (p *jsonMarshaler) UnmarshalJSON(input []byte) error {
 	p.Id = "hello"
+	return nil
+}
+
+
+type jsonMarshalerMap map[int]int
+
+func (p *jsonMarshalerMap) MarshalJSON() ([]byte, error) {
+	return []byte(`{}`), nil
+}
+
+func (p *jsonMarshalerMap) UnmarshalJSON(input []byte) error {
+	return nil
+}
+
+type textMarshaler struct {
+	Id string `json:"id,omitempty" db:"id"`
+}
+
+func (p *textMarshaler) MarshalText() ([]byte, error) {
+	return []byte(`{}`), nil
+}
+
+func (p *textMarshaler) UnmarshalText(input []byte) error {
+	p.Id = "hello"
+	return nil
+}
+
+type textMarshalerMap map[int]int
+
+
+func (p *textMarshalerMap) MarshalText() ([]byte, error) {
+	return []byte(`{}`), nil
+}
+
+func (p *textMarshalerMap) UnmarshalText(input []byte) error {
 	return nil
 }

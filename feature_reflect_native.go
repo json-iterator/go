@@ -1,7 +1,6 @@
 package jsoniter
 
 import (
-	"encoding"
 	"encoding/base64"
 	"encoding/json"
 	"reflect"
@@ -590,86 +589,4 @@ func (encoder *stringModeStringEncoder) Encode(ptr unsafe.Pointer, stream *Strea
 
 func (encoder *stringModeStringEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	return encoder.elemEncoder.IsEmpty(ptr)
-}
-
-type marshalerEncoder struct {
-	checkIsEmpty checkIsEmpty
-	valType      reflect2.Type
-}
-
-func (encoder *marshalerEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
-	obj := encoder.valType.UnsafeIndirect(ptr)
-	if reflect2.IsNil(obj) {
-		stream.WriteNil()
-		return
-	}
-	marshaler := obj.(json.Marshaler)
-	bytes, err := marshaler.MarshalJSON()
-	if err != nil {
-		stream.Error = err
-	} else {
-		stream.Write(bytes)
-	}
-}
-
-func (encoder *marshalerEncoder) IsEmpty(ptr unsafe.Pointer) bool {
-	return encoder.checkIsEmpty.IsEmpty(ptr)
-}
-
-type textMarshalerEncoder struct {
-	valType			reflect2.Type
-	checkIsEmpty      checkIsEmpty
-}
-
-func (encoder *textMarshalerEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
-	obj := encoder.valType.UnsafeIndirect(ptr)
-	if reflect2.IsNil(obj) {
-		stream.WriteNil()
-		return
-	}
-	marshaler := (obj).(encoding.TextMarshaler)
-	bytes, err := marshaler.MarshalText()
-	if err != nil {
-		stream.Error = err
-	} else {
-		stream.WriteString(string(bytes))
-	}
-}
-
-func (encoder *textMarshalerEncoder) IsEmpty(ptr unsafe.Pointer) bool {
-	return encoder.checkIsEmpty.IsEmpty(ptr)
-}
-
-type unmarshalerDecoder struct {
-	templateInterface emptyInterface
-}
-
-func (decoder *unmarshalerDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
-	templateInterface := decoder.templateInterface
-	templateInterface.word = ptr
-	realInterface := (*interface{})(unsafe.Pointer(&templateInterface))
-	unmarshaler := (*realInterface).(json.Unmarshaler)
-	iter.nextToken()
-	iter.unreadByte() // skip spaces
-	bytes := iter.SkipAndReturnBytes()
-	err := unmarshaler.UnmarshalJSON(bytes)
-	if err != nil {
-		iter.ReportError("unmarshalerDecoder", err.Error())
-	}
-}
-
-type textUnmarshalerDecoder struct {
-	templateInterface emptyInterface
-}
-
-func (decoder *textUnmarshalerDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
-	templateInterface := decoder.templateInterface
-	templateInterface.word = ptr
-	realInterface := (*interface{})(unsafe.Pointer(&templateInterface))
-	unmarshaler := (*realInterface).(encoding.TextUnmarshaler)
-	str := iter.ReadString()
-	err := unmarshaler.UnmarshalText([]byte(str))
-	if err != nil {
-		iter.ReportError("textUnmarshalerDecoder", err.Error())
-	}
 }

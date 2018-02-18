@@ -107,3 +107,15 @@ func (encoder *dereferenceEncoder) IsEmbeddedPtrNil(ptr unsafe.Pointer) bool {
 	fieldPtr := unsafe.Pointer(deReferenced)
 	return isEmbeddedPtrNil.IsEmbeddedPtrNil(fieldPtr)
 }
+
+type referenceEncoder struct {
+	encoder ValEncoder
+}
+
+func (encoder *referenceEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
+	encoder.encoder.Encode(unsafe.Pointer(&ptr), stream)
+}
+
+func (encoder *referenceEncoder) IsEmpty(ptr unsafe.Pointer) bool {
+	return encoder.encoder.IsEmpty(unsafe.Pointer(&ptr))
+}
