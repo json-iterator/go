@@ -79,7 +79,7 @@ func (stream *Stream) WriteVal(val interface{}) {
 	}
 	typ := reflect.TypeOf(val)
 	encoder := stream.cfg.EncoderOf(typ)
-	encoder.Encode((*emptyInterface)(unsafe.Pointer(&val)).word, stream)
+	encoder.Encode(reflect2.PtrOf(val), stream)
 }
 
 func decoderOfType(cfg *frozenConfig, prefix string, typ reflect.Type) ValDecoder {
@@ -149,6 +149,9 @@ func createDecoderOfType(cfg *frozenConfig, prefix string, typ reflect.Type) Val
 	if typ.Kind() == reflect.Slice && typ.Elem().Kind() == reflect.Uint8 {
 		sliceDecoder := decoderOfSlice(cfg, prefix, typ)
 		return &base64Codec{sliceDecoder: sliceDecoder}
+	}
+	if typ == anyType {
+		return &directAnyCodec{}
 	}
 	if typ.Implements(anyType) {
 		return &anyCodec{}
@@ -383,8 +386,13 @@ func createEncoderOfType(cfg *frozenConfig, prefix string, typ reflect.Type) Val
 	if typ.Kind() == reflect.Slice && typ.Elem().Kind() == reflect.Uint8 {
 		return &base64Codec{}
 	}
+	if typ == anyType {
+		return &directAnyCodec{}
+	}
 	if typ.Implements(anyType) {
-		return &anyCodec{}
+		return &anyCodec{
+			valType: reflect2.Type2(typ),
+		}
 	}
 	return createEncoderOfSimpleType(cfg, prefix, typ)
 }

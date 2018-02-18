@@ -369,20 +369,41 @@ func (encoder *dynamicEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	return encoder.valType.UnsafeIndirect(ptr) == nil
 }
 
-
 type anyCodec struct {
+	valType reflect2.Type
 }
 
 func (codec *anyCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
-	*((*Any)(ptr)) = iter.ReadAny()
+	panic("not implemented")
 }
 
 func (codec *anyCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
-	(*((*Any)(ptr))).WriteTo(stream)
+	obj := codec.valType.UnsafeIndirect(ptr)
+	any := obj.(Any)
+	any.WriteTo(stream)
 }
 
 func (codec *anyCodec) IsEmpty(ptr unsafe.Pointer) bool {
-	return (*((*Any)(ptr))).Size() == 0
+	obj := codec.valType.UnsafeIndirect(ptr)
+	any := obj.(Any)
+	return any.Size() == 0
+}
+
+type directAnyCodec struct {
+}
+
+func (codec *directAnyCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
+	*(*Any)(ptr) = iter.readAny()
+}
+
+func (codec *directAnyCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
+	any := *(*Any)(ptr)
+	any.WriteTo(stream)
+}
+
+func (codec *directAnyCodec) IsEmpty(ptr unsafe.Pointer) bool {
+	any := *(*Any)(ptr)
+	return any.Size() == 0
 }
 
 type jsonNumberCodec struct {
