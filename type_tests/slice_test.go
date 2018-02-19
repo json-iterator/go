@@ -74,7 +74,7 @@ func init() {
 		(*[]jsonMarshaler)(nil),
 		(*[]jsonMarshalerMap)(nil),
 		(*[]textMarshaler)(nil),
-		selectedSymmetricCase{(*[]textMarshalerMap)(nil)},
+		(*[]textMarshalerMap)(nil),
 	)
 }
 

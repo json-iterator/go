@@ -34,7 +34,7 @@ type Any interface {
 type baseAny struct{}
 
 func (any *baseAny) Get(path ...interface{}) Any {
-	return &invalidAny{baseAny{}, fmt.Errorf("Get %v from simple value", path)}
+	return &invalidAny{baseAny{}, fmt.Errorf("GetIndex %v from simple value", path)}
 }
 
 func (any *baseAny) Size() int {

@@ -14,7 +14,7 @@ func (any *stringAny) Get(path ...interface{}) Any {
 	if len(path) == 0 {
 		return any
 	}
-	return &invalidAny{baseAny{}, fmt.Errorf("Get %v from simple value", path)}
+	return &invalidAny{baseAny{}, fmt.Errorf("GetIndex %v from simple value", path)}
 }
 
 func (any *stringAny) Parse() *Iterator {
