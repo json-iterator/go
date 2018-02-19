@@ -82,19 +82,22 @@ func (stream *Stream) WriteVal(val interface{}) {
 	encoder.Encode(reflect2.PtrOf(val), stream)
 }
 
-func decoderOfType(cfg *frozenConfig, prefix string, typ reflect.Type) ValDecoder {
+func (cfg *frozenConfig) DecoderOf(typ reflect.Type) ValDecoder {
 	cacheKey := typ
 	decoder := cfg.getDecoderFromCache(cacheKey)
 	if decoder != nil {
 		return decoder
 	}
-	decoder = getTypeDecoderFromExtension(cfg, typ)
+	decoder = decoderOfType(cfg, "", typ)
+	cfg.addDecoderToCache(cacheKey, decoder)
+	return decoder
+}
+
+func decoderOfType(cfg *frozenConfig, prefix string, typ reflect.Type) ValDecoder {
+	decoder := getTypeDecoderFromExtension(cfg, typ)
 	if decoder != nil {
-		cfg.addDecoderToCache(cacheKey, decoder)
 		return decoder
 	}
-	decoder = &placeholderDecoder{cfg: cfg, cacheKey: cacheKey}
-	cfg.addDecoderToCache(cacheKey, decoder)
 	decoder = createDecoderOfType(cfg, prefix, typ)
 	for _, extension := range extensions {
 		decoder = extension.DecorateDecoder(typ, decoder)
@@ -102,7 +105,6 @@ func decoderOfType(cfg *frozenConfig, prefix string, typ reflect.Type) ValDecode
 	for _, extension := range cfg.extensions {
 		decoder = extension.DecorateDecoder(typ, decoder)
 	}
-	cfg.addDecoderToCache(cacheKey, decoder)
 	return decoder
 }
 
@@ -120,30 +122,8 @@ func createDecoderOfType(cfg *frozenConfig, prefix string, typ reflect.Type) Val
 	if typ.AssignableTo(jsoniterNumberType) {
 		return &jsoniterNumberCodec{}
 	}
-	if typ.Implements(unmarshalerType) {
-		templateInterface := reflect.New(typ).Elem().Interface()
-		var decoder ValDecoder = &unmarshalerDecoder{extractInterface(templateInterface)}
-		if typ.Kind() == reflect.Ptr {
-			decoder = &OptionalDecoder{typ.Elem(), decoder}
-		}
-		return decoder
-	}
-	if reflect.PtrTo(typ).Implements(unmarshalerType) {
-		templateInterface := reflect.New(typ).Interface()
-		var decoder ValDecoder = &unmarshalerDecoder{extractInterface(templateInterface)}
-		return decoder
-	}
-	if typ.Implements(textUnmarshalerType) {
-		templateInterface := reflect.New(typ).Elem().Interface()
-		var decoder ValDecoder = &textUnmarshalerDecoder{extractInterface(templateInterface)}
-		if typ.Kind() == reflect.Ptr {
-			decoder = &OptionalDecoder{typ.Elem(), decoder}
-		}
-		return decoder
-	}
-	if reflect.PtrTo(typ).Implements(textUnmarshalerType) {
-		templateInterface := reflect.New(typ).Interface()
-		var decoder ValDecoder = &textUnmarshalerDecoder{extractInterface(templateInterface)}
+	decoder := createDecoderOfMarshaler(cfg, prefix, typ)
+	if decoder != nil {
 		return decoder
 	}
 	if typ.Kind() == reflect.Slice && typ.Elem().Kind() == reflect.Uint8 {

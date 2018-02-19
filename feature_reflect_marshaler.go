@@ -8,6 +8,21 @@ import (
 	"reflect"
 )
 
+func createDecoderOfMarshaler(cfg *frozenConfig, prefix string, typ reflect.Type) ValDecoder {
+	ptrType := reflect.PtrTo(typ)
+	if ptrType.Implements(unmarshalerType) {
+		return &referenceDecoder{
+			&unmarshalerDecoder{reflect2.Type2(ptrType)},
+		}
+	}
+	if ptrType.Implements(textUnmarshalerType) {
+		return &referenceDecoder{
+			&textUnmarshalerDecoder{reflect2.Type2(ptrType)},
+		}
+	}
+	return nil
+}
+
 func createEncoderOfMarshaler(cfg *frozenConfig, prefix string, typ reflect.Type) ValEncoder {
 	if typ == marshalerType {
 		checkIsEmpty := createCheckIsEmpty(cfg, typ)
@@ -160,14 +175,13 @@ func (encoder *directTextMarshalerEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 }
 
 type unmarshalerDecoder struct {
-	templateInterface emptyInterface
+	valType reflect2.Type
 }
 
 func (decoder *unmarshalerDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
-	templateInterface := decoder.templateInterface
-	templateInterface.word = ptr
-	realInterface := (*interface{})(unsafe.Pointer(&templateInterface))
-	unmarshaler := (*realInterface).(json.Unmarshaler)
+	valType := decoder.valType
+	obj := valType.UnsafeIndirect(ptr)
+	unmarshaler := obj.(json.Unmarshaler)
 	iter.nextToken()
 	iter.unreadByte() // skip spaces
 	bytes := iter.SkipAndReturnBytes()
@@ -178,14 +192,20 @@ func (decoder *unmarshalerDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 }
 
 type textUnmarshalerDecoder struct {
-	templateInterface emptyInterface
+	valType reflect2.Type
 }
 
 func (decoder *textUnmarshalerDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
-	templateInterface := decoder.templateInterface
-	templateInterface.word = ptr
-	realInterface := (*interface{})(unsafe.Pointer(&templateInterface))
-	unmarshaler := (*realInterface).(encoding.TextUnmarshaler)
+	valType := decoder.valType
+	obj := valType.UnsafeIndirect(ptr)
+	if reflect2.IsNil(obj) {
+		ptrType := valType.(*reflect2.UnsafePtrType)
+		elemType := ptrType.Elem()
+		elem := elemType.UnsafeNew()
+		ptrType.UnsafeSet(ptr, unsafe.Pointer(&elem))
+		obj = valType.UnsafeIndirect(ptr)
+	}
+	unmarshaler := (obj).(encoding.TextUnmarshaler)
 	str := iter.ReadString()
 	err := unmarshaler.UnmarshalText([]byte(str))
 	if err != nil {

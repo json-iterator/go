@@ -6,61 +6,80 @@ import (
 )
 
 func init() {
-	jsonMarshaler := json.Marshaler(fakeJsonMarshaler{})
-	textMarshaler := encoding.TextMarshaler(fakeTextMarshaler{})
-	textMarshaler2 := encoding.TextMarshaler(&fakeTextMarshaler2{})
+	jm := json.Marshaler(jmOfStruct{})
+	tm1 := encoding.TextMarshaler(tmOfStruct{})
+	tm2 := encoding.TextMarshaler(&tmOfStructInt{})
 	marshalCases = append(marshalCases,
-		fakeJsonMarshaler{},
-		&jsonMarshaler,
-		fakeTextMarshaler{},
-		&textMarshaler,
-		fakeTextMarshaler2{},
-		&textMarshaler2,
-		map[fakeTextMarshaler]int{
-			fakeTextMarshaler{}: 100,
+		jmOfStruct{},
+		&jm,
+		tmOfStruct{},
+		&tm1,
+		tmOfStructInt{},
+		&tm2,
+		map[tmOfStruct]int{
+			tmOfStruct{}: 100,
 		},
-		map[*fakeTextMarshaler]int{
-			&fakeTextMarshaler{}: 100,
+		map[*tmOfStruct]int{
+			&tmOfStruct{}: 100,
 		},
 		map[encoding.TextMarshaler]int{
-			textMarshaler: 100,
+			tm1: 100,
 		},
 	)
+	unmarshalCases = append(unmarshalCases, unmarshalCase{
+		ptr: (*tmOfMap)(nil),
+		input: `"{1:2}"`,
+	}, unmarshalCase{
+		ptr: (*tmOfMapPtr)(nil),
+		input: `"{1:2}"`,
+	})
 }
 
-type fakeJsonMarshaler struct {
+type jmOfStruct struct {
 	F2 chan []byte
 }
 
-func (q fakeJsonMarshaler) MarshalJSON() ([]byte, error) {
+func (q jmOfStruct) MarshalJSON() ([]byte, error) {
 	return []byte(`""`), nil
 }
 
-func (q *fakeJsonMarshaler) UnmarshalJSON(value []byte) error {
+func (q *jmOfStruct) UnmarshalJSON(value []byte) error {
 	return nil
 }
 
 
-type fakeTextMarshaler struct {
+type tmOfStruct struct {
 	F2 chan []byte
 }
 
-func (q fakeTextMarshaler) MarshalText() ([]byte, error) {
+func (q tmOfStruct) MarshalText() ([]byte, error) {
 	return []byte(`""`), nil
 }
 
-func (q *fakeTextMarshaler) UnmarshalText(value []byte) error {
+func (q *tmOfStruct) UnmarshalText(value []byte) error {
 	return nil
 }
 
-type fakeTextMarshaler2 struct {
+type tmOfStructInt struct {
 	Field2 int
 }
 
-func (q *fakeTextMarshaler2) MarshalText() ([]byte, error) {
+func (q *tmOfStructInt) MarshalText() ([]byte, error) {
 	return []byte(`"abc"`), nil
 }
 
-func (q *fakeTextMarshaler2) UnmarshalText(value []byte) error {
+func (q *tmOfStructInt) UnmarshalText(value []byte) error {
+	return nil
+}
+
+type tmOfMap map[int]int
+
+func (q tmOfMap) UnmarshalText(value []byte) error {
+	return nil
+}
+
+type tmOfMapPtr map[int]int
+
+func (q *tmOfMapPtr) UnmarshalText(value []byte) error {
 	return nil
 }

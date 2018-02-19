@@ -1,19 +1,24 @@
 package jsoniter
 
 import (
-	"encoding"
 	"reflect"
 	"sort"
-	"strconv"
 	"unsafe"
 	"github.com/v2pro/plz/reflect2"
 	"fmt"
 )
 
 func decoderOfMap(cfg *frozenConfig, prefix string, typ reflect.Type) ValDecoder {
-	decoder := decoderOfType(cfg, prefix+"[map]->", typ.Elem())
-	mapInterface := reflect.New(typ).Interface()
-	return &mapDecoder{typ, typ.Key(), typ.Elem(), decoder, extractInterface(mapInterface)}
+	keyDecoder := decoderOfMapKey(cfg, prefix+" [mapKey]", typ.Key())
+	elemDecoder := decoderOfType(cfg, prefix+" [mapElem]", typ.Elem())
+	mapType := reflect2.Type2(typ).(*reflect2.UnsafeMapType)
+	return &mapDecoder{
+		mapType:     mapType,
+		keyType:     mapType.Key(),
+		elemType:    mapType.Elem(),
+		keyDecoder:  keyDecoder,
+		elemDecoder: elemDecoder,
+	}
 }
 
 func encoderOfMap(cfg *frozenConfig, prefix string, typ reflect.Type) ValEncoder {
@@ -28,6 +33,38 @@ func encoderOfMap(cfg *frozenConfig, prefix string, typ reflect.Type) ValEncoder
 		mapType:     reflect2.Type2(typ).(*reflect2.UnsafeMapType),
 		keyEncoder:  encoderOfMapKey(cfg, prefix+" [mapKey]", typ.Key()),
 		elemEncoder: encoderOfType(cfg, prefix+" [mapElem]", typ.Elem()),
+	}
+}
+
+func decoderOfMapKey(cfg *frozenConfig, prefix string, typ reflect.Type) ValDecoder {
+	switch typ.Kind() {
+	case reflect.String:
+		return decoderOfType(cfg, prefix, reflect2.DefaultTypeOfKind(reflect.String).Type1())
+	case reflect.Bool,
+		reflect.Uint8, reflect.Int8,
+		reflect.Uint16, reflect.Int16,
+		reflect.Uint32, reflect.Int32,
+		reflect.Uint64, reflect.Int64,
+		reflect.Uint, reflect.Int,
+		reflect.Float32, reflect.Float64,
+		reflect.Uintptr:
+		typ = reflect2.DefaultTypeOfKind(typ.Kind()).Type1()
+		return &numericMapKeyDecoder{decoderOfType(cfg, prefix, typ)}
+	default:
+		ptrType := reflect.PtrTo(typ)
+		if ptrType.Implements(textMarshalerType) {
+			return &referenceDecoder{
+				&textUnmarshalerDecoder{
+					valType: reflect2.Type2(ptrType),
+				},
+			}
+		}
+		if typ.Implements(textMarshalerType) {
+			return &textUnmarshalerDecoder{
+				valType:       reflect2.Type2(typ),
+			}
+		}
+		return &lazyErrorDecoder{err: fmt.Errorf("unsupported map key type: %v", typ)}
 	}
 }
 
@@ -53,7 +90,7 @@ func encoderOfMapKey(cfg *frozenConfig, prefix string, typ reflect.Type) ValEnco
 		}
 		if typ.Implements(textMarshalerType) {
 			return &textMarshalerEncoder{
-				valType: reflect2.Type2(typ),
+				valType:       reflect2.Type2(typ),
 				stringEncoder: cfg.EncoderOf(reflect.TypeOf("")),
 			}
 		}
@@ -62,77 +99,81 @@ func encoderOfMapKey(cfg *frozenConfig, prefix string, typ reflect.Type) ValEnco
 }
 
 type mapDecoder struct {
-	mapType      reflect.Type
-	keyType      reflect.Type
-	elemType     reflect.Type
-	elemDecoder  ValDecoder
-	mapInterface emptyInterface
+	mapType     *reflect2.UnsafeMapType
+	keyType     reflect2.Type
+	elemType    reflect2.Type
+	keyDecoder  ValDecoder
+	elemDecoder ValDecoder
 }
 
 func (decoder *mapDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
-	// dark magic to cast unsafe.Pointer back to interface{} using reflect.Type
-	mapInterface := decoder.mapInterface
-	mapInterface.word = ptr
-	realInterface := (*interface{})(unsafe.Pointer(&mapInterface))
-	realVal := reflect.ValueOf(*realInterface).Elem()
-	if iter.ReadNil() {
-		realVal.Set(reflect.Zero(decoder.mapType))
+	mapType := decoder.mapType
+	c := iter.nextToken()
+	if c == 'n' {
+		iter.skipThreeBytes('u', 'l', 'l')
+		*(*unsafe.Pointer)(ptr) = nil
+		mapType.UnsafeSet(ptr, mapType.UnsafeNew())
 		return
 	}
-	if realVal.IsNil() {
-		realVal.Set(reflect.MakeMap(realVal.Type()))
+	if mapType.UnsafeIsNil(ptr) {
+		mapType.UnsafeSet(ptr, mapType.UnsafeMakeMap(0))
 	}
-	iter.ReadMapCB(func(iter *Iterator, keyStr string) bool {
-		elem := reflect.New(decoder.elemType)
-		decoder.elemDecoder.Decode(extractInterface(elem.Interface()).word, iter)
-		// to put into map, we have to use reflection
-		keyType := decoder.keyType
-		// TODO: remove this from loop
-		switch {
-		case keyType.Kind() == reflect.String:
-			realVal.SetMapIndex(reflect.ValueOf(keyStr).Convert(keyType), elem.Elem())
-			return true
-		case keyType.Implements(textUnmarshalerType):
-			textUnmarshaler := reflect.New(keyType.Elem()).Interface().(encoding.TextUnmarshaler)
-			err := textUnmarshaler.UnmarshalText([]byte(keyStr))
-			if err != nil {
-				iter.ReportError("read map key as TextUnmarshaler", err.Error())
-				return false
-			}
-			realVal.SetMapIndex(reflect.ValueOf(textUnmarshaler), elem.Elem())
-			return true
-		case reflect.PtrTo(keyType).Implements(textUnmarshalerType):
-			textUnmarshaler := reflect.New(keyType).Interface().(encoding.TextUnmarshaler)
-			err := textUnmarshaler.UnmarshalText([]byte(keyStr))
-			if err != nil {
-				iter.ReportError("read map key as TextUnmarshaler", err.Error())
-				return false
-			}
-			realVal.SetMapIndex(reflect.ValueOf(textUnmarshaler).Elem(), elem.Elem())
-			return true
-		default:
-			switch keyType.Kind() {
-			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-				n, err := strconv.ParseInt(keyStr, 10, 64)
-				if err != nil || reflect.Zero(keyType).OverflowInt(n) {
-					iter.ReportError("read map key as int64", "read int64 failed")
-					return false
-				}
-				realVal.SetMapIndex(reflect.ValueOf(n).Convert(keyType), elem.Elem())
-				return true
-			case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
-				n, err := strconv.ParseUint(keyStr, 10, 64)
-				if err != nil || reflect.Zero(keyType).OverflowUint(n) {
-					iter.ReportError("read map key as uint64", "read uint64 failed")
-					return false
-				}
-				realVal.SetMapIndex(reflect.ValueOf(n).Convert(keyType), elem.Elem())
-				return true
-			}
+	if c != '{' {
+		iter.ReportError("ReadMapCB", `expect { or n, but found `+string([]byte{c}))
+		return
+	}
+	c = iter.nextToken()
+	if c == '}' {
+		return
+	}
+	if c != '"' {
+		iter.ReportError("ReadMapCB", `expect " after }, but found `+string([]byte{c}))
+		return
+	}
+	iter.unreadByte()
+	key := decoder.keyType.UnsafeNew()
+	decoder.keyDecoder.Decode(key, iter)
+	c = iter.nextToken()
+	if c != ':' {
+		iter.ReportError("ReadMapCB", "expect : after object field, but found "+string([]byte{c}))
+		return
+	}
+	elem := decoder.elemType.UnsafeNew()
+	decoder.elemDecoder.Decode(elem, iter)
+	decoder.mapType.UnsafeSetIndex(ptr, key, elem)
+	for c = iter.nextToken(); c == ','; c = iter.nextToken() {
+		key := decoder.keyType.UnsafeNew()
+		decoder.keyDecoder.Decode(key, iter)
+		c = iter.nextToken()
+		if c != ':' {
+			iter.ReportError("ReadMapCB", "expect : after object field, but found "+string([]byte{c}))
+			return
 		}
-		iter.ReportError("read map key", "unexpected map key type "+keyType.String())
-		return true
-	})
+		elem := decoder.elemType.UnsafeNew()
+		decoder.elemDecoder.Decode(elem, iter)
+		decoder.mapType.UnsafeSetIndex(ptr, key, elem)
+	}
+	if c != '}' {
+		iter.ReportError("ReadMapCB", `expect }, but found `+string([]byte{c}))
+	}
+}
+
+type numericMapKeyDecoder struct {
+	decoder ValDecoder
+}
+
+func (decoder *numericMapKeyDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
+	c := iter.nextToken()
+	if c != '"' {
+		iter.ReportError("ReadMapCB", `expect ", but found `+string([]byte{c}))
+		return
+	}
+	decoder.decoder.Decode(ptr, iter)
+	c = iter.nextToken()
+	if c != '"' {
+		iter.ReportError("ReadMapCB", `expect ", but found `+string([]byte{c}))
+		return
+	}
 }
 
 type numericMapKeyEncoder struct {

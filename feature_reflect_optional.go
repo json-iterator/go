@@ -119,3 +119,11 @@ func (encoder *referenceEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 func (encoder *referenceEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	return encoder.encoder.IsEmpty(unsafe.Pointer(&ptr))
 }
+
+type referenceDecoder struct {
+	decoder ValDecoder
+}
+
+func (decoder *referenceDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
+	decoder.decoder.Decode(unsafe.Pointer(&ptr), iter)
+}
