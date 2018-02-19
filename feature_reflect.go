@@ -333,55 +333,9 @@ func createEncoderOfType(cfg *frozenConfig, prefix string, typ reflect.Type) Val
 	if typ.AssignableTo(jsoniterNumberType) {
 		return &jsoniterNumberCodec{}
 	}
-	if typ == marshalerType {
-		checkIsEmpty := createCheckIsEmpty(cfg, typ)
-		var encoder ValEncoder = &directMarshalerEncoder{
-			checkIsEmpty:      checkIsEmpty,
-		}
+	encoder := createEncoderOfMarshaler(cfg, prefix, typ)
+	if encoder != nil {
 		return encoder
-	}
-	if typ.Implements(marshalerType) {
-		checkIsEmpty := createCheckIsEmpty(cfg, typ)
-		var encoder ValEncoder = &marshalerEncoder{
-			valType: reflect2.Type2(typ),
-			checkIsEmpty:      checkIsEmpty,
-		}
-		return encoder
-	}
-	ptrType := reflect.PtrTo(typ)
-	if ptrType.Implements(marshalerType) {
-		checkIsEmpty := createCheckIsEmpty(cfg, ptrType)
-		var encoder ValEncoder = &marshalerEncoder{
-			valType: reflect2.Type2(ptrType),
-			checkIsEmpty:      checkIsEmpty,
-		}
-		return &referenceEncoder{encoder}
-	}
-	if typ == textMarshalerType {
-		checkIsEmpty := createCheckIsEmpty(cfg, typ)
-		var encoder ValEncoder = &directTextMarshalerEncoder{
-			checkIsEmpty:      checkIsEmpty,
-			stringEncoder: cfg.EncoderOf(reflect.TypeOf("")),
-		}
-		return encoder
-	}
-	if typ.Implements(textMarshalerType) {
-		checkIsEmpty := createCheckIsEmpty(cfg, typ)
-		var encoder ValEncoder = &textMarshalerEncoder{
-			valType: reflect2.Type2(typ),
-			stringEncoder: cfg.EncoderOf(reflect.TypeOf("")),
-			checkIsEmpty:      checkIsEmpty,
-		}
-		return encoder
-	}
-	if typ.Kind() == reflect.Map && ptrType.Implements(textMarshalerType) {
-		checkIsEmpty := createCheckIsEmpty(cfg, ptrType)
-		var encoder ValEncoder = &textMarshalerEncoder{
-			valType: reflect2.Type2(ptrType),
-			stringEncoder: cfg.EncoderOf(reflect.TypeOf("")),
-			checkIsEmpty:      checkIsEmpty,
-		}
-		return &referenceEncoder{encoder}
 	}
 	if typ.Kind() == reflect.Slice && typ.Elem().Kind() == reflect.Uint8 {
 		return &base64Codec{}
