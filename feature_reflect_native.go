@@ -493,15 +493,13 @@ func (codec *jsoniterRawMessageCodec) IsEmpty(ptr unsafe.Pointer) bool {
 }
 
 type base64Codec struct {
+	sliceType *reflect2.UnsafeSliceType
 	sliceDecoder ValDecoder
 }
 
 func (codec *base64Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	if iter.ReadNil() {
-		ptrSlice := (*sliceHeader)(ptr)
-		ptrSlice.Len = 0
-		ptrSlice.Cap = 0
-		ptrSlice.Data = nil
+		codec.sliceType.UnsafeSetNil(ptr)
 		return
 	}
 	switch iter.WhatIsNext() {
@@ -516,11 +514,7 @@ func (codec *base64Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 			iter.ReportError("decode base64", err.Error())
 		} else {
 			dst = dst[:len]
-			dstSlice := (*sliceHeader)(unsafe.Pointer(&dst))
-			ptrSlice := (*sliceHeader)(ptr)
-			ptrSlice.Data = dstSlice.Data
-			ptrSlice.Cap = dstSlice.Cap
-			ptrSlice.Len = dstSlice.Len
+			codec.sliceType.UnsafeSet(ptr, unsafe.Pointer(&dst))
 		}
 	case ArrayValue:
 		codec.sliceDecoder.Decode(ptr, iter)

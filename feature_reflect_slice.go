@@ -49,20 +49,12 @@ func (encoder *sliceEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 }
 
 func (encoder *sliceEncoder) IsEmpty(ptr unsafe.Pointer) bool {
-	slice := (*sliceHeader)(ptr)
-	return slice.Len == 0
+	return encoder.sliceType.UnsafeLengthOf(ptr) == 0
 }
 
 type sliceDecoder struct {
 	sliceType   *reflect2.UnsafeSliceType
 	elemDecoder ValDecoder
-}
-
-// sliceHeader is a safe version of SliceHeader used within this package.
-type sliceHeader struct {
-	Data unsafe.Pointer
-	Len  int
-	Cap  int
 }
 
 func (decoder *sliceDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
