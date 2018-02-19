@@ -369,62 +369,6 @@ func (encoder *dynamicEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	return encoder.valType.UnsafeIndirect(ptr) == nil
 }
 
-type jsonNumberCodec struct {
-}
-
-func (codec *jsonNumberCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
-	switch iter.WhatIsNext() {
-	case StringValue:
-		*((*json.Number)(ptr)) = json.Number(iter.ReadString())
-	case NilValue:
-		iter.skipFourBytes('n', 'u', 'l', 'l')
-		*((*json.Number)(ptr)) = ""
-	default:
-		*((*json.Number)(ptr)) = json.Number([]byte(iter.readNumberAsString()))
-	}
-}
-
-func (codec *jsonNumberCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
-	number := *((*json.Number)(ptr))
-	if len(number) == 0 {
-		stream.writeByte('0')
-	} else {
-		stream.WriteRaw(string(number))
-	}
-}
-
-func (codec *jsonNumberCodec) IsEmpty(ptr unsafe.Pointer) bool {
-	return len(*((*json.Number)(ptr))) == 0
-}
-
-type jsoniterNumberCodec struct {
-}
-
-func (codec *jsoniterNumberCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
-	switch iter.WhatIsNext() {
-	case StringValue:
-		*((*Number)(ptr)) = Number(iter.ReadString())
-	case NilValue:
-		iter.skipFourBytes('n', 'u', 'l', 'l')
-		*((*Number)(ptr)) = ""
-	default:
-		*((*Number)(ptr)) = Number([]byte(iter.readNumberAsString()))
-	}
-}
-
-func (codec *jsoniterNumberCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
-	number := *((*Number)(ptr))
-	if len(number) == 0 {
-		stream.writeByte('0')
-	} else {
-		stream.WriteRaw(string(number))
-	}
-}
-
-func (codec *jsoniterNumberCodec) IsEmpty(ptr unsafe.Pointer) bool {
-	return len(*((*Number)(ptr))) == 0
-}
-
 type jsonRawMessageCodec struct {
 }
 

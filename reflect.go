@@ -36,8 +36,6 @@ type checkIsEmpty interface {
 	IsEmpty(ptr unsafe.Pointer) bool
 }
 
-var jsonNumberType reflect.Type
-var jsoniterNumberType reflect.Type
 var jsonRawMessageType reflect.Type
 var jsoniterRawMessageType reflect.Type
 var anyType reflect.Type
@@ -47,8 +45,6 @@ var textMarshalerType reflect.Type
 var textUnmarshalerType reflect.Type
 
 func init() {
-	jsonNumberType = reflect.TypeOf((*json.Number)(nil)).Elem()
-	jsoniterNumberType = reflect.TypeOf((*Number)(nil)).Elem()
 	jsonRawMessageType = reflect.TypeOf((*json.RawMessage)(nil)).Elem()
 	jsoniterRawMessageType = reflect.TypeOf((*RawMessage)(nil)).Elem()
 	anyType = reflect.TypeOf((*Any)(nil)).Elem()
@@ -116,13 +112,11 @@ func createDecoderOfType(cfg *frozenConfig, prefix string, typ reflect.Type) Val
 	if typ == jsoniterRawMessageType {
 		return &jsoniterRawMessageCodec{}
 	}
-	if typ.AssignableTo(jsonNumberType) {
-		return &jsonNumberCodec{}
+	decoder := createDecoderOfJsonNumber(cfg, prefix, typ)
+	if decoder != nil {
+		return decoder
 	}
-	if typ.AssignableTo(jsoniterNumberType) {
-		return &jsoniterNumberCodec{}
-	}
-	decoder := createDecoderOfMarshaler(cfg, prefix, typ)
+	decoder = createDecoderOfMarshaler(cfg, prefix, typ)
 	if decoder != nil {
 		return decoder
 	}
@@ -307,13 +301,11 @@ func createEncoderOfType(cfg *frozenConfig, prefix string, typ reflect.Type) Val
 	if typ == jsoniterRawMessageType {
 		return &jsoniterRawMessageCodec{}
 	}
-	if typ.AssignableTo(jsonNumberType) {
-		return &jsonNumberCodec{}
+	encoder := createEncoderOfJsonNumber(cfg, prefix, typ)
+	if encoder != nil {
+		return encoder
 	}
-	if typ.AssignableTo(jsoniterNumberType) {
-		return &jsoniterNumberCodec{}
-	}
-	encoder := createEncoderOfMarshaler(cfg, prefix, typ)
+	encoder = createEncoderOfMarshaler(cfg, prefix, typ)
 	if encoder != nil {
 		return encoder
 	}
