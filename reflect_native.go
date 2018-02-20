@@ -369,36 +369,6 @@ func (encoder *dynamicEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	return encoder.valType.UnsafeIndirect(ptr) == nil
 }
 
-type jsonRawMessageCodec struct {
-}
-
-func (codec *jsonRawMessageCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
-	*((*json.RawMessage)(ptr)) = json.RawMessage(iter.SkipAndReturnBytes())
-}
-
-func (codec *jsonRawMessageCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
-	stream.WriteRaw(string(*((*json.RawMessage)(ptr))))
-}
-
-func (codec *jsonRawMessageCodec) IsEmpty(ptr unsafe.Pointer) bool {
-	return len(*((*json.RawMessage)(ptr))) == 0
-}
-
-type jsoniterRawMessageCodec struct {
-}
-
-func (codec *jsoniterRawMessageCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
-	*((*RawMessage)(ptr)) = RawMessage(iter.SkipAndReturnBytes())
-}
-
-func (codec *jsoniterRawMessageCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
-	stream.WriteRaw(string(*((*RawMessage)(ptr))))
-}
-
-func (codec *jsoniterRawMessageCodec) IsEmpty(ptr unsafe.Pointer) bool {
-	return len(*((*RawMessage)(ptr))) == 0
-}
-
 type base64Codec struct {
 	sliceType *reflect2.UnsafeSliceType
 	sliceDecoder ValDecoder
@@ -447,68 +417,4 @@ func (codec *base64Codec) Encode(ptr unsafe.Pointer, stream *Stream) {
 
 func (codec *base64Codec) IsEmpty(ptr unsafe.Pointer) bool {
 	return len(*((*[]byte)(ptr))) == 0
-}
-
-type stringModeNumberDecoder struct {
-	elemDecoder ValDecoder
-}
-
-func (decoder *stringModeNumberDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
-	c := iter.nextToken()
-	if c != '"' {
-		iter.ReportError("stringModeNumberDecoder", `expect ", but found `+string([]byte{c}))
-		return
-	}
-	decoder.elemDecoder.Decode(ptr, iter)
-	if iter.Error != nil {
-		return
-	}
-	c = iter.readByte()
-	if c != '"' {
-		iter.ReportError("stringModeNumberDecoder", `expect ", but found `+string([]byte{c}))
-		return
-	}
-}
-
-type stringModeStringDecoder struct {
-	elemDecoder ValDecoder
-	cfg         *frozenConfig
-}
-
-func (decoder *stringModeStringDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
-	decoder.elemDecoder.Decode(ptr, iter)
-	str := *((*string)(ptr))
-	tempIter := decoder.cfg.BorrowIterator([]byte(str))
-	defer decoder.cfg.ReturnIterator(tempIter)
-	*((*string)(ptr)) = tempIter.ReadString()
-}
-
-type stringModeNumberEncoder struct {
-	elemEncoder ValEncoder
-}
-
-func (encoder *stringModeNumberEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
-	stream.writeByte('"')
-	encoder.elemEncoder.Encode(ptr, stream)
-	stream.writeByte('"')
-}
-
-func (encoder *stringModeNumberEncoder) IsEmpty(ptr unsafe.Pointer) bool {
-	return encoder.elemEncoder.IsEmpty(ptr)
-}
-
-type stringModeStringEncoder struct {
-	elemEncoder ValEncoder
-	cfg         *frozenConfig
-}
-
-func (encoder *stringModeStringEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
-	tempStream := encoder.cfg.BorrowStream(nil)
-	defer encoder.cfg.ReturnStream(tempStream)
-	encoder.elemEncoder.Encode(ptr, tempStream)
-	stream.WriteString(string(tempStream.Buffer()))
-}
-
-func (encoder *stringModeStringEncoder) IsEmpty(ptr unsafe.Pointer) bool {
-	return encoder.elemEncoder.IsEmpty(ptr)
 }

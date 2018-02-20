@@ -8,6 +8,32 @@ import (
 	"unsafe"
 )
 
+func decoderOfStruct(cfg *frozenConfig, prefix string, typ reflect.Type) ValDecoder {
+	bindings := map[string]*Binding{}
+	structDescriptor := describeStruct(cfg, prefix, typ)
+	for _, binding := range structDescriptor.Fields {
+		for _, fromName := range binding.FromNames {
+			old := bindings[fromName]
+			if old == nil {
+				bindings[fromName] = binding
+				continue
+			}
+			ignoreOld, ignoreNew := resolveConflictBinding(cfg, old, binding)
+			if ignoreOld {
+				delete(bindings, fromName)
+			}
+			if !ignoreNew {
+				bindings[fromName] = binding
+			}
+		}
+	}
+	fields := map[string]*structFieldDecoder{}
+	for k, binding := range bindings {
+		fields[k] = binding.Decoder.(*structFieldDecoder)
+	}
+	return createStructDecoder(cfg, typ, fields)
+}
+
 func createStructDecoder(cfg *frozenConfig, typ reflect.Type, fields map[string]*structFieldDecoder) ValDecoder {
 	if cfg.disallowUnknownFields {
 		return &generalStructDecoder{typ: typ, fields: fields, disallowUnknownFields: true}
@@ -970,5 +996,39 @@ func (decoder *structFieldDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	decoder.fieldDecoder.Decode(fieldPtr, iter)
 	if iter.Error != nil && iter.Error != io.EOF {
 		iter.Error = fmt.Errorf("%s: %s", decoder.field.Name, iter.Error.Error())
+	}
+}
+
+type stringModeStringDecoder struct {
+	elemDecoder ValDecoder
+	cfg         *frozenConfig
+}
+
+func (decoder *stringModeStringDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
+	decoder.elemDecoder.Decode(ptr, iter)
+	str := *((*string)(ptr))
+	tempIter := decoder.cfg.BorrowIterator([]byte(str))
+	defer decoder.cfg.ReturnIterator(tempIter)
+	*((*string)(ptr)) = tempIter.ReadString()
+}
+
+type stringModeNumberDecoder struct {
+	elemDecoder ValDecoder
+}
+
+func (decoder *stringModeNumberDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
+	c := iter.nextToken()
+	if c != '"' {
+		iter.ReportError("stringModeNumberDecoder", `expect ", but found `+string([]byte{c}))
+		return
+	}
+	decoder.elemDecoder.Decode(ptr, iter)
+	if iter.Error != nil {
+		return
+	}
+	c = iter.readByte()
+	if c != '"' {
+		iter.ReportError("stringModeNumberDecoder", `expect ", but found `+string([]byte{c}))
+		return
 	}
 }

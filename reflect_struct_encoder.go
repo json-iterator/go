@@ -74,32 +74,6 @@ func resolveConflictBinding(cfg *frozenConfig, old, new *Binding) (ignoreOld, ig
 	}
 }
 
-func decoderOfStruct(cfg *frozenConfig, prefix string, typ reflect.Type) ValDecoder {
-	bindings := map[string]*Binding{}
-	structDescriptor := describeStruct(cfg, prefix, typ)
-	for _, binding := range structDescriptor.Fields {
-		for _, fromName := range binding.FromNames {
-			old := bindings[fromName]
-			if old == nil {
-				bindings[fromName] = binding
-				continue
-			}
-			ignoreOld, ignoreNew := resolveConflictBinding(cfg, old, binding)
-			if ignoreOld {
-				delete(bindings, fromName)
-			}
-			if !ignoreNew {
-				bindings[fromName] = binding
-			}
-		}
-	}
-	fields := map[string]*structFieldDecoder{}
-	for k, binding := range bindings {
-		fields[k] = binding.Decoder.(*structFieldDecoder)
-	}
-	return createStructDecoder(cfg, typ, fields)
-}
-
 type structFieldEncoder struct {
 	field        *reflect.StructField
 	fieldEncoder ValEncoder
@@ -178,4 +152,34 @@ func (encoder *emptyStructEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 
 func (encoder *emptyStructEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	return false
+}
+
+type stringModeNumberEncoder struct {
+	elemEncoder ValEncoder
+}
+
+func (encoder *stringModeNumberEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
+	stream.writeByte('"')
+	encoder.elemEncoder.Encode(ptr, stream)
+	stream.writeByte('"')
+}
+
+func (encoder *stringModeNumberEncoder) IsEmpty(ptr unsafe.Pointer) bool {
+	return encoder.elemEncoder.IsEmpty(ptr)
+}
+
+type stringModeStringEncoder struct {
+	elemEncoder ValEncoder
+	cfg         *frozenConfig
+}
+
+func (encoder *stringModeStringEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
+	tempStream := encoder.cfg.BorrowStream(nil)
+	defer encoder.cfg.ReturnStream(tempStream)
+	encoder.elemEncoder.Encode(ptr, tempStream)
+	stream.WriteString(string(tempStream.Buffer()))
+}
+
+func (encoder *stringModeStringEncoder) IsEmpty(ptr unsafe.Pointer) bool {
+	return encoder.elemEncoder.IsEmpty(ptr)
 }

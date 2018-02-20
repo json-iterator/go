@@ -106,13 +106,11 @@ func decoderOfType(cfg *frozenConfig, prefix string, typ reflect.Type) ValDecode
 
 func createDecoderOfType(cfg *frozenConfig, prefix string, typ reflect.Type) ValDecoder {
 	typeName := typ.String()
-	if typ == jsonRawMessageType {
-		return &jsonRawMessageCodec{}
+	decoder := createDecoderOfJsonRawMessage(cfg, prefix, typ)
+	if decoder != nil {
+		return decoder
 	}
-	if typ == jsoniterRawMessageType {
-		return &jsoniterRawMessageCodec{}
-	}
-	decoder := createDecoderOfJsonNumber(cfg, prefix, typ)
+	decoder = createDecoderOfJsonNumber(cfg, prefix, typ)
 	if decoder != nil {
 		return decoder
 	}
@@ -295,13 +293,11 @@ func encoderOfType(cfg *frozenConfig, prefix string, typ reflect.Type) ValEncode
 }
 
 func createEncoderOfType(cfg *frozenConfig, prefix string, typ reflect.Type) ValEncoder {
-	if typ == jsonRawMessageType {
-		return &jsonRawMessageCodec{}
+	encoder := createEncoderOfJsonRawMessage(cfg, prefix, typ)
+	if encoder != nil {
+		return encoder
 	}
-	if typ == jsoniterRawMessageType {
-		return &jsoniterRawMessageCodec{}
-	}
-	encoder := createEncoderOfJsonNumber(cfg, prefix, typ)
+	encoder = createEncoderOfJsonNumber(cfg, prefix, typ)
 	if encoder != nil {
 		return encoder
 	}
