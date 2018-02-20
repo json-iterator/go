@@ -38,7 +38,6 @@ type checkIsEmpty interface {
 
 var jsonRawMessageType reflect.Type
 var jsoniterRawMessageType reflect.Type
-var anyType reflect.Type
 var marshalerType reflect.Type
 var unmarshalerType reflect.Type
 var textMarshalerType reflect.Type
@@ -47,7 +46,6 @@ var textUnmarshalerType reflect.Type
 func init() {
 	jsonRawMessageType = reflect.TypeOf((*json.RawMessage)(nil)).Elem()
 	jsoniterRawMessageType = reflect.TypeOf((*RawMessage)(nil)).Elem()
-	anyType = reflect.TypeOf((*Any)(nil)).Elem()
 	marshalerType = reflect.TypeOf((*json.Marshaler)(nil)).Elem()
 	unmarshalerType = reflect.TypeOf((*json.Unmarshaler)(nil)).Elem()
 	textMarshalerType = reflect.TypeOf((*encoding.TextMarshaler)(nil)).Elem()
@@ -105,7 +103,6 @@ func decoderOfType(cfg *frozenConfig, prefix string, typ reflect.Type) ValDecode
 }
 
 func createDecoderOfType(cfg *frozenConfig, prefix string, typ reflect.Type) ValDecoder {
-	typeName := typ.String()
 	decoder := createDecoderOfJsonRawMessage(cfg, prefix, typ)
 	if decoder != nil {
 		return decoder
@@ -118,11 +115,9 @@ func createDecoderOfType(cfg *frozenConfig, prefix string, typ reflect.Type) Val
 	if decoder != nil {
 		return decoder
 	}
-	if typ == anyType {
-		return &directAnyCodec{}
-	}
-	if typ.Implements(anyType) {
-		return &anyCodec{}
+	decoder = createDecoderOfAny(cfg, prefix, typ)
+	if decoder != nil {
+		return decoder
 	}
 	decoder = createDecoderOfNative(cfg, prefix, typ)
 	if decoder != nil {
@@ -230,15 +225,31 @@ func createEncoderOfType(cfg *frozenConfig, prefix string, typ reflect.Type) Val
 	if encoder != nil {
 		return encoder
 	}
-	if typ == anyType {
-		return &directAnyCodec{}
+	encoder = createEncoderOfAny(cfg, prefix, typ)
+	if encoder != nil {
+		return encoder
 	}
-	if typ.Implements(anyType) {
-		return &anyCodec{
-			valType: reflect2.Type2(typ),
-		}
+	encoder = createEncoderOfNative(cfg, prefix, typ)
+	if encoder != nil {
+		return encoder
 	}
-	return createEncoderOfSimpleType(cfg, prefix, typ)
+	kind := typ.Kind()
+	switch kind {
+	case reflect.Interface:
+		return &dynamicEncoder{reflect2.Type2(typ)}
+	case reflect.Struct:
+		return encoderOfStruct(cfg, prefix, typ)
+	case reflect.Array:
+		return encoderOfArray(cfg, prefix, typ)
+	case reflect.Slice:
+		return encoderOfSlice(cfg, prefix, typ)
+	case reflect.Map:
+		return encoderOfMap(cfg, prefix, typ)
+	case reflect.Ptr:
+		return encoderOfOptional(cfg, prefix, typ)
+	default:
+		return &lazyErrorEncoder{err: fmt.Errorf("%s%s is unsupported type", prefix, typ.String())}
+	}
 }
 
 func createCheckIsEmpty(cfg *frozenConfig, typ reflect.Type) checkIsEmpty {
@@ -291,29 +302,6 @@ func createCheckIsEmpty(cfg *frozenConfig, typ reflect.Type) checkIsEmpty {
 	}
 }
 
-func createEncoderOfSimpleType(cfg *frozenConfig, prefix string, typ reflect.Type) ValEncoder {
-	encoder := createEncoderOfNative(cfg, prefix, typ)
-	if encoder != nil {
-		return encoder
-	}
-	kind := typ.Kind()
-	switch kind {
-	case reflect.Interface:
-		return &dynamicEncoder{reflect2.Type2(typ)}
-	case reflect.Struct:
-		return encoderOfStruct(cfg, prefix, typ)
-	case reflect.Array:
-		return encoderOfArray(cfg, prefix, typ)
-	case reflect.Slice:
-		return encoderOfSlice(cfg, prefix, typ)
-	case reflect.Map:
-		return encoderOfMap(cfg, prefix, typ)
-	case reflect.Ptr:
-		return encoderOfOptional(cfg, prefix, typ)
-	default:
-		return &lazyErrorEncoder{err: fmt.Errorf("%s%s is unsupported type", prefix, typ.String())}
-	}
-}
 
 type placeholderDecoder struct {
 	cfg      *frozenConfig

@@ -245,6 +245,32 @@ func locatePath(iter *Iterator, path []interface{}) Any {
 	return iter.readAny()
 }
 
+var anyType = reflect.TypeOf((*Any)(nil)).Elem()
+
+func createDecoderOfAny(cfg *frozenConfig, prefix string, typ reflect.Type) ValDecoder {
+	if typ == anyType {
+		return &directAnyCodec{}
+	}
+	if typ.Implements(anyType) {
+		return &anyCodec{
+			valType: reflect2.Type2(typ),
+		}
+	}
+	return nil
+}
+
+func createEncoderOfAny(cfg *frozenConfig, prefix string, typ reflect.Type) ValEncoder {
+	if typ == anyType {
+		return &directAnyCodec{}
+	}
+	if typ.Implements(anyType) {
+		return &anyCodec{
+			valType: reflect2.Type2(typ),
+		}
+	}
+	return nil
+}
+
 type anyCodec struct {
 	valType reflect2.Type
 }
