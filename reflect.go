@@ -36,22 +36,6 @@ type checkIsEmpty interface {
 	IsEmpty(ptr unsafe.Pointer) bool
 }
 
-var jsonRawMessageType reflect.Type
-var jsoniterRawMessageType reflect.Type
-var marshalerType reflect.Type
-var unmarshalerType reflect.Type
-var textMarshalerType reflect.Type
-var textUnmarshalerType reflect.Type
-
-func init() {
-	jsonRawMessageType = reflect.TypeOf((*json.RawMessage)(nil)).Elem()
-	jsoniterRawMessageType = reflect.TypeOf((*RawMessage)(nil)).Elem()
-	marshalerType = reflect.TypeOf((*json.Marshaler)(nil)).Elem()
-	unmarshalerType = reflect.TypeOf((*json.Unmarshaler)(nil)).Elem()
-	textMarshalerType = reflect.TypeOf((*encoding.TextMarshaler)(nil)).Elem()
-	textUnmarshalerType = reflect.TypeOf((*encoding.TextUnmarshaler)(nil)).Elem()
-}
-
 // ReadVal copy the underlying JSON into go interface, same as json.Unmarshal
 func (iter *Iterator) ReadVal(obj interface{}) {
 	typ := reflect.TypeOf(obj)
@@ -171,30 +155,7 @@ func (encoder *onePtrEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 }
 
 func shouldFixOnePtr(typ reflect.Type) bool {
-	if isPtrKind(typ.Kind()) {
-		return true
-	}
-	if typ.Kind() == reflect.Struct {
-		if typ.NumField() != 1 {
-			return false
-		}
-		return shouldFixOnePtr(typ.Field(0).Type)
-	}
-	if typ.Kind() == reflect.Array {
-		if typ.Len() != 1 {
-			return false
-		}
-		return shouldFixOnePtr(typ.Elem())
-	}
-	return false
-}
-
-func isPtrKind(kind reflect.Kind) bool {
-	switch kind {
-	case reflect.Ptr, reflect.Map, reflect.Chan, reflect.Func:
-		return true
-	}
-	return false
+	return reflect2.Type2(typ).LikePtr()
 }
 
 func encoderOfType(cfg *frozenConfig, prefix string, typ reflect.Type) ValEncoder {
@@ -250,76 +211,6 @@ func createEncoderOfType(cfg *frozenConfig, prefix string, typ reflect.Type) Val
 	default:
 		return &lazyErrorEncoder{err: fmt.Errorf("%s%s is unsupported type", prefix, typ.String())}
 	}
-}
-
-func createCheckIsEmpty(cfg *frozenConfig, typ reflect.Type) checkIsEmpty {
-	kind := typ.Kind()
-	switch kind {
-	case reflect.String:
-		return &stringCodec{}
-	case reflect.Int:
-		return &intCodec{}
-	case reflect.Int8:
-		return &int8Codec{}
-	case reflect.Int16:
-		return &int16Codec{}
-	case reflect.Int32:
-		return &int32Codec{}
-	case reflect.Int64:
-		return &int64Codec{}
-	case reflect.Uint:
-		return &uintCodec{}
-	case reflect.Uint8:
-		return &uint8Codec{}
-	case reflect.Uint16:
-		return &uint16Codec{}
-	case reflect.Uint32:
-		return &uint32Codec{}
-	case reflect.Uintptr:
-		return &uintptrCodec{}
-	case reflect.Uint64:
-		return &uint64Codec{}
-	case reflect.Float32:
-		return &float32Codec{}
-	case reflect.Float64:
-		return &float64Codec{}
-	case reflect.Bool:
-		return &boolCodec{}
-	case reflect.Interface:
-		return &dynamicEncoder{reflect2.Type2(typ)}
-	case reflect.Struct:
-		return &structEncoder{typ: typ}
-	case reflect.Array:
-		return &arrayEncoder{}
-	case reflect.Slice:
-		return &sliceEncoder{}
-	case reflect.Map:
-		return encoderOfMap(cfg, "", typ)
-	case reflect.Ptr:
-		return &OptionalEncoder{}
-	default:
-		return &lazyErrorEncoder{err: fmt.Errorf("unsupported type: %v", typ)}
-	}
-}
-
-
-type placeholderDecoder struct {
-	cfg      *frozenConfig
-	cacheKey reflect.Type
-}
-
-func (decoder *placeholderDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
-	for i := 0; i < 500; i++ {
-		realDecoder := decoder.cfg.getDecoderFromCache(decoder.cacheKey)
-		_, isPlaceholder := realDecoder.(*placeholderDecoder)
-		if isPlaceholder {
-			time.Sleep(10 * time.Millisecond)
-		} else {
-			realDecoder.Decode(ptr, iter)
-			return
-		}
-	}
-	panic(fmt.Sprintf("real decoder not found for cache key: %v", decoder.cacheKey))
 }
 
 type lazyErrorDecoder struct {

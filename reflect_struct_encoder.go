@@ -5,6 +5,7 @@ import (
 	"io"
 	"reflect"
 	"unsafe"
+	"github.com/v2pro/plz/reflect2"
 )
 
 func encoderOfStruct(cfg *frozenConfig, prefix string, typ reflect.Type) ValEncoder {
@@ -43,6 +44,56 @@ func encoderOfStruct(cfg *frozenConfig, prefix string, typ reflect.Type) ValEnco
 		}
 	}
 	return &structEncoder{typ, finalOrderedFields}
+}
+
+func createCheckIsEmpty(cfg *frozenConfig, typ reflect.Type) checkIsEmpty {
+	kind := typ.Kind()
+	switch kind {
+	case reflect.String:
+		return &stringCodec{}
+	case reflect.Int:
+		return &intCodec{}
+	case reflect.Int8:
+		return &int8Codec{}
+	case reflect.Int16:
+		return &int16Codec{}
+	case reflect.Int32:
+		return &int32Codec{}
+	case reflect.Int64:
+		return &int64Codec{}
+	case reflect.Uint:
+		return &uintCodec{}
+	case reflect.Uint8:
+		return &uint8Codec{}
+	case reflect.Uint16:
+		return &uint16Codec{}
+	case reflect.Uint32:
+		return &uint32Codec{}
+	case reflect.Uintptr:
+		return &uintptrCodec{}
+	case reflect.Uint64:
+		return &uint64Codec{}
+	case reflect.Float32:
+		return &float32Codec{}
+	case reflect.Float64:
+		return &float64Codec{}
+	case reflect.Bool:
+		return &boolCodec{}
+	case reflect.Interface:
+		return &dynamicEncoder{reflect2.Type2(typ)}
+	case reflect.Struct:
+		return &structEncoder{typ: typ}
+	case reflect.Array:
+		return &arrayEncoder{}
+	case reflect.Slice:
+		return &sliceEncoder{}
+	case reflect.Map:
+		return encoderOfMap(cfg, "", typ)
+	case reflect.Ptr:
+		return &OptionalEncoder{}
+	default:
+		return &lazyErrorEncoder{err: fmt.Errorf("unsupported type: %v", typ)}
+	}
 }
 
 func resolveConflictBinding(cfg *frozenConfig, old, new *Binding) (ignoreOld, ignoreNew bool) {

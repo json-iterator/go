@@ -8,6 +8,11 @@ import (
 	"reflect"
 )
 
+var marshalerType = reflect.TypeOf((*json.Marshaler)(nil)).Elem()
+var unmarshalerType = reflect.TypeOf((*json.Unmarshaler)(nil)).Elem()
+var textMarshalerType = reflect.TypeOf((*encoding.TextMarshaler)(nil)).Elem()
+var textUnmarshalerType = reflect.TypeOf((*encoding.TextUnmarshaler)(nil)).Elem()
+
 func createDecoderOfMarshaler(cfg *frozenConfig, prefix string, typ reflect.Type) ValDecoder {
 	ptrType := reflect.PtrTo(typ)
 	if ptrType.Implements(unmarshalerType) {

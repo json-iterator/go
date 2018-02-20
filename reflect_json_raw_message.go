@@ -6,6 +6,9 @@ import (
 	"reflect"
 )
 
+var jsonRawMessageType = reflect.TypeOf((*json.RawMessage)(nil)).Elem()
+var jsoniterRawMessageType = reflect.TypeOf((*RawMessage)(nil)).Elem()
+
 func createEncoderOfJsonRawMessage(cfg *frozenConfig, prefix string, typ reflect.Type) ValEncoder {
 	if typ == jsonRawMessageType {
 		return &jsonRawMessageCodec{}

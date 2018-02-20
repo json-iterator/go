@@ -28,6 +28,7 @@ func (decoder *OptionalDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 		*((*unsafe.Pointer)(ptr)) = nil
 	} else {
 		if *((*unsafe.Pointer)(ptr)) == nil {
+			// TODO: use reflect2 instead
 			//pointer to null, we have to allocate memory to hold the value
 			value := reflect.New(decoder.ValueType)
 			newPtr := extractInterface(value.Interface()).word
