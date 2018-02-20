@@ -118,92 +118,17 @@ func createDecoderOfType(cfg *frozenConfig, prefix string, typ reflect.Type) Val
 	if decoder != nil {
 		return decoder
 	}
-	if typ.Kind() == reflect.Slice && typ.Elem().Kind() == reflect.Uint8 {
-		sliceDecoder := decoderOfSlice(cfg, prefix, typ)
-		return &base64Codec{sliceDecoder: sliceDecoder}
-	}
 	if typ == anyType {
 		return &directAnyCodec{}
 	}
 	if typ.Implements(anyType) {
 		return &anyCodec{}
 	}
+	decoder = createDecoderOfNative(cfg, prefix, typ)
+	if decoder != nil {
+		return decoder
+	}
 	switch typ.Kind() {
-	case reflect.String:
-		if typeName != "string" {
-			return decoderOfType(cfg, prefix, reflect.TypeOf((*string)(nil)).Elem())
-		}
-		return &stringCodec{}
-	case reflect.Int:
-		if typeName != "int" {
-			return decoderOfType(cfg, prefix, reflect.TypeOf((*int)(nil)).Elem())
-		}
-		return &intCodec{}
-	case reflect.Int8:
-		if typeName != "int8" {
-			return decoderOfType(cfg, prefix, reflect.TypeOf((*int8)(nil)).Elem())
-		}
-		return &int8Codec{}
-	case reflect.Int16:
-		if typeName != "int16" {
-			return decoderOfType(cfg, prefix, reflect.TypeOf((*int16)(nil)).Elem())
-		}
-		return &int16Codec{}
-	case reflect.Int32:
-		if typeName != "int32" {
-			return decoderOfType(cfg, prefix, reflect.TypeOf((*int32)(nil)).Elem())
-		}
-		return &int32Codec{}
-	case reflect.Int64:
-		if typeName != "int64" {
-			return decoderOfType(cfg, prefix, reflect.TypeOf((*int64)(nil)).Elem())
-		}
-		return &int64Codec{}
-	case reflect.Uint:
-		if typeName != "uint" {
-			return decoderOfType(cfg, prefix, reflect.TypeOf((*uint)(nil)).Elem())
-		}
-		return &uintCodec{}
-	case reflect.Uint8:
-		if typeName != "uint8" {
-			return decoderOfType(cfg, prefix, reflect.TypeOf((*uint8)(nil)).Elem())
-		}
-		return &uint8Codec{}
-	case reflect.Uint16:
-		if typeName != "uint16" {
-			return decoderOfType(cfg, prefix, reflect.TypeOf((*uint16)(nil)).Elem())
-		}
-		return &uint16Codec{}
-	case reflect.Uint32:
-		if typeName != "uint32" {
-			return decoderOfType(cfg, prefix, reflect.TypeOf((*uint32)(nil)).Elem())
-		}
-		return &uint32Codec{}
-	case reflect.Uintptr:
-		if typeName != "uintptr" {
-			return decoderOfType(cfg, prefix, reflect.TypeOf((*uintptr)(nil)).Elem())
-		}
-		return &uintptrCodec{}
-	case reflect.Uint64:
-		if typeName != "uint64" {
-			return decoderOfType(cfg, prefix, reflect.TypeOf((*uint64)(nil)).Elem())
-		}
-		return &uint64Codec{}
-	case reflect.Float32:
-		if typeName != "float32" {
-			return decoderOfType(cfg, prefix, reflect.TypeOf((*float32)(nil)).Elem())
-		}
-		return &float32Codec{}
-	case reflect.Float64:
-		if typeName != "float64" {
-			return decoderOfType(cfg, prefix, reflect.TypeOf((*float64)(nil)).Elem())
-		}
-		return &float64Codec{}
-	case reflect.Bool:
-		if typeName != "bool" {
-			return decoderOfType(cfg, prefix, reflect.TypeOf((*bool)(nil)).Elem())
-		}
-		return &boolCodec{}
 	case reflect.Interface:
 		if typ.NumMethod() == 0 {
 			return &emptyInterfaceCodec{}
@@ -305,9 +230,6 @@ func createEncoderOfType(cfg *frozenConfig, prefix string, typ reflect.Type) Val
 	if encoder != nil {
 		return encoder
 	}
-	if typ.Kind() == reflect.Slice && typ.Elem().Kind() == reflect.Uint8 {
-		return &base64Codec{}
-	}
 	if typ == anyType {
 		return &directAnyCodec{}
 	}
@@ -370,84 +292,12 @@ func createCheckIsEmpty(cfg *frozenConfig, typ reflect.Type) checkIsEmpty {
 }
 
 func createEncoderOfSimpleType(cfg *frozenConfig, prefix string, typ reflect.Type) ValEncoder {
-	typeName := typ.String()
+	encoder := createEncoderOfNative(cfg, prefix, typ)
+	if encoder != nil {
+		return encoder
+	}
 	kind := typ.Kind()
 	switch kind {
-	case reflect.String:
-		if typeName != "string" {
-			return encoderOfType(cfg, prefix, reflect.TypeOf((*string)(nil)).Elem())
-		}
-		return &stringCodec{}
-	case reflect.Int:
-		if typeName != "int" {
-			return encoderOfType(cfg, prefix, reflect.TypeOf((*int)(nil)).Elem())
-		}
-		return &intCodec{}
-	case reflect.Int8:
-		if typeName != "int8" {
-			return encoderOfType(cfg, prefix, reflect.TypeOf((*int8)(nil)).Elem())
-		}
-		return &int8Codec{}
-	case reflect.Int16:
-		if typeName != "int16" {
-			return encoderOfType(cfg, prefix, reflect.TypeOf((*int16)(nil)).Elem())
-		}
-		return &int16Codec{}
-	case reflect.Int32:
-		if typeName != "int32" {
-			return encoderOfType(cfg, prefix, reflect.TypeOf((*int32)(nil)).Elem())
-		}
-		return &int32Codec{}
-	case reflect.Int64:
-		if typeName != "int64" {
-			return encoderOfType(cfg, prefix, reflect.TypeOf((*int64)(nil)).Elem())
-		}
-		return &int64Codec{}
-	case reflect.Uint:
-		if typeName != "uint" {
-			return encoderOfType(cfg, prefix, reflect.TypeOf((*uint)(nil)).Elem())
-		}
-		return &uintCodec{}
-	case reflect.Uint8:
-		if typeName != "uint8" {
-			return encoderOfType(cfg, prefix, reflect.TypeOf((*uint8)(nil)).Elem())
-		}
-		return &uint8Codec{}
-	case reflect.Uint16:
-		if typeName != "uint16" {
-			return encoderOfType(cfg, prefix, reflect.TypeOf((*uint16)(nil)).Elem())
-		}
-		return &uint16Codec{}
-	case reflect.Uint32:
-		if typeName != "uint32" {
-			return encoderOfType(cfg, prefix, reflect.TypeOf((*uint32)(nil)).Elem())
-		}
-		return &uint32Codec{}
-	case reflect.Uintptr:
-		if typeName != "uintptr" {
-			return encoderOfType(cfg, prefix, reflect.TypeOf((*uintptr)(nil)).Elem())
-		}
-		return &uintptrCodec{}
-	case reflect.Uint64:
-		if typeName != "uint64" {
-			return encoderOfType(cfg, prefix, reflect.TypeOf((*uint64)(nil)).Elem())
-		}
-		return &uint64Codec{}
-	case reflect.Float32:
-		if typeName != "float32" {
-			return encoderOfType(cfg, prefix, reflect.TypeOf((*float32)(nil)).Elem())
-		}
-		return &float32Codec{}
-	case reflect.Float64:
-		if typeName != "float64" {
-			return encoderOfType(cfg, prefix, reflect.TypeOf((*float64)(nil)).Elem())
-		}
-		return &float64Codec{}
-	case reflect.Bool:
-		if typeName != "bool" {
-			return encoderOfType(cfg, prefix, reflect.TypeOf((*bool)(nil)).Elem())
-		}
-		return &boolCodec{}
 	case reflect.Interface:
 		return &dynamicEncoder{reflect2.Type2(typ)}
 	case reflect.Struct:
