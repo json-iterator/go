@@ -78,7 +78,7 @@ func (decoder *sliceDecoder) doDecode(ptr unsafe.Pointer, iter *Iterator) {
 	}
 	c = iter.nextToken()
 	if c == ']' {
-		sliceType.Set(ptr, sliceType.UnsafeNew())
+		sliceType.UnsafeSet(ptr, sliceType.UnsafeMakeSlice(0, 0))
 		return
 	}
 	iter.unreadByte()

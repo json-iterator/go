@@ -325,27 +325,27 @@ func structFields1To11() {
 			Field9 string
 		})(nil),
 		(*struct {
-			Field1 string
-			Field2 string
-			Field3 string
-			Field4 string
-			Field5 string
-			Field6 string
-			Field7 string
-			Field8 string
-			Field9 string
+			Field1  string
+			Field2  string
+			Field3  string
+			Field4  string
+			Field5  string
+			Field6  string
+			Field7  string
+			Field8  string
+			Field9  string
 			Field10 string
 		})(nil),
 		(*struct {
-			Field1 string
-			Field2 string
-			Field3 string
-			Field4 string
-			Field5 string
-			Field6 string
-			Field7 string
-			Field8 string
-			Field9 string
+			Field1  string
+			Field2  string
+			Field3  string
+			Field4  string
+			Field5  string
+			Field6  string
+			Field7  string
+			Field8  string
+			Field9  string
 			Field10 string
 			Field11 string
 		})(nil),

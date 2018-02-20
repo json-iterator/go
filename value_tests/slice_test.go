@@ -10,5 +10,8 @@ func init() {
 	unmarshalCases = append(unmarshalCases, unmarshalCase{
 		ptr:   (*[]string)(nil),
 		input: "null",
+	}, unmarshalCase{
+		ptr:   (*[]string)(nil),
+		input: "[]",
 	})
 }
