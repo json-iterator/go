@@ -10,8 +10,10 @@ import (
 )
 
 type unmarshalCase struct {
+	obj func() interface{}
 	ptr interface{}
 	input string
+	selected bool
 }
 
 var unmarshalCases []unmarshalCase
@@ -25,16 +27,31 @@ type selectedMarshalCase struct  {
 }
 
 func Test_unmarshal(t *testing.T) {
-	should := require.New(t)
 	for _, testCase := range unmarshalCases {
-		valType := reflect.TypeOf(testCase.ptr).Elem()
-		ptr1Val := reflect.New(valType)
-		err1 := json.Unmarshal([]byte(testCase.input), ptr1Val.Interface())
-		should.NoError(err1)
-		ptr2Val := reflect.New(valType)
-		err2 := jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal([]byte(testCase.input), ptr2Val.Interface())
-		should.NoError(err2)
-		should.Equal(ptr1Val.Interface(), ptr2Val.Interface())
+		if testCase.selected {
+			unmarshalCases = []unmarshalCase{testCase}
+			break
+		}
+	}
+	for i, testCase := range unmarshalCases {
+		t.Run(fmt.Sprintf("[%v]%s", i, testCase.input), func(t *testing.T) {
+			should := require.New(t)
+			var obj1 interface{}
+			var obj2 interface{}
+			if testCase.obj != nil {
+				obj1 = testCase.obj()
+				obj2 = testCase.obj()
+			} else {
+				valType := reflect.TypeOf(testCase.ptr).Elem()
+				obj1 = reflect.New(valType).Interface()
+				obj2 = reflect.New(valType).Interface()
+			}
+			err1 := json.Unmarshal([]byte(testCase.input), obj1)
+			should.NoError(err1, "json")
+			err2 := jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal([]byte(testCase.input), obj2)
+			should.NoError(err2, "jsoniter")
+			should.Equal(obj1, obj2)
+		})
 	}
 }
 

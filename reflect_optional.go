@@ -3,12 +3,16 @@ package jsoniter
 import (
 	"reflect"
 	"unsafe"
+	"github.com/v2pro/plz/reflect2"
 )
 
 func decoderOfOptional(cfg *frozenConfig, prefix string, typ reflect.Type) ValDecoder {
 	elemType := typ.Elem()
 	decoder := decoderOfType(cfg, prefix, elemType)
-	return &OptionalDecoder{elemType, decoder}
+	if prefix == "" && elemType.Kind() == reflect.Ptr {
+		return &dereferenceDecoder{reflect2.Type2(elemType), decoder}
+	}
+	return &OptionalDecoder{reflect2.Type2(elemType), decoder}
 }
 
 func encoderOfOptional(cfg *frozenConfig, prefix string, typ reflect.Type) ValEncoder {
@@ -19,7 +23,7 @@ func encoderOfOptional(cfg *frozenConfig, prefix string, typ reflect.Type) ValEn
 }
 
 type OptionalDecoder struct {
-	ValueType    reflect.Type
+	ValueType    reflect2.Type
 	ValueDecoder ValDecoder
 }
 
@@ -28,12 +32,10 @@ func (decoder *OptionalDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 		*((*unsafe.Pointer)(ptr)) = nil
 	} else {
 		if *((*unsafe.Pointer)(ptr)) == nil {
-			// TODO: use reflect2 instead
 			//pointer to null, we have to allocate memory to hold the value
-			value := reflect.New(decoder.ValueType)
-			newPtr := extractInterface(value.Interface()).word
+			newPtr := decoder.ValueType.UnsafeNew()
 			decoder.ValueDecoder.Decode(newPtr, iter)
-			*((*uintptr)(ptr)) = uintptr(newPtr)
+			*((*unsafe.Pointer)(ptr)) = newPtr
 		} else {
 			//reuse existing instance
 			decoder.ValueDecoder.Decode(*((*unsafe.Pointer)(ptr)), iter)
@@ -43,17 +45,16 @@ func (decoder *OptionalDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 
 type dereferenceDecoder struct {
 	// only to deference a pointer
-	valueType    reflect.Type
+	valueType    reflect2.Type
 	valueDecoder ValDecoder
 }
 
 func (decoder *dereferenceDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	if *((*unsafe.Pointer)(ptr)) == nil {
 		//pointer to null, we have to allocate memory to hold the value
-		value := reflect.New(decoder.valueType)
-		newPtr := extractInterface(value.Interface()).word
+		newPtr := decoder.valueType.UnsafeNew()
 		decoder.valueDecoder.Decode(newPtr, iter)
-		*((*uintptr)(ptr)) = uintptr(newPtr)
+		*((*unsafe.Pointer)(ptr)) = newPtr
 	} else {
 		//reuse existing instance
 		decoder.valueDecoder.Decode(*((*unsafe.Pointer)(ptr)), iter)

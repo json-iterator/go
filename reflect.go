@@ -36,14 +36,17 @@ type checkIsEmpty interface {
 // ReadVal copy the underlying JSON into go interface, same as json.Unmarshal
 func (iter *Iterator) ReadVal(obj interface{}) {
 	typ := reflect.TypeOf(obj)
-	cacheKey := typ.Elem()
-	decoder := decoderOfType(iter.cfg, "", cacheKey)
-	e := (*emptyInterface)(unsafe.Pointer(&obj))
-	if e.word == nil {
+	if typ.Kind() != reflect.Ptr {
+		iter.ReportError("ReadVal", "can only unmarshal into pointer")
+		return
+	}
+	decoder := iter.cfg.DecoderOf(typ)
+	ptr := reflect2.PtrOf(obj)
+	if ptr == nil {
 		iter.ReportError("ReadVal", "can not read into nil pointer")
 		return
 	}
-	decoder.Decode(e.word, iter)
+	decoder.Decode(ptr, iter)
 }
 
 // WriteVal copy the go interface into underlying JSON, same as json.Marshal
@@ -63,7 +66,7 @@ func (cfg *frozenConfig) DecoderOf(typ reflect.Type) ValDecoder {
 	if decoder != nil {
 		return decoder
 	}
-	decoder = decoderOfType(cfg, "", typ)
+	decoder = decoderOfType(cfg, "", typ.Elem())
 	cfg.addDecoderToCache(cacheKey, decoder)
 	return decoder
 }
@@ -106,10 +109,11 @@ func createDecoderOfType(cfg *frozenConfig, prefix string, typ reflect.Type) Val
 	}
 	switch typ.Kind() {
 	case reflect.Interface:
-		if typ.NumMethod() == 0 {
-			return &emptyInterfaceCodec{}
+		if typ.NumMethod() > 0 {
+			ifaceType := reflect2.Type2(typ).(*reflect2.UnsafeIFaceType)
+			return &ifaceDecoder{valType: ifaceType}
 		}
-		return &nonEmptyInterfaceCodec{}
+		return &efaceDecoder{}
 	case reflect.Struct:
 		return decoderOfStruct(cfg, prefix, typ)
 	case reflect.Array:
@@ -238,28 +242,4 @@ func (encoder *lazyErrorEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 
 func (encoder *lazyErrorEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	return false
-}
-
-func extractInterface(val interface{}) emptyInterface {
-	return *((*emptyInterface)(unsafe.Pointer(&val)))
-}
-
-// emptyInterface is the header for an interface{} value.
-type emptyInterface struct {
-	typ  unsafe.Pointer
-	word unsafe.Pointer
-}
-
-// emptyInterface is the header for an interface with method (not interface{})
-type nonEmptyInterface struct {
-	// see ../runtime/iface.go:/Itab
-	itab *struct {
-		ityp   unsafe.Pointer // static interface type
-		typ    unsafe.Pointer // dynamic concrete type
-		link   unsafe.Pointer
-		bad    int32
-		unused int32
-		fun    [100000]unsafe.Pointer // method table
-	}
-	word unsafe.Pointer
 }

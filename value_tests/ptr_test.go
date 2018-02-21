@@ -1,25 +1,39 @@
 package test
 
 func init() {
-	var pEFace = func(val interface{}) *interface{} {
-		return &val
-	}
 	var pInt = func(val int) *int {
 		return &val
 	}
-	unmarshalCases = append(unmarshalCases, unmarshalCase{
-		ptr: (**interface{})(nil),
-		input: `"hello"`,
-	}, unmarshalCase{
-		ptr: (**interface{})(nil),
-		input: `1e1`,
-	}, unmarshalCase{
-		ptr: (**interface{})(nil),
-		input: `1.0e1`,
-	})
 	marshalCases = append(marshalCases,
-		pEFace("hello"),
 		(*int)(nil),
 		pInt(100),
 	)
+	unmarshalCases = append(unmarshalCases, unmarshalCase{
+		obj: func() interface{} {
+			var i int
+			return &i
+		},
+		input: "null",
+	}, unmarshalCase{
+		obj: func() interface{} {
+			var i *int
+			return &i
+		},
+		input: "10",
+	}, unmarshalCase{
+		obj: func() interface{} {
+			var i int
+			pi := &i
+			return &pi
+		},
+		input: "null",
+	}, unmarshalCase{
+		obj: func() interface{} {
+			var i int
+			pi := &i
+			ppi := &pi
+			return &ppi
+		},
+		input: "null",
+	})
 }

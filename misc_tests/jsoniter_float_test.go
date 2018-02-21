@@ -49,13 +49,13 @@ func Test_read_float64_cursor(t *testing.T) {
 func Test_read_float_scientific(t *testing.T) {
 	should := require.New(t)
 	var obj interface{}
-	should.Nil(jsoniter.UnmarshalFromString(`1e1`, &obj))
+	should.NoError(jsoniter.UnmarshalFromString(`1e1`, &obj))
 	should.Equal(float64(10), obj)
-	should.Nil(json.Unmarshal([]byte(`1e1`), &obj))
+	should.NoError(json.Unmarshal([]byte(`1e1`), &obj))
 	should.Equal(float64(10), obj)
-	should.Nil(jsoniter.UnmarshalFromString(`1.0e1`, &obj))
+	should.NoError(jsoniter.UnmarshalFromString(`1.0e1`, &obj))
 	should.Equal(float64(10), obj)
-	should.Nil(json.Unmarshal([]byte(`1.0e1`), &obj))
+	should.NoError(json.Unmarshal([]byte(`1.0e1`), &obj))
 	should.Equal(float64(10), obj)
 }
 

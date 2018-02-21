@@ -7,6 +7,7 @@ import (
 	"strings"
 	"unicode"
 	"unsafe"
+	"github.com/v2pro/plz/reflect2"
 )
 
 var typeDecoders = map[string]ValDecoder{}
@@ -240,7 +241,7 @@ func _getTypeDecoderFromExtension(cfg *frozenConfig, typ reflect.Type) ValDecode
 	if typ.Kind() == reflect.Ptr {
 		decoder := typeDecoders[typ.Elem().String()]
 		if decoder != nil {
-			return &OptionalDecoder{typ.Elem(), decoder}
+			return &OptionalDecoder{reflect2.Type2(typ.Elem()), decoder}
 		}
 	}
 	return nil
@@ -317,7 +318,7 @@ func describeStruct(cfg *frozenConfig, prefix string, typ reflect.Type) *StructD
 					omitempty := binding.Encoder.(*structFieldEncoder).omitempty
 					binding.Encoder = &dereferenceEncoder{binding.Encoder}
 					binding.Encoder = &structFieldEncoder{&field, binding.Encoder, omitempty}
-					binding.Decoder = &dereferenceDecoder{field.Type.Elem(), binding.Decoder}
+					binding.Decoder = &dereferenceDecoder{reflect2.Type2(field.Type.Elem()), binding.Decoder}
 					binding.Decoder = &structFieldDecoder{&field, binding.Decoder}
 					embeddedBindings = append(embeddedBindings, binding)
 				}

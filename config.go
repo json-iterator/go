@@ -2,7 +2,6 @@ package jsoniter
 
 import (
 	"encoding/json"
-	"errors"
 	"io"
 	"reflect"
 	"unsafe"
@@ -267,11 +266,6 @@ func (cfg *frozenConfig) Unmarshal(data []byte, v interface{}) error {
 	data = data[:lastNotSpacePos(data)]
 	iter := cfg.BorrowIterator(data)
 	defer cfg.ReturnIterator(iter)
-	typ := reflect.TypeOf(v)
-	if typ.Kind() != reflect.Ptr {
-		// return non-pointer error
-		return errors.New("the second param must be ptr type")
-	}
 	iter.ReadVal(v)
 	if iter.head == iter.tail {
 		iter.loadMore()
