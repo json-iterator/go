@@ -120,8 +120,7 @@ func init() {
 			Field1 string `json:"field-1,omitempty"`
 			Field2 func() `json:"-"`
 		}{},
-		// TODO: fix me
-		//structRecursive{},
+		structRecursive{},
 		struct {
 			*CacheItem
 

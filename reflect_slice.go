@@ -8,14 +8,14 @@ import (
 	"github.com/v2pro/plz/reflect2"
 )
 
-func decoderOfSlice(cfg *frozenConfig, prefix string, typ reflect.Type) ValDecoder {
-	decoder := decoderOfType(cfg, prefix+"[slice]->", typ.Elem())
+func decoderOfSlice(ctx *ctx, typ reflect.Type) ValDecoder {
+	decoder := decoderOfType(ctx.append("[sliceElem]"), typ.Elem())
 	sliceType := reflect2.Type2(typ).(*reflect2.UnsafeSliceType)
 	return &sliceDecoder{sliceType, decoder}
 }
 
-func encoderOfSlice(cfg *frozenConfig, prefix string, typ reflect.Type) ValEncoder {
-	encoder := encoderOfType(cfg, prefix+"[slice]->", typ.Elem())
+func encoderOfSlice(ctx *ctx, typ reflect.Type) ValEncoder {
+	encoder := encoderOfType(ctx.append("[sliceElem]"), typ.Elem())
 	sliceType := reflect2.Type2(typ).(*reflect2.UnsafeSliceType)
 	return &sliceEncoder{sliceType, encoder}
 }

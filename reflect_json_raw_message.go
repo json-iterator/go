@@ -9,7 +9,7 @@ import (
 var jsonRawMessageType = reflect.TypeOf((*json.RawMessage)(nil)).Elem()
 var jsoniterRawMessageType = reflect.TypeOf((*RawMessage)(nil)).Elem()
 
-func createEncoderOfJsonRawMessage(cfg *frozenConfig, prefix string, typ reflect.Type) ValEncoder {
+func createEncoderOfJsonRawMessage(ctx *ctx, typ reflect.Type) ValEncoder {
 	if typ == jsonRawMessageType {
 		return &jsonRawMessageCodec{}
 	}
@@ -19,7 +19,7 @@ func createEncoderOfJsonRawMessage(cfg *frozenConfig, prefix string, typ reflect
 	return nil
 }
 
-func createDecoderOfJsonRawMessage(cfg *frozenConfig, prefix string, typ reflect.Type) ValDecoder {
+func createDecoderOfJsonRawMessage(ctx *ctx, typ reflect.Type) ValDecoder {
 	if typ == jsonRawMessageType {
 		return &jsonRawMessageCodec{}
 	}

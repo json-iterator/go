@@ -8,14 +8,14 @@ import (
 	"github.com/v2pro/plz/reflect2"
 )
 
-func encoderOfStruct(cfg *frozenConfig, prefix string, typ reflect.Type) ValEncoder {
+func encoderOfStruct(ctx *ctx, typ reflect.Type) ValEncoder {
 	type bindingTo struct {
 		binding *Binding
 		toName  string
 		ignored bool
 	}
 	orderedBindings := []*bindingTo{}
-	structDescriptor := describeStruct(cfg, prefix, typ)
+	structDescriptor := describeStruct(ctx, typ)
 	for _, binding := range structDescriptor.Fields {
 		for _, toName := range binding.ToNames {
 			new := &bindingTo{
@@ -26,7 +26,7 @@ func encoderOfStruct(cfg *frozenConfig, prefix string, typ reflect.Type) ValEnco
 				if old.toName != toName {
 					continue
 				}
-				old.ignored, new.ignored = resolveConflictBinding(cfg, old.binding, new.binding)
+				old.ignored, new.ignored = resolveConflictBinding(ctx.frozenConfig, old.binding, new.binding)
 			}
 			orderedBindings = append(orderedBindings, new)
 		}
@@ -46,7 +46,7 @@ func encoderOfStruct(cfg *frozenConfig, prefix string, typ reflect.Type) ValEnco
 	return &structEncoder{typ, finalOrderedFields}
 }
 
-func createCheckIsEmpty(cfg *frozenConfig, typ reflect.Type) checkIsEmpty {
+func createCheckIsEmpty(ctx *ctx, typ reflect.Type) checkIsEmpty {
 	kind := typ.Kind()
 	switch kind {
 	case reflect.String:
@@ -88,7 +88,7 @@ func createCheckIsEmpty(cfg *frozenConfig, typ reflect.Type) checkIsEmpty {
 	case reflect.Slice:
 		return &sliceEncoder{}
 	case reflect.Map:
-		return encoderOfMap(cfg, "", typ)
+		return encoderOfMap(ctx, typ)
 	case reflect.Ptr:
 		return &OptionalEncoder{}
 	default:

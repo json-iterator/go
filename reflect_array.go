@@ -7,16 +7,16 @@ import (
 	"unsafe"
 )
 
-func decoderOfArray(cfg *frozenConfig, prefix string, typ reflect.Type) ValDecoder {
-	decoder := decoderOfType(cfg, prefix+"[array]->", typ.Elem())
+func decoderOfArray(ctx *ctx, typ reflect.Type) ValDecoder {
+	decoder := decoderOfType(ctx.append("[arrayElem]"), typ.Elem())
 	return &arrayDecoder{typ, typ.Elem(), decoder}
 }
 
-func encoderOfArray(cfg *frozenConfig, prefix string, typ reflect.Type) ValEncoder {
+func encoderOfArray(ctx *ctx, typ reflect.Type) ValEncoder {
 	if typ.Len() == 0 {
 		return emptyArrayEncoder{}
 	}
-	encoder := encoderOfType(cfg, prefix+"[array]->", typ.Elem())
+	encoder := encoderOfType(ctx.append("[arrayElem]"), typ.Elem())
 	return &arrayEncoder{typ, typ.Elem(), encoder}
 }
 

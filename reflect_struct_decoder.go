@@ -8,9 +8,9 @@ import (
 	"unsafe"
 )
 
-func decoderOfStruct(cfg *frozenConfig, prefix string, typ reflect.Type) ValDecoder {
+func decoderOfStruct(ctx *ctx, typ reflect.Type) ValDecoder {
 	bindings := map[string]*Binding{}
-	structDescriptor := describeStruct(cfg, prefix, typ)
+	structDescriptor := describeStruct(ctx, typ)
 	for _, binding := range structDescriptor.Fields {
 		for _, fromName := range binding.FromNames {
 			old := bindings[fromName]
@@ -18,7 +18,7 @@ func decoderOfStruct(cfg *frozenConfig, prefix string, typ reflect.Type) ValDeco
 				bindings[fromName] = binding
 				continue
 			}
-			ignoreOld, ignoreNew := resolveConflictBinding(cfg, old, binding)
+			ignoreOld, ignoreNew := resolveConflictBinding(ctx.frozenConfig, old, binding)
 			if ignoreOld {
 				delete(bindings, fromName)
 			}
@@ -31,11 +31,11 @@ func decoderOfStruct(cfg *frozenConfig, prefix string, typ reflect.Type) ValDeco
 	for k, binding := range bindings {
 		fields[k] = binding.Decoder.(*structFieldDecoder)
 	}
-	return createStructDecoder(cfg, typ, fields)
+	return createStructDecoder(ctx, typ, fields)
 }
 
-func createStructDecoder(cfg *frozenConfig, typ reflect.Type, fields map[string]*structFieldDecoder) ValDecoder {
-	if cfg.disallowUnknownFields {
+func createStructDecoder(ctx *ctx, typ reflect.Type, fields map[string]*structFieldDecoder) ValDecoder {
+	if ctx.disallowUnknownFields {
 		return &generalStructDecoder{typ: typ, fields: fields, disallowUnknownFields: true}
 	}
 	knownHash := map[int64]struct{}{

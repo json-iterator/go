@@ -6,18 +6,18 @@ import (
 	"github.com/v2pro/plz/reflect2"
 )
 
-func decoderOfOptional(cfg *frozenConfig, prefix string, typ reflect.Type) ValDecoder {
+func decoderOfOptional(ctx *ctx, typ reflect.Type) ValDecoder {
 	elemType := typ.Elem()
-	decoder := decoderOfType(cfg, prefix, elemType)
-	if prefix == "" && elemType.Kind() == reflect.Ptr {
+	decoder := decoderOfType(ctx, elemType)
+	if ctx.prefix == "" && elemType.Kind() == reflect.Ptr {
 		return &dereferenceDecoder{reflect2.Type2(elemType), decoder}
 	}
 	return &OptionalDecoder{reflect2.Type2(elemType), decoder}
 }
 
-func encoderOfOptional(cfg *frozenConfig, prefix string, typ reflect.Type) ValEncoder {
+func encoderOfOptional(ctx *ctx, typ reflect.Type) ValEncoder {
 	elemType := typ.Elem()
-	elemEncoder := encoderOfType(cfg, prefix, elemType)
+	elemEncoder := encoderOfType(ctx, elemType)
 	encoder := &OptionalEncoder{elemEncoder}
 	return encoder
 }

@@ -33,6 +33,22 @@ type checkIsEmpty interface {
 	IsEmpty(ptr unsafe.Pointer) bool
 }
 
+type ctx struct {
+	*frozenConfig
+	prefix   string
+	encoders map[reflect.Type]ValEncoder
+	decoders map[reflect.Type]ValDecoder
+}
+
+func (b *ctx) append(prefix string) *ctx {
+	return &ctx{
+		frozenConfig: b.frozenConfig,
+		prefix:       b.prefix + " " + prefix,
+		encoders:     b.encoders,
+		decoders:     b.decoders,
+	}
+}
+
 // ReadVal copy the underlying JSON into go interface, same as json.Unmarshal
 func (iter *Iterator) ReadVal(obj interface{}) {
 	typ := reflect.TypeOf(obj)
@@ -66,44 +82,62 @@ func (cfg *frozenConfig) DecoderOf(typ reflect.Type) ValDecoder {
 	if decoder != nil {
 		return decoder
 	}
-	decoder = decoderOfType(cfg, "", typ.Elem())
+	ctx := &ctx{
+		frozenConfig: cfg,
+		prefix:       "",
+		decoders:     map[reflect.Type]ValDecoder{},
+		encoders:     map[reflect.Type]ValEncoder{},
+	}
+	decoder = decoderOfType(ctx, typ.Elem())
 	cfg.addDecoderToCache(cacheKey, decoder)
 	return decoder
 }
 
-func decoderOfType(cfg *frozenConfig, prefix string, typ reflect.Type) ValDecoder {
-	decoder := getTypeDecoderFromExtension(cfg, typ)
+func decoderOfType(ctx *ctx, typ reflect.Type) ValDecoder {
+	decoder := getTypeDecoderFromExtension(ctx, typ)
 	if decoder != nil {
 		return decoder
 	}
-	decoder = createDecoderOfType(cfg, prefix, typ)
+	decoder = createDecoderOfType(ctx, typ)
 	for _, extension := range extensions {
 		decoder = extension.DecorateDecoder(typ, decoder)
 	}
-	for _, extension := range cfg.extensions {
+	for _, extension := range ctx.extensions {
 		decoder = extension.DecorateDecoder(typ, decoder)
 	}
 	return decoder
 }
 
-func createDecoderOfType(cfg *frozenConfig, prefix string, typ reflect.Type) ValDecoder {
-	decoder := createDecoderOfJsonRawMessage(cfg, prefix, typ)
+func createDecoderOfType(ctx *ctx, typ reflect.Type) ValDecoder {
+	decoder := ctx.decoders[typ]
 	if decoder != nil {
 		return decoder
 	}
-	decoder = createDecoderOfJsonNumber(cfg, prefix, typ)
+	placeholder := &placeholderDecoder{}
+	ctx.decoders[typ] = placeholder
+	decoder = _createDecoderOfType(ctx, typ)
+	placeholder.decoder = decoder
+	return decoder
+}
+
+func _createDecoderOfType(ctx *ctx, typ reflect.Type) ValDecoder {
+	decoder := createDecoderOfJsonRawMessage(ctx, typ)
 	if decoder != nil {
 		return decoder
 	}
-	decoder = createDecoderOfMarshaler(cfg, prefix, typ)
+	decoder = createDecoderOfJsonNumber(ctx, typ)
 	if decoder != nil {
 		return decoder
 	}
-	decoder = createDecoderOfAny(cfg, prefix, typ)
+	decoder = createDecoderOfMarshaler(ctx, typ)
 	if decoder != nil {
 		return decoder
 	}
-	decoder = createDecoderOfNative(cfg, prefix, typ)
+	decoder = createDecoderOfAny(ctx, typ)
+	if decoder != nil {
+		return decoder
+	}
+	decoder = createDecoderOfNative(ctx, typ)
 	if decoder != nil {
 		return decoder
 	}
@@ -115,17 +149,17 @@ func createDecoderOfType(cfg *frozenConfig, prefix string, typ reflect.Type) Val
 		}
 		return &efaceDecoder{}
 	case reflect.Struct:
-		return decoderOfStruct(cfg, prefix, typ)
+		return decoderOfStruct(ctx, typ)
 	case reflect.Array:
-		return decoderOfArray(cfg, prefix, typ)
+		return decoderOfArray(ctx, typ)
 	case reflect.Slice:
-		return decoderOfSlice(cfg, prefix, typ)
+		return decoderOfSlice(ctx, typ)
 	case reflect.Map:
-		return decoderOfMap(cfg, prefix, typ)
+		return decoderOfMap(ctx, typ)
 	case reflect.Ptr:
-		return decoderOfOptional(cfg, prefix, typ)
+		return decoderOfOptional(ctx, typ)
 	default:
-		return &lazyErrorDecoder{err: fmt.Errorf("%s%s is unsupported type", prefix, typ.String())}
+		return &lazyErrorDecoder{err: fmt.Errorf("%s%s is unsupported type", ctx.prefix, typ.String())}
 	}
 }
 
@@ -135,7 +169,13 @@ func (cfg *frozenConfig) EncoderOf(typ reflect.Type) ValEncoder {
 	if encoder != nil {
 		return encoder
 	}
-	encoder = encoderOfType(cfg, "", typ)
+	ctx := &ctx{
+		frozenConfig: cfg,
+		prefix:       "",
+		decoders:     map[reflect.Type]ValDecoder{},
+		encoders:     map[reflect.Type]ValEncoder{},
+	}
+	encoder = encoderOfType(ctx, typ)
 	if shouldFixOnePtr(typ) {
 		encoder = &onePtrEncoder{encoder}
 	}
@@ -159,39 +199,50 @@ func shouldFixOnePtr(typ reflect.Type) bool {
 	return reflect2.Type2(typ).LikePtr()
 }
 
-func encoderOfType(cfg *frozenConfig, prefix string, typ reflect.Type) ValEncoder {
-	encoder := getTypeEncoderFromExtension(cfg, typ)
+func encoderOfType(ctx *ctx, typ reflect.Type) ValEncoder {
+	encoder := getTypeEncoderFromExtension(ctx, typ)
 	if encoder != nil {
 		return encoder
 	}
-	encoder = createEncoderOfType(cfg, prefix, typ)
+	encoder = createEncoderOfType(ctx, typ)
 	for _, extension := range extensions {
 		encoder = extension.DecorateEncoder(typ, encoder)
 	}
-	for _, extension := range cfg.extensions {
+	for _, extension := range ctx.extensions {
 		encoder = extension.DecorateEncoder(typ, encoder)
 	}
 	return encoder
 }
 
-func createEncoderOfType(cfg *frozenConfig, prefix string, typ reflect.Type) ValEncoder {
-	encoder := createEncoderOfJsonRawMessage(cfg, prefix, typ)
+func createEncoderOfType(ctx *ctx, typ reflect.Type) ValEncoder {
+	encoder := ctx.encoders[typ]
 	if encoder != nil {
 		return encoder
 	}
-	encoder = createEncoderOfJsonNumber(cfg, prefix, typ)
+	placeholder := &placeholderEncoder{}
+	ctx.encoders[typ] = placeholder
+	encoder = _createEncoderOfType(ctx, typ)
+	placeholder.encoder = encoder
+	return encoder
+}
+func _createEncoderOfType(ctx *ctx, typ reflect.Type) ValEncoder {
+	encoder := createEncoderOfJsonRawMessage(ctx, typ)
 	if encoder != nil {
 		return encoder
 	}
-	encoder = createEncoderOfMarshaler(cfg, prefix, typ)
+	encoder = createEncoderOfJsonNumber(ctx, typ)
 	if encoder != nil {
 		return encoder
 	}
-	encoder = createEncoderOfAny(cfg, prefix, typ)
+	encoder = createEncoderOfMarshaler(ctx, typ)
 	if encoder != nil {
 		return encoder
 	}
-	encoder = createEncoderOfNative(cfg, prefix, typ)
+	encoder = createEncoderOfAny(ctx, typ)
+	if encoder != nil {
+		return encoder
+	}
+	encoder = createEncoderOfNative(ctx, typ)
 	if encoder != nil {
 		return encoder
 	}
@@ -200,17 +251,17 @@ func createEncoderOfType(cfg *frozenConfig, prefix string, typ reflect.Type) Val
 	case reflect.Interface:
 		return &dynamicEncoder{reflect2.Type2(typ)}
 	case reflect.Struct:
-		return encoderOfStruct(cfg, prefix, typ)
+		return encoderOfStruct(ctx, typ)
 	case reflect.Array:
-		return encoderOfArray(cfg, prefix, typ)
+		return encoderOfArray(ctx, typ)
 	case reflect.Slice:
-		return encoderOfSlice(cfg, prefix, typ)
+		return encoderOfSlice(ctx, typ)
 	case reflect.Map:
-		return encoderOfMap(cfg, prefix, typ)
+		return encoderOfMap(ctx, typ)
 	case reflect.Ptr:
-		return encoderOfOptional(cfg, prefix, typ)
+		return encoderOfOptional(ctx, typ)
 	default:
-		return &lazyErrorEncoder{err: fmt.Errorf("%s%s is unsupported type", prefix, typ.String())}
+		return &lazyErrorEncoder{err: fmt.Errorf("%s%s is unsupported type", ctx.prefix, typ.String())}
 	}
 }
 
@@ -242,4 +293,24 @@ func (encoder *lazyErrorEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 
 func (encoder *lazyErrorEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	return false
+}
+
+type placeholderDecoder struct {
+	decoder ValDecoder
+}
+
+func (decoder *placeholderDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
+	decoder.decoder.Decode(ptr, iter)
+}
+
+type placeholderEncoder struct {
+	encoder ValEncoder
+}
+
+func (encoder *placeholderEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
+	encoder.encoder.Encode(ptr, stream)
+}
+
+func (encoder *placeholderEncoder) IsEmpty(ptr unsafe.Pointer) bool {
+	return encoder.encoder.IsEmpty(ptr)
 }

@@ -35,7 +35,7 @@ func CastJsonNumber(val interface{}) (string, bool) {
 var jsonNumberType = reflect.TypeOf((*json.Number)(nil)).Elem()
 var jsoniterNumberType = reflect.TypeOf((*Number)(nil)).Elem()
 
-func createDecoderOfJsonNumber(cfg *frozenConfig, prefix string, typ reflect.Type) ValDecoder {
+func createDecoderOfJsonNumber(ctx *ctx, typ reflect.Type) ValDecoder {
 	if typ.AssignableTo(jsonNumberType) {
 		return &jsonNumberCodec{}
 	}
@@ -45,7 +45,7 @@ func createDecoderOfJsonNumber(cfg *frozenConfig, prefix string, typ reflect.Typ
 	return nil
 }
 
-func createEncoderOfJsonNumber(cfg *frozenConfig, prefix string, typ reflect.Type) ValEncoder {
+func createEncoderOfJsonNumber(ctx *ctx, typ reflect.Type) ValEncoder {
 	if typ.AssignableTo(jsonNumberType) {
 		return &jsonNumberCodec{}
 	}

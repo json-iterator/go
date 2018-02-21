@@ -13,7 +13,7 @@ var unmarshalerType = reflect.TypeOf((*json.Unmarshaler)(nil)).Elem()
 var textMarshalerType = reflect.TypeOf((*encoding.TextMarshaler)(nil)).Elem()
 var textUnmarshalerType = reflect.TypeOf((*encoding.TextUnmarshaler)(nil)).Elem()
 
-func createDecoderOfMarshaler(cfg *frozenConfig, prefix string, typ reflect.Type) ValDecoder {
+func createDecoderOfMarshaler(ctx *ctx, typ reflect.Type) ValDecoder {
 	ptrType := reflect.PtrTo(typ)
 	if ptrType.Implements(unmarshalerType) {
 		return &referenceDecoder{
@@ -28,16 +28,16 @@ func createDecoderOfMarshaler(cfg *frozenConfig, prefix string, typ reflect.Type
 	return nil
 }
 
-func createEncoderOfMarshaler(cfg *frozenConfig, prefix string, typ reflect.Type) ValEncoder {
+func createEncoderOfMarshaler(ctx *ctx, typ reflect.Type) ValEncoder {
 	if typ == marshalerType {
-		checkIsEmpty := createCheckIsEmpty(cfg, typ)
+		checkIsEmpty := createCheckIsEmpty(ctx, typ)
 		var encoder ValEncoder = &directMarshalerEncoder{
 			checkIsEmpty: checkIsEmpty,
 		}
 		return encoder
 	}
 	if typ.Implements(marshalerType) {
-		checkIsEmpty := createCheckIsEmpty(cfg, typ)
+		checkIsEmpty := createCheckIsEmpty(ctx, typ)
 		var encoder ValEncoder = &marshalerEncoder{
 			valType:      reflect2.Type2(typ),
 			checkIsEmpty: checkIsEmpty,
@@ -45,8 +45,8 @@ func createEncoderOfMarshaler(cfg *frozenConfig, prefix string, typ reflect.Type
 		return encoder
 	}
 	ptrType := reflect.PtrTo(typ)
-	if prefix != "" && ptrType.Implements(marshalerType) {
-		checkIsEmpty := createCheckIsEmpty(cfg, ptrType)
+	if ctx.prefix != "" && ptrType.Implements(marshalerType) {
+		checkIsEmpty := createCheckIsEmpty(ctx, ptrType)
 		var encoder ValEncoder = &marshalerEncoder{
 			valType:      reflect2.Type2(ptrType),
 			checkIsEmpty: checkIsEmpty,
@@ -54,28 +54,28 @@ func createEncoderOfMarshaler(cfg *frozenConfig, prefix string, typ reflect.Type
 		return &referenceEncoder{encoder}
 	}
 	if typ == textMarshalerType {
-		checkIsEmpty := createCheckIsEmpty(cfg, typ)
+		checkIsEmpty := createCheckIsEmpty(ctx, typ)
 		var encoder ValEncoder = &directTextMarshalerEncoder{
 			checkIsEmpty:  checkIsEmpty,
-			stringEncoder: cfg.EncoderOf(reflect.TypeOf("")),
+			stringEncoder: ctx.EncoderOf(reflect.TypeOf("")),
 		}
 		return encoder
 	}
 	if typ.Implements(textMarshalerType) {
-		checkIsEmpty := createCheckIsEmpty(cfg, typ)
+		checkIsEmpty := createCheckIsEmpty(ctx, typ)
 		var encoder ValEncoder = &textMarshalerEncoder{
 			valType:       reflect2.Type2(typ),
-			stringEncoder: cfg.EncoderOf(reflect.TypeOf("")),
+			stringEncoder: ctx.EncoderOf(reflect.TypeOf("")),
 			checkIsEmpty:  checkIsEmpty,
 		}
 		return encoder
 	}
 	// if prefix is empty, the type is the root type
-	if prefix != "" && ptrType.Implements(textMarshalerType) {
-		checkIsEmpty := createCheckIsEmpty(cfg, ptrType)
+	if ctx.prefix != "" && ptrType.Implements(textMarshalerType) {
+		checkIsEmpty := createCheckIsEmpty(ctx, ptrType)
 		var encoder ValEncoder = &textMarshalerEncoder{
 			valType:       reflect2.Type2(ptrType),
-			stringEncoder: cfg.EncoderOf(reflect.TypeOf("")),
+			stringEncoder: ctx.EncoderOf(reflect.TypeOf("")),
 			checkIsEmpty:  checkIsEmpty,
 		}
 		return &referenceEncoder{encoder}
