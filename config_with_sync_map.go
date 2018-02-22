@@ -16,8 +16,8 @@ type frozenConfig struct {
 	decoderCache                  sync.Map
 	encoderCache                  sync.Map
 	extensions                    []Extension
-	streamPool                    chan *Stream
-	iteratorPool                  chan *Iterator
+	streamPool                    *sync.Pool
+	iteratorPool                  *sync.Pool
 }
 
 func (cfg *frozenConfig) initCache() {

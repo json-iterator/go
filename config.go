@@ -5,6 +5,7 @@ import (
 	"io"
 	"unsafe"
 	"github.com/v2pro/plz/reflect2"
+	"sync"
 )
 
 // Config customize how the API should behave.
@@ -66,8 +67,16 @@ func (cfg Config) Froze() API {
 		objectFieldMustBeSimpleString: cfg.ObjectFieldMustBeSimpleString,
 		onlyTaggedField:               cfg.OnlyTaggedField,
 		disallowUnknownFields:         cfg.DisallowUnknownFields,
-		streamPool:                    make(chan *Stream, 16),
-		iteratorPool:                  make(chan *Iterator, 16),
+	}
+	api.streamPool = &sync.Pool{
+		New: func() interface{} {
+			return NewStream(api, nil, 512)
+		},
+	}
+	api.iteratorPool = &sync.Pool{
+		New: func() interface{} {
+			return NewIterator(api)
+		},
 	}
 	api.initCache()
 	encoderExtension := EncoderExtension{}
