@@ -75,8 +75,12 @@ func (stream *Stream) WriteVal(val interface{}) {
 		stream.WriteNil()
 		return
 	}
-	typ := reflect2.TypeOf(val)
-	encoder := stream.cfg.EncoderOf(typ)
+	cacheKey := reflect2.RTypeOf(val)
+	encoder := stream.cfg.getEncoderFromCache(cacheKey)
+	if encoder == nil {
+		typ := reflect2.TypeOf(val)
+		encoder = stream.cfg.EncoderOf(typ)
+	}
 	encoder.Encode(reflect2.PtrOf(val), stream)
 }
 
