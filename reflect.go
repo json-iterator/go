@@ -51,12 +51,16 @@ func (b *ctx) append(prefix string) *ctx {
 
 // ReadVal copy the underlying JSON into go interface, same as json.Unmarshal
 func (iter *Iterator) ReadVal(obj interface{}) {
-	typ := reflect2.TypeOf(obj)
-	if typ.Kind() != reflect.Ptr {
-		iter.ReportError("ReadVal", "can only unmarshal into pointer")
-		return
+	cacheKey := reflect2.RTypeOf(obj)
+	decoder := iter.cfg.getDecoderFromCache(cacheKey)
+	if decoder == nil {
+		typ := reflect2.TypeOf(obj)
+		if typ.Kind() != reflect.Ptr {
+			iter.ReportError("ReadVal", "can only unmarshal into pointer")
+			return
+		}
+		decoder = iter.cfg.DecoderOf(typ)
 	}
-	decoder := iter.cfg.DecoderOf(typ)
 	ptr := reflect2.PtrOf(obj)
 	if ptr == nil {
 		iter.ReportError("ReadVal", "can not read into nil pointer")
