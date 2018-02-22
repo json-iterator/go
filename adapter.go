@@ -16,15 +16,6 @@ func Unmarshal(data []byte, v interface{}) error {
 	return ConfigDefault.Unmarshal(data, v)
 }
 
-func lastNotSpacePos(data []byte) int {
-	for i := len(data) - 1; i >= 0; i-- {
-		if data[i] != ' ' && data[i] != '\t' && data[i] != '\r' && data[i] != '\n' {
-			return i + 1
-		}
-	}
-	return 0
-}
-
 // UnmarshalFromString convenient method to read from string instead of []byte
 func UnmarshalFromString(str string, v interface{}) error {
 	return ConfigDefault.UnmarshalFromString(str, v)

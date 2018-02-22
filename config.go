@@ -249,19 +249,17 @@ func (cfg *frozenConfig) MarshalIndent(v interface{}, prefix, indent string) ([]
 
 func (cfg *frozenConfig) UnmarshalFromString(str string, v interface{}) error {
 	data := []byte(str)
-	data = data[:lastNotSpacePos(data)]
 	iter := cfg.BorrowIterator(data)
 	defer cfg.ReturnIterator(iter)
 	iter.ReadVal(v)
-	if iter.head == iter.tail {
-		iter.loadMore()
+	c := iter.nextToken()
+	if c == 0 {
+		if iter.Error == io.EOF {
+			return nil
+		}
+		return iter.Error
 	}
-	if iter.Error == io.EOF {
-		return nil
-	}
-	if iter.Error == nil {
-		iter.ReportError("UnmarshalFromString", "there are bytes left after unmarshal")
-	}
+	iter.ReportError("Unmarshal", "there are bytes left after unmarshal")
 	return iter.Error
 }
 
@@ -272,19 +270,17 @@ func (cfg *frozenConfig) Get(data []byte, path ...interface{}) Any {
 }
 
 func (cfg *frozenConfig) Unmarshal(data []byte, v interface{}) error {
-	data = data[:lastNotSpacePos(data)]
 	iter := cfg.BorrowIterator(data)
 	defer cfg.ReturnIterator(iter)
 	iter.ReadVal(v)
-	if iter.head == iter.tail {
-		iter.loadMore()
+	c := iter.nextToken()
+	if c == 0 {
+		if iter.Error == io.EOF {
+			return nil
+		}
+		return iter.Error
 	}
-	if iter.Error == io.EOF {
-		return nil
-	}
-	if iter.Error == nil {
-		iter.ReportError("Unmarshal", "there are bytes left after unmarshal")
-	}
+	iter.ReportError("Unmarshal", "there are bytes left after unmarshal")
 	return iter.Error
 }
 

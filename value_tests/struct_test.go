@@ -18,6 +18,11 @@ func init() {
 		input: `{"Field": "hello"}`,
 	}, unmarshalCase{
 		ptr: (*struct {
+			Field interface{}
+		})(nil),
+		input: `{"Field": "hello"}       `,
+	}, unmarshalCase{
+		ptr: (*struct {
 			Field int `json:"field"`
 		})(nil),
 		input: `{"field": null}`,
