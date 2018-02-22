@@ -16,10 +16,10 @@ type privateFieldsExtension struct {
 
 func (extension *privateFieldsExtension) UpdateStructDescriptor(structDescriptor *jsoniter.StructDescriptor) {
 	for _, binding := range structDescriptor.Fields {
-		isPrivate := unicode.IsLower(rune(binding.Field.Name[0]))
+		isPrivate := unicode.IsLower(rune(binding.Field.Name()[0]))
 		if isPrivate {
-			binding.FromNames = []string{binding.Field.Name}
-			binding.ToNames = []string{binding.Field.Name}
+			binding.FromNames = []string{binding.Field.Name()}
+			binding.ToNames = []string{binding.Field.Name()}
 		}
 	}
 }

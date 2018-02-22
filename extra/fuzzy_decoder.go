@@ -9,6 +9,7 @@ import (
 	"unsafe"
 
 	"github.com/json-iterator/go"
+	"github.com/v2pro/plz/reflect2"
 )
 
 const maxUint = ^uint(0)
@@ -148,7 +149,7 @@ type tolerateEmptyArrayExtension struct {
 	jsoniter.DummyExtension
 }
 
-func (extension *tolerateEmptyArrayExtension) DecorateDecoder(typ reflect.Type, decoder jsoniter.ValDecoder) jsoniter.ValDecoder {
+func (extension *tolerateEmptyArrayExtension) DecorateDecoder(typ reflect2.Type, decoder jsoniter.ValDecoder) jsoniter.ValDecoder {
 	if typ.Kind() == reflect.Struct || typ.Kind() == reflect.Map {
 		return &tolerateEmptyArrayDecoder{decoder}
 	}

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"strconv"
 	"unsafe"
-	"reflect"
+	"github.com/v2pro/plz/reflect2"
 )
 
 type Number string
@@ -32,10 +32,10 @@ func CastJsonNumber(val interface{}) (string, bool) {
 	return "", false
 }
 
-var jsonNumberType = reflect.TypeOf((*json.Number)(nil)).Elem()
-var jsoniterNumberType = reflect.TypeOf((*Number)(nil)).Elem()
+var jsonNumberType = reflect2.TypeOfPtr((*json.Number)(nil)).Elem()
+var jsoniterNumberType = reflect2.TypeOfPtr((*Number)(nil)).Elem()
 
-func createDecoderOfJsonNumber(ctx *ctx, typ reflect.Type) ValDecoder {
+func createDecoderOfJsonNumber(ctx *ctx, typ reflect2.Type) ValDecoder {
 	if typ.AssignableTo(jsonNumberType) {
 		return &jsonNumberCodec{}
 	}
@@ -45,7 +45,7 @@ func createDecoderOfJsonNumber(ctx *ctx, typ reflect.Type) ValDecoder {
 	return nil
 }
 
-func createEncoderOfJsonNumber(ctx *ctx, typ reflect.Type) ValEncoder {
+func createEncoderOfJsonNumber(ctx *ctx, typ reflect2.Type) ValEncoder {
 	if typ.AssignableTo(jsonNumberType) {
 		return &jsonNumberCodec{}
 	}

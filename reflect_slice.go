@@ -3,20 +3,19 @@ package jsoniter
 import (
 	"fmt"
 	"io"
-	"reflect"
 	"unsafe"
 	"github.com/v2pro/plz/reflect2"
 )
 
-func decoderOfSlice(ctx *ctx, typ reflect.Type) ValDecoder {
-	decoder := decoderOfType(ctx.append("[sliceElem]"), typ.Elem())
-	sliceType := reflect2.Type2(typ).(*reflect2.UnsafeSliceType)
+func decoderOfSlice(ctx *ctx, typ reflect2.Type) ValDecoder {
+	sliceType := typ.(*reflect2.UnsafeSliceType)
+	decoder := decoderOfType(ctx.append("[sliceElem]"), sliceType.Elem())
 	return &sliceDecoder{sliceType, decoder}
 }
 
-func encoderOfSlice(ctx *ctx, typ reflect.Type) ValEncoder {
-	encoder := encoderOfType(ctx.append("[sliceElem]"), typ.Elem())
-	sliceType := reflect2.Type2(typ).(*reflect2.UnsafeSliceType)
+func encoderOfSlice(ctx *ctx, typ reflect2.Type) ValEncoder {
+	sliceType := typ.(*reflect2.UnsafeSliceType)
+	encoder := encoderOfType(ctx.append("[sliceElem]"), sliceType.Elem())
 	return &sliceEncoder{sliceType, encoder}
 }
 
@@ -73,7 +72,7 @@ func (decoder *sliceDecoder) doDecode(ptr unsafe.Pointer, iter *Iterator) {
 		return
 	}
 	if c != '[' {
-		iter.ReportError("decode array", "expect [ or n, but found "+string([]byte{c}))
+		iter.ReportError("decode slice", "expect [ or n, but found "+string([]byte{c}))
 		return
 	}
 	c = iter.nextToken()
@@ -94,7 +93,7 @@ func (decoder *sliceDecoder) doDecode(ptr unsafe.Pointer, iter *Iterator) {
 		decoder.elemDecoder.Decode(elemPtr, iter)
 	}
 	if c != ']' {
-		iter.ReportError("decode array", "expect ], but found "+string([]byte{c}))
+		iter.ReportError("decode slice", "expect ], but found "+string([]byte{c}))
 		return
 	}
 }

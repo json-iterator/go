@@ -18,7 +18,7 @@ var extensions = []Extension{}
 
 // StructDescriptor describe how should we encode/decode the struct
 type StructDescriptor struct {
-	Type               reflect.Type
+	Type               reflect2.Type
 	Fields             []*Binding
 }
 
@@ -26,7 +26,7 @@ type StructDescriptor struct {
 // Can not use map here to keep field orders.
 func (structDescriptor *StructDescriptor) GetField(fieldName string) *Binding {
 	for _, binding := range structDescriptor.Fields {
-		if binding.Field.Name == fieldName {
+		if binding.Field.Name() == fieldName {
 			return binding
 		}
 	}
@@ -36,7 +36,7 @@ func (structDescriptor *StructDescriptor) GetField(fieldName string) *Binding {
 // Binding describe how should we encode/decode the struct field
 type Binding struct {
 	levels    []int
-	Field     *reflect.StructField
+	Field     reflect2.StructField
 	FromNames []string
 	ToNames   []string
 	Encoder   ValEncoder
@@ -47,10 +47,10 @@ type Binding struct {
 // Can also rename fields by UpdateStructDescriptor.
 type Extension interface {
 	UpdateStructDescriptor(structDescriptor *StructDescriptor)
-	CreateDecoder(typ reflect.Type) ValDecoder
-	CreateEncoder(typ reflect.Type) ValEncoder
-	DecorateDecoder(typ reflect.Type, decoder ValDecoder) ValDecoder
-	DecorateEncoder(typ reflect.Type, encoder ValEncoder) ValEncoder
+	CreateDecoder(typ reflect2.Type) ValDecoder
+	CreateEncoder(typ reflect2.Type) ValEncoder
+	DecorateDecoder(typ reflect2.Type, decoder ValDecoder) ValDecoder
+	DecorateEncoder(typ reflect2.Type, encoder ValEncoder) ValEncoder
 }
 
 // DummyExtension embed this type get dummy implementation for all methods of Extension
@@ -62,74 +62,74 @@ func (extension *DummyExtension) UpdateStructDescriptor(structDescriptor *Struct
 }
 
 // CreateDecoder No-op
-func (extension *DummyExtension) CreateDecoder(typ reflect.Type) ValDecoder {
+func (extension *DummyExtension) CreateDecoder(typ reflect2.Type) ValDecoder {
 	return nil
 }
 
 // CreateEncoder No-op
-func (extension *DummyExtension) CreateEncoder(typ reflect.Type) ValEncoder {
+func (extension *DummyExtension) CreateEncoder(typ reflect2.Type) ValEncoder {
 	return nil
 }
 
 // DecorateDecoder No-op
-func (extension *DummyExtension) DecorateDecoder(typ reflect.Type, decoder ValDecoder) ValDecoder {
+func (extension *DummyExtension) DecorateDecoder(typ reflect2.Type, decoder ValDecoder) ValDecoder {
 	return decoder
 }
 
 // DecorateEncoder No-op
-func (extension *DummyExtension) DecorateEncoder(typ reflect.Type, encoder ValEncoder) ValEncoder {
+func (extension *DummyExtension) DecorateEncoder(typ reflect2.Type, encoder ValEncoder) ValEncoder {
 	return encoder
 }
 
-type EncoderExtension map[reflect.Type]ValEncoder
+type EncoderExtension map[reflect2.Type]ValEncoder
 
 // UpdateStructDescriptor No-op
 func (extension EncoderExtension) UpdateStructDescriptor(structDescriptor *StructDescriptor) {
 }
 
 // CreateDecoder No-op
-func (extension EncoderExtension) CreateDecoder(typ reflect.Type) ValDecoder {
+func (extension EncoderExtension) CreateDecoder(typ reflect2.Type) ValDecoder {
 	return nil
 }
 
 // CreateEncoder get encoder from map
-func (extension EncoderExtension) CreateEncoder(typ reflect.Type) ValEncoder {
+func (extension EncoderExtension) CreateEncoder(typ reflect2.Type) ValEncoder {
 	return extension[typ]
 }
 
 // DecorateDecoder No-op
-func (extension EncoderExtension) DecorateDecoder(typ reflect.Type, decoder ValDecoder) ValDecoder {
+func (extension EncoderExtension) DecorateDecoder(typ reflect2.Type, decoder ValDecoder) ValDecoder {
 	return decoder
 }
 
 // DecorateEncoder No-op
-func (extension EncoderExtension) DecorateEncoder(typ reflect.Type, encoder ValEncoder) ValEncoder {
+func (extension EncoderExtension) DecorateEncoder(typ reflect2.Type, encoder ValEncoder) ValEncoder {
 	return encoder
 }
 
-type DecoderExtension map[reflect.Type]ValDecoder
+type DecoderExtension map[reflect2.Type]ValDecoder
 
 // UpdateStructDescriptor No-op
 func (extension DecoderExtension) UpdateStructDescriptor(structDescriptor *StructDescriptor) {
 }
 
 // CreateDecoder get decoder from map
-func (extension DecoderExtension) CreateDecoder(typ reflect.Type) ValDecoder {
+func (extension DecoderExtension) CreateDecoder(typ reflect2.Type) ValDecoder {
 	return extension[typ]
 }
 
 // CreateEncoder No-op
-func (extension DecoderExtension) CreateEncoder(typ reflect.Type) ValEncoder {
+func (extension DecoderExtension) CreateEncoder(typ reflect2.Type) ValEncoder {
 	return nil
 }
 
 // DecorateDecoder No-op
-func (extension DecoderExtension) DecorateDecoder(typ reflect.Type, decoder ValDecoder) ValDecoder {
+func (extension DecoderExtension) DecorateDecoder(typ reflect2.Type, decoder ValDecoder) ValDecoder {
 	return decoder
 }
 
 // DecorateEncoder No-op
-func (extension DecoderExtension) DecorateEncoder(typ reflect.Type, encoder ValEncoder) ValEncoder {
+func (extension DecoderExtension) DecorateEncoder(typ reflect2.Type, encoder ValEncoder) ValEncoder {
 	return encoder
 }
 
@@ -208,7 +208,7 @@ func RegisterExtension(extension Extension) {
 	extensions = append(extensions, extension)
 }
 
-func getTypeDecoderFromExtension(ctx *ctx, typ reflect.Type) ValDecoder {
+func getTypeDecoderFromExtension(ctx *ctx, typ reflect2.Type) ValDecoder {
 	decoder := _getTypeDecoderFromExtension(ctx, typ)
 	if decoder != nil {
 		for _, extension := range extensions {
@@ -220,7 +220,7 @@ func getTypeDecoderFromExtension(ctx *ctx, typ reflect.Type) ValDecoder {
 	}
 	return decoder
 }
-func _getTypeDecoderFromExtension(ctx *ctx, typ reflect.Type) ValDecoder {
+func _getTypeDecoderFromExtension(ctx *ctx, typ reflect2.Type) ValDecoder {
 	for _, extension := range extensions {
 		decoder := extension.CreateDecoder(typ)
 		if decoder != nil {
@@ -239,15 +239,16 @@ func _getTypeDecoderFromExtension(ctx *ctx, typ reflect.Type) ValDecoder {
 		return decoder
 	}
 	if typ.Kind() == reflect.Ptr {
-		decoder := typeDecoders[typ.Elem().String()]
+		ptrType := typ.(*reflect2.UnsafePtrType)
+		decoder := typeDecoders[ptrType.Elem().String()]
 		if decoder != nil {
-			return &OptionalDecoder{reflect2.Type2(typ.Elem()), decoder}
+			return &OptionalDecoder{ptrType.Elem(), decoder}
 		}
 	}
 	return nil
 }
 
-func getTypeEncoderFromExtension(ctx *ctx, typ reflect.Type) ValEncoder {
+func getTypeEncoderFromExtension(ctx *ctx, typ reflect2.Type) ValEncoder {
 	encoder := _getTypeEncoderFromExtension(ctx, typ)
 	if encoder != nil {
 		for _, extension := range extensions {
@@ -260,7 +261,7 @@ func getTypeEncoderFromExtension(ctx *ctx, typ reflect.Type) ValEncoder {
 	return encoder
 }
 
-func _getTypeEncoderFromExtension(ctx *ctx, typ reflect.Type) ValEncoder {
+func _getTypeEncoderFromExtension(ctx *ctx, typ reflect2.Type) ValEncoder {
 	for _, extension := range extensions {
 		encoder := extension.CreateEncoder(typ)
 		if encoder != nil {
@@ -279,7 +280,8 @@ func _getTypeEncoderFromExtension(ctx *ctx, typ reflect.Type) ValEncoder {
 		return encoder
 	}
 	if typ.Kind() == reflect.Ptr {
-		encoder := typeEncoders[typ.Elem().String()]
+		typePtr := typ.(*reflect2.UnsafePtrType)
+		encoder := typeEncoders[typePtr.Elem().String()]
 		if encoder != nil {
 			return &OptionalEncoder{encoder}
 		}
@@ -287,12 +289,13 @@ func _getTypeEncoderFromExtension(ctx *ctx, typ reflect.Type) ValEncoder {
 	return nil
 }
 
-func describeStruct(ctx *ctx, typ reflect.Type) *StructDescriptor {
+func describeStruct(ctx *ctx, typ reflect2.Type) *StructDescriptor {
+	structType := typ.(*reflect2.UnsafeStructType)
 	embeddedBindings := []*Binding{}
 	bindings := []*Binding{}
-	for i := 0; i < typ.NumField(); i++ {
-		field := typ.Field(i)
-		tag, hastag := field.Tag.Lookup(ctx.getTagKey())
+	for i := 0; i < structType.NumField(); i++ {
+		field := structType.Field(i)
+		tag, hastag := field.Tag().Lookup(ctx.getTagKey())
 		if ctx.onlyTaggedField && !hastag {
 			continue
 		}
@@ -300,43 +303,46 @@ func describeStruct(ctx *ctx, typ reflect.Type) *StructDescriptor {
 		if tag == "-" {
 			continue
 		}
-		if field.Anonymous && (tag == "" || tagParts[0] == "") {
-			if field.Type.Kind() == reflect.Struct {
-				structDescriptor := describeStruct(ctx, field.Type)
+		if field.Anonymous() && (tag == "" || tagParts[0] == "") {
+			if field.Type().Kind() == reflect.Struct {
+				structDescriptor := describeStruct(ctx, field.Type())
 				for _, binding := range structDescriptor.Fields {
 					binding.levels = append([]int{i}, binding.levels...)
 					omitempty := binding.Encoder.(*structFieldEncoder).omitempty
-					binding.Encoder = &structFieldEncoder{&field, binding.Encoder, omitempty}
-					binding.Decoder = &structFieldDecoder{&field, binding.Decoder}
+					binding.Encoder = &structFieldEncoder{field, binding.Encoder, omitempty}
+					binding.Decoder = &structFieldDecoder{field, binding.Decoder}
 					embeddedBindings = append(embeddedBindings, binding)
 				}
 				continue
-			} else if field.Type.Kind() == reflect.Ptr && field.Type.Elem().Kind() == reflect.Struct {
-				structDescriptor := describeStruct(ctx, field.Type.Elem())
-				for _, binding := range structDescriptor.Fields {
-					binding.levels = append([]int{i}, binding.levels...)
-					omitempty := binding.Encoder.(*structFieldEncoder).omitempty
-					binding.Encoder = &dereferenceEncoder{binding.Encoder}
-					binding.Encoder = &structFieldEncoder{&field, binding.Encoder, omitempty}
-					binding.Decoder = &dereferenceDecoder{reflect2.Type2(field.Type.Elem()), binding.Decoder}
-					binding.Decoder = &structFieldDecoder{&field, binding.Decoder}
-					embeddedBindings = append(embeddedBindings, binding)
+			} else if field.Type().Kind() == reflect.Ptr {
+				ptrType := field.Type().(*reflect2.UnsafePtrType)
+				if ptrType.Elem().Kind() == reflect.Struct {
+					structDescriptor := describeStruct(ctx, ptrType.Elem())
+					for _, binding := range structDescriptor.Fields {
+						binding.levels = append([]int{i}, binding.levels...)
+						omitempty := binding.Encoder.(*structFieldEncoder).omitempty
+						binding.Encoder = &dereferenceEncoder{binding.Encoder}
+						binding.Encoder = &structFieldEncoder{field, binding.Encoder, omitempty}
+						binding.Decoder = &dereferenceDecoder{ptrType.Elem(), binding.Decoder}
+						binding.Decoder = &structFieldDecoder{field, binding.Decoder}
+						embeddedBindings = append(embeddedBindings, binding)
+					}
+					continue
 				}
-				continue
 			}
 		}
-		fieldNames := calcFieldNames(field.Name, tagParts[0], tag)
-		fieldCacheKey := fmt.Sprintf("%s/%s", typ.String(), field.Name)
+		fieldNames := calcFieldNames(field.Name(), tagParts[0], tag)
+		fieldCacheKey := fmt.Sprintf("%s/%s", typ.String(), field.Name())
 		decoder := fieldDecoders[fieldCacheKey]
 		if decoder == nil {
-			decoder = decoderOfType(ctx.append(field.Name), field.Type)
+			decoder = decoderOfType(ctx.append(field.Name()), field.Type())
 		}
 		encoder := fieldEncoders[fieldCacheKey]
 		if encoder == nil {
-			encoder = encoderOfType(ctx.append(field.Name), field.Type)
+			encoder = encoderOfType(ctx.append(field.Name()), field.Type())
 		}
 		binding := &Binding{
-			Field:     &field,
+			Field:     field,
 			FromNames: fieldNames,
 			ToNames:   fieldNames,
 			Decoder:   decoder,
@@ -347,7 +353,7 @@ func describeStruct(ctx *ctx, typ reflect.Type) *StructDescriptor {
 	}
 	return createStructDescriptor(ctx, typ, bindings, embeddedBindings)
 }
-func createStructDescriptor(ctx *ctx, typ reflect.Type, bindings []*Binding, embeddedBindings []*Binding) *StructDescriptor {
+func createStructDescriptor(ctx *ctx, typ reflect2.Type, bindings []*Binding, embeddedBindings []*Binding) *StructDescriptor {
 	structDescriptor := &StructDescriptor{
 		Type:               typ,
 		Fields:             bindings,
@@ -364,21 +370,6 @@ func createStructDescriptor(ctx *ctx, typ reflect.Type, bindings []*Binding, emb
 	sort.Sort(allBindings)
 	structDescriptor.Fields = allBindings
 	return structDescriptor
-}
-
-func isStructOnePtr(typ reflect.Type) bool {
-	if typ.NumField() == 1 {
-		firstField := typ.Field(0)
-		switch firstField.Type.Kind() {
-		case reflect.Ptr:
-			return true
-		case reflect.Map:
-			return true
-		case reflect.Struct:
-			return isStructOnePtr(firstField.Type)
-		}
-	}
-	return false
 }
 
 type sortableBindings []*Binding
@@ -408,12 +399,12 @@ func (bindings sortableBindings) Swap(i, j int) {
 func processTags(structDescriptor *StructDescriptor, cfg *frozenConfig) {
 	for _, binding := range structDescriptor.Fields {
 		shouldOmitEmpty := false
-		tagParts := strings.Split(binding.Field.Tag.Get(cfg.getTagKey()), ",")
+		tagParts := strings.Split(binding.Field.Tag().Get(cfg.getTagKey()), ",")
 		for _, tagPart := range tagParts[1:] {
 			if tagPart == "omitempty" {
 				shouldOmitEmpty = true
 			} else if tagPart == "string" {
-				if binding.Field.Type.Kind() == reflect.String {
+				if binding.Field.Type().Kind() == reflect.String {
 					binding.Decoder = &stringModeStringDecoder{binding.Decoder, cfg}
 					binding.Encoder = &stringModeStringEncoder{binding.Encoder, cfg}
 				} else {

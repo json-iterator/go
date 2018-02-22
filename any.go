@@ -90,7 +90,7 @@ func Wrap(val interface{}) Any {
 	if isAny {
 		return asAny
 	}
-	typ := reflect.TypeOf(val)
+	typ := reflect2.TypeOf(val)
 	switch typ.Kind() {
 	case reflect.Slice:
 		return wrapArray(val)
@@ -245,27 +245,27 @@ func locatePath(iter *Iterator, path []interface{}) Any {
 	return iter.readAny()
 }
 
-var anyType = reflect.TypeOf((*Any)(nil)).Elem()
+var anyType = reflect2.TypeOfPtr((*Any)(nil)).Elem()
 
-func createDecoderOfAny(ctx *ctx, typ reflect.Type) ValDecoder {
+func createDecoderOfAny(ctx *ctx, typ reflect2.Type) ValDecoder {
 	if typ == anyType {
 		return &directAnyCodec{}
 	}
 	if typ.Implements(anyType) {
 		return &anyCodec{
-			valType: reflect2.Type2(typ),
+			valType: typ,
 		}
 	}
 	return nil
 }
 
-func createEncoderOfAny(ctx *ctx, typ reflect.Type) ValEncoder {
+func createEncoderOfAny(ctx *ctx, typ reflect2.Type) ValEncoder {
 	if typ == anyType {
 		return &directAnyCodec{}
 	}
 	if typ.Implements(anyType) {
 		return &anyCodec{
-			valType: reflect2.Type2(typ),
+			valType: typ,
 		}
 	}
 	return nil

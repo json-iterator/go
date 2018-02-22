@@ -2,11 +2,11 @@ package test
 
 import (
 	"testing"
-	"reflect"
 	"encoding/json"
 	"github.com/stretchr/testify/require"
 	"github.com/json-iterator/go"
 	"fmt"
+	"github.com/v2pro/plz/reflect2"
 )
 
 type unmarshalCase struct {
@@ -42,9 +42,9 @@ func Test_unmarshal(t *testing.T) {
 				obj1 = testCase.obj()
 				obj2 = testCase.obj()
 			} else {
-				valType := reflect.TypeOf(testCase.ptr).Elem()
-				obj1 = reflect.New(valType).Interface()
-				obj2 = reflect.New(valType).Interface()
+				valType := reflect2.TypeOfPtr(testCase.ptr).Elem()
+				obj1 = valType.New()
+				obj2 = valType.New()
 			}
 			err1 := json.Unmarshal([]byte(testCase.input), obj1)
 			should.NoError(err1, "json")
@@ -66,7 +66,7 @@ func Test_marshal(t *testing.T) {
 	for i, testCase := range marshalCases {
 		var name string
 		if testCase != nil {
-			name = fmt.Sprintf("[%v]%v/%s", i, testCase, reflect.TypeOf(testCase).String())
+			name = fmt.Sprintf("[%v]%v/%s", i, testCase, reflect2.TypeOf(testCase).String())
 		}
 		t.Run(name, func(t *testing.T) {
 			should := require.New(t)

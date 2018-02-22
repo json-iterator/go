@@ -8,7 +8,7 @@ import (
 	"github.com/v2pro/plz/reflect2"
 )
 
-func encoderOfStruct(ctx *ctx, typ reflect.Type) ValEncoder {
+func encoderOfStruct(ctx *ctx, typ reflect2.Type) ValEncoder {
 	type bindingTo struct {
 		binding *Binding
 		toName  string
@@ -46,7 +46,7 @@ func encoderOfStruct(ctx *ctx, typ reflect.Type) ValEncoder {
 	return &structEncoder{typ, finalOrderedFields}
 }
 
-func createCheckIsEmpty(ctx *ctx, typ reflect.Type) checkIsEmpty {
+func createCheckIsEmpty(ctx *ctx, typ reflect2.Type) checkIsEmpty {
 	kind := typ.Kind()
 	switch kind {
 	case reflect.String:
@@ -80,7 +80,7 @@ func createCheckIsEmpty(ctx *ctx, typ reflect.Type) checkIsEmpty {
 	case reflect.Bool:
 		return &boolCodec{}
 	case reflect.Interface:
-		return &dynamicEncoder{reflect2.Type2(typ)}
+		return &dynamicEncoder{typ}
 	case reflect.Struct:
 		return &structEncoder{typ: typ}
 	case reflect.Array:
@@ -97,8 +97,8 @@ func createCheckIsEmpty(ctx *ctx, typ reflect.Type) checkIsEmpty {
 }
 
 func resolveConflictBinding(cfg *frozenConfig, old, new *Binding) (ignoreOld, ignoreNew bool) {
-	newTagged := new.Field.Tag.Get(cfg.getTagKey()) != ""
-	oldTagged := old.Field.Tag.Get(cfg.getTagKey()) != ""
+	newTagged := new.Field.Tag().Get(cfg.getTagKey()) != ""
+	oldTagged := old.Field.Tag().Get(cfg.getTagKey()) != ""
 	if newTagged {
 		if oldTagged {
 			if len(old.levels) > len(new.levels) {
@@ -126,21 +126,21 @@ func resolveConflictBinding(cfg *frozenConfig, old, new *Binding) (ignoreOld, ig
 }
 
 type structFieldEncoder struct {
-	field        *reflect.StructField
+	field        reflect2.StructField
 	fieldEncoder ValEncoder
 	omitempty    bool
 }
 
 func (encoder *structFieldEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
-	fieldPtr := unsafe.Pointer(uintptr(ptr) + encoder.field.Offset)
+	fieldPtr := encoder.field.UnsafeGet(ptr)
 	encoder.fieldEncoder.Encode(fieldPtr, stream)
 	if stream.Error != nil && stream.Error != io.EOF {
-		stream.Error = fmt.Errorf("%s: %s", encoder.field.Name, stream.Error.Error())
+		stream.Error = fmt.Errorf("%s: %s", encoder.field.Name(), stream.Error.Error())
 	}
 }
 
 func (encoder *structFieldEncoder) IsEmpty(ptr unsafe.Pointer) bool {
-	fieldPtr := unsafe.Pointer(uintptr(ptr) + encoder.field.Offset)
+	fieldPtr := encoder.field.UnsafeGet(ptr)
 	return encoder.fieldEncoder.IsEmpty(fieldPtr)
 }
 
@@ -149,7 +149,7 @@ func (encoder *structFieldEncoder) IsEmbeddedPtrNil(ptr unsafe.Pointer) bool {
 	if !converted {
 		return false
 	}
-	fieldPtr := unsafe.Pointer(uintptr(ptr) + encoder.field.Offset)
+	fieldPtr := encoder.field.UnsafeGet(ptr)
 	return isEmbeddedPtrNil.IsEmbeddedPtrNil(fieldPtr)
 }
 
@@ -158,7 +158,7 @@ type IsEmbeddedPtrNil interface {
 }
 
 type structEncoder struct {
-	typ    reflect.Type
+	typ    reflect2.Type
 	fields []structFieldTo
 }
 

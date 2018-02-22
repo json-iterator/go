@@ -3,13 +3,13 @@ package jsoniter
 import (
 	"unsafe"
 	"encoding/json"
-	"reflect"
+	"github.com/v2pro/plz/reflect2"
 )
 
-var jsonRawMessageType = reflect.TypeOf((*json.RawMessage)(nil)).Elem()
-var jsoniterRawMessageType = reflect.TypeOf((*RawMessage)(nil)).Elem()
+var jsonRawMessageType = reflect2.TypeOfPtr((*json.RawMessage)(nil)).Elem()
+var jsoniterRawMessageType = reflect2.TypeOfPtr((*RawMessage)(nil)).Elem()
 
-func createEncoderOfJsonRawMessage(ctx *ctx, typ reflect.Type) ValEncoder {
+func createEncoderOfJsonRawMessage(ctx *ctx, typ reflect2.Type) ValEncoder {
 	if typ == jsonRawMessageType {
 		return &jsonRawMessageCodec{}
 	}
@@ -19,7 +19,7 @@ func createEncoderOfJsonRawMessage(ctx *ctx, typ reflect.Type) ValEncoder {
 	return nil
 }
 
-func createDecoderOfJsonRawMessage(ctx *ctx, typ reflect.Type) ValDecoder {
+func createDecoderOfJsonRawMessage(ctx *ctx, typ reflect2.Type) ValDecoder {
 	if typ == jsonRawMessageType {
 		return &jsonRawMessageCodec{}
 	}

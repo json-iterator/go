@@ -3,21 +3,23 @@ package jsoniter
 import (
 	"fmt"
 	"io"
-	"reflect"
 	"unsafe"
+	"github.com/v2pro/plz/reflect2"
 )
 
-func decoderOfArray(ctx *ctx, typ reflect.Type) ValDecoder {
-	decoder := decoderOfType(ctx.append("[arrayElem]"), typ.Elem())
-	return &arrayDecoder{typ, typ.Elem(), decoder}
+func decoderOfArray(ctx *ctx, typ reflect2.Type) ValDecoder {
+	arrayType := typ.(*reflect2.UnsafeArrayType)
+	decoder := decoderOfType(ctx.append("[arrayElem]"), arrayType.Elem())
+	return &arrayDecoder{arrayType, decoder}
 }
 
-func encoderOfArray(ctx *ctx, typ reflect.Type) ValEncoder {
-	if typ.Len() == 0 {
+func encoderOfArray(ctx *ctx, typ reflect2.Type) ValEncoder {
+	arrayType := typ.(*reflect2.UnsafeArrayType)
+	if arrayType.Len() == 0 {
 		return emptyArrayEncoder{}
 	}
-	encoder := encoderOfType(ctx.append("[arrayElem]"), typ.Elem())
-	return &arrayEncoder{typ, typ.Elem(), encoder}
+	encoder := encoderOfType(ctx.append("[arrayElem]"), arrayType.Elem())
+	return &arrayEncoder{arrayType, encoder}
 }
 
 type emptyArrayEncoder struct{}
@@ -31,8 +33,7 @@ func (encoder emptyArrayEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 }
 
 type arrayEncoder struct {
-	arrayType   reflect.Type
-	elemType    reflect.Type
+	arrayType   *reflect2.UnsafeArrayType
 	elemEncoder ValEncoder
 }
 
@@ -42,8 +43,8 @@ func (encoder *arrayEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	encoder.elemEncoder.Encode(elemPtr, stream)
 	for i := 1; i < encoder.arrayType.Len(); i++ {
 		stream.WriteMore()
-		elemPtr = unsafe.Pointer(uintptr(elemPtr) + encoder.elemType.Size())
-		encoder.elemEncoder.Encode(unsafe.Pointer(elemPtr), stream)
+		elemPtr = encoder.arrayType.UnsafeGetIndex(ptr, i)
+		encoder.elemEncoder.Encode(elemPtr, stream)
 	}
 	stream.WriteArrayEnd()
 	if stream.Error != nil && stream.Error != io.EOF {
@@ -56,8 +57,7 @@ func (encoder *arrayEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 }
 
 type arrayDecoder struct {
-	arrayType   reflect.Type
-	elemType    reflect.Type
+	arrayType   *reflect2.UnsafeArrayType
 	elemDecoder ValDecoder
 }
 
@@ -69,14 +69,36 @@ func (decoder *arrayDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 }
 
 func (decoder *arrayDecoder) doDecode(ptr unsafe.Pointer, iter *Iterator) {
-	offset := uintptr(0)
-	iter.ReadArrayCB(func(iter *Iterator) bool {
-		if offset < decoder.arrayType.Size() {
-			decoder.elemDecoder.Decode(unsafe.Pointer(uintptr(ptr)+offset), iter)
-			offset += decoder.elemType.Size()
-		} else {
+	c := iter.nextToken()
+	arrayType := decoder.arrayType
+	if c == 'n' {
+		iter.skipThreeBytes('u', 'l', 'l')
+		return
+	}
+	if c != '[' {
+		iter.ReportError("decode array", "expect [ or n, but found "+string([]byte{c}))
+		return
+	}
+	c = iter.nextToken()
+	if c == ']' {
+		return
+	}
+	iter.unreadByte()
+	elemPtr := arrayType.UnsafeGetIndex(ptr, 0)
+	decoder.elemDecoder.Decode(elemPtr, iter)
+	length := 1
+	for c = iter.nextToken(); c == ','; c = iter.nextToken() {
+		if length >= arrayType.Len() {
 			iter.Skip()
+			continue
 		}
-		return true
-	})
+		idx := length
+		length += 1
+		elemPtr = arrayType.UnsafeGetIndex(ptr, idx)
+		decoder.elemDecoder.Decode(elemPtr, iter)
+	}
+	if c != ']' {
+		iter.ReportError("decode array", "expect ], but found "+string([]byte{c}))
+		return
+	}
 }

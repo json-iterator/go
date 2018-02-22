@@ -36,8 +36,8 @@ type checkIsEmpty interface {
 type ctx struct {
 	*frozenConfig
 	prefix   string
-	encoders map[reflect.Type]ValEncoder
-	decoders map[reflect.Type]ValDecoder
+	encoders map[reflect2.Type]ValEncoder
+	decoders map[reflect2.Type]ValDecoder
 }
 
 func (b *ctx) append(prefix string) *ctx {
@@ -51,7 +51,7 @@ func (b *ctx) append(prefix string) *ctx {
 
 // ReadVal copy the underlying JSON into go interface, same as json.Unmarshal
 func (iter *Iterator) ReadVal(obj interface{}) {
-	typ := reflect.TypeOf(obj)
+	typ := reflect2.TypeOf(obj)
 	if typ.Kind() != reflect.Ptr {
 		iter.ReportError("ReadVal", "can only unmarshal into pointer")
 		return
@@ -71,13 +71,13 @@ func (stream *Stream) WriteVal(val interface{}) {
 		stream.WriteNil()
 		return
 	}
-	typ := reflect.TypeOf(val)
+	typ := reflect2.TypeOf(val)
 	encoder := stream.cfg.EncoderOf(typ)
 	encoder.Encode(reflect2.PtrOf(val), stream)
 }
 
-func (cfg *frozenConfig) DecoderOf(typ reflect.Type) ValDecoder {
-	cacheKey := typ
+func (cfg *frozenConfig) DecoderOf(typ reflect2.Type) ValDecoder {
+	cacheKey := typ.RType()
 	decoder := cfg.getDecoderFromCache(cacheKey)
 	if decoder != nil {
 		return decoder
@@ -85,15 +85,16 @@ func (cfg *frozenConfig) DecoderOf(typ reflect.Type) ValDecoder {
 	ctx := &ctx{
 		frozenConfig: cfg,
 		prefix:       "",
-		decoders:     map[reflect.Type]ValDecoder{},
-		encoders:     map[reflect.Type]ValEncoder{},
+		decoders:     map[reflect2.Type]ValDecoder{},
+		encoders:     map[reflect2.Type]ValEncoder{},
 	}
-	decoder = decoderOfType(ctx, typ.Elem())
+	ptrType := typ.(*reflect2.UnsafePtrType)
+	decoder = decoderOfType(ctx, ptrType.Elem())
 	cfg.addDecoderToCache(cacheKey, decoder)
 	return decoder
 }
 
-func decoderOfType(ctx *ctx, typ reflect.Type) ValDecoder {
+func decoderOfType(ctx *ctx, typ reflect2.Type) ValDecoder {
 	decoder := getTypeDecoderFromExtension(ctx, typ)
 	if decoder != nil {
 		return decoder
@@ -108,7 +109,7 @@ func decoderOfType(ctx *ctx, typ reflect.Type) ValDecoder {
 	return decoder
 }
 
-func createDecoderOfType(ctx *ctx, typ reflect.Type) ValDecoder {
+func createDecoderOfType(ctx *ctx, typ reflect2.Type) ValDecoder {
 	decoder := ctx.decoders[typ]
 	if decoder != nil {
 		return decoder
@@ -120,7 +121,7 @@ func createDecoderOfType(ctx *ctx, typ reflect.Type) ValDecoder {
 	return decoder
 }
 
-func _createDecoderOfType(ctx *ctx, typ reflect.Type) ValDecoder {
+func _createDecoderOfType(ctx *ctx, typ reflect2.Type) ValDecoder {
 	decoder := createDecoderOfJsonRawMessage(ctx, typ)
 	if decoder != nil {
 		return decoder
@@ -143,8 +144,8 @@ func _createDecoderOfType(ctx *ctx, typ reflect.Type) ValDecoder {
 	}
 	switch typ.Kind() {
 	case reflect.Interface:
-		if typ.NumMethod() > 0 {
-			ifaceType := reflect2.Type2(typ).(*reflect2.UnsafeIFaceType)
+		ifaceType, isIFace := typ.(*reflect2.UnsafeIFaceType)
+		if isIFace {
 			return &ifaceDecoder{valType: ifaceType}
 		}
 		return &efaceDecoder{}
@@ -163,8 +164,8 @@ func _createDecoderOfType(ctx *ctx, typ reflect.Type) ValDecoder {
 	}
 }
 
-func (cfg *frozenConfig) EncoderOf(typ reflect.Type) ValEncoder {
-	cacheKey := typ
+func (cfg *frozenConfig) EncoderOf(typ reflect2.Type) ValEncoder {
+	cacheKey := typ.RType()
 	encoder := cfg.getEncoderFromCache(cacheKey)
 	if encoder != nil {
 		return encoder
@@ -172,11 +173,11 @@ func (cfg *frozenConfig) EncoderOf(typ reflect.Type) ValEncoder {
 	ctx := &ctx{
 		frozenConfig: cfg,
 		prefix:       "",
-		decoders:     map[reflect.Type]ValDecoder{},
-		encoders:     map[reflect.Type]ValEncoder{},
+		decoders:     map[reflect2.Type]ValDecoder{},
+		encoders:     map[reflect2.Type]ValEncoder{},
 	}
 	encoder = encoderOfType(ctx, typ)
-	if shouldFixOnePtr(typ) {
+	if typ.LikePtr() {
 		encoder = &onePtrEncoder{encoder}
 	}
 	cfg.addEncoderToCache(cacheKey, encoder)
@@ -195,11 +196,7 @@ func (encoder *onePtrEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	encoder.encoder.Encode(unsafe.Pointer(&ptr), stream)
 }
 
-func shouldFixOnePtr(typ reflect.Type) bool {
-	return reflect2.Type2(typ).LikePtr()
-}
-
-func encoderOfType(ctx *ctx, typ reflect.Type) ValEncoder {
+func encoderOfType(ctx *ctx, typ reflect2.Type) ValEncoder {
 	encoder := getTypeEncoderFromExtension(ctx, typ)
 	if encoder != nil {
 		return encoder
@@ -214,7 +211,7 @@ func encoderOfType(ctx *ctx, typ reflect.Type) ValEncoder {
 	return encoder
 }
 
-func createEncoderOfType(ctx *ctx, typ reflect.Type) ValEncoder {
+func createEncoderOfType(ctx *ctx, typ reflect2.Type) ValEncoder {
 	encoder := ctx.encoders[typ]
 	if encoder != nil {
 		return encoder
@@ -225,7 +222,7 @@ func createEncoderOfType(ctx *ctx, typ reflect.Type) ValEncoder {
 	placeholder.encoder = encoder
 	return encoder
 }
-func _createEncoderOfType(ctx *ctx, typ reflect.Type) ValEncoder {
+func _createEncoderOfType(ctx *ctx, typ reflect2.Type) ValEncoder {
 	encoder := createEncoderOfJsonRawMessage(ctx, typ)
 	if encoder != nil {
 		return encoder
@@ -249,7 +246,7 @@ func _createEncoderOfType(ctx *ctx, typ reflect.Type) ValEncoder {
 	kind := typ.Kind()
 	switch kind {
 	case reflect.Interface:
-		return &dynamicEncoder{reflect2.Type2(typ)}
+		return &dynamicEncoder{typ}
 	case reflect.Struct:
 		return encoderOfStruct(ctx, typ)
 	case reflect.Array:

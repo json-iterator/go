@@ -11,7 +11,7 @@ import (
 )
 
 type testCase struct {
-	ptr interface{}
+	ptr    interface{}
 	inputs []string
 }
 

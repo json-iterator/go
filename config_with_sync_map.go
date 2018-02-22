@@ -3,7 +3,6 @@
 package jsoniter
 
 import (
-	"reflect"
 	"sync"
 )
 
@@ -26,15 +25,15 @@ func (cfg *frozenConfig) initCache() {
 	cfg.encoderCache = sync.Map{}
 }
 
-func (cfg *frozenConfig) addDecoderToCache(cacheKey reflect.Type, decoder ValDecoder) {
+func (cfg *frozenConfig) addDecoderToCache(cacheKey uintptr, decoder ValDecoder) {
 	cfg.decoderCache.Store(cacheKey, decoder)
 }
 
-func (cfg *frozenConfig) addEncoderToCache(cacheKey reflect.Type, encoder ValEncoder) {
+func (cfg *frozenConfig) addEncoderToCache(cacheKey uintptr, encoder ValEncoder) {
 	cfg.encoderCache.Store(cacheKey, encoder)
 }
 
-func (cfg *frozenConfig) getDecoderFromCache(cacheKey reflect.Type) ValDecoder {
+func (cfg *frozenConfig) getDecoderFromCache(cacheKey uintptr) ValDecoder {
 	decoder, found := cfg.decoderCache.Load(cacheKey)
 	if found {
 		return decoder.(ValDecoder)
@@ -42,7 +41,7 @@ func (cfg *frozenConfig) getDecoderFromCache(cacheKey reflect.Type) ValDecoder {
 	return nil
 }
 
-func (cfg *frozenConfig) getEncoderFromCache(cacheKey reflect.Type) ValEncoder {
+func (cfg *frozenConfig) getEncoderFromCache(cacheKey uintptr) ValEncoder {
 	encoder, found := cfg.encoderCache.Load(cacheKey)
 	if found {
 		return encoder.(ValEncoder)

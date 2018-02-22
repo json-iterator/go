@@ -3,8 +3,8 @@ package jsoniter
 import (
 	"encoding/json"
 	"io"
-	"reflect"
 	"unsafe"
+	"github.com/v2pro/plz/reflect2"
 )
 
 // Config customize how the API should behave.
@@ -118,12 +118,12 @@ func (cfg *frozenConfig) validateJsonRawMessage(extension EncoderExtension) {
 	}, func(ptr unsafe.Pointer) bool {
 		return false
 	}}
-	extension[reflect.TypeOf((*json.RawMessage)(nil)).Elem()] = encoder
-	extension[reflect.TypeOf((*RawMessage)(nil)).Elem()] = encoder
+	extension[reflect2.TypeOfPtr((*json.RawMessage)(nil)).Elem()] = encoder
+	extension[reflect2.TypeOfPtr((*RawMessage)(nil)).Elem()] = encoder
 }
 
 func (cfg *frozenConfig) useNumber(extension DecoderExtension) {
-	extension[reflect.TypeOf((*interface{})(nil)).Elem()] = &funcDecoder{func(ptr unsafe.Pointer, iter *Iterator) {
+	extension[reflect2.TypeOfPtr((*interface{})(nil)).Elem()] = &funcDecoder{func(ptr unsafe.Pointer, iter *Iterator) {
 		if iter.WhatIsNext() == NumberValue {
 			*((*interface{})(ptr)) = json.Number(iter.readNumberAsString())
 		} else {
@@ -169,8 +169,8 @@ func (encoder *lossyFloat64Encoder) IsEmpty(ptr unsafe.Pointer) bool {
 // for float variables for better performance.
 func (cfg *frozenConfig) marshalFloatWith6Digits(extension EncoderExtension) {
 	// for better performance
-	extension[reflect.TypeOf((*float32)(nil)).Elem()] = &lossyFloat32Encoder{}
-	extension[reflect.TypeOf((*float64)(nil)).Elem()] = &lossyFloat64Encoder{}
+	extension[reflect2.TypeOfPtr((*float32)(nil)).Elem()] = &lossyFloat32Encoder{}
+	extension[reflect2.TypeOfPtr((*float64)(nil)).Elem()] = &lossyFloat64Encoder{}
 }
 
 type htmlEscapedStringEncoder struct {
@@ -186,7 +186,7 @@ func (encoder *htmlEscapedStringEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 }
 
 func (cfg *frozenConfig) escapeHTML(encoderExtension EncoderExtension) {
-	encoderExtension[reflect.TypeOf((*string)(nil)).Elem()] = &htmlEscapedStringEncoder{}
+	encoderExtension[reflect2.TypeOfPtr((*string)(nil)).Elem()] = &htmlEscapedStringEncoder{}
 }
 
 func (cfg *frozenConfig) cleanDecoders() {

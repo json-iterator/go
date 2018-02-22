@@ -8,10 +8,10 @@ import (
 	"fmt"
 )
 
-func decoderOfMap(ctx *ctx, typ reflect.Type) ValDecoder {
-	keyDecoder := decoderOfMapKey(ctx.append("[mapKey]"), typ.Key())
-	elemDecoder := decoderOfType(ctx.append("[mapElem]"), typ.Elem())
-	mapType := reflect2.Type2(typ).(*reflect2.UnsafeMapType)
+func decoderOfMap(ctx *ctx, typ reflect2.Type) ValDecoder {
+	mapType := typ.(*reflect2.UnsafeMapType)
+	keyDecoder := decoderOfMapKey(ctx.append("[mapKey]"), mapType.Key())
+	elemDecoder := decoderOfType(ctx.append("[mapElem]"), mapType.Elem())
 	return &mapDecoder{
 		mapType:     mapType,
 		keyType:     mapType.Key(),
@@ -21,25 +21,26 @@ func decoderOfMap(ctx *ctx, typ reflect.Type) ValDecoder {
 	}
 }
 
-func encoderOfMap(ctx *ctx, typ reflect.Type) ValEncoder {
+func encoderOfMap(ctx *ctx, typ reflect2.Type) ValEncoder {
+	mapType := typ.(*reflect2.UnsafeMapType)
 	if ctx.sortMapKeys {
 		return &sortKeysMapEncoder{
-			mapType:     reflect2.Type2(typ).(*reflect2.UnsafeMapType),
-			keyEncoder:  encoderOfMapKey(ctx.append("[mapKey]"), typ.Key()),
-			elemEncoder: encoderOfType(ctx.append("[mapElem]"), typ.Elem()),
+			mapType:     mapType,
+			keyEncoder:  encoderOfMapKey(ctx.append("[mapKey]"), mapType.Key()),
+			elemEncoder: encoderOfType(ctx.append("[mapElem]"), mapType.Elem()),
 		}
 	}
 	return &mapEncoder{
-		mapType:     reflect2.Type2(typ).(*reflect2.UnsafeMapType),
-		keyEncoder:  encoderOfMapKey(ctx.append("[mapKey]"), typ.Key()),
-		elemEncoder: encoderOfType(ctx.append("[mapElem]"), typ.Elem()),
+		mapType:     mapType,
+		keyEncoder:  encoderOfMapKey(ctx.append("[mapKey]"), mapType.Key()),
+		elemEncoder: encoderOfType(ctx.append("[mapElem]"), mapType.Elem()),
 	}
 }
 
-func decoderOfMapKey(ctx *ctx, typ reflect.Type) ValDecoder {
+func decoderOfMapKey(ctx *ctx, typ reflect2.Type) ValDecoder {
 	switch typ.Kind() {
 	case reflect.String:
-		return decoderOfType(ctx, reflect2.DefaultTypeOfKind(reflect.String).Type1())
+		return decoderOfType(ctx, reflect2.DefaultTypeOfKind(reflect.String))
 	case reflect.Bool,
 		reflect.Uint8, reflect.Int8,
 		reflect.Uint16, reflect.Int16,
@@ -48,30 +49,30 @@ func decoderOfMapKey(ctx *ctx, typ reflect.Type) ValDecoder {
 		reflect.Uint, reflect.Int,
 		reflect.Float32, reflect.Float64,
 		reflect.Uintptr:
-		typ = reflect2.DefaultTypeOfKind(typ.Kind()).Type1()
+		typ = reflect2.DefaultTypeOfKind(typ.Kind())
 		return &numericMapKeyDecoder{decoderOfType(ctx, typ)}
 	default:
-		ptrType := reflect.PtrTo(typ)
+		ptrType := reflect2.PtrTo(typ)
 		if ptrType.Implements(textMarshalerType) {
 			return &referenceDecoder{
 				&textUnmarshalerDecoder{
-					valType: reflect2.Type2(ptrType),
+					valType: ptrType,
 				},
 			}
 		}
 		if typ.Implements(textMarshalerType) {
 			return &textUnmarshalerDecoder{
-				valType:       reflect2.Type2(typ),
+				valType: typ,
 			}
 		}
 		return &lazyErrorDecoder{err: fmt.Errorf("unsupported map key type: %v", typ)}
 	}
 }
 
-func encoderOfMapKey(ctx *ctx, typ reflect.Type) ValEncoder {
+func encoderOfMapKey(ctx *ctx, typ reflect2.Type) ValEncoder {
 	switch typ.Kind() {
 	case reflect.String:
-		return encoderOfType(ctx, reflect2.DefaultTypeOfKind(reflect.String).Type1())
+		return encoderOfType(ctx, reflect2.DefaultTypeOfKind(reflect.String))
 	case reflect.Bool,
 		reflect.Uint8, reflect.Int8,
 		reflect.Uint16, reflect.Int16,
@@ -80,18 +81,18 @@ func encoderOfMapKey(ctx *ctx, typ reflect.Type) ValEncoder {
 		reflect.Uint, reflect.Int,
 		reflect.Float32, reflect.Float64,
 		reflect.Uintptr:
-		typ = reflect2.DefaultTypeOfKind(typ.Kind()).Type1()
+		typ = reflect2.DefaultTypeOfKind(typ.Kind())
 		return &numericMapKeyEncoder{encoderOfType(ctx, typ)}
 	default:
 		if typ == textMarshalerType {
 			return &directTextMarshalerEncoder{
-				stringEncoder: ctx.EncoderOf(reflect.TypeOf("")),
+				stringEncoder: ctx.EncoderOf(reflect2.TypeOf("")),
 			}
 		}
 		if typ.Implements(textMarshalerType) {
 			return &textMarshalerEncoder{
-				valType:       reflect2.Type2(typ),
-				stringEncoder: ctx.EncoderOf(reflect.TypeOf("")),
+				valType:       typ,
+				stringEncoder: ctx.EncoderOf(reflect2.TypeOf("")),
 			}
 		}
 		return &lazyErrorEncoder{err: fmt.Errorf("unsupported map key type: %v", typ)}
