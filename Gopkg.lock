@@ -34,12 +34,12 @@
     "concurrent",
     "reflect2"
   ]
-  revision = "571356917fca907b069b7b47a14cd32ba0b340d4"
-  version = "0.9.0"
+  revision = "10fc95fad3224a032229e59f6e7023137d82b526"
+  version = "0.9.1"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "ffb25bdf1cd3ab253be54f9ab00735276c630e61c6fe5611d15aa54edd5f8e5b"
+  inputs-digest = "64fe3937a1afce5cb551c06ff7109065c971643e082512243d1071bab428ff14"
   solver-name = "gps-cdcl"
   solver-version = 1
