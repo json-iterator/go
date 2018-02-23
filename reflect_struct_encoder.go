@@ -47,38 +47,12 @@ func encoderOfStruct(ctx *ctx, typ reflect2.Type) ValEncoder {
 }
 
 func createCheckIsEmpty(ctx *ctx, typ reflect2.Type) checkIsEmpty {
+	encoder := createEncoderOfNative(ctx, typ)
+	if encoder != nil {
+		return encoder
+	}
 	kind := typ.Kind()
 	switch kind {
-	case reflect.String:
-		return &stringCodec{}
-	case reflect.Int:
-		return &intCodec{}
-	case reflect.Int8:
-		return &int8Codec{}
-	case reflect.Int16:
-		return &int16Codec{}
-	case reflect.Int32:
-		return &int32Codec{}
-	case reflect.Int64:
-		return &int64Codec{}
-	case reflect.Uint:
-		return &uintCodec{}
-	case reflect.Uint8:
-		return &uint8Codec{}
-	case reflect.Uint16:
-		return &uint16Codec{}
-	case reflect.Uint32:
-		return &uint32Codec{}
-	case reflect.Uintptr:
-		return &uintptrCodec{}
-	case reflect.Uint64:
-		return &uint64Codec{}
-	case reflect.Float32:
-		return &float32Codec{}
-	case reflect.Float64:
-		return &float64Codec{}
-	case reflect.Bool:
-		return &boolCodec{}
 	case reflect.Interface:
 		return &dynamicEncoder{typ}
 	case reflect.Struct:

@@ -22,11 +22,17 @@ func init() {
 
 // ReadUint read uint
 func (iter *Iterator) ReadUint() uint {
+	if strconv.IntSize == 32 {
+		return uint(iter.ReadUint32())
+	}
 	return uint(iter.ReadUint64())
 }
 
 // ReadInt read int
 func (iter *Iterator) ReadInt() int {
+	if strconv.IntSize == 32 {
+		return int(iter.ReadInt32())
+	}
 	return int(iter.ReadInt64())
 }
 

@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"unsafe"
 	"github.com/v2pro/plz/reflect2"
+	"strconv"
 )
 
 // Any generic object representation.
@@ -101,6 +102,9 @@ func Wrap(val interface{}) Any {
 	case reflect.String:
 		return WrapString(val.(string))
 	case reflect.Int:
+		if strconv.IntSize == 32 {
+			return WrapInt32(int32(val.(int)))
+		}
 		return WrapInt64(int64(val.(int)))
 	case reflect.Int8:
 		return WrapInt32(int32(val.(int8)))
@@ -111,7 +115,15 @@ func Wrap(val interface{}) Any {
 	case reflect.Int64:
 		return WrapInt64(val.(int64))
 	case reflect.Uint:
+		if strconv.IntSize == 32 {
+			return WrapUint32(uint32(val.(uint)))
+		}
 		return WrapUint64(uint64(val.(uint)))
+	case reflect.Uintptr:
+		if ptrSize == 32 {
+			return WrapUint32(uint32(val.(uintptr)))
+		}
+		return WrapUint64(uint64(val.(uintptr)))
 	case reflect.Uint8:
 		return WrapUint32(uint32(val.(uint8)))
 	case reflect.Uint16:
