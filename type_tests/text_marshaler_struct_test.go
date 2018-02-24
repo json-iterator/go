@@ -2,9 +2,9 @@ package test
 
 import (
 	"bytes"
+	"encoding"
 	"encoding/base64"
 	"strings"
-	"encoding"
 )
 
 func init() {

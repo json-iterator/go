@@ -1,18 +1,18 @@
 package test
 
 import (
-	"testing"
 	"encoding/json"
-	"github.com/stretchr/testify/require"
-	"github.com/json-iterator/go"
 	"fmt"
+	"github.com/json-iterator/go"
+	"github.com/stretchr/testify/require"
 	"github.com/v2pro/plz/reflect2"
+	"testing"
 )
 
 type unmarshalCase struct {
-	obj func() interface{}
-	ptr interface{}
-	input string
+	obj      func() interface{}
+	ptr      interface{}
+	input    string
 	selected bool
 }
 
@@ -22,7 +22,7 @@ var marshalCases = []interface{}{
 	nil,
 }
 
-type selectedMarshalCase struct  {
+type selectedMarshalCase struct {
 	marshalCase interface{}
 }
 

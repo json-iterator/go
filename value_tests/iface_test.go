@@ -17,7 +17,7 @@ func init() {
 		pCloser2("hello"),
 	)
 	unmarshalCases = append(unmarshalCases, unmarshalCase{
-		ptr: (*[]io.Closer)(nil),
+		ptr:   (*[]io.Closer)(nil),
 		input: "[null]",
 	}, unmarshalCase{
 		obj: func() interface{} {

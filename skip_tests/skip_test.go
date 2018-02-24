@@ -6,8 +6,8 @@ import (
 	"github.com/json-iterator/go"
 	"github.com/stretchr/testify/require"
 	"io"
-	"testing"
 	"reflect"
+	"testing"
 )
 
 type testCase struct {

@@ -1,10 +1,10 @@
 package test
 
 import (
-	"strings"
-	"encoding"
 	"bytes"
+	"encoding"
 	"encoding/base64"
+	"strings"
 )
 
 func init() {

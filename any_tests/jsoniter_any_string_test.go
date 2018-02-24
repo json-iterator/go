@@ -3,8 +3,8 @@ package any_tests
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	"github.com/json-iterator/go"
+	"github.com/stretchr/testify/require"
 )
 
 var stringConvertMap = map[string]string{

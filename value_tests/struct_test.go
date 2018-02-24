@@ -1,9 +1,9 @@
 package test
 
 import (
-	"time"
-	"encoding/json"
 	"bytes"
+	"encoding/json"
+	"time"
 )
 
 func init() {

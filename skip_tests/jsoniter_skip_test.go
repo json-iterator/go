@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	"github.com/json-iterator/go"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_skip_number_in_array(t *testing.T) {

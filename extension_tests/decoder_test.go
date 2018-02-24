@@ -1,12 +1,12 @@
 package test
 
 import (
-	"testing"
-	"unsafe"
-	"time"
 	"github.com/json-iterator/go"
 	"github.com/stretchr/testify/require"
 	"strconv"
+	"testing"
+	"time"
+	"unsafe"
 )
 
 func Test_customize_type_decoder(t *testing.T) {
@@ -60,7 +60,6 @@ func Test_customize_field_decoder(t *testing.T) {
 		t.Fatal(err)
 	}
 }
-
 
 func Test_recursive_empty_interface_customization(t *testing.T) {
 	t.Skip()

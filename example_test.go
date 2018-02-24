@@ -111,7 +111,6 @@ func ExampleMapKey() {
 
 type MyKey string
 
-
 func (m *MyKey) MarshalText() ([]byte, error) {
 	return []byte(strings.Replace(string(*m), "h", "H", -1)), nil
 }
@@ -120,4 +119,3 @@ func (m *MyKey) UnmarshalText(text []byte) error {
 	*m = MyKey(text[:3])
 	return nil
 }
-

@@ -1,11 +1,11 @@
 package test
 
 import (
-	"testing"
-	"github.com/stretchr/testify/require"
 	"bytes"
-	"github.com/json-iterator/go"
 	"encoding/json"
+	"github.com/json-iterator/go"
+	"github.com/stretchr/testify/require"
+	"testing"
 )
 
 // Standard Encoder has trailing newline.

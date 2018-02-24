@@ -1,10 +1,10 @@
 package test
 
 import (
-	"testing"
-	"github.com/stretchr/testify/require"
-	"github.com/json-iterator/go"
 	"encoding/json"
+	"github.com/json-iterator/go"
+	"github.com/stretchr/testify/require"
+	"testing"
 )
 
 func Test_use_number_for_unmarshal(t *testing.T) {
@@ -22,7 +22,6 @@ func Test_customize_float_marshal(t *testing.T) {
 	should.Nil(err)
 	should.Equal("1.234568", str)
 }
-
 
 func Test_customize_tag_key(t *testing.T) {
 

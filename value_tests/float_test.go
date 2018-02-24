@@ -1,13 +1,13 @@
 package test
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
-	"testing"
+	"github.com/json-iterator/go"
 	"github.com/stretchr/testify/require"
 	"strconv"
-	"bytes"
-	"github.com/json-iterator/go"
-	"encoding/json"
+	"testing"
 )
 
 func Test_read_float(t *testing.T) {
@@ -49,7 +49,6 @@ func Test_read_float(t *testing.T) {
 		})
 	}
 }
-
 
 func Test_write_float32(t *testing.T) {
 	vals := []float32{0, 1, -1, 99, 0xff, 0xfff, 0xffff, 0xfffff, 0xffffff, 0x4ffffff, 0xfffffff,

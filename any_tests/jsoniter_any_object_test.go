@@ -3,8 +3,8 @@ package any_tests
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	"github.com/json-iterator/go"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_read_object_as_any(t *testing.T) {

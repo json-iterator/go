@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	"github.com/json-iterator/go"
-	"time"
+	"github.com/stretchr/testify/require"
 	"strings"
+	"time"
 )
 
 func Test_empty_object(t *testing.T) {

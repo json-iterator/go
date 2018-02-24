@@ -1,15 +1,15 @@
 package test
 
 import (
-	"testing"
-	"reflect"
-	"fmt"
-	"github.com/google/gofuzz"
-	"strings"
-	"github.com/json-iterator/go"
-	"encoding/json"
 	"bytes"
+	"encoding/json"
+	"fmt"
 	"github.com/davecgh/go-spew/spew"
+	"github.com/google/gofuzz"
+	"github.com/json-iterator/go"
+	"reflect"
+	"strings"
+	"testing"
 )
 
 var testCases []interface{}

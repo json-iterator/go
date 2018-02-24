@@ -3,9 +3,9 @@ package misc_tests
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/json-iterator/go"
 	"github.com/stretchr/testify/require"
 	"testing"
-	"github.com/json-iterator/go"
 )
 
 func Test_empty_array(t *testing.T) {

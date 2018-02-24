@@ -3,8 +3,8 @@ package test
 import (
 	"bytes"
 	"encoding/base64"
-	"strings"
 	"encoding/json"
+	"strings"
 )
 
 type StringMarshaler string

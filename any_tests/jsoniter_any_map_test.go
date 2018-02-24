@@ -1,9 +1,9 @@
 package any_tests
 
 import (
+	"github.com/json-iterator/go"
 	"github.com/stretchr/testify/require"
 	"testing"
-	"github.com/json-iterator/go"
 )
 
 func Test_wrap_map(t *testing.T) {

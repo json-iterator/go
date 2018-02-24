@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	"github.com/json-iterator/go"
+	"github.com/stretchr/testify/require"
 )
 
 var boolConvertMap = map[string]bool{

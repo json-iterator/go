@@ -2,10 +2,10 @@ package misc_tests
 
 import (
 	"encoding/json"
+	"github.com/json-iterator/go"
 	"github.com/stretchr/testify/require"
 	"strings"
 	"testing"
-	"github.com/json-iterator/go"
 )
 
 func Test_jsoniter_RawMessage(t *testing.T) {
@@ -45,18 +45,18 @@ func Test_marshal_invalid_json_raw_message(t *testing.T) {
 func Test_raw_message_memory_not_copied_issue(t *testing.T) {
 	jsonStream := `{"name":"xxxxx","bundle_id":"com.zonst.majiang","app_platform":"ios","app_category":"100103", "budget_day":1000,"bidding_min":1,"bidding_max":2,"bidding_type":"CPM", "freq":{"open":true,"type":"day","num":100},"speed":1, "targeting":{"vendor":{"open":true,"list":["zonst"]}, "geo_code":{"open":true,"list":["156110100"]},"app_category":{"open":true,"list":["100101"]}, "day_parting":{"open":true,"list":["100409","100410"]},"device_type":{"open":true,"list":["ipad"]}, "os_version":{"open":true,"list":[10]},"carrier":{"open":true,"list":["mobile"]}, "network":{"open":true,"list":["4G"]}},"url":{"tracking_imp_url":"http://www.baidu.com", "tracking_clk_url":"http://www.baidu.com","jump_url":"http://www.baidu.com","deep_link_url":"http://www.baidu.com"}}`
 	type IteratorObject struct {
-		Name        *string     `json:"name"`
-		BundleId    *string     `json:"bundle_id"`
-		AppCategory *string     `json:"app_category"`
-		AppPlatform *string     `json:"app_platform"`
-		BudgetDay   *float32    `json:"budget_day"`
-		BiddingMax  *float32    `json:"bidding_max"`
-		BiddingMin  *float32    `json:"bidding_min"`
-		BiddingType *string     `json:"bidding_type"`
+		Name        *string              `json:"name"`
+		BundleId    *string              `json:"bundle_id"`
+		AppCategory *string              `json:"app_category"`
+		AppPlatform *string              `json:"app_platform"`
+		BudgetDay   *float32             `json:"budget_day"`
+		BiddingMax  *float32             `json:"bidding_max"`
+		BiddingMin  *float32             `json:"bidding_min"`
+		BiddingType *string              `json:"bidding_type"`
 		Freq        *jsoniter.RawMessage `json:"freq"`
 		Targeting   *jsoniter.RawMessage `json:"targeting"`
 		Url         *jsoniter.RawMessage `json:"url"`
-		Speed       *int        `json:"speed" db:"speed"`
+		Speed       *int                 `json:"speed" db:"speed"`
 	}
 
 	obj := &IteratorObject{}

@@ -91,7 +91,6 @@ func (p *jsonMarshaler) UnmarshalJSON(input []byte) error {
 	return nil
 }
 
-
 type jsonMarshalerMap map[int]int
 
 func (p *jsonMarshalerMap) MarshalJSON() ([]byte, error) {
@@ -116,7 +115,6 @@ func (p *textMarshaler) UnmarshalText(input []byte) error {
 }
 
 type textMarshalerMap map[int]int
-
 
 func (p *textMarshalerMap) MarshalText() ([]byte, error) {
 	return []byte(`{}`), nil

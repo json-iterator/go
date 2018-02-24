@@ -1,10 +1,10 @@
 package test
 
 import (
-	"strings"
-	"encoding/base64"
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
+	"strings"
 )
 
 type structMarshaler struct {

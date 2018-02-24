@@ -1,13 +1,13 @@
 package test
 
 import (
-	"unsafe"
-	"strconv"
-	"testing"
-	"github.com/stretchr/testify/require"
 	"github.com/json-iterator/go"
+	"github.com/stretchr/testify/require"
 	"github.com/v2pro/plz/reflect2"
 	"reflect"
+	"strconv"
+	"testing"
+	"unsafe"
 )
 
 type TestObject1 struct {

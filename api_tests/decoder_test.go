@@ -2,11 +2,11 @@ package test
 
 import (
 	"bytes"
-	"github.com/stretchr/testify/require"
-	"testing"
-	"github.com/json-iterator/go"
-	"io/ioutil"
 	"encoding/json"
+	"github.com/json-iterator/go"
+	"github.com/stretchr/testify/require"
+	"io/ioutil"
+	"testing"
 )
 
 func Test_disallowUnknownFields(t *testing.T) {
@@ -17,7 +17,6 @@ func Test_disallowUnknownFields(t *testing.T) {
 	decoder.DisallowUnknownFields()
 	should.Error(decoder.Decode(&obj))
 }
-
 
 func Test_new_decoder(t *testing.T) {
 	should := require.New(t)

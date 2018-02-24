@@ -1,8 +1,8 @@
 package test
 
 import (
-	"math/big"
 	"encoding/json"
+	"math/big"
 )
 
 func init() {
@@ -26,16 +26,16 @@ func init() {
 		},
 		nilMap,
 		&nilMap,
-		map[string]*json.RawMessage{"hello":pRawMessage(json.RawMessage("[]"))},
+		map[string]*json.RawMessage{"hello": pRawMessage(json.RawMessage("[]"))},
 	)
 	unmarshalCases = append(unmarshalCases, unmarshalCase{
-		ptr: (*map[string]string)(nil),
+		ptr:   (*map[string]string)(nil),
 		input: `{"k\"ey": "val"}`,
 	}, unmarshalCase{
-		ptr: (*map[string]string)(nil),
+		ptr:   (*map[string]string)(nil),
 		input: `null`,
 	}, unmarshalCase{
-		ptr: (*map[string]*json.RawMessage)(nil),
+		ptr:   (*map[string]*json.RawMessage)(nil),
 		input: "{\"test\":[{\"key\":\"value\"}]}",
 	})
 }

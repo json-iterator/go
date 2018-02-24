@@ -1,8 +1,8 @@
 package test
 
 import (
-	"strings"
 	"encoding"
+	"strings"
 )
 
 func init() {
@@ -25,7 +25,6 @@ func (k *stringKeyType) UnmarshalText(text []byte) error {
 
 var _ encoding.TextMarshaler = stringKeyType("")
 var _ encoding.TextUnmarshaler = new(stringKeyType)
-
 
 type structKeyType struct {
 	X string

@@ -2,10 +2,10 @@ package jsoniter
 
 import (
 	"encoding/json"
-	"io"
-	"unsafe"
 	"github.com/v2pro/plz/reflect2"
+	"io"
 	"sync"
+	"unsafe"
 )
 
 // Config customize how the API should behave.

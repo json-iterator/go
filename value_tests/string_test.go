@@ -1,9 +1,9 @@
 package test
 
 import (
-	"testing"
-	"github.com/json-iterator/go"
 	"encoding/json"
+	"github.com/json-iterator/go"
+	"testing"
 	"unicode/utf8"
 )
 

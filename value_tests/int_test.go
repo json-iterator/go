@@ -1,12 +1,12 @@
 package test
 
 import (
+	"bytes"
+	"fmt"
+	"github.com/json-iterator/go"
 	"github.com/stretchr/testify/require"
 	"strconv"
-	"fmt"
 	"testing"
-	"bytes"
-	"github.com/json-iterator/go"
 )
 
 func init() {
@@ -157,7 +157,6 @@ func Test_read_int64(t *testing.T) {
 		})
 	}
 }
-
 
 func Test_write_uint8(t *testing.T) {
 	vals := []uint8{0, 1, 11, 111, 255}

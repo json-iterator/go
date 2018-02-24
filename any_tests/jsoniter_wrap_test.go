@@ -3,8 +3,8 @@ package any_tests
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	"github.com/json-iterator/go"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_wrap_and_valuetype_everything(t *testing.T) {

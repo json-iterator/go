@@ -1,8 +1,8 @@
 package test
 
 import (
-	"encoding/json"
 	"encoding"
+	"encoding/json"
 )
 
 func init() {
@@ -17,20 +17,20 @@ func init() {
 		tmOfStructInt{},
 		&tm2,
 		map[tmOfStruct]int{
-			tmOfStruct{}: 100,
+			{}: 100,
 		},
 		map[*tmOfStruct]int{
-			&tmOfStruct{}: 100,
+			{}: 100,
 		},
 		map[encoding.TextMarshaler]int{
 			tm1: 100,
 		},
 	)
 	unmarshalCases = append(unmarshalCases, unmarshalCase{
-		ptr: (*tmOfMap)(nil),
+		ptr:   (*tmOfMap)(nil),
 		input: `"{1:2}"`,
 	}, unmarshalCase{
-		ptr: (*tmOfMapPtr)(nil),
+		ptr:   (*tmOfMapPtr)(nil),
 		input: `"{1:2}"`,
 	})
 }
@@ -46,7 +46,6 @@ func (q jmOfStruct) MarshalJSON() ([]byte, error) {
 func (q *jmOfStruct) UnmarshalJSON(value []byte) error {
 	return nil
 }
-
 
 type tmOfStruct struct {
 	F2 chan []byte
