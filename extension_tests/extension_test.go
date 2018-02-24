@@ -6,6 +6,8 @@ import (
 	"testing"
 	"github.com/stretchr/testify/require"
 	"github.com/json-iterator/go"
+	"github.com/v2pro/plz/reflect2"
+	"reflect"
 )
 
 type TestObject1 struct {
@@ -44,6 +46,53 @@ func Test_customize_field_by_extension(t *testing.T) {
 	str, err := cfg.MarshalToString(obj)
 	should.Nil(err)
 	should.Equal(`{"field-1":100}`, str)
+}
+
+func Test_customize_map_key_encoder(t *testing.T) {
+	should := require.New(t)
+	cfg := jsoniter.Config{}.Froze()
+	cfg.RegisterExtension(&testMapKeyExtension{})
+	m := map[int]int{1: 2}
+	output, err := cfg.MarshalToString(m)
+	should.NoError(err)
+	should.Equal(`{"2":2}`, output)
+	m = map[int]int{}
+	should.NoError(cfg.UnmarshalFromString(output, &m))
+	should.Equal(map[int]int{1: 2}, m)
+}
+
+type testMapKeyExtension struct {
+	jsoniter.DummyExtension
+}
+
+func (extension *testMapKeyExtension) CreateMapKeyEncoder(typ reflect2.Type) jsoniter.ValEncoder {
+	if typ.Kind() == reflect.Int {
+		return &funcEncoder{
+			fun: func(ptr unsafe.Pointer, stream *jsoniter.Stream) {
+				stream.WriteRaw(`"`)
+				stream.WriteInt(*(*int)(ptr) + 1)
+				stream.WriteRaw(`"`)
+			},
+		}
+	}
+	return nil
+}
+
+func (extension *testMapKeyExtension) CreateMapKeyDecoder(typ reflect2.Type) jsoniter.ValDecoder {
+	if typ.Kind() == reflect.Int {
+		return &funcDecoder{
+			fun: func(ptr unsafe.Pointer, iter *jsoniter.Iterator) {
+				i, err := strconv.Atoi(iter.ReadString())
+				if err != nil {
+					iter.ReportError("read map key", err.Error())
+					return
+				}
+				i--
+				*(*int)(ptr) = i
+			},
+		}
+	}
+	return nil
 }
 
 type funcDecoder struct {
