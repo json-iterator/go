@@ -357,3 +357,35 @@ func Test_bad_case(t *testing.T) {
 	should := require.New(t)
 	should.Nil(err)
 }
+
+func Test_null_to_string(t *testing.T) {
+	should := require.New(t)
+	body := []byte(`null`)
+	var message string
+	err := jsoniter.Unmarshal(body, &message)
+	should.NoError(err)
+}
+
+func Test_null_to_int(t *testing.T) {
+	should := require.New(t)
+	body := []byte(`null`)
+	var message int
+	err := jsoniter.Unmarshal(body, &message)
+	should.NoError(err)
+}
+
+func Test_null_to_float32(t *testing.T) {
+	should := require.New(t)
+	body := []byte(`null`)
+	var message float32
+	err := jsoniter.Unmarshal(body, &message)
+	should.NoError(err)
+}
+
+func Test_null_to_float64(t *testing.T) {
+	should := require.New(t)
+	body := []byte(`null`)
+	var message float64
+	err := jsoniter.Unmarshal(body, &message)
+	should.NoError(err)
+}

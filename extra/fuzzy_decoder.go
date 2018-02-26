@@ -183,6 +183,9 @@ func (decoder *fuzzyStringDecoder) Decode(ptr unsafe.Pointer, iter *jsoniter.Ite
 		*((*string)(ptr)) = string(number)
 	case jsoniter.StringValue:
 		*((*string)(ptr)) = iter.ReadString()
+	case jsoniter.NilValue:
+		iter.Skip()
+		*((*string)(ptr)) = ""
 	default:
 		iter.ReportError("fuzzyStringDecoder", "not number or string")
 	}
@@ -208,6 +211,9 @@ func (decoder *fuzzyIntegerDecoder) Decode(ptr unsafe.Pointer, iter *jsoniter.It
 		} else {
 			str = "0"
 		}
+	case jsoniter.NilValue:
+		iter.Skip()
+		str = "0"
 	default:
 		iter.ReportError("fuzzyIntegerDecoder", "not number or string")
 	}
@@ -244,6 +250,9 @@ func (decoder *fuzzyFloat32Decoder) Decode(ptr unsafe.Pointer, iter *jsoniter.It
 		} else {
 			*((*float32)(ptr)) = 0
 		}
+	case jsoniter.NilValue:
+		iter.Skip()
+		*((*float32)(ptr)) = 0
 	default:
 		iter.ReportError("fuzzyFloat32Decoder", "not number or string")
 	}
@@ -273,7 +282,10 @@ func (decoder *fuzzyFloat64Decoder) Decode(ptr unsafe.Pointer, iter *jsoniter.It
 		} else {
 			*((*float64)(ptr)) = 0
 		}
+	case jsoniter.NilValue:
+		iter.Skip()
+		*((*float64)(ptr)) = 0
 	default:
-		iter.ReportError("fuzzyFloat32Decoder", "not number or string")
+		iter.ReportError("fuzzyFloat64Decoder", "not number or string")
 	}
 }
