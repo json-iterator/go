@@ -104,7 +104,7 @@ func (cfg *frozenConfig) getEncoderFromCache(cacheKey uintptr) ValEncoder {
 	return nil
 }
 
-var cfgCache = &sync.Map{}
+var cfgCache = concurrent.NewMap()
 
 func getFrozenConfigFromCache(cfg Config) *frozenConfig {
 	obj, found := cfgCache.Load(cfg)
