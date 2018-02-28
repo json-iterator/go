@@ -3,7 +3,7 @@ package test
 import (
 	"github.com/json-iterator/go"
 	"github.com/stretchr/testify/require"
-	"github.com/v2pro/plz/reflect2"
+	"github.com/modern-go/reflect2"
 	"reflect"
 	"strconv"
 	"testing"

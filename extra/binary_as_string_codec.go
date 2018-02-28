@@ -4,7 +4,7 @@ import (
 	"github.com/json-iterator/go"
 	"unsafe"
 	"unicode/utf8"
-	"github.com/v2pro/plz/reflect2"
+	"github.com/modern-go/reflect2"
 )
 
 // safeSet holds the value true if the ASCII character with the given array
