@@ -7,6 +7,7 @@ import (
 	"sync"
 	"unsafe"
 	"github.com/modern-go/concurrent"
+	"reflect"
 )
 
 // Config customize how the API should behave.
@@ -192,6 +193,11 @@ func (cfg *frozenConfig) validateJsonRawMessage(extension EncoderExtension) {
 
 func (cfg *frozenConfig) useNumber(extension DecoderExtension) {
 	extension[reflect2.TypeOfPtr((*interface{})(nil)).Elem()] = &funcDecoder{func(ptr unsafe.Pointer, iter *Iterator) {
+		exitingValue := *((*interface{})(ptr))
+		if exitingValue != nil && reflect.TypeOf(exitingValue).Kind() == reflect.Ptr {
+			iter.ReadVal(exitingValue)
+			return
+		}
 		if iter.WhatIsNext() == NumberValue {
 			*((*interface{})(ptr)) = json.Number(iter.readNumberAsString())
 		} else {

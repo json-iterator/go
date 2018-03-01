@@ -130,3 +130,20 @@ func Test_reader_and_load_more(t *testing.T) {
 	obj := TestObject{}
 	should.Nil(decoder.Decode(&obj))
 }
+
+func Test_unmarshal_into_existing_value(t *testing.T) {
+	should := require.New(t)
+	type TestObject struct {
+		Field1 int
+		Field2 interface{}
+	}
+	var obj TestObject
+	m := map[string]interface{}{}
+	obj.Field2 = &m
+	cfg := jsoniter.Config{UseNumber: true}.Froze()
+	err := cfg.Unmarshal([]byte(`{"Field1":1,"Field2":{"k":"v"}}`), &obj)
+	should.NoError(err)
+	should.Equal(map[string]interface{}{
+		"k": "v",
+	}, m)
+}
