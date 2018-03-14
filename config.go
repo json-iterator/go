@@ -40,6 +40,8 @@ type API interface {
 	NewDecoder(reader io.Reader) *Decoder
 	Valid(data []byte) bool
 	RegisterExtension(extension Extension)
+	DecoderOf(typ reflect2.Type) ValDecoder
+	EncoderOf(typ reflect2.Type) ValEncoder
 }
 
 // ConfigDefault the default API
