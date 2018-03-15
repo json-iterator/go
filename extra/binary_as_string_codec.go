@@ -2,9 +2,9 @@ package extra
 
 import (
 	"github.com/json-iterator/go"
-	"unsafe"
-	"unicode/utf8"
 	"github.com/modern-go/reflect2"
+	"unicode/utf8"
+	"unsafe"
 )
 
 // safeSet holds the value true if the ASCII character with the given array
@@ -171,18 +171,18 @@ func (codec *binaryAsStringCodec) Encode(ptr unsafe.Pointer, stream *jsoniter.St
 func readHex(iter *jsoniter.Iterator, b1, b2 byte) byte {
 	var ret byte
 	if b1 >= '0' && b1 <= '9' {
-		ret = b1-'0'
+		ret = b1 - '0'
 	} else if b1 >= 'a' && b1 <= 'f' {
-		ret = b1-'a'+10
+		ret = b1 - 'a' + 10
 	} else {
 		iter.ReportError("read hex", "expects 0~9 or a~f, but found "+string([]byte{b1}))
 		return 0
 	}
 	ret = ret * 16
 	if b2 >= '0' && b2 <= '9' {
-		ret = b2-'0'
+		ret = b2 - '0'
 	} else if b2 >= 'a' && b2 <= 'f' {
-		ret = b2-'a'+10
+		ret = b2 - 'a' + 10
 	} else {
 		iter.ReportError("read hex", "expects 0~9 or a~f, but found "+string([]byte{b2}))
 		return 0

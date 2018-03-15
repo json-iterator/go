@@ -31,3 +31,14 @@ func Test_read_map_with_reader(t *testing.T) {
 	should.Equal(m2, m1)
 	should.Equal("1.0.76", m1["note"].(map[string]interface{})["CoreServices"].(map[string]interface{})["version_name"])
 }
+
+func Test_map_eface_of_eface(t *testing.T) {
+	should := require.New(t)
+	json := jsoniter.ConfigCompatibleWithStandardLibrary
+	output, err := json.MarshalToString(map[interface{}]interface{}{
+		"1": 2,
+		3:   "4",
+	})
+	should.NoError(err)
+	should.Equal(`{"1":2,"3":"4"}`, output)
+}
