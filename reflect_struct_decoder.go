@@ -31,6 +31,11 @@ func decoderOfStruct(ctx *ctx, typ reflect2.Type) ValDecoder {
 	for k, binding := range bindings {
 		fields[k] = binding.Decoder.(*structFieldDecoder)
 	}
+	for k, binding := range bindings {
+		if _, found := fields[strings.ToLower(k)]; !found {
+			fields[strings.ToLower(k)] = binding.Decoder.(*structFieldDecoder)
+		}
+	}
 	return createStructDecoder(ctx, typ, fields)
 }
 

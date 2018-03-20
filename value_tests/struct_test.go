@@ -63,6 +63,21 @@ func init() {
 			d *time.Timer
 		})(nil),
 		input: `{"a": 444, "b":"bad", "C":256, "d":{"not":"a timer"}}`,
+	}, unmarshalCase{
+		ptr: (*struct {
+			A string
+			B string
+			C string
+			D string
+			E string
+			F string
+			G string
+			H string
+			I string
+			J string
+			K string
+		})(nil),
+		input: `{"a":"1","b":"2","c":"3","d":"4","e":"5","f":"6","g":"7","h":"8","i":"9","j":"10","k":"11"}`,
 	})
 	marshalCases = append(marshalCases,
 		struct {
