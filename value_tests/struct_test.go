@@ -78,6 +78,16 @@ func init() {
 			K string
 		})(nil),
 		input: `{"a":"1","b":"2","c":"3","d":"4","e":"5","f":"6","g":"7","h":"8","i":"9","j":"10","k":"11"}`,
+	}, unmarshalCase{
+		ptr: (*struct {
+			T float64 `json:"T"`
+		})(nil),
+		input: `{"t":10.0}`,
+	}, unmarshalCase{
+		ptr: (*struct {
+			T float64 `json:"T"`
+		})(nil),
+		input: `{"T":10.0}`,
 	})
 	marshalCases = append(marshalCases,
 		struct {
