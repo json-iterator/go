@@ -11,6 +11,9 @@ import (
 
 func decoderOfMap(ctx *ctx, typ reflect2.Type) ValDecoder {
 	mapType := typ.(*reflect2.UnsafeMapType)
+	if mapType.Key().Kind() == reflect.String && mapType.Elem().Kind() == reflect.String {
+		return &mapStringStringDecoder{}
+	}
 	keyDecoder := decoderOfMapKey(ctx.append("[mapKey]"), mapType.Key())
 	elemDecoder := decoderOfType(ctx.append("[mapElem]"), mapType.Elem())
 	return &mapDecoder{
