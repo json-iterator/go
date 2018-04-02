@@ -494,12 +494,15 @@ func (decoder *generalStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) 
 	if !iter.readObjectStart() {
 		return
 	}
-	decoder.decodeOneField(ptr, iter)
-	for iter.nextToken() == ',' {
+	var c byte
+	for c = ','; c == ','; c = iter.nextToken() {
 		decoder.decodeOneField(ptr, iter)
 	}
 	if iter.Error != nil && iter.Error != io.EOF {
 		iter.Error = fmt.Errorf("%v.%s", decoder.typ, iter.Error.Error())
+	}
+	if c != '}' {
+		iter.ReportError("struct Decode", `expect }, but found `+string([]byte{c}))
 	}
 }
 
