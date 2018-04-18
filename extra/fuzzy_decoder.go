@@ -217,6 +217,9 @@ func (decoder *fuzzyIntegerDecoder) Decode(ptr unsafe.Pointer, iter *jsoniter.It
 	default:
 		iter.ReportError("fuzzyIntegerDecoder", "not number or string")
 	}
+	if len(str) == 0 {
+		str = "0"
+	}
 	newIter := iter.Pool().BorrowIterator([]byte(str))
 	defer iter.Pool().ReturnIterator(newIter)
 	isFloat := strings.IndexByte(str, '.') != -1

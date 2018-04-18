@@ -37,6 +37,8 @@ func Test_any_to_int64(t *testing.T) {
 	should.Equal(int64(10), val)
 	should.Nil(jsoniter.UnmarshalFromString(`10`, &val))
 	should.Equal(int64(10), val)
+	should.Nil(jsoniter.UnmarshalFromString(`""`, &val))
+	should.Equal(int64(0), val)
 
 	// bool part
 	should.Nil(jsoniter.UnmarshalFromString(`false`, &val))
