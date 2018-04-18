@@ -88,6 +88,11 @@ func init() {
 			T float64 `json:"T"`
 		})(nil),
 		input: `{"T":10.0}`,
+	}, unmarshalCase{
+		ptr: (*struct {
+			T float64 `json:"t"`
+		})(nil),
+		input: `{"T":10.0}`,
 	})
 	marshalCases = append(marshalCases,
 		struct {
