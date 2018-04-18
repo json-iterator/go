@@ -56,3 +56,9 @@ func Test_use_number(t *testing.T) {
 	should.Nil(decoder2.Decode(&obj2))
 	should.Equal(json.Number("123"), obj2)
 }
+
+func Test_decoder_more(t *testing.T) {
+	should := require.New(t)
+	decoder := jsoniter.NewDecoder(bytes.NewBufferString("abcde"))
+	should.True(decoder.More())
+}
