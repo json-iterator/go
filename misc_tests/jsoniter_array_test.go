@@ -3,9 +3,10 @@ package misc_tests
 import (
 	"bytes"
 	"encoding/json"
+	"testing"
+
 	"github.com/json-iterator/go"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func Test_empty_array(t *testing.T) {
@@ -164,6 +165,17 @@ func Test_decode_byte_array_from_base64(t *testing.T) {
 	should.Nil(err)
 	should.Equal([]byte{1, 2, 3}, data)
 	err = jsoniter.Unmarshal([]byte(`"AQID"`), &data)
+	should.Nil(err)
+	should.Equal([]byte{1, 2, 3}, data)
+}
+
+func Test_decode_byte_array_from_base64_with_newlines(t *testing.T) {
+	should := require.New(t)
+	data := []byte{}
+	err := json.Unmarshal([]byte(`"A\rQ\nID"`), &data)
+	should.Nil(err)
+	should.Equal([]byte{1, 2, 3}, data)
+	err = jsoniter.Unmarshal([]byte(`"A\rQ\nID"`), &data)
 	should.Nil(err)
 	should.Equal([]byte{1, 2, 3}, data)
 }
