@@ -14,6 +14,7 @@ import (
 // The API is created from Config by Froze.
 type Config struct {
 	IndentionStep                 int
+	UseTabs                       bool
 	MarshalFloatWith6Digits       bool
 	EscapeHTML                    bool
 	SortMapKeys                   bool
@@ -67,6 +68,7 @@ type frozenConfig struct {
 	configBeforeFrozen            Config
 	sortMapKeys                   bool
 	indentionStep                 int
+	useTabs                       bool
 	objectFieldMustBeSimpleString bool
 	onlyTaggedField               bool
 	disallowUnknownFields         bool
@@ -125,6 +127,7 @@ func (cfg Config) Froze() API {
 	api := &frozenConfig{
 		sortMapKeys:                   cfg.SortMapKeys,
 		indentionStep:                 cfg.IndentionStep,
+		useTabs:                       cfg.UseTabs,
 		objectFieldMustBeSimpleString: cfg.ObjectFieldMustBeSimpleString,
 		onlyTaggedField:               cfg.OnlyTaggedField,
 		disallowUnknownFields:         cfg.DisallowUnknownFields,
@@ -300,16 +303,21 @@ func (cfg *frozenConfig) Marshal(v interface{}) ([]byte, error) {
 }
 
 func (cfg *frozenConfig) MarshalIndent(v interface{}, prefix, indent string) ([]byte, error) {
+	var useTabs bool
 	if prefix != "" {
 		panic("prefix is not supported")
 	}
 	for _, r := range indent {
-		if r != ' ' {
+		if r != ' ' && r != '\t' {
 			panic("indent can only be space")
+		}
+		if r == '\t' {
+			useTabs = true
 		}
 	}
 	newCfg := cfg.configBeforeFrozen
 	newCfg.IndentionStep = len(indent)
+	newCfg.UseTabs = useTabs
 	return newCfg.frozeWithCacheReuse().Marshal(v)
 }
 

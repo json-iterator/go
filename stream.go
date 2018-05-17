@@ -206,6 +206,10 @@ func (stream *Stream) writeIndention(delta int) {
 	stream.writeByte('\n')
 	toWrite := stream.indention - delta
 	for i := 0; i < toWrite; i++ {
-		stream.buf = append(stream.buf, ' ')
+		if !stream.cfg.useTabs {
+			stream.buf = append(stream.buf, ' ')
+		} else {
+			stream.buf = append(stream.buf, '\t')
+		}
 	}
 }
