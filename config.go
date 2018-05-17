@@ -307,9 +307,13 @@ func (cfg *frozenConfig) MarshalIndent(v interface{}, prefix, indent string) ([]
 	if prefix != "" {
 		panic("prefix is not supported")
 	}
+	// some rudimentary error checking
 	for _, r := range indent {
 		if r != ' ' && r != '\t' {
-			panic("indent can only be space")
+			panic("indent can only be space or tabs")
+		}
+		if r == ' ' && useTabs {
+			panic("indent cannot be mixed space and tabs")
 		}
 		if r == '\t' {
 			useTabs = true
