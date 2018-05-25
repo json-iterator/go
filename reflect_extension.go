@@ -41,6 +41,7 @@ type Binding struct {
 	ToNames   []string
 	Encoder   ValEncoder
 	Decoder   ValDecoder
+	IgnoreOverride bool
 }
 
 // Extension the one for all SPI. Customize encoding/decoding by specifying alternate encoder/decoder.
@@ -363,7 +364,7 @@ func describeStruct(ctx *ctx, typ reflect2.Type) *StructDescriptor {
 				}
 			}
 		}
-		fieldNames := calcFieldNames(field.Name(), tagParts[0], tag)
+		fieldNames, ignoreNameOverrides := calcFieldNames(field.Name(), tagParts[0], tag)
 		fieldCacheKey := fmt.Sprintf("%s/%s", typ.String(), field.Name())
 		decoder := fieldDecoders[fieldCacheKey]
 		if decoder == nil {
@@ -379,6 +380,7 @@ func describeStruct(ctx *ctx, typ reflect2.Type) *StructDescriptor {
 			ToNames:   fieldNames,
 			Decoder:   decoder,
 			Encoder:   encoder,
+			IgnoreOverride: ignoreNameOverrides,
 		}
 		binding.levels = []int{i}
 		bindings = append(bindings, binding)
@@ -450,22 +452,26 @@ func processTags(structDescriptor *StructDescriptor, cfg *frozenConfig) {
 	}
 }
 
-func calcFieldNames(originalFieldName string, tagProvidedFieldName string, wholeTag string) []string {
+func calcFieldNames(originalFieldName string, tagProvidedFieldName string, wholeTag string) ([]string, bool) {
+	var ignoreNamingStrategy bool // conditions for which we should ignore custom naming strategy
 	// ignore?
 	if wholeTag == "-" {
-		return []string{}
+		ignoreNamingStrategy = true
+		return []string{}, ignoreNamingStrategy
 	}
 	// rename?
 	var fieldNames []string
 	if tagProvidedFieldName == "" {
 		fieldNames = []string{originalFieldName}
 	} else {
+		ignoreNamingStrategy = true
 		fieldNames = []string{tagProvidedFieldName}
+
 	}
 	// private?
 	isNotExported := unicode.IsLower(rune(originalFieldName[0]))
 	if isNotExported {
 		fieldNames = []string{}
 	}
-	return fieldNames
+	return fieldNames, ignoreNamingStrategy
 }

@@ -17,8 +17,10 @@ type namingStrategyExtension struct {
 
 func (extension *namingStrategyExtension) UpdateStructDescriptor(structDescriptor *jsoniter.StructDescriptor) {
 	for _, binding := range structDescriptor.Fields {
-		binding.ToNames = []string{extension.translate(binding.Field.Name())}
-		binding.FromNames = []string{extension.translate(binding.Field.Name())}
+		if !binding.IgnoreOverride {
+			binding.ToNames = []string{extension.translate(binding.Field.Name())}
+			binding.FromNames = []string{extension.translate(binding.Field.Name())}
+		}
 	}
 }
 
