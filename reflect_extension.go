@@ -35,12 +35,12 @@ func (structDescriptor *StructDescriptor) GetField(fieldName string) *Binding {
 
 // Binding describe how should we encode/decode the struct field
 type Binding struct {
-	levels    []int
-	Field     reflect2.StructField
-	FromNames []string
-	ToNames   []string
-	Encoder   ValEncoder
-	Decoder   ValDecoder
+	levels         []int
+	Field          reflect2.StructField
+	FromNames      []string
+	ToNames        []string
+	Encoder        ValEncoder
+	Decoder        ValDecoder
 	IgnoreOverride bool
 }
 
@@ -375,11 +375,11 @@ func describeStruct(ctx *ctx, typ reflect2.Type) *StructDescriptor {
 			encoder = encoderOfType(ctx.append(field.Name()), field.Type())
 		}
 		binding := &Binding{
-			Field:     field,
-			FromNames: fieldNames,
-			ToNames:   fieldNames,
-			Decoder:   decoder,
-			Encoder:   encoder,
+			Field:          field,
+			FromNames:      fieldNames,
+			ToNames:        fieldNames,
+			Decoder:        decoder,
+			Encoder:        encoder,
 			IgnoreOverride: ignoreNameOverrides,
 		}
 		binding.levels = []int{i}
