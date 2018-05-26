@@ -20,5 +20,8 @@ func init() {
 	}, unmarshalCase{
 		ptr:   (*[]byte)(nil),
 		input: `"aGVsbG8="`,
+	}, unmarshalCase{
+		ptr:   (*[]byte)(nil),
+		input: `"c3ViamVjdHM\/X2Q9MQ=="`,
 	})
 }
