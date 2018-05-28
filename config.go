@@ -48,6 +48,7 @@ type API interface {
 // ConfigDefault the default API
 var ConfigDefault = Config{
 	EscapeHTML: true,
+	IndentionChar: ' ',
 }.Froze()
 
 // ConfigCompatibleWithStandardLibrary tries to be 100% compatible with standard library behavior
@@ -55,6 +56,7 @@ var ConfigCompatibleWithStandardLibrary = Config{
 	EscapeHTML:             true,
 	SortMapKeys:            true,
 	ValidateJsonRawMessage: true,
+	IndentionChar: ' ',
 }.Froze()
 
 // ConfigFastest marshals float with only 6 digits precision
@@ -62,6 +64,7 @@ var ConfigFastest = Config{
 	EscapeHTML:                    false,
 	MarshalFloatWith6Digits:       true, // will lose precession
 	ObjectFieldMustBeSimpleString: true, // do not unescape object field
+	IndentionChar: ' ',
 }.Froze()
 
 type frozenConfig struct {
@@ -309,7 +312,7 @@ func (cfg *frozenConfig) MarshalIndent(v interface{}, prefix, indent string) ([]
 	}
 	// some rudimentary error checking
 	newCfg := cfg.configBeforeFrozen
-	cfg.indentionChar = ' '
+	newCfg.IndentionChar = ' '
 	for _, r := range indent {
 		if r != ' ' && r != '\t' {
 			panic("indent can only be space or tabs")
