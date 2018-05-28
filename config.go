@@ -322,7 +322,7 @@ func (cfg *frozenConfig) MarshalIndent(v interface{}, prefix, indent string) ([]
 		}
 		if r == '\t' {
 			useTabs = true
-			cfg.indentionChar = '\t'
+			newCfg.IndentionChar = '\t'
 		}
 	}
 
