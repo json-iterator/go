@@ -432,7 +432,8 @@ func processTags(structDescriptor *StructDescriptor, cfg *frozenConfig) {
 	for _, binding := range structDescriptor.Fields {
 		shouldOmitEmpty := false
 		tagParts := strings.Split(binding.Field.Tag().Get(cfg.getTagKey()), ",")
-		for _, tagPart := range tagParts[1:] {
+
+		for _, tagPart := range tagParts[0:] {
 			if tagPart == "omitempty" {
 				shouldOmitEmpty = true
 			} else if tagPart == "string" {
