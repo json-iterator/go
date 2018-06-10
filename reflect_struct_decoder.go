@@ -2,10 +2,11 @@ package jsoniter
 
 import (
 	"fmt"
-	"github.com/modern-go/reflect2"
 	"io"
 	"strings"
 	"unsafe"
+
+	"github.com/modern-go/reflect2"
 )
 
 func decoderOfStruct(ctx *ctx, typ reflect2.Type) ValDecoder {
@@ -51,7 +52,7 @@ func createStructDecoder(ctx *ctx, typ reflect2.Type, fields map[string]*structF
 		return &skipObjectDecoder{typ}
 	case 1:
 		for fieldName, fieldDecoder := range fields {
-			fieldHash := calcHash(fieldName)
+			fieldHash := calcHash(fieldName, ctx.caseSensitive())
 			_, known := knownHash[fieldHash]
 			if known {
 				return &generalStructDecoder{typ, fields, false}
@@ -65,7 +66,7 @@ func createStructDecoder(ctx *ctx, typ reflect2.Type, fields map[string]*structF
 		var fieldDecoder1 *structFieldDecoder
 		var fieldDecoder2 *structFieldDecoder
 		for fieldName, fieldDecoder := range fields {
-			fieldHash := calcHash(fieldName)
+			fieldHash := calcHash(fieldName, ctx.caseSensitive())
 			_, known := knownHash[fieldHash]
 			if known {
 				return &generalStructDecoder{typ, fields, false}
@@ -88,7 +89,7 @@ func createStructDecoder(ctx *ctx, typ reflect2.Type, fields map[string]*structF
 		var fieldDecoder2 *structFieldDecoder
 		var fieldDecoder3 *structFieldDecoder
 		for fieldName, fieldDecoder := range fields {
-			fieldHash := calcHash(fieldName)
+			fieldHash := calcHash(fieldName, ctx.caseSensitive())
 			_, known := knownHash[fieldHash]
 			if known {
 				return &generalStructDecoder{typ, fields, false}
@@ -119,7 +120,7 @@ func createStructDecoder(ctx *ctx, typ reflect2.Type, fields map[string]*structF
 		var fieldDecoder3 *structFieldDecoder
 		var fieldDecoder4 *structFieldDecoder
 		for fieldName, fieldDecoder := range fields {
-			fieldHash := calcHash(fieldName)
+			fieldHash := calcHash(fieldName, ctx.caseSensitive())
 			_, known := knownHash[fieldHash]
 			if known {
 				return &generalStructDecoder{typ, fields, false}
@@ -156,7 +157,7 @@ func createStructDecoder(ctx *ctx, typ reflect2.Type, fields map[string]*structF
 		var fieldDecoder4 *structFieldDecoder
 		var fieldDecoder5 *structFieldDecoder
 		for fieldName, fieldDecoder := range fields {
-			fieldHash := calcHash(fieldName)
+			fieldHash := calcHash(fieldName, ctx.caseSensitive())
 			_, known := knownHash[fieldHash]
 			if known {
 				return &generalStructDecoder{typ, fields, false}
@@ -199,7 +200,7 @@ func createStructDecoder(ctx *ctx, typ reflect2.Type, fields map[string]*structF
 		var fieldDecoder5 *structFieldDecoder
 		var fieldDecoder6 *structFieldDecoder
 		for fieldName, fieldDecoder := range fields {
-			fieldHash := calcHash(fieldName)
+			fieldHash := calcHash(fieldName, ctx.caseSensitive())
 			_, known := knownHash[fieldHash]
 			if known {
 				return &generalStructDecoder{typ, fields, false}
@@ -248,7 +249,7 @@ func createStructDecoder(ctx *ctx, typ reflect2.Type, fields map[string]*structF
 		var fieldDecoder6 *structFieldDecoder
 		var fieldDecoder7 *structFieldDecoder
 		for fieldName, fieldDecoder := range fields {
-			fieldHash := calcHash(fieldName)
+			fieldHash := calcHash(fieldName, ctx.caseSensitive())
 			_, known := knownHash[fieldHash]
 			if known {
 				return &generalStructDecoder{typ, fields, false}
@@ -303,7 +304,7 @@ func createStructDecoder(ctx *ctx, typ reflect2.Type, fields map[string]*structF
 		var fieldDecoder7 *structFieldDecoder
 		var fieldDecoder8 *structFieldDecoder
 		for fieldName, fieldDecoder := range fields {
-			fieldHash := calcHash(fieldName)
+			fieldHash := calcHash(fieldName, ctx.caseSensitive())
 			_, known := knownHash[fieldHash]
 			if known {
 				return &generalStructDecoder{typ, fields, false}
@@ -364,7 +365,7 @@ func createStructDecoder(ctx *ctx, typ reflect2.Type, fields map[string]*structF
 		var fieldDecoder8 *structFieldDecoder
 		var fieldDecoder9 *structFieldDecoder
 		for fieldName, fieldDecoder := range fields {
-			fieldHash := calcHash(fieldName)
+			fieldHash := calcHash(fieldName, ctx.caseSensitive())
 			_, known := knownHash[fieldHash]
 			if known {
 				return &generalStructDecoder{typ, fields, false}
@@ -431,7 +432,7 @@ func createStructDecoder(ctx *ctx, typ reflect2.Type, fields map[string]*structF
 		var fieldDecoder9 *structFieldDecoder
 		var fieldDecoder10 *structFieldDecoder
 		for fieldName, fieldDecoder := range fields {
-			fieldHash := calcHash(fieldName)
+			fieldHash := calcHash(fieldName, ctx.caseSensitive())
 			_, known := knownHash[fieldHash]
 			if known {
 				return &generalStructDecoder{typ, fields, false}
