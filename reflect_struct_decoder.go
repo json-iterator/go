@@ -32,11 +32,15 @@ func decoderOfStruct(ctx *ctx, typ reflect2.Type) ValDecoder {
 	for k, binding := range bindings {
 		fields[k] = binding.Decoder.(*structFieldDecoder)
 	}
-	for k, binding := range bindings {
-		if _, found := fields[strings.ToLower(k)]; !found {
-			fields[strings.ToLower(k)] = binding.Decoder.(*structFieldDecoder)
+
+	if !ctx.caseSensitive() {
+		for k, binding := range bindings {
+			if _, found := fields[strings.ToLower(k)]; !found {
+				fields[strings.ToLower(k)] = binding.Decoder.(*structFieldDecoder)
+			}
 		}
 	}
+
 	return createStructDecoder(ctx, typ, fields)
 }
 
@@ -47,6 +51,7 @@ func createStructDecoder(ctx *ctx, typ reflect2.Type, fields map[string]*structF
 	knownHash := map[int64]struct{}{
 		0: {},
 	}
+
 	switch len(fields) {
 	case 0:
 		return &skipObjectDecoder{typ}
@@ -514,13 +519,13 @@ func (decoder *generalStructDecoder) decodeOneField(ptr unsafe.Pointer, iter *It
 		fieldBytes := iter.ReadStringAsSlice()
 		field = *(*string)(unsafe.Pointer(&fieldBytes))
 		fieldDecoder = decoder.fields[field]
-		if fieldDecoder == nil {
+		if fieldDecoder == nil && !iter.cfg.caseSensitive {
 			fieldDecoder = decoder.fields[strings.ToLower(field)]
 		}
 	} else {
 		field = iter.ReadString()
 		fieldDecoder = decoder.fields[field]
-		if fieldDecoder == nil {
+		if fieldDecoder == nil && !iter.cfg.caseSensitive {
 			fieldDecoder = decoder.fields[strings.ToLower(field)]
 		}
 	}
