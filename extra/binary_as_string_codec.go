@@ -1,10 +1,11 @@
 package extra
 
 import (
-	"github.com/json-iterator/go"
-	"github.com/modern-go/reflect2"
 	"unicode/utf8"
 	"unsafe"
+
+	"github.com/json-iterator/go"
+	"github.com/modern-go/reflect2"
 )
 
 // safeSet holds the value true if the ASCII character with the given array
@@ -142,14 +143,19 @@ func (codec *binaryAsStringCodec) Decode(ptr unsafe.Pointer, iter *jsoniter.Iter
 		b := rawBytes[i]
 		if b == '\\' {
 			b2 := rawBytes[i+1]
+			if b2 == '"' {
+				bytes = append(bytes, '"')
+				i++
+				continue
+			}
 			if b2 != '\\' {
 				iter.ReportError("decode binary as string", `\\x is only supported escape`)
 				return
 			}
-			b3 := rawBytes[i+2]
-			if b3 != 'x' {
-				iter.ReportError("decode binary as string", `\\x is only supported escape`)
-				return
+			if i+2 == len(rawBytes) || rawBytes[i+2] != 'x' {
+				bytes = append(bytes, '\\')
+				i++
+				continue
 			}
 			b4 := rawBytes[i+3]
 			b5 := rawBytes[i+4]
@@ -180,9 +186,9 @@ func readHex(iter *jsoniter.Iterator, b1, b2 byte) byte {
 	}
 	ret = ret * 16
 	if b2 >= '0' && b2 <= '9' {
-		ret = b2 - '0'
+		ret += b2 - '0'
 	} else if b2 >= 'a' && b2 <= 'f' {
-		ret = b2 - 'a' + 10
+		ret += b2 - 'a' + 10
 	} else {
 		iter.ReportError("read hex", "expects 0~9 or a~f, but found "+string([]byte{b2}))
 		return 0
@@ -201,7 +207,7 @@ func writeBytes(space []byte, s []byte) []byte {
 		if c < utf8.RuneSelf && safeSet[c] {
 			space = append(space, c)
 		} else {
-			break
+			space = append(space, '\\', c)
 		}
 	}
 	if i == len(s)-1 {
