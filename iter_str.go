@@ -119,7 +119,7 @@ func (iter *Iterator) ReadStringAsSlice() (ret []byte) {
 		for i := iter.head; i < iter.tail; i++ {
 			// require ascii string and no escape
 			// for: field name, base64, number
-			if iter.buf[i] == '"' {
+			if iter.buf[i] == '"' && iter.buf[i-1] != '\\' {
 				// fast path: reuse the underlying buffer
 				ret = iter.buf[iter.head:i]
 				iter.head = i + 1
