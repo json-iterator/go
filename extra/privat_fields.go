@@ -1,9 +1,10 @@
 package extra
 
 import (
-	"github.com/json-iterator/go"
 	"strings"
 	"unicode"
+
+	"github.com/json-iterator/go"
 )
 
 // SupportPrivateFields include private fields when encoding/decoding
@@ -45,10 +46,12 @@ func calcFieldNames(originalFieldName string, tagProvidedFieldName string, whole
 	} else {
 		fieldNames = []string{tagProvidedFieldName}
 	}
-	// private?
-	isNotExported := unicode.IsLower(rune(originalFieldName[0]))
-	if isNotExported {
+
+	// not private?
+	isExported := unicode.IsUpper(rune(originalFieldName[0]))
+	if isExported {
 		fieldNames = []string{}
 	}
+
 	return fieldNames
 }
