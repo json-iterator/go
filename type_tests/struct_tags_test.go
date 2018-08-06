@@ -145,6 +145,9 @@ func init() {
 		(*struct {
 			Field bool `json:",omitempty,string"`
 		})(nil),
+		(*struct {
+			Field bool `json:"中文"`
+		})(nil),
 	)
 }
 
