@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 	"unsafe"
+	"bytes"
 )
 
 func Test_customize_type_decoder(t *testing.T) {
@@ -97,4 +98,93 @@ func Test_read_custom_interface(t *testing.T) {
 	err := jsoniter.UnmarshalFromString(`"hello"`, &val)
 	should.Nil(err)
 	should.Equal("hello", val.Hello())
+}
+
+const flow1 = `
+{"A":"hello"}
+{"A":"hello"}
+{"A":"hello"}
+{"A":"hello"}
+{"A":"hello"}`
+
+const flow2 = `
+{"A":"hello"}
+{"A":"hello"}
+{"A":"hello"}
+{"A":"hello"}
+{"A":"hello"}
+`
+
+type (
+	Type1 struct {
+		A string
+	}
+
+	Type2 struct {
+		A string
+	}
+)
+
+func (t *Type2) UnmarshalJSON(data []byte) error {
+	return nil
+}
+
+func (t *Type2) MarshalJSON() ([]byte, error) {
+	return nil, nil
+}
+
+func TestType1NoFinalLF(t *testing.T) {
+	reader := bytes.NewReader([]byte(flow1))
+	dec := jsoniter.NewDecoder(reader)
+
+	i := 0
+	for dec.More() {
+		data := &Type1{}
+		if err := dec.Decode(data); err != nil {
+			t.Errorf("at %v got %v", i, err)
+		}
+		i++
+	}
+}
+
+func TestType1FinalLF(t *testing.T) {
+	reader := bytes.NewReader([]byte(flow2))
+	dec := jsoniter.NewDecoder(reader)
+
+	i := 0
+	for dec.More() {
+		data := &Type1{}
+		if err := dec.Decode(data); err != nil {
+			t.Errorf("at %v got %v", i, err)
+		}
+		i++
+	}
+}
+
+func TestType2NoFinalLF(t *testing.T) {
+	reader := bytes.NewReader([]byte(flow1))
+	dec := jsoniter.NewDecoder(reader)
+
+	i := 0
+	for dec.More() {
+		data := &Type2{}
+		if err := dec.Decode(data); err != nil {
+			t.Errorf("at %v got %v", i, err)
+		}
+		i++
+	}
+}
+
+func TestType2FinalLF(t *testing.T) {
+	reader := bytes.NewReader([]byte(flow2))
+	dec := jsoniter.NewDecoder(reader)
+
+	i := 0
+	for dec.More() {
+		data := &Type2{}
+		if err := dec.Decode(data); err != nil {
+			t.Errorf("at %v got %v", i, err)
+		}
+		i++
+	}
 }

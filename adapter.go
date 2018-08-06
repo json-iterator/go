@@ -81,10 +81,12 @@ func (adapter *Decoder) More() bool {
 	if iter.Error != nil {
 		return false
 	}
-	if iter.head != iter.tail {
-		return true
+	c := iter.nextToken()
+	if c == 0 {
+		return false
 	}
-	return iter.loadMore()
+	iter.unreadByte()
+	return c != ']' && c != '}'
 }
 
 // Buffered remaining buffer
