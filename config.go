@@ -191,7 +191,7 @@ func (cfg *frozenConfig) validateJsonRawMessage(extension EncoderExtension) {
 			stream.WriteRaw(string(rawMessage))
 		}
 	}, func(ptr unsafe.Pointer) bool {
-		return false
+		return len(*((*json.RawMessage)(ptr))) == 0
 	}}
 	extension[reflect2.TypeOfPtr((*json.RawMessage)(nil)).Elem()] = encoder
 	extension[reflect2.TypeOfPtr((*RawMessage)(nil)).Elem()] = encoder
