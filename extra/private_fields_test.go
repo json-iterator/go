@@ -28,3 +28,14 @@ func Test_private_fields_with_tag(t *testing.T) {
 	should.Nil(jsoniter.UnmarshalFromString(`{"field_1":"Hello"}`, &obj))
 	should.Equal("Hello", obj.field1)
 }
+
+func Test_private_fields_with_empty_tag(t *testing.T) {
+	type TestObject struct {
+		field1 string `json:""`
+	}
+	SupportPrivateFields()
+	should := require.New(t)
+	obj := TestObject{}
+	should.Nil(jsoniter.UnmarshalFromString(`{"field1":"Hello"}`, &obj))
+	should.Equal("Hello", obj.field1)
+}

@@ -46,12 +46,10 @@ func calcFieldNames(originalFieldName string, tagProvidedFieldName string, whole
 	} else {
 		fieldNames = []string{tagProvidedFieldName}
 	}
-
 	// not private?
-	isExported := unicode.IsUpper(rune(originalFieldName[0]))
-	if isExported {
+	isExported := unicode.IsLower(rune(originalFieldName[0]))
+	if !isExported {
 		fieldNames = []string{}
 	}
-
 	return fieldNames
 }
