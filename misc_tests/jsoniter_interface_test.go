@@ -114,7 +114,7 @@ func Test_overwrite_interface_value_with_nil(t *testing.T) {
 
 	err := json.Unmarshal([]byte(`{"payload": {"val": 42}}`), &wrapper)
 	should.NoError(err)
-	should.Equal(42, (*(wrapper.Payload.(*Payload))).Value)
+	should.Equal(42, wrapper.Payload.(*Payload).Value)
 
 	err = json.Unmarshal([]byte(`{"payload": null}`), &wrapper)
 	should.NoError(err)
@@ -128,7 +128,7 @@ func Test_overwrite_interface_value_with_nil(t *testing.T) {
 
 	err = jsoniter.Unmarshal([]byte(`{"payload": {"val": 42}}`), &wrapper)
 	should.Equal(nil, err)
-	should.Equal(42, (*(wrapper.Payload.(*Payload))).Value)
+	should.Equal(42, wrapper.Payload.(*Payload).Value)
 
 	err = jsoniter.Unmarshal([]byte(`{"payload": null}`), &wrapper)
 	should.Equal(nil, err)
