@@ -153,7 +153,7 @@ func (codec *binaryAsStringCodec) Decode(ptr unsafe.Pointer, iter *jsoniter.Iter
 			}
 			b4 := rawBytes[i+3]
 			b5 := rawBytes[i+4]
-			i = i + 4
+			i += 4
 			b = readHex(iter, b4, b5)
 		}
 		bytes = append(bytes, b)
@@ -178,7 +178,7 @@ func readHex(iter *jsoniter.Iterator, b1, b2 byte) byte {
 		iter.ReportError("read hex", "expects 0~9 or a~f, but found "+string([]byte{b1}))
 		return 0
 	}
-	ret = ret * 16
+	ret *= 16
 	if b2 >= '0' && b2 <= '9' {
 		ret = b2 - '0'
 	} else if b2 >= 'a' && b2 <= 'f' {
