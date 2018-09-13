@@ -118,6 +118,4 @@ func Test_object_wrapper_any_get_all(t *testing.T) {
 	should.Contains(any.Keys(), "Field1")
 	should.Contains(any.Keys(), "Field2")
 	should.NotContains(any.Keys(), "Field3")
-
-	//should.Contains(any.GetObject()["Field1"].GetArray()[0], 1)
 }
