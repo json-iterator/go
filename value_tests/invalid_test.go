@@ -224,3 +224,13 @@ func Test_EmptyInput(t *testing.T) {
 		t.Errorf("Expected error")
 	}
 }
+
+type Foo struct {
+	A jsoniter.Any
+}
+
+func Test_nil_any(t *testing.T) {
+	should := require.New(t)
+	data, _ := jsoniter.Marshal(&Foo{})
+	should.Equal(`{"A":null}`, string(data))
+}
