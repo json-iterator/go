@@ -172,3 +172,58 @@ func Test_CaseSensitive_MoreThanTenFields(t *testing.T) {
 		should.Equal(tc.expectedOutput, output)
 	}
 }
+
+type onlyTaggedFieldStruct struct {
+	A      string `json:"a"`
+	B      string
+	FSimpl F `json:"f_simpl"`
+	ISimpl I
+	FPtr   *F `json:"f_ptr"`
+	IPtr   *I
+	F
+	*I
+}
+
+type F struct {
+	G string `json:"g"`
+	H string
+}
+
+type I struct {
+	J string `json:"j"`
+	K string
+}
+
+func Test_OnlyTaggedField(t *testing.T) {
+	should := require.New(t)
+
+	obj := onlyTaggedFieldStruct{
+		A:      "a",
+		B:      "b",
+		FSimpl: F{G: "g", H: "h"},
+		ISimpl: I{J: "j", K: "k"},
+		FPtr:   &F{G: "g", H: "h"},
+		IPtr:   &I{J: "j", K: "k"},
+		F:      F{G: "g", H: "h"},
+		I:      &I{J: "j", K: "k"},
+	}
+
+	output, err := jsoniter.Config{OnlyTaggedField: true}.Froze().Marshal(obj)
+	should.Nil(err)
+
+	m := make(map[string]interface{})
+	err = jsoniter.Unmarshal(output, &m)
+	should.Nil(err)
+
+	should.Equal(map[string]interface{}{
+		"a": "a",
+		"f_simpl": map[string]interface{}{
+			"g": "g",
+		},
+		"f_ptr": map[string]interface{}{
+			"g": "g",
+		},
+		"g": "g",
+		"j": "j",
+	}, m)
+}
