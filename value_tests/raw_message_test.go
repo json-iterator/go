@@ -17,5 +17,8 @@ func init() {
 	unmarshalCases = append(unmarshalCases, unmarshalCase{
 		ptr:   (*json.RawMessage)(nil),
 		input: `[1,2,3]`,
+	}, unmarshalCase{
+		ptr:   (*json.RawMessage)(nil),
+		input: `1.122e+250`,
 	})
 }
