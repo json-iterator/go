@@ -300,10 +300,7 @@ func (cfg *frozenConfig) Marshal(v interface{}) ([]byte, error) {
 	if stream.Error != nil {
 		return nil, stream.Error
 	}
-	result := stream.Buffer()
-	copied := make([]byte, len(result))
-	copy(copied, result)
-	return copied, nil
+	return stream.Buffer(), nil
 }
 
 func (cfg *frozenConfig) MarshalIndent(v interface{}, prefix, indent string) ([]byte, error) {
