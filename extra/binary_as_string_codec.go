@@ -1,7 +1,7 @@
 package extra
 
 import (
-	"github.com/json-iterator/go"
+	".."
 	"github.com/modern-go/reflect2"
 	"unicode/utf8"
 	"unsafe"
@@ -163,7 +163,11 @@ func (codec *binaryAsStringCodec) Decode(ptr unsafe.Pointer, iter *jsoniter.Iter
 func (codec *binaryAsStringCodec) IsEmpty(ptr unsafe.Pointer) bool {
 	return len(*((*[]byte)(ptr))) == 0
 }
-func (codec *binaryAsStringCodec) Encode(ptr unsafe.Pointer, stream *jsoniter.Stream) {
+func (codec *binaryAsStringCodec) Encode(ptr unsafe.Pointer, stream *jsoniter.Stream, level int) {
+	if level > 	jsoniter.DefaultMaxRecursiveLevel{
+		stream.Error = jsoniter.MarshalLevelTooDeepErr
+		return
+	}
 	newBuffer := writeBytes(stream.Buffer(), *(*[]byte)(ptr))
 	stream.SetBuffer(newBuffer)
 }

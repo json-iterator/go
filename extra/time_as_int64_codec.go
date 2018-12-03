@@ -1,7 +1,7 @@
 package extra
 
 import (
-	"github.com/json-iterator/go"
+	".."
 	"time"
 	"unsafe"
 )
@@ -25,7 +25,11 @@ func (codec *timeAsInt64Codec) IsEmpty(ptr unsafe.Pointer) bool {
 	ts := *((*time.Time)(ptr))
 	return ts.UnixNano() == 0
 }
-func (codec *timeAsInt64Codec) Encode(ptr unsafe.Pointer, stream *jsoniter.Stream) {
+func (codec *timeAsInt64Codec) Encode(ptr unsafe.Pointer, stream *jsoniter.Stream, level int) {
+	if level > 	jsoniter.DefaultMaxRecursiveLevel{
+		stream.Error = jsoniter.MarshalLevelTooDeepErr
+		return
+	}
 	ts := *((*time.Time)(ptr))
 	stream.WriteInt64(ts.UnixNano() / codec.precision.Nanoseconds())
 }
