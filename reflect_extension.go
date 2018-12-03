@@ -183,7 +183,7 @@ func (encoder *funcEncoder) Encode(ptr unsafe.Pointer, stream *Stream, level int
 		stream.Error = MarshalLevelTooDeepErr
 		return
 	}
-	encoder.fun(ptr, stream)
+	encoder.fun(ptr, stream, level)
 }
 
 func (encoder *funcEncoder) IsEmpty(ptr unsafe.Pointer) bool {
@@ -197,7 +197,7 @@ func (encoder *funcEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 type DecoderFunc func(ptr unsafe.Pointer, iter *Iterator)
 
 // EncoderFunc the function form of TypeEncoder
-type EncoderFunc func(ptr unsafe.Pointer, stream *Stream)
+type EncoderFunc func(ptr unsafe.Pointer, stream *Stream, level int)
 
 // RegisterTypeDecoderFunc register TypeDecoder for a type with function
 func RegisterTypeDecoderFunc(typ string, fun DecoderFunc) {

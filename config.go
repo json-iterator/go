@@ -184,7 +184,7 @@ func (cfg Config) frozeWithCacheReuse(extraExtensions []Extension) *frozenConfig
 }
 
 func (cfg *frozenConfig) validateJsonRawMessage(extension EncoderExtension) {
-	encoder := &funcEncoder{func(ptr unsafe.Pointer, stream *Stream) {
+	encoder := &funcEncoder{func(ptr unsafe.Pointer, stream *Stream, level int) {
 		rawMessage := *(*json.RawMessage)(ptr)
 		iter := cfg.BorrowIterator([]byte(rawMessage))
 		iter.Read()
