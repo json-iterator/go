@@ -1,7 +1,7 @@
 package extra
 
 import (
-	".."
+	"github.com/vearne/json-iterator-go"
 	"time"
 	"unsafe"
 )
