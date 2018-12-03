@@ -67,11 +67,15 @@ type OptionalEncoder struct {
 	ValueEncoder ValEncoder
 }
 
-func (encoder *OptionalEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
+func (encoder *OptionalEncoder) Encode(ptr unsafe.Pointer, stream *Stream, level int) {
+	if level > 	DefaultMaxRecursiveLevel{
+		stream.Error = MarshalLevelTooDeepErr
+		return
+	}
 	if *((*unsafe.Pointer)(ptr)) == nil {
 		stream.WriteNil()
 	} else {
-		encoder.ValueEncoder.Encode(*((*unsafe.Pointer)(ptr)), stream)
+		encoder.ValueEncoder.Encode(*((*unsafe.Pointer)(ptr)), stream, level)
 	}
 }
 
@@ -83,11 +87,16 @@ type dereferenceEncoder struct {
 	ValueEncoder ValEncoder
 }
 
-func (encoder *dereferenceEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
+func (encoder *dereferenceEncoder) Encode(ptr unsafe.Pointer, stream *Stream, level int) {
+	if level > 	DefaultMaxRecursiveLevel{
+		stream.Error = MarshalLevelTooDeepErr
+		return
+	}
+
 	if *((*unsafe.Pointer)(ptr)) == nil {
 		stream.WriteNil()
 	} else {
-		encoder.ValueEncoder.Encode(*((*unsafe.Pointer)(ptr)), stream)
+		encoder.ValueEncoder.Encode(*((*unsafe.Pointer)(ptr)), stream, level)
 	}
 }
 
@@ -116,8 +125,12 @@ type referenceEncoder struct {
 	encoder ValEncoder
 }
 
-func (encoder *referenceEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
-	encoder.encoder.Encode(unsafe.Pointer(&ptr), stream)
+func (encoder *referenceEncoder) Encode(ptr unsafe.Pointer, stream *Stream, level int) {
+	if level > 	DefaultMaxRecursiveLevel{
+		stream.Error = MarshalLevelTooDeepErr
+		return
+	}
+	encoder.encoder.Encode(unsafe.Pointer(&ptr), stream, level)
 }
 
 func (encoder *referenceEncoder) IsEmpty(ptr unsafe.Pointer) bool {

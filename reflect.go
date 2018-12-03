@@ -25,9 +25,10 @@ type ValDecoder interface {
 // ValEncoder is an internal type registered to cache as needed.
 // Don't confuse jsoniter.ValEncoder with json.Encoder.
 // For json.Encoder's adapter, refer to jsoniter.AdapterEncoder(todo godoc link).
+// level is Recursive depth
 type ValEncoder interface {
 	IsEmpty(ptr unsafe.Pointer) bool
-	Encode(ptr unsafe.Pointer, stream *Stream)
+	Encode(ptr unsafe.Pointer, stream *Stream, level int)
 }
 
 type checkIsEmpty interface {
@@ -90,7 +91,7 @@ func (stream *Stream) WriteVal(val interface{}) {
 		typ := reflect2.TypeOf(val)
 		encoder = stream.cfg.EncoderOf(typ)
 	}
-	encoder.Encode(reflect2.PtrOf(val), stream)
+	encoder.Encode(reflect2.PtrOf(val), stream, 0)
 }
 
 func (cfg *frozenConfig) DecoderOf(typ reflect2.Type) ValDecoder {
@@ -210,8 +211,12 @@ func (encoder *onePtrEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	return encoder.encoder.IsEmpty(unsafe.Pointer(&ptr))
 }
 
-func (encoder *onePtrEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
-	encoder.encoder.Encode(unsafe.Pointer(&ptr), stream)
+func (encoder *onePtrEncoder) Encode(ptr unsafe.Pointer, stream *Stream, level int) {
+	if level > 	DefaultMaxRecursiveLevel{
+		stream.Error = MarshalLevelTooDeepErr
+		return
+	}
+	encoder.encoder.Encode(unsafe.Pointer(&ptr), stream, level)
 }
 
 func encoderOfType(ctx *ctx, typ reflect2.Type) ValEncoder {
@@ -299,7 +304,11 @@ type lazyErrorEncoder struct {
 	err error
 }
 
-func (encoder *lazyErrorEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
+func (encoder *lazyErrorEncoder) Encode(ptr unsafe.Pointer, stream *Stream, level int) {
+	if level > 	DefaultMaxRecursiveLevel{
+		stream.Error = MarshalLevelTooDeepErr
+		return
+	}
 	if ptr == nil {
 		stream.WriteNil()
 	} else if stream.Error == nil {
@@ -323,8 +332,12 @@ type placeholderEncoder struct {
 	encoder ValEncoder
 }
 
-func (encoder *placeholderEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
-	encoder.encoder.Encode(ptr, stream)
+func (encoder *placeholderEncoder) Encode(ptr unsafe.Pointer, stream *Stream, level int) {
+	if level > 	DefaultMaxRecursiveLevel{
+		stream.Error = MarshalLevelTooDeepErr
+		return
+	}
+	encoder.encoder.Encode(ptr, stream, level)
 }
 
 func (encoder *placeholderEncoder) IsEmpty(ptr unsafe.Pointer) bool {

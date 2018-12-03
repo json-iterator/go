@@ -105,9 +105,13 @@ type structFieldEncoder struct {
 	omitempty    bool
 }
 
-func (encoder *structFieldEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
+func (encoder *structFieldEncoder) Encode(ptr unsafe.Pointer, stream *Stream, level int) {
+	if level > 	DefaultMaxRecursiveLevel{
+		stream.Error = MarshalLevelTooDeepErr
+		return
+	}
 	fieldPtr := encoder.field.UnsafeGet(ptr)
-	encoder.fieldEncoder.Encode(fieldPtr, stream)
+	encoder.fieldEncoder.Encode(fieldPtr, stream, level)
 	if stream.Error != nil && stream.Error != io.EOF {
 		stream.Error = fmt.Errorf("%s: %s", encoder.field.Name(), stream.Error.Error())
 	}
@@ -141,7 +145,12 @@ type structFieldTo struct {
 	toName  string
 }
 
-func (encoder *structEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
+func (encoder *structEncoder) Encode(ptr unsafe.Pointer, stream *Stream, level int) {
+	if level > 	DefaultMaxRecursiveLevel{
+		stream.Error = MarshalLevelTooDeepErr
+		return
+	}
+
 	stream.WriteObjectStart()
 	isNotFirst := false
 	for _, field := range encoder.fields {
@@ -155,7 +164,7 @@ func (encoder *structEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 			stream.WriteMore()
 		}
 		stream.WriteObjectField(field.toName)
-		field.encoder.Encode(ptr, stream)
+		field.encoder.Encode(ptr, stream, level + 1)
 		isNotFirst = true
 	}
 	stream.WriteObjectEnd()
@@ -171,7 +180,11 @@ func (encoder *structEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 type emptyStructEncoder struct {
 }
 
-func (encoder *emptyStructEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
+func (encoder *emptyStructEncoder) Encode(ptr unsafe.Pointer, stream *Stream, level int) {
+	if level > 	DefaultMaxRecursiveLevel{
+		stream.Error = MarshalLevelTooDeepErr
+		return
+	}
 	stream.WriteEmptyObject()
 }
 
@@ -183,9 +196,13 @@ type stringModeNumberEncoder struct {
 	elemEncoder ValEncoder
 }
 
-func (encoder *stringModeNumberEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
+func (encoder *stringModeNumberEncoder) Encode(ptr unsafe.Pointer, stream *Stream, level int) {
+	if level > 	DefaultMaxRecursiveLevel{
+		stream.Error = MarshalLevelTooDeepErr
+		return
+	}
 	stream.writeByte('"')
-	encoder.elemEncoder.Encode(ptr, stream)
+	encoder.elemEncoder.Encode(ptr, stream, level)
 	stream.writeByte('"')
 }
 
@@ -198,10 +215,14 @@ type stringModeStringEncoder struct {
 	cfg         *frozenConfig
 }
 
-func (encoder *stringModeStringEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
+func (encoder *stringModeStringEncoder) Encode(ptr unsafe.Pointer, stream *Stream, level int) {
+	if level > 	DefaultMaxRecursiveLevel{
+		stream.Error = MarshalLevelTooDeepErr
+		return
+	}
 	tempStream := encoder.cfg.BorrowStream(nil)
 	defer encoder.cfg.ReturnStream(tempStream)
-	encoder.elemEncoder.Encode(ptr, tempStream)
+	encoder.elemEncoder.Encode(ptr, tempStream, level)
 	stream.WriteString(string(tempStream.Buffer()))
 }
 

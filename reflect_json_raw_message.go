@@ -36,7 +36,11 @@ func (codec *jsonRawMessageCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	*((*json.RawMessage)(ptr)) = json.RawMessage(iter.SkipAndReturnBytes())
 }
 
-func (codec *jsonRawMessageCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
+func (codec *jsonRawMessageCodec) Encode(ptr unsafe.Pointer, stream *Stream, level int) {
+	if level > 	DefaultMaxRecursiveLevel{
+		stream.Error = MarshalLevelTooDeepErr
+		return
+	}
 	stream.WriteRaw(string(*((*json.RawMessage)(ptr))))
 }
 
@@ -51,7 +55,11 @@ func (codec *jsoniterRawMessageCodec) Decode(ptr unsafe.Pointer, iter *Iterator)
 	*((*RawMessage)(ptr)) = RawMessage(iter.SkipAndReturnBytes())
 }
 
-func (codec *jsoniterRawMessageCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
+func (codec *jsoniterRawMessageCodec) Encode(ptr unsafe.Pointer, stream *Stream, level int) {
+	if level > 	DefaultMaxRecursiveLevel{
+		stream.Error = MarshalLevelTooDeepErr
+		return
+	}
 	stream.WriteRaw(string(*((*RawMessage)(ptr))))
 }
 

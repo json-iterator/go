@@ -9,7 +9,11 @@ import (
 
 	"github.com/modern-go/concurrent"
 	"github.com/modern-go/reflect2"
+	"errors"
 )
+
+const DefaultMaxRecursiveLevel = 1000
+var MarshalLevelTooDeepErr = errors.New("JSON marshal level too deep")
 
 // Config customize how the API should behave.
 // The API is created from Config by Froze.
@@ -48,7 +52,7 @@ type API interface {
 
 // ConfigDefault the default API
 var ConfigDefault = Config{
-	EscapeHTML: true,
+	EscapeHTML:        true,
 }.Froze()
 
 // ConfigCompatibleWithStandardLibrary tries to be 100% compatible with standard library behavior
@@ -228,7 +232,11 @@ func (cfg *frozenConfig) RegisterExtension(extension Extension) {
 type lossyFloat32Encoder struct {
 }
 
-func (encoder *lossyFloat32Encoder) Encode(ptr unsafe.Pointer, stream *Stream) {
+func (encoder *lossyFloat32Encoder) Encode(ptr unsafe.Pointer, stream *Stream, level int) {
+	if level > 	DefaultMaxRecursiveLevel{
+		stream.Error = MarshalLevelTooDeepErr
+		return
+	}
 	stream.WriteFloat32Lossy(*((*float32)(ptr)))
 }
 
@@ -239,7 +247,11 @@ func (encoder *lossyFloat32Encoder) IsEmpty(ptr unsafe.Pointer) bool {
 type lossyFloat64Encoder struct {
 }
 
-func (encoder *lossyFloat64Encoder) Encode(ptr unsafe.Pointer, stream *Stream) {
+func (encoder *lossyFloat64Encoder) Encode(ptr unsafe.Pointer, stream *Stream, level int) {
+	if level > 	DefaultMaxRecursiveLevel{
+		stream.Error = MarshalLevelTooDeepErr
+		return
+	}
 	stream.WriteFloat64Lossy(*((*float64)(ptr)))
 }
 
@@ -258,7 +270,11 @@ func (cfg *frozenConfig) marshalFloatWith6Digits(extension EncoderExtension) {
 type htmlEscapedStringEncoder struct {
 }
 
-func (encoder *htmlEscapedStringEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
+func (encoder *htmlEscapedStringEncoder) Encode(ptr unsafe.Pointer, stream *Stream, level int) {
+	if level > 	DefaultMaxRecursiveLevel{
+		stream.Error = MarshalLevelTooDeepErr
+		return
+	}
 	str := *((*string)(ptr))
 	stream.WriteStringWithHTMLEscaped(str)
 }

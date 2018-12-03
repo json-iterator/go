@@ -209,7 +209,12 @@ func (codec *stringCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	*((*string)(ptr)) = iter.ReadString()
 }
 
-func (codec *stringCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
+func (codec *stringCodec) Encode(ptr unsafe.Pointer, stream *Stream, level int) {
+	if level > 	DefaultMaxRecursiveLevel{
+		stream.Error = MarshalLevelTooDeepErr
+		return
+	}
+
 	str := *((*string)(ptr))
 	stream.WriteString(str)
 }
@@ -227,7 +232,11 @@ func (codec *int8Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	}
 }
 
-func (codec *int8Codec) Encode(ptr unsafe.Pointer, stream *Stream) {
+func (codec *int8Codec) Encode(ptr unsafe.Pointer, stream *Stream, level int) {
+	if level > 	DefaultMaxRecursiveLevel{
+		stream.Error = MarshalLevelTooDeepErr
+		return
+	}
 	stream.WriteInt8(*((*int8)(ptr)))
 }
 
@@ -244,7 +253,11 @@ func (codec *int16Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	}
 }
 
-func (codec *int16Codec) Encode(ptr unsafe.Pointer, stream *Stream) {
+func (codec *int16Codec) Encode(ptr unsafe.Pointer, stream *Stream, level int) {
+	if level > 	DefaultMaxRecursiveLevel{
+		stream.Error = MarshalLevelTooDeepErr
+		return
+	}
 	stream.WriteInt16(*((*int16)(ptr)))
 }
 
@@ -261,7 +274,11 @@ func (codec *int32Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	}
 }
 
-func (codec *int32Codec) Encode(ptr unsafe.Pointer, stream *Stream) {
+func (codec *int32Codec) Encode(ptr unsafe.Pointer, stream *Stream, level int) {
+	if level > 	DefaultMaxRecursiveLevel{
+		stream.Error = MarshalLevelTooDeepErr
+		return
+	}
 	stream.WriteInt32(*((*int32)(ptr)))
 }
 
@@ -278,7 +295,11 @@ func (codec *int64Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	}
 }
 
-func (codec *int64Codec) Encode(ptr unsafe.Pointer, stream *Stream) {
+func (codec *int64Codec) Encode(ptr unsafe.Pointer, stream *Stream, level int) {
+	if level > 	DefaultMaxRecursiveLevel{
+		stream.Error = MarshalLevelTooDeepErr
+		return
+	}
 	stream.WriteInt64(*((*int64)(ptr)))
 }
 
@@ -295,7 +316,11 @@ func (codec *uint8Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	}
 }
 
-func (codec *uint8Codec) Encode(ptr unsafe.Pointer, stream *Stream) {
+func (codec *uint8Codec) Encode(ptr unsafe.Pointer, stream *Stream, level int) {
+	if level > 	DefaultMaxRecursiveLevel{
+		stream.Error = MarshalLevelTooDeepErr
+		return
+	}
 	stream.WriteUint8(*((*uint8)(ptr)))
 }
 
@@ -312,7 +337,11 @@ func (codec *uint16Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	}
 }
 
-func (codec *uint16Codec) Encode(ptr unsafe.Pointer, stream *Stream) {
+func (codec *uint16Codec) Encode(ptr unsafe.Pointer, stream *Stream, level int) {
+	if level > 	DefaultMaxRecursiveLevel{
+		stream.Error = MarshalLevelTooDeepErr
+		return
+	}
 	stream.WriteUint16(*((*uint16)(ptr)))
 }
 
@@ -329,7 +358,11 @@ func (codec *uint32Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	}
 }
 
-func (codec *uint32Codec) Encode(ptr unsafe.Pointer, stream *Stream) {
+func (codec *uint32Codec) Encode(ptr unsafe.Pointer, stream *Stream, level int) {
+	if level > 	DefaultMaxRecursiveLevel{
+		stream.Error = MarshalLevelTooDeepErr
+		return
+	}
 	stream.WriteUint32(*((*uint32)(ptr)))
 }
 
@@ -346,7 +379,11 @@ func (codec *uint64Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	}
 }
 
-func (codec *uint64Codec) Encode(ptr unsafe.Pointer, stream *Stream) {
+func (codec *uint64Codec) Encode(ptr unsafe.Pointer, stream *Stream, level int) {
+	if level > 	DefaultMaxRecursiveLevel{
+		stream.Error = MarshalLevelTooDeepErr
+		return
+	}
 	stream.WriteUint64(*((*uint64)(ptr)))
 }
 
@@ -363,7 +400,11 @@ func (codec *float32Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	}
 }
 
-func (codec *float32Codec) Encode(ptr unsafe.Pointer, stream *Stream) {
+func (codec *float32Codec) Encode(ptr unsafe.Pointer, stream *Stream, level int) {
+	if level > 	DefaultMaxRecursiveLevel{
+		stream.Error = MarshalLevelTooDeepErr
+		return
+	}
 	stream.WriteFloat32(*((*float32)(ptr)))
 }
 
@@ -380,7 +421,11 @@ func (codec *float64Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	}
 }
 
-func (codec *float64Codec) Encode(ptr unsafe.Pointer, stream *Stream) {
+func (codec *float64Codec) Encode(ptr unsafe.Pointer, stream *Stream, level int) {
+	if level > 	DefaultMaxRecursiveLevel{
+		stream.Error = MarshalLevelTooDeepErr
+		return
+	}
 	stream.WriteFloat64(*((*float64)(ptr)))
 }
 
@@ -397,7 +442,11 @@ func (codec *boolCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	}
 }
 
-func (codec *boolCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
+func (codec *boolCodec) Encode(ptr unsafe.Pointer, stream *Stream, level int) {
+	if level > 	DefaultMaxRecursiveLevel{
+		stream.Error = MarshalLevelTooDeepErr
+		return
+	}
 	stream.WriteBool(*((*bool)(ptr)))
 }
 
@@ -431,7 +480,11 @@ func (codec *base64Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	}
 }
 
-func (codec *base64Codec) Encode(ptr unsafe.Pointer, stream *Stream) {
+func (codec *base64Codec) Encode(ptr unsafe.Pointer, stream *Stream, level int) {
+	if level > 	DefaultMaxRecursiveLevel{
+		stream.Error = MarshalLevelTooDeepErr
+		return
+	}
 	src := *((*[]byte)(ptr))
 	if len(src) == 0 {
 		stream.WriteNil()

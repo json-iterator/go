@@ -10,7 +10,11 @@ type dynamicEncoder struct {
 	valType reflect2.Type
 }
 
-func (encoder *dynamicEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
+func (encoder *dynamicEncoder) Encode(ptr unsafe.Pointer, stream *Stream, level int) {
+	if level > 	DefaultMaxRecursiveLevel{
+		stream.Error = MarshalLevelTooDeepErr
+		return
+	}
 	obj := encoder.valType.UnsafeIndirect(ptr)
 	stream.WriteVal(obj)
 }

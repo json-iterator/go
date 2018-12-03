@@ -178,7 +178,11 @@ type funcEncoder struct {
 	isEmptyFunc func(ptr unsafe.Pointer) bool
 }
 
-func (encoder *funcEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
+func (encoder *funcEncoder) Encode(ptr unsafe.Pointer, stream *Stream, level int) {
+	if level > 	DefaultMaxRecursiveLevel{
+		stream.Error = MarshalLevelTooDeepErr
+		return
+	}
 	encoder.fun(ptr, stream)
 }
 

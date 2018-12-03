@@ -24,7 +24,11 @@ type sliceEncoder struct {
 	elemEncoder ValEncoder
 }
 
-func (encoder *sliceEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
+func (encoder *sliceEncoder) Encode(ptr unsafe.Pointer, stream *Stream, level int) {
+	if level > 	DefaultMaxRecursiveLevel{
+		stream.Error = MarshalLevelTooDeepErr
+		return
+	}
 	if encoder.sliceType.UnsafeIsNil(ptr) {
 		stream.WriteNil()
 		return
@@ -35,11 +39,11 @@ func (encoder *sliceEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 		return
 	}
 	stream.WriteArrayStart()
-	encoder.elemEncoder.Encode(encoder.sliceType.UnsafeGetIndex(ptr, 0), stream)
+	encoder.elemEncoder.Encode(encoder.sliceType.UnsafeGetIndex(ptr, 0), stream, level+1)
 	for i := 1; i < length; i++ {
 		stream.WriteMore()
 		elemPtr := encoder.sliceType.UnsafeGetIndex(ptr, i)
-		encoder.elemEncoder.Encode(elemPtr, stream)
+		encoder.elemEncoder.Encode(elemPtr, stream, level+1)
 	}
 	stream.WriteArrayEnd()
 	if stream.Error != nil && stream.Error != io.EOF {

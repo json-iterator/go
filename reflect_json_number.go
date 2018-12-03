@@ -70,7 +70,7 @@ func (codec *jsonNumberCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	}
 }
 
-func (codec *jsonNumberCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
+func (codec *jsonNumberCodec) Encode(ptr unsafe.Pointer, stream *Stream, level int) {
 	number := *((*json.Number)(ptr))
 	if len(number) == 0 {
 		stream.writeByte('0')
@@ -98,7 +98,12 @@ func (codec *jsoniterNumberCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	}
 }
 
-func (codec *jsoniterNumberCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
+func (codec *jsoniterNumberCodec) Encode(ptr unsafe.Pointer, stream *Stream, level int) {
+	if level > 	DefaultMaxRecursiveLevel{
+		stream.Error = MarshalLevelTooDeepErr
+		return
+	}
+
 	number := *((*Number)(ptr))
 	if len(number) == 0 {
 		stream.writeByte('0')
