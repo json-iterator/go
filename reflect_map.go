@@ -250,6 +250,10 @@ type mapEncoder struct {
 
 func (encoder *mapEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteObjectStart()
+	if stream.Error!= nil{
+		return
+	}
+
 	iter := encoder.mapType.UnsafeIterate(ptr)
 	for i := 0; iter.HasNext(); i++ {
 		if i != 0 {
@@ -284,6 +288,9 @@ func (encoder *sortKeysMapEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 		return
 	}
 	stream.WriteObjectStart()
+	if stream.Error!= nil{
+		return
+	}
 	mapIter := encoder.mapType.UnsafeIterate(ptr)
 	subStream := stream.cfg.BorrowStream(nil)
 	subIter := stream.cfg.BorrowIterator(nil)

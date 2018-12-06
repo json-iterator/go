@@ -35,6 +35,9 @@ func (encoder *sliceEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 		return
 	}
 	stream.WriteArrayStart()
+	if stream.Error!= nil{
+		return
+	}
 	encoder.elemEncoder.Encode(encoder.sliceType.UnsafeGetIndex(ptr, 0), stream)
 	for i := 1; i < length; i++ {
 		stream.WriteMore()

@@ -143,6 +143,9 @@ type structFieldTo struct {
 
 func (encoder *structEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteObjectStart()
+	if stream.Error!= nil{
+		return
+	}
 	isNotFirst := false
 	for _, field := range encoder.fields {
 		if field.encoder.omitempty && field.encoder.IsEmpty(ptr) {
