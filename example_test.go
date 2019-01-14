@@ -95,7 +95,7 @@ func ExampleGet() {
 	// Crimson
 }
 
-func ExampleMapKey() {
+func ExampleMyKey() {
 	hello := MyKey("hello")
 	output, _ := Marshal(map[*MyKey]string{&hello: "world"})
 	fmt.Println(string(output))
