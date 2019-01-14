@@ -1,12 +1,14 @@
 package jsoniter
 
 import (
+	"bytes"
 	"fmt"
-	"github.com/modern-go/reflect2"
 	"io"
 	"reflect"
 	"sort"
 	"unsafe"
+
+	"github.com/modern-go/reflect2"
 )
 
 func decoderOfMap(ctx *ctx, typ reflect2.Type) ValDecoder {
@@ -303,10 +305,48 @@ func (encoder *sortKeysMapEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 		} else {
 			subStream.writeByte(':')
 		}
+
 		encoder.elemEncoder.Encode(elem, subStream)
+		value := subStream.Buffer()
+		if stream.indention > 0 {
+			// We have to add additional spaces after every \n.
+			//
+			// For example, we have map[a: "a", b: "b"] and IndentionStep == 2
+			// Due to the fact that encoder.elemEncoder.Encode() doesn't know anything about
+			// current indentionStep, it always encodes map as
+			// {
+			//   "a": "a",
+			//   "b": "b"
+			// }
+			//
+			// We can fix encoder.elemEncoder.Encode or can just add additional spaces.
+			// Next code realize second solution.
+
+			var (
+				i = 0
+				// Reserve space for additional spaces
+				res = make([]byte, len(value)+stream.indention*bytes.Count(value, []byte("\n")))
+				// Small optimization
+				size = len(value)
+			)
+
+			for j := 0; j < size; j++ {
+				res[i] = value[j]
+				if value[j] == '\n' {
+					for k := 0; k < stream.indention; k++ {
+						i++
+						res[i] = ' '
+					}
+				}
+				i++
+			}
+
+			value = res
+		}
+
 		keyValues = append(keyValues, encodedKV{
 			key:      decodedKey,
-			keyValue: subStream.Buffer(),
+			keyValue: value,
 		})
 	}
 	sort.Sort(keyValues)
