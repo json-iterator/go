@@ -1,8 +1,9 @@
 package jsoniter
 
 import (
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func Test_writeByte_should_grow_buffer(t *testing.T) {
@@ -66,4 +67,83 @@ func Test_flush_buffer_should_stop_grow_buffer(t *testing.T) {
 	NewEncoder(writer).Encode(make([]int, 10000000))
 	should := require.New(t)
 	should.Equal(8, writer.bufferSize)
+}
+
+func TestStreamIndentionStep(t *testing.T) {
+	should := require.New(t)
+
+	config := (Config{
+		EscapeHTML:    true,
+		IndentionStep: 4,
+	}).Froze()
+
+	// {
+	// 	"_source": {
+	// 		"@timestamp": "2018-10-07T15:01:48.442Z",
+	// 		"source": {
+	// 			"geoip": {
+	// 				"city_name": "Mosman",
+	// 				"country_name": "Australia"
+	// 			}
+	// 		},
+	// 		"user": {
+	// 			"service": "wOot",
+	// 			"uid": "1"
+	// 		}
+	// 	}
+	// }
+
+	res := `{
+    "_source": {
+        "@timestamp": "2018-10-07T15:01:48.442Z",
+        "source": {
+            "geoip": {
+                "city_name": "Mosman",
+                "country_name": "Australia"
+            }
+        },
+        "user": {
+            "service": "wOot",
+            "uid": "1"
+        }
+    }
+}`
+
+	stream := NewStream(config, nil, 0)
+
+	stream.WriteObjectStart()
+
+	stream.WriteObjectField("_source")
+	stream.WriteObjectStart()
+
+	stream.WriteObjectField("@timestamp")
+	stream.WriteString("2018-10-07T15:01:48.442Z")
+	stream.WriteMore()
+	// ,
+	stream.WriteObjectField("source")
+	stream.WriteObjectStart()
+	stream.WriteObjectField("geoip")
+	stream.WriteObjectStart()
+	stream.WriteObjectField("city_name")
+	stream.WriteString("Mosman")
+	stream.WriteMore()
+	stream.WriteObjectField("country_name")
+	stream.WriteString("Australia")
+	stream.WriteObjectEnd()
+	stream.WriteObjectEnd()
+	stream.WriteMore()
+	// ,
+	stream.WriteObjectField("user")
+	stream.WriteObjectStart()
+	stream.WriteObjectField("service")
+	stream.WriteString("wOot")
+	stream.WriteMore()
+	stream.WriteObjectField("uid")
+	stream.WriteString("1")
+	stream.WriteObjectEnd()
+
+	stream.WriteObjectEnd()
+	stream.WriteObjectEnd()
+
+	should.Equal(res, string(stream.Buffer()))
 }
