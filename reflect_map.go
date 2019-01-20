@@ -309,8 +309,6 @@ func (encoder *sortKeysMapEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 		encoder.elemEncoder.Encode(elem, subStream)
 		value := subStream.Buffer()
 		if stream.indention > 0 {
-			// We have to add additional spaces after every \n.
-			//
 			// For example, we have map[a: "a", b: "b"] and IndentionStep == 2
 			// Due to the fact that encoder.elemEncoder.Encode() doesn't know anything about
 			// current indentionStep, it always encodes map as
@@ -320,28 +318,8 @@ func (encoder *sortKeysMapEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 			// }
 			//
 			// We can fix encoder.elemEncoder.Encode or can just add additional spaces.
-			// Next code realize second solution.
-
-			var (
-				i = 0
-				// Reserve space for additional spaces
-				res = make([]byte, len(value)+stream.indention*bytes.Count(value, []byte("\n")))
-				// Small optimization
-				size = len(value)
-			)
-
-			for j := 0; j < size; j++ {
-				res[i] = value[j]
-				if value[j] == '\n' {
-					for k := 0; k < stream.indention; k++ {
-						i++
-						res[i] = ' '
-					}
-				}
-				i++
-			}
-
-			value = res
+			// Next function realize second solution.
+			value = fixMapIndention(value, stream.indention)
 		}
 
 		keyValues = append(keyValues, encodedKV{
@@ -359,6 +337,32 @@ func (encoder *sortKeysMapEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteObjectEnd()
 	stream.cfg.ReturnStream(subStream)
 	stream.cfg.ReturnIterator(subIter)
+}
+
+// fixMapIndention adds additional spaces after every '\n'
+//
+// It fixes https://github.com/json-iterator/go/issues/331
+func fixMapIndention(value []byte, indention int) []byte {
+	var (
+		i = 0
+		// Reserve space for additional spaces
+		res = make([]byte, len(value)+indention*bytes.Count(value, []byte("\n")))
+		// Small optimization
+		size = len(value)
+	)
+
+	for j := 0; j < size; j++ {
+		res[i] = value[j]
+		if value[j] == '\n' {
+			for k := 0; k < indention; k++ {
+				i++
+				res[i] = ' '
+			}
+		}
+		i++
+	}
+
+	return res
 }
 
 func (encoder *sortKeysMapEncoder) IsEmpty(ptr unsafe.Pointer) bool {
