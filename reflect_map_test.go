@@ -1,12 +1,10 @@
-package jsoniter_test
+package jsoniter
 
 import (
 	"bytes"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
-	jsoniter "github.com/json-iterator/go"
 )
 
 func TestMapIndention(t *testing.T) {
@@ -73,7 +71,7 @@ func TestMapIndention(t *testing.T) {
     "number": 42
 }`
 
-	json := jsoniter.Config{
+	json := Config{
 		EscapeHTML:  true,
 		SortMapKeys: true,
 	}.Froze()
