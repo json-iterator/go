@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"sync"
 	"unsafe"
-
+	
 	"github.com/modern-go/concurrent"
 	"github.com/modern-go/reflect2"
 )
@@ -26,6 +26,7 @@ type Config struct {
 	ObjectFieldMustBeSimpleString bool
 	CaseSensitive                 bool
 	EmitDefaults                  bool
+	OrigName                      bool
 }
 
 // API the public interface of this package.
@@ -82,6 +83,7 @@ type frozenConfig struct {
 	iteratorPool                  *sync.Pool
 	caseSensitive                 bool
 	emitDefaults                  bool
+	origName                      bool
 }
 
 func (cfg *frozenConfig) initCache() {
@@ -137,6 +139,7 @@ func (cfg Config) Froze() API {
 		disallowUnknownFields:         cfg.DisallowUnknownFields,
 		caseSensitive:                 cfg.CaseSensitive,
 		emitDefaults:                  cfg.EmitDefaults,
+		origName:                      cfg.OrigName,
 	}
 	api.streamPool = &sync.Pool{
 		New: func() interface{} {

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"unicode"
 	"unsafe"
-
+	
 	"github.com/modern-go/reflect2"
 )
 
@@ -374,7 +374,7 @@ func describeStruct(ctx *ctx, typ reflect2.Type) *StructDescriptor {
 				}
 			}
 		}
-		fieldNames := calcFieldNames(field.Name(), tagParts[0], tag)
+		fieldNames := calcFieldNames(ctx, field.Name(), tagParts[0], tag)
 		fieldCacheKey := fmt.Sprintf("%s/%s", typ.String(), field.Name())
 		decoder := fieldDecoders[fieldCacheKey]
 		if decoder == nil {
@@ -465,14 +465,14 @@ func processTags(structDescriptor *StructDescriptor, cfg *frozenConfig) {
 	}
 }
 
-func calcFieldNames(originalFieldName string, tagProvidedFieldName string, wholeTag string) []string {
+func calcFieldNames(ctx *ctx, originalFieldName string, tagProvidedFieldName string, wholeTag string) []string {
 	// ignore?
 	if wholeTag == "-" {
 		return []string{}
 	}
 	// rename?
 	var fieldNames []string
-	if tagProvidedFieldName == "" {
+	if ctx.origName == true || tagProvidedFieldName == "" {
 		fieldNames = []string{originalFieldName}
 	} else {
 		fieldNames = []string{tagProvidedFieldName}
