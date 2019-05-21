@@ -1,7 +1,9 @@
 package jsoniter
 
 import (
+	"github.com/junchih/stringx"
 	"io"
+	"strings"
 )
 
 // IteratorPool a thread safe pool of iterators with same configuration
@@ -39,4 +41,21 @@ func (cfg *frozenConfig) ReturnIterator(iter *Iterator) {
 	iter.Error = nil
 	iter.Attachment = nil
 	cfg.iteratorPool.Put(iter)
+}
+
+func (cfg *frozenConfig) borrowStringBuilder() *strings.Builder {
+	return cfg.stringBuilderPool.Get().(*strings.Builder)
+}
+
+func (cfg *frozenConfig) returnStringBuilder(builder *strings.Builder) {
+	builder.Reset()
+	cfg.stringBuilderPool.Put(builder)
+}
+
+func (cfg *frozenConfig) borrowStringFactory() *stringx.Factory {
+	return cfg.stringFactoryPool.Get().(*stringx.Factory)
+}
+
+func (cfg *frozenConfig) returnStringFactory(factory *stringx.Factory) {
+	cfg.stringFactoryPool.Put(factory)
 }

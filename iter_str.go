@@ -2,17 +2,20 @@ package jsoniter
 
 import (
 	"fmt"
+	"strings"
 	"unicode/utf16"
 )
 
 // ReadString read string from iterator
 func (iter *Iterator) ReadString() (ret string) {
+	strf := iter.cfg.borrowStringFactory()
+	defer iter.cfg.returnStringFactory(strf)
 	c := iter.nextToken()
 	if c == '"' {
 		for i := iter.head; i < iter.tail; i++ {
 			c := iter.buf[i]
 			if c == '"' {
-				ret = string(iter.buf[iter.head:i])
+				ret = strf.NewString(iter.buf[iter.head:i])
 				iter.head = i + 1
 				return ret
 			} else if c == '\\' {
@@ -28,87 +31,93 @@ func (iter *Iterator) ReadString() (ret string) {
 		iter.skipThreeBytes('u', 'l', 'l')
 		return ""
 	}
-	iter.ReportError("ReadString", `expects " or n, but found `+string([]byte{c}))
+	iter.ReportError("ReadString", `expects " or n, but found `+strf.NewString([]byte{c}))
 	return
 }
 
-func (iter *Iterator) readStringSlowPath() (ret string) {
-	var str []byte
+func (iter *Iterator) readStringSlowPath() string {
+	strb := iter.cfg.borrowStringBuilder()
+	defer iter.cfg.returnStringBuilder(strb)
 	var c byte
 	for iter.Error == nil {
 		c = iter.readByte()
 		if c == '"' {
-			return string(str)
+			return strb.String()
 		}
 		if c == '\\' {
 			c = iter.readByte()
-			str = iter.readEscapedChar(c, str)
+			iter.readEscapedChar(c, strb)
 		} else {
-			str = append(str, c)
+			strb.WriteByte(c)
 		}
 	}
 	iter.ReportError("readStringSlowPath", "unexpected end of input")
-	return
+	return ""
 }
 
-func (iter *Iterator) readEscapedChar(c byte, str []byte) []byte {
+func (iter *Iterator) readEscapedChar(c byte, strb *strings.Builder) {
 	switch c {
 	case 'u':
 		r := iter.readU4()
 		if utf16.IsSurrogate(r) {
 			c = iter.readByte()
 			if iter.Error != nil {
-				return nil
+				strb.Reset()
+				return
 			}
 			if c != '\\' {
 				iter.unreadByte()
-				str = appendRune(str, r)
-				return str
+				appendRune(strb, r)
+				return
 			}
 			c = iter.readByte()
 			if iter.Error != nil {
-				return nil
+				strb.Reset()
+				return
 			}
 			if c != 'u' {
-				str = appendRune(str, r)
-				return iter.readEscapedChar(c, str)
+				appendRune(strb, r)
+				iter.readEscapedChar(c, strb)
+				return
 			}
 			r2 := iter.readU4()
 			if iter.Error != nil {
-				return nil
+				strb.Reset()
+				return
 			}
 			combined := utf16.DecodeRune(r, r2)
 			if combined == '\uFFFD' {
-				str = appendRune(str, r)
-				str = appendRune(str, r2)
+				appendRune(strb, r)
+				appendRune(strb, r2)
 			} else {
-				str = appendRune(str, combined)
+				appendRune(strb, combined)
 			}
 		} else {
-			str = appendRune(str, r)
+			appendRune(strb, r)
 		}
 	case '"':
-		str = append(str, '"')
+		strb.WriteByte('"')
 	case '\\':
-		str = append(str, '\\')
+		strb.WriteByte('\\')
 	case '/':
-		str = append(str, '/')
+		strb.WriteByte('/')
 	case 'b':
-		str = append(str, '\b')
+		strb.WriteByte('\b')
 	case 'f':
-		str = append(str, '\f')
+		strb.WriteByte('\f')
 	case 'n':
-		str = append(str, '\n')
+		strb.WriteByte('\n')
 	case 'r':
-		str = append(str, '\r')
+		strb.WriteByte('\r')
 	case 't':
-		str = append(str, '\t')
+		strb.WriteByte('\t')
 	default:
 		iter.ReportError("readEscapedChar",
 			`invalid escape char after \`)
-		return nil
+		strb.Reset()
+		return
 	}
-	return str
+	return
 }
 
 // ReadStringAsSlice read string from iterator without copying into string form.
@@ -187,29 +196,25 @@ const (
 	runeError = '\uFFFD'     // the "error" Rune or "Unicode replacement character"
 )
 
-func appendRune(p []byte, r rune) []byte {
+func appendRune(p *strings.Builder, r rune) {
 	// Negative values are erroneous. Making it unsigned addresses the problem.
 	switch i := uint32(r); {
 	case i <= rune1Max:
-		p = append(p, byte(r))
-		return p
+		p.WriteByte(byte(r))
 	case i <= rune2Max:
-		p = append(p, t2|byte(r>>6))
-		p = append(p, tx|byte(r)&maskx)
-		return p
+		p.WriteByte(t2 | byte(r>>6))
+		p.WriteByte(tx | byte(r)&maskx)
 	case i > maxRune, surrogateMin <= i && i <= surrogateMax:
 		r = runeError
 		fallthrough
 	case i <= rune3Max:
-		p = append(p, t3|byte(r>>12))
-		p = append(p, tx|byte(r>>6)&maskx)
-		p = append(p, tx|byte(r)&maskx)
-		return p
+		p.WriteByte(t3 | byte(r>>12))
+		p.WriteByte(tx | byte(r>>6)&maskx)
+		p.WriteByte(tx | byte(r)&maskx)
 	default:
-		p = append(p, t4|byte(r>>18))
-		p = append(p, tx|byte(r>>12)&maskx)
-		p = append(p, tx|byte(r>>6)&maskx)
-		p = append(p, tx|byte(r)&maskx)
-		return p
+		p.WriteByte(t4 | byte(r>>18))
+		p.WriteByte(tx | byte(r>>12)&maskx)
+		p.WriteByte(tx | byte(r>>6)&maskx)
+		p.WriteByte(tx | byte(r)&maskx)
 	}
 }
