@@ -2,6 +2,7 @@ package misc_tests
 
 import (
 	"encoding/json"
+	"math"
 	"testing"
 
 	"github.com/json-iterator/go"
@@ -75,6 +76,26 @@ func Test_read_number(t *testing.T) {
 	iter := jsoniter.ParseString(jsoniter.ConfigDefault, `92233720368547758079223372036854775807`)
 	val := iter.ReadNumber()
 	should.Equal(`92233720368547758079223372036854775807`, string(val))
+}
+
+func Test_encode_inf(t *testing.T) {
+	should := require.New(t)
+	_, err := json.Marshal(math.Inf(1))
+	should.Error(err)
+	_, err = jsoniter.Marshal(float32(math.Inf(1)))
+	should.Error(err)
+	_, err = jsoniter.Marshal(math.Inf(-1))
+	should.Error(err)
+}
+
+func Test_encode_nan(t *testing.T) {
+	should := require.New(t)
+	_, err := json.Marshal(math.NaN())
+	should.Error(err)
+	_, err = jsoniter.Marshal(float32(math.NaN()))
+	should.Error(err)
+	_, err = jsoniter.Marshal(math.NaN())
+	should.Error(err)
 }
 
 func Benchmark_jsoniter_float(b *testing.B) {
