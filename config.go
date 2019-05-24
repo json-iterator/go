@@ -8,7 +8,6 @@ import (
 	"sync"
 	"unsafe"
 
-	"github.com/junchih/stringx"
 	"github.com/modern-go/concurrent"
 	"github.com/modern-go/reflect2"
 )
@@ -82,7 +81,6 @@ type frozenConfig struct {
 	streamPool                    *sync.Pool
 	iteratorPool                  *sync.Pool
 	stringBuilderPool             *sync.Pool
-	stringFactoryPool             *sync.Pool
 	caseSensitive                 bool
 }
 
@@ -152,11 +150,6 @@ func (cfg Config) Froze() API {
 	api.stringBuilderPool = &sync.Pool{
 		New: func() interface{} {
 			return &strings.Builder{}
-		},
-	}
-	api.stringFactoryPool = &sync.Pool{
-		New: func() interface{} {
-			return stringx.NewFactory()
 		},
 	}
 	api.initCache()

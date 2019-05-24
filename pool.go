@@ -1,7 +1,6 @@
 package jsoniter
 
 import (
-	"github.com/junchih/stringx"
 	"io"
 	"strings"
 )
@@ -50,12 +49,4 @@ func (cfg *frozenConfig) borrowStringBuilder() *strings.Builder {
 func (cfg *frozenConfig) returnStringBuilder(builder *strings.Builder) {
 	builder.Reset()
 	cfg.stringBuilderPool.Put(builder)
-}
-
-func (cfg *frozenConfig) borrowStringFactory() *stringx.Factory {
-	return cfg.stringFactoryPool.Get().(*stringx.Factory)
-}
-
-func (cfg *frozenConfig) returnStringFactory(factory *stringx.Factory) {
-	cfg.stringFactoryPool.Put(factory)
 }

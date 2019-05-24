@@ -8,14 +8,12 @@ import (
 
 // ReadString read string from iterator
 func (iter *Iterator) ReadString() (ret string) {
-	strf := iter.cfg.borrowStringFactory()
-	defer iter.cfg.returnStringFactory(strf)
 	c := iter.nextToken()
 	if c == '"' {
 		for i := iter.head; i < iter.tail; i++ {
 			c := iter.buf[i]
 			if c == '"' {
-				ret = strf.NewString(iter.buf[iter.head:i])
+				ret = iter.strf.NewString(iter.buf[iter.head:i])
 				iter.head = i + 1
 				return ret
 			} else if c == '\\' {
@@ -31,7 +29,7 @@ func (iter *Iterator) ReadString() (ret string) {
 		iter.skipThreeBytes('u', 'l', 'l')
 		return ""
 	}
-	iter.ReportError("ReadString", `expects " or n, but found `+strf.NewString([]byte{c}))
+	iter.ReportError("ReadString", `expects " or n, but found `+iter.strf.NewString([]byte{c}))
 	return
 }
 

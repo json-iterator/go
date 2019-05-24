@@ -3,6 +3,7 @@ package jsoniter
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/junchih/stringx"
 	"io"
 )
 
@@ -72,6 +73,7 @@ type Iterator struct {
 	cfg              *frozenConfig
 	reader           io.Reader
 	buf              []byte
+	strf             *stringx.Factory
 	head             int
 	tail             int
 	captureStartedAt int
@@ -86,6 +88,7 @@ func NewIterator(cfg API) *Iterator {
 		cfg:    cfg.(*frozenConfig),
 		reader: nil,
 		buf:    nil,
+		strf:   stringx.NewFactory(),
 		head:   0,
 		tail:   0,
 	}
@@ -97,6 +100,7 @@ func Parse(cfg API, reader io.Reader, bufSize int) *Iterator {
 		cfg:    cfg.(*frozenConfig),
 		reader: reader,
 		buf:    make([]byte, bufSize),
+		strf:   stringx.NewFactory(),
 		head:   0,
 		tail:   0,
 	}
@@ -108,6 +112,7 @@ func ParseBytes(cfg API, input []byte) *Iterator {
 		cfg:    cfg.(*frozenConfig),
 		reader: nil,
 		buf:    input,
+		strf:   stringx.NewFactory(),
 		head:   0,
 		tail:   len(input),
 	}
