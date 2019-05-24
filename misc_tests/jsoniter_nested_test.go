@@ -64,6 +64,20 @@ func Benchmark_jsoniter_nested(b *testing.B) {
 	}
 }
 
+func Benchmark_jsoniter_string(b *testing.B) {
+	dummy := func(str string) {}
+	for n := 0; n < b.N; n++ {
+		func() {
+			iter := jsoniter.ConfigDefault.BorrowIterator(
+				[]byte(`"hello world!!! hello world!!! hello world!!!"`),
+			)
+			defer jsoniter.ConfigDefault.ReturnIterator(iter)
+			hello := iter.ReadString()
+			dummy(hello)
+		}()
+	}
+}
+
 func readLevel1Hello(iter *jsoniter.Iterator) []Level2 {
 	l2Array := make([]Level2, 0, 2)
 	for iter.ReadArray() {
