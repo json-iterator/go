@@ -105,6 +105,15 @@ func Test_skip_and_return_bytes_with_reader(t *testing.T) {
 	should.Equal(`{"a" : [{"stream": "c"}], "d": 102 }`, string(skipped))
 }
 
+func Test_append_skip_and_return_bytes_with_reader(t *testing.T) {
+	should := require.New(t)
+	iter := jsoniter.Parse(jsoniter.ConfigDefault, bytes.NewBufferString(`[ {"a" : [{"stream": "c"}], "d": 102 }, "stream"]`), 4)
+	iter.ReadArray()
+	buf := make([]byte, 0, 1024)
+	buf = iter.SkipAndAppendBytes(buf)
+	should.Equal(`{"a" : [{"stream": "c"}], "d": 102 }`, string(buf))
+}
+
 func Test_skip_empty(t *testing.T) {
 	should := require.New(t)
 	should.NotNil(jsoniter.Get([]byte("")).LastError())
