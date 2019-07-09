@@ -49,6 +49,7 @@ type Extension interface {
 	UpdateStructDescriptor(structDescriptor *StructDescriptor)
 	CreateMapKeyDecoder(typ reflect2.Type) ValDecoder
 	CreateMapKeyEncoder(typ reflect2.Type) ValEncoder
+	CreateMapKeySorter() MapKeySorter
 	CreateDecoder(typ reflect2.Type) ValDecoder
 	CreateEncoder(typ reflect2.Type) ValEncoder
 	DecorateDecoder(typ reflect2.Type, decoder ValDecoder) ValDecoder
@@ -70,6 +71,11 @@ func (extension *DummyExtension) CreateMapKeyDecoder(typ reflect2.Type) ValDecod
 
 // CreateMapKeyEncoder No-op
 func (extension *DummyExtension) CreateMapKeyEncoder(typ reflect2.Type) ValEncoder {
+	return nil
+}
+
+// CreateMapKeySorter No-op
+func (extension *DummyExtension) CreateMapKeySorter() MapKeySorter {
 	return nil
 }
 
@@ -119,6 +125,11 @@ func (extension EncoderExtension) CreateMapKeyEncoder(typ reflect2.Type) ValEnco
 	return nil
 }
 
+// CreateMapKeySorter No-op
+func (extension EncoderExtension) CreateMapKeySorter() MapKeySorter {
+	return nil
+}
+
 // DecorateDecoder No-op
 func (extension EncoderExtension) DecorateDecoder(typ reflect2.Type, decoder ValDecoder) ValDecoder {
 	return decoder
@@ -142,6 +153,11 @@ func (extension DecoderExtension) CreateMapKeyDecoder(typ reflect2.Type) ValDeco
 
 // CreateMapKeyEncoder No-op
 func (extension DecoderExtension) CreateMapKeyEncoder(typ reflect2.Type) ValEncoder {
+	return nil
+}
+
+// CreateMapKeySorter No-op
+func (extension DecoderExtension) CreateMapKeySorter() MapKeySorter {
 	return nil
 }
 
