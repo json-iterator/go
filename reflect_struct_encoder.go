@@ -208,3 +208,22 @@ func (encoder *stringModeStringEncoder) Encode(ptr unsafe.Pointer, stream *Strea
 func (encoder *stringModeStringEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	return encoder.elemEncoder.IsEmpty(ptr)
 }
+
+type stringSliceModeNumberSliceEncoder struct {
+	elemEncoder ValEncoder
+}
+
+func (encoder *stringSliceModeNumberSliceEncoder) IsEmpty(ptr unsafe.Pointer) bool {
+	return encoder.elemEncoder.IsEmpty(ptr)
+}
+
+func (encoder *stringSliceModeNumberSliceEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
+	sliceElemEncoder := encoder.elemEncoder.(*sliceEncoder)
+	stringSliceModeElemEncode := &sliceEncoder{
+		sliceType: sliceElemEncoder.sliceType,
+		elemEncoder: &stringModeNumberEncoder{
+			elemEncoder: sliceElemEncoder.elemEncoder,
+		},
+	}
+	stringSliceModeElemEncode.Encode(ptr, stream)
+}

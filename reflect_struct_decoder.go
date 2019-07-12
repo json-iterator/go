@@ -1046,3 +1046,17 @@ func (decoder *stringModeNumberDecoder) Decode(ptr unsafe.Pointer, iter *Iterato
 		return
 	}
 }
+
+type stringSliceModeNumberSliceDecoder struct {
+	elemDecoder ValDecoder
+}
+
+func (decoder *stringSliceModeNumberSliceDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
+	sliceElemDecoder := decoder.elemDecoder.(*sliceDecoder)
+	stringSliceModeElemDecoder := sliceDecoder{
+		sliceType:   sliceElemDecoder.sliceType,
+		elemDecoder: &stringModeNumberDecoder{sliceElemDecoder.elemDecoder},
+	}
+	stringSliceModeElemDecoder.Decode(ptr, iter)
+}
+
