@@ -34,3 +34,5 @@ func TestEncodeMarshalJSON(t *testing.T) {
 	stdenc.Encode(foo)
 	should.Equal(stdbuf.Bytes(), buf.Bytes())
 }
+
+
