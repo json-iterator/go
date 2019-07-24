@@ -202,7 +202,7 @@ func (encoder *stringModeStringEncoder) Encode(ptr unsafe.Pointer, stream *Strea
 	tempStream := encoder.cfg.BorrowStream(nil)
 	defer encoder.cfg.ReturnStream(tempStream)
 	encoder.elemEncoder.Encode(ptr, tempStream)
-	stream.WriteString(string(tempStream.Buffer()))
+	stream.WriteBytesAsString(tempStream.Buffer())
 }
 
 func (encoder *stringModeStringEncoder) IsEmpty(ptr unsafe.Pointer) bool {

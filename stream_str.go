@@ -2,6 +2,7 @@ package jsoniter
 
 import (
 	"unicode/utf8"
+	"unsafe"
 )
 
 // htmlSafeSet holds the value true if the ASCII character with the given
@@ -305,6 +306,13 @@ func writeStringSlowPathWithHTMLEscaped(stream *Stream, i int, s string, valLen 
 		stream.WriteRaw(s[start:])
 	}
 	stream.writeByte('"')
+}
+
+// WriteBytesAsString writes b to the stream (without html escapes) as if it
+// were a string. (If you start out with a []byte, calling this instead of
+// WriteString avoids an allocation.)
+func (stream *Stream) WriteBytesAsString(b []byte) {
+	stream.WriteString(*(*string)(unsafe.Pointer(&b)))
 }
 
 // WriteString write string to stream without html escape
