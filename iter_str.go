@@ -3,15 +3,34 @@ package jsoniter
 import (
 	"fmt"
 	"unicode/utf16"
-	"unsafe"
 )
 
 // ReadString read string from iterator
 func (iter *Iterator) ReadString() (ret string) {
-	b := iter.ReadStringIntoBuffer(nil)
-	// Since b will be a copy, it is safe to directly cast it into a
-	// string.
-	return *(*string)(unsafe.Pointer(&b))
+	c := iter.nextToken()
+	if c == '"' {
+		for i := iter.head; i < iter.tail; i++ {
+			c := iter.buf[i]
+			if c == '"' {
+				ret = string(iter.buf[iter.head:i])
+				iter.head = i + 1
+				return ret
+			} else if c == '\\' {
+				break
+			} else if c < ' ' {
+				iter.ReportError("ReadString",
+					fmt.Sprintf(`invalid control character found: %d`, c))
+				return ""
+			}
+		}
+		ret = string(iter.readStringSlowPath(nil))
+		return ret
+	} else if c == 'n' {
+		iter.skipThreeBytes('u', 'l', 'l')
+		return ""
+	}
+	iter.ReportError("ReadString", `expects " or n, but found `+string([]byte{c}))
+	return ""
 }
 
 // ReadStringIntoBuffer reads a string, storing it into b. If b doesn't have
@@ -30,7 +49,7 @@ func (iter *Iterator) ReadStringIntoBuffer(b []byte) []byte {
 			} else if c == '\\' {
 				break
 			} else if c < ' ' {
-				iter.ReportError("ReadString",
+				iter.ReportError("ReadStringIntoBuffer",
 					fmt.Sprintf(`invalid control character found: %d`, c))
 				return b
 			}
@@ -41,7 +60,7 @@ func (iter *Iterator) ReadStringIntoBuffer(b []byte) []byte {
 		iter.skipThreeBytes('u', 'l', 'l')
 		return b
 	}
-	iter.ReportError("ReadString", `expects " or n, but found `+string([]byte{c}))
+	iter.ReportError("ReadStringIntoBuffer", `expects " or n, but found `+string([]byte{c}))
 	return b
 }
 
