@@ -3,52 +3,68 @@ package jsoniter
 import (
 	"fmt"
 	"unicode/utf16"
+	"unsafe"
 )
 
 // ReadString read string from iterator
 func (iter *Iterator) ReadString() (ret string) {
+	b := iter.ReadStringIntoBuffer(nil)
+	// Since b will be a copy, it is safe to directly cast it into a
+	// string.
+	return *(*string)(unsafe.Pointer(&b))
+}
+
+// ReadStringIntoBuffer reads a string, storing it into b. If b doesn't have
+// enough capacity, it will be enlarged, but otherwise no allocations will be
+// done. The possibly-enlarged buffer will be returned. Passing nil will cause
+// a buffer to be allocated.
+func (iter *Iterator) ReadStringIntoBuffer(b []byte) []byte {
 	c := iter.nextToken()
 	if c == '"' {
 		for i := iter.head; i < iter.tail; i++ {
 			c := iter.buf[i]
 			if c == '"' {
-				ret = string(iter.buf[iter.head:i])
+				b = append(b, iter.buf[iter.head:i]...)
 				iter.head = i + 1
-				return ret
+				return b
 			} else if c == '\\' {
 				break
 			} else if c < ' ' {
 				iter.ReportError("ReadString",
 					fmt.Sprintf(`invalid control character found: %d`, c))
-				return
+				return b
 			}
 		}
-		return iter.readStringSlowPath()
+		b = iter.readStringSlowPath(b)
+		return b
 	} else if c == 'n' {
 		iter.skipThreeBytes('u', 'l', 'l')
-		return ""
+		return b
 	}
 	iter.ReportError("ReadString", `expects " or n, but found `+string([]byte{c}))
-	return
+	return b
 }
 
-func (iter *Iterator) readStringSlowPath() (ret string) {
-	var str []byte
+func (iter *Iterator) readStringSlowPath(dest []byte) []byte {
+	dn := len(dest)
 	var c byte
 	for iter.Error == nil {
 		c = iter.readByte()
 		if c == '"' {
-			return string(str)
+			return dest
 		}
 		if c == '\\' {
 			c = iter.readByte()
-			str = iter.readEscapedChar(c, str)
+			dest = iter.readEscapedChar(c, dest)
 		} else {
-			str = append(str, c)
+			dest = append(dest, c)
 		}
 	}
 	iter.ReportError("readStringSlowPath", "unexpected end of input")
-	return
+	if len(dest) > dn {
+		dest = dest[:dn]
+	}
+	return dest
 }
 
 func (iter *Iterator) readEscapedChar(c byte, str []byte) []byte {

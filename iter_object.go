@@ -3,6 +3,7 @@ package jsoniter
 import (
 	"fmt"
 	"strings"
+	"unsafe"
 )
 
 // ReadObject read one field from object.
@@ -59,7 +60,11 @@ func (iter *Iterator) readFieldHash() int64 {
 			b := iter.buf[i]
 			if b == '\\' {
 				iter.head = i
-				for _, b := range iter.readStringSlowPath() {
+				decodedBytes := iter.readStringSlowPath(nil)
+				// Iterate over a string to ensure we look at
+				// utf8 encoded runes and not bytes.
+				str := *(*string)(unsafe.Pointer(&decodedBytes))
+				for _, b := range str {
 					if 'A' <= b && b <= 'Z' && !iter.cfg.caseSensitive {
 						b += 'a' - 'A'
 					}
@@ -199,6 +204,58 @@ func (iter *Iterator) ReadMapCB(callback func(*Iterator, string) bool) bool {
 		return true // null
 	}
 	iter.ReportError("ReadMapCB", `expect { or n, but found `+string([]byte{c}))
+	return false
+}
+
+// ReadMapCBFieldAsBytes reads a map with a callback. The field name will be
+// decoded properly, but it's passed as a []byte to permit zero allocation
+// reads. The buffer will be reused, so you must copy it if you want to store
+// its contents.
+func (iter *Iterator) ReadMapCBFieldAsBytes(fieldNameBuffer []byte, callback func(*Iterator, []byte) bool) bool {
+	c := iter.nextToken()
+	if c == '{' {
+		c = iter.nextToken()
+		if c == '"' {
+			iter.unreadByte()
+			fieldNameBuffer = fieldNameBuffer[:0]
+			fieldNameBuffer = iter.ReadStringIntoBuffer(fieldNameBuffer)
+			if iter.nextToken() != ':' {
+				iter.ReportError("ReadMapCBFieldAsBytes", "expect : after object field, but found "+string([]byte{c}))
+				return false
+			}
+			if !callback(iter, fieldNameBuffer) {
+				return false
+			}
+			c = iter.nextToken()
+			for c == ',' {
+				fieldNameBuffer = fieldNameBuffer[:0]
+				fieldNameBuffer = iter.ReadStringIntoBuffer(fieldNameBuffer)
+				if iter.nextToken() != ':' {
+					iter.ReportError("ReadMapCBFieldAsBytes", "expect : after object field, but found "+string([]byte{c}))
+					return false
+				}
+				if !callback(iter, fieldNameBuffer) {
+					return false
+				}
+				c = iter.nextToken()
+			}
+			if c != '}' {
+				iter.ReportError("ReadMapCBFieldAsBytes", `object not ended with }`)
+				return false
+			}
+			return true
+		}
+		if c == '}' {
+			return true
+		}
+		iter.ReportError("ReadMapCBFieldAsBytes", `expect " after }, but found `+string([]byte{c}))
+		return false
+	}
+	if c == 'n' {
+		iter.skipThreeBytes('u', 'l', 'l')
+		return true // null
+	}
+	iter.ReportError("ReadMapCBFieldAsBytes", `expect { or n, but found `+string([]byte{c}))
 	return false
 }
 
