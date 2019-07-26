@@ -216,7 +216,7 @@ func scanBytes(iter *jsoniter.Iterator, buf []byte) []byte {
 	return buf
 }
 
-func Benchmark_scan_string(b *testing.B) {
+func Benchmark_custom_scan(b *testing.B) {
 	file, _ := os.Open("/tmp/large-file.json")
 	fb, _ := ioutil.ReadAll(file)
 	file.Close()

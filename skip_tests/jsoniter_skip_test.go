@@ -148,6 +148,7 @@ func Benchmark_jsoniter_skip(b *testing.B) {
     },
     "code": 200
 }`)
+	b.ReportAllocs()
 	for n := 0; n < b.N; n++ {
 		result := TestResp{}
 		iter := jsoniter.ParseBytes(jsoniter.ConfigDefault, input)
