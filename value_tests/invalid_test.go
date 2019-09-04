@@ -234,3 +234,12 @@ func Test_nil_any(t *testing.T) {
 	data, _ := jsoniter.Marshal(&Foo{})
 	should.Equal(`{"A":null}`, string(data))
 }
+
+func Test_NullKeyMap(t *testing.T) {
+	jb := []byte(`{"a":"b",null:"c"}`)
+	var out map[string]interface{}
+	err := jsoniter.Unmarshal(jb, &out)
+	if err == nil {
+		t.Errorf("Expected error")
+	}
+}
