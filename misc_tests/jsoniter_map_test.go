@@ -42,3 +42,11 @@ func Test_map_eface_of_eface(t *testing.T) {
 	should.NoError(err)
 	should.Equal(`{"1":2,"3":"4"}`, output)
 }
+
+func Test_encode_nil_map(t *testing.T) {
+	should := require.New(t)
+	var nilMap map[string]string
+	output, err := jsoniter.MarshalToString(nilMap)
+	should.NoError(err)
+	should.Equal(`null`, output)
+}
