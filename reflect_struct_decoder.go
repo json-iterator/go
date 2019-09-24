@@ -1026,14 +1026,14 @@ func (decoder *stringModeStringDecoder) Decode(ptr unsafe.Pointer, iter *Iterato
 	*((*string)(ptr)) = tempIter.ReadString()
 }
 
-type stringModeNumberDecoder struct {
+type stringModeNonStringDecoder struct {
 	elemDecoder ValDecoder
 }
 
-func (decoder *stringModeNumberDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
+func (decoder *stringModeNonStringDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	c := iter.nextToken()
 	if c != '"' {
-		iter.ReportError("stringModeNumberDecoder", `expect ", but found `+string([]byte{c}))
+		iter.ReportError("stringModeNonStringDecoder", `expect ", but found `+string([]byte{c}))
 		return
 	}
 	decoder.elemDecoder.Decode(ptr, iter)
@@ -1042,7 +1042,7 @@ func (decoder *stringModeNumberDecoder) Decode(ptr unsafe.Pointer, iter *Iterato
 	}
 	c = iter.readByte()
 	if c != '"' {
-		iter.ReportError("stringModeNumberDecoder", `expect ", but found `+string([]byte{c}))
+		iter.ReportError("stringModeNonStringDecoder", `expect ", but found `+string([]byte{c}))
 		return
 	}
 }

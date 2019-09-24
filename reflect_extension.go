@@ -451,9 +451,9 @@ func processTags(structDescriptor *StructDescriptor, cfg *frozenConfig) {
 				if binding.Field.Type().Kind() == reflect.String {
 					binding.Decoder = &stringModeStringDecoder{binding.Decoder, cfg}
 					binding.Encoder = &stringModeStringEncoder{binding.Encoder, cfg}
-				} else {
-					binding.Decoder = &stringModeNumberDecoder{binding.Decoder}
-					binding.Encoder = &stringModeNumberEncoder{binding.Encoder}
+				} else if binding.Field.Type().Kind() != reflect.Slice && binding.Field.Type().Kind() != reflect.Map{
+					binding.Decoder = &stringModeNonStringDecoder{binding.Decoder}
+					binding.Encoder = &stringModeNonStringEncoder{binding.Encoder}
 				}
 			}
 		}
