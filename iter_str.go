@@ -3,6 +3,7 @@ package jsoniter
 import (
 	"fmt"
 	"unicode/utf16"
+	"unicode/utf8"
 )
 
 // ReadString read string from iterator
@@ -15,7 +16,8 @@ func (iter *Iterator) ReadString() (ret string) {
 				ret = string(iter.buf[iter.head:i])
 				iter.head = i + 1
 				return ret
-			} else if c == '\\' {
+			} else if c == '\\' || c >= utf8.RuneSelf {
+				// we have escaped characters or multi-byte runes we need to verify
 				break
 			} else if c < ' ' {
 				iter.ReportError("ReadString",
@@ -32,8 +34,11 @@ func (iter *Iterator) ReadString() (ret string) {
 	return
 }
 
+var invalidRuneBytes = []byte(string([]rune{utf8.RuneError}))
+
 func (iter *Iterator) readStringSlowPath() (ret string) {
 	var str []byte
+	var runeBytes = make([]byte, 0, utf8.MaxRune) // allocate once
 	var c byte
 	for iter.Error == nil {
 		c = iter.readByte()
@@ -43,8 +48,42 @@ func (iter *Iterator) readStringSlowPath() (ret string) {
 		if c == '\\' {
 			c = iter.readByte()
 			str = iter.readEscapedChar(c, str)
-		} else {
+		} else if c < utf8.RuneSelf {
+			// standalone rune
 			str = append(str, c)
+		} else if !utf8.RuneStart(c) {
+			// invalid rune
+			str = append(str, invalidRuneBytes...)
+		} else {
+			// reset runeBytes to hold our starting byte
+			runeBytes = append(runeBytes[:0], c)
+
+			// read up to utf8.MaxRune bytes
+			for i := 1; i < utf8.MaxRune; i++ {
+				c2 := iter.readByte()
+				if utf8.RuneStart(c2) {
+					// if this is not a continuation, put the byte back and stop reading
+					iter.unreadByte()
+					break
+				} else {
+					// append to our rune array
+					runeBytes = append(runeBytes, c2)
+				}
+			}
+
+			r, size := utf8.DecodeRune(runeBytes)
+			if r == utf8.RuneError && size == 1 {
+				// invalid decode, replace starting byte with utf8.RuneError, matching go stdlib
+				str = append(str, invalidRuneBytes...)
+			} else {
+				// successful decode, append bytes
+				str = append(str, runeBytes[0:size]...)
+			}
+
+			// put bytes we didn't consume in the decode back (an invalid decode consumes 1 byte)
+			for i := size; i < len(runeBytes); i++ {
+				iter.unreadByte()
+			}
 		}
 	}
 	iter.ReportError("readStringSlowPath", "unexpected end of input")
