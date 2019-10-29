@@ -60,6 +60,7 @@ func init() {
 		(*SameLevel2NoTags)(nil),
 		(*SameLevel2Tagged)(nil),
 		(*EmbeddedPtr)(nil),
+		(*UnnamedLiteral)(nil),
 	)
 }
 
@@ -230,4 +231,8 @@ type EmbeddedPtrOption struct {
 
 type EmbeddedPtr struct {
 	EmbeddedPtrOption `json:","`
+}
+
+type UnnamedLiteral struct {
+	_ struct{}
 }
