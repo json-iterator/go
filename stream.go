@@ -66,11 +66,6 @@ func (stream *Stream) SetBuffer(buf []byte) {
 // why the write is short.
 func (stream *Stream) Write(p []byte) (nn int, err error) {
 	stream.buf = append(stream.buf, p...)
-	if stream.out != nil {
-		nn, err = stream.out.Write(stream.buf)
-		stream.buf = stream.buf[nn:]
-		return
-	}
 	return len(p), nil
 }
 
@@ -177,7 +172,6 @@ func (stream *Stream) WriteEmptyObject() {
 func (stream *Stream) WriteMore() {
 	stream.writeByte(',')
 	stream.writeIndention(0)
-	stream.Flush()
 }
 
 // WriteArrayStart write [ with possible indention
