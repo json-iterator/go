@@ -2,9 +2,11 @@ package test
 
 import (
 	"encoding/json"
+	"fmt"
+	"strings"
 	"testing"
 
-	"github.com/json-iterator/go"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/stretchr/testify/require"
 )
 
@@ -22,6 +24,51 @@ func Test_customize_float_marshal(t *testing.T) {
 	str, err := json.MarshalToString(float32(1.23456789))
 	should.Nil(err)
 	should.Equal("1.234568", str)
+}
+
+func Test_max_depth(t *testing.T) {
+	deepJSON := func(depth int) []byte {
+		return []byte(strings.Repeat(`[`, depth) + strings.Repeat(`]`, depth))
+	}
+
+	tests := []struct {
+		jsonDepth   int
+		cfgMaxDepth int
+		expectedErr string
+	}{
+		// Test the default depth
+		{jsonDepth: 10000, cfgMaxDepth: 0},
+		{jsonDepth: 10001, cfgMaxDepth: 0, expectedErr: "max depth"},
+		// Test max depth logic
+		{jsonDepth: 5, cfgMaxDepth: 6},
+		{jsonDepth: 5, cfgMaxDepth: 5},
+		{jsonDepth: 5, cfgMaxDepth: 4, expectedErr: "max depth"},
+		// Now try some larger values to figure out the limit
+		{jsonDepth: 128000, cfgMaxDepth: -1},
+		{jsonDepth: 512000, cfgMaxDepth: -1},
+		{jsonDepth: 768000, cfgMaxDepth: -1},
+		{jsonDepth: 860367, cfgMaxDepth: -1}, // largest value for jsoniter without stack overflow
+	}
+
+	for _, test := range tests {
+		t.Run(fmt.Sprintf("jsonDepth:%v_cfgMaxDepth:%v", test.jsonDepth, test.cfgMaxDepth), func(t *testing.T) {
+			if testing.Short() && test.jsonDepth >= 512000 {
+				t.Skip("skipping in -short due to large input data")
+			}
+
+			should := require.New(t)
+			cfg := jsoniter.Config{MaxDepth: test.cfgMaxDepth}.Froze()
+
+			var val interface{}
+			err := cfg.Unmarshal(deepJSON(test.jsonDepth), &val)
+			if test.expectedErr != "" {
+				should.Error(err)
+				should.Contains(err.Error(), test.expectedErr)
+			} else {
+				should.NoError(err)
+			}
+		})
+	}
 }
 
 func Test_customize_tag_key(t *testing.T) {
