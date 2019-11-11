@@ -43,19 +43,12 @@ func Test_max_depth(t *testing.T) {
 		{jsonDepth: 5, cfgMaxDepth: 6},
 		{jsonDepth: 5, cfgMaxDepth: 5},
 		{jsonDepth: 5, cfgMaxDepth: 4, expectedErr: "max depth"},
-		// Now try some larger values to figure out the limit
+		// Try a large depth without a limit
 		{jsonDepth: 128000, cfgMaxDepth: -1},
-		{jsonDepth: 512000, cfgMaxDepth: -1},
-		{jsonDepth: 768000, cfgMaxDepth: -1},
-		{jsonDepth: 860367, cfgMaxDepth: -1}, // largest value for jsoniter without stack overflow
 	}
 
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("jsonDepth:%v_cfgMaxDepth:%v", test.jsonDepth, test.cfgMaxDepth), func(t *testing.T) {
-			if testing.Short() && test.jsonDepth >= 512000 {
-				t.Skip("skipping in -short due to large input data")
-			}
-
 			should := require.New(t)
 			cfg := jsoniter.Config{MaxDepth: test.cfgMaxDepth}.Froze()
 
