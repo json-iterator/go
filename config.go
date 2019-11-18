@@ -29,6 +29,7 @@ type Config struct {
 	ObjectFieldMustBeSimpleString bool
 	CaseSensitive                 bool
 	MaxDepth                      int
+	AllowOmitEmptyStruct          bool
 }
 
 // API the public interface of this package.
@@ -86,6 +87,7 @@ type frozenConfig struct {
 	iteratorPool                  *sync.Pool
 	caseSensitive                 bool
 	maxDepth                      int
+	allowOmitEmptyStruct          bool
 }
 
 func (cfg *frozenConfig) initCache() {
@@ -144,6 +146,7 @@ func (cfg Config) Froze() API {
 		disallowUnknownFields:         cfg.DisallowUnknownFields,
 		caseSensitive:                 cfg.CaseSensitive,
 		maxDepth:                      cfg.MaxDepth,
+		allowOmitEmptyStruct:          cfg.AllowOmitEmptyStruct,
 	}
 	api.streamPool = &sync.Pool{
 		New: func() interface{} {
