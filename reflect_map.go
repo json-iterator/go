@@ -320,6 +320,9 @@ func (encoder *sortKeysMapEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 		}
 		stream.Write(keyValue.keyValue)
 	}
+	if subStream.Error != nil && stream.Error == nil {
+		stream.Error = subStream.Error
+	}
 	stream.WriteObjectEnd()
 	stream.cfg.ReturnStream(subStream)
 	stream.cfg.ReturnIterator(subIter)
