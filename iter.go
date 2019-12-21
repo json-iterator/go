@@ -327,9 +327,12 @@ func (iter *Iterator) Read() interface{} {
 	}
 }
 
+// limit maximum depth of nesting, as allowed by https://tools.ietf.org/html/rfc7159#section-9
+const maxDepth = 10000
+
 func (iter *Iterator) incrementDepth() (success bool) {
 	iter.depth++
-	if iter.depth <= iter.cfg.maxDepth || iter.cfg.maxDepth < 0 {
+	if iter.depth <= maxDepth {
 		return true
 	}
 	iter.ReportError("incrementDepth", "exceeded max depth")
