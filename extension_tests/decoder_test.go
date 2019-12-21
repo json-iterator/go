@@ -2,6 +2,7 @@ package test
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/json-iterator/go"
 	"github.com/stretchr/testify/require"
 	"strconv"
@@ -45,6 +46,38 @@ func Test_customize_byte_array_encoder(t *testing.T) {
 	str, err := jsoniter.MarshalToString(val)
 	should.Nil(err)
 	should.Equal(`"abc"`, str)
+}
+
+type CustomEncoderAttachmentTestStruct struct {
+	Value int32 `json:"value"`
+}
+
+type CustomEncoderAttachmentTestStructEncoder struct {}
+
+func (c *CustomEncoderAttachmentTestStructEncoder) Encode(ptr unsafe.Pointer, stream *jsoniter.Stream) {
+	attachVal, ok := stream.Attachment.(int)
+	stream.WriteRaw(`"`)
+	stream.WriteRaw(fmt.Sprintf("%t %d", ok, attachVal))
+	stream.WriteRaw(`"`)
+}
+
+func (c *CustomEncoderAttachmentTestStructEncoder) IsEmpty(ptr unsafe.Pointer) bool {
+	return false
+}
+
+func Test_custom_encoder_attachment(t *testing.T) {
+
+	jsoniter.RegisterTypeEncoder("test.CustomEncoderAttachmentTestStruct", &CustomEncoderAttachmentTestStructEncoder{})
+	expectedValue := 17
+	should := require.New(t)
+	buf := &bytes.Buffer{}
+	stream := jsoniter.NewStream(jsoniter.Config{SortMapKeys: true}.Froze(), buf, 4096)
+	stream.Attachment = expectedValue
+	val := map[string]CustomEncoderAttachmentTestStruct{"a": {}}
+	stream.WriteVal(val)
+	stream.Flush()
+	should.Nil(stream.Error)
+	should.Equal("{\"a\":\"true 17\"}", buf.String())
 }
 
 func Test_customize_field_decoder(t *testing.T) {
