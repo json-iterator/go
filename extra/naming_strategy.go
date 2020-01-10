@@ -18,6 +18,9 @@ type namingStrategyExtension struct {
 
 func (extension *namingStrategyExtension) UpdateStructDescriptor(structDescriptor *jsoniter.StructDescriptor) {
 	for _, binding := range structDescriptor.Fields {
+		if unicode.IsLower(rune(binding.Field.Name()[0])) {
+			continue
+		}
 		tag, hastag := binding.Field.Tag().Lookup("json")
 		if hastag {
 			tagParts := strings.Split(tag, ",")
