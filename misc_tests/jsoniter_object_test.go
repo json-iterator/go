@@ -2,6 +2,7 @@ package misc_tests
 
 import (
 	"bytes"
+	"reflect"
 	"testing"
 
 	"github.com/json-iterator/go"
@@ -146,4 +147,27 @@ func Test_unmarshal_into_existing_value(t *testing.T) {
 	should.Equal(map[string]interface{}{
 		"k": "v",
 	}, m)
+}
+
+// for issue421
+func Test_unmarshal_anonymous_struct_invalid(t *testing.T) {
+	should := require.New(t)
+	t1 := struct {
+		Field1 string
+	}{}
+
+	cfg := jsoniter.ConfigCompatibleWithStandardLibrary
+	err := cfg.UnmarshalFromString(`{"Field1":`, &t1)
+	should.NotNil(err)
+	should.NotContains(err.Error(), reflect.TypeOf(t1).String())
+
+	type TestObject struct {
+		Field1 struct {
+			InnerField1 string
+		}
+	}
+	t2 := TestObject{}
+	err = cfg.UnmarshalFromString(`{"Field1":{"InnerField1"`, &t2)
+	should.NotNil(err)
+	should.NotContains(err.Error(), reflect.TypeOf(t2.Field1).String())
 }
