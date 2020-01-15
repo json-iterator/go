@@ -6,9 +6,61 @@ import (
 	"fmt"
 	"github.com/json-iterator/go"
 	"github.com/stretchr/testify/require"
+	"math"
 	"strconv"
 	"testing"
 )
+
+func Test_NaN_Inf(t *testing.T) {
+	cases := []struct {
+		json  string
+		check func(float64) bool
+	}{
+		{
+			json:  "NaN",
+			check: math.IsNaN,
+		},
+		{
+			json:  "-Infinity",
+			check: func(f float64) bool { return math.IsInf(f, -1) },
+		},
+		{
+			json:  "Infinity",
+			check: func(f float64) bool { return math.IsInf(f, 1) },
+		},
+	}
+
+	for _, tc := range cases {
+		iter := jsoniter.ParseString(jsoniter.ConfigDefault, tc.json+",")
+		if res := iter.ReadFloat64(); !tc.check(res) || iter.Error != nil {
+			t.Errorf("couldn't parse %s, got %f (%v)", tc.json, res, iter.Error)
+		}
+		iterStd := jsoniter.ParseString(jsoniter.ConfigCompatibleWithStandardLibrary, tc.json+",")
+		res := iterStd.Read()
+		if iterStd.Error == nil {
+			t.Errorf("standard compatible parser should have returned an error for %s, but got %v",
+				tc.json, res)
+		}
+		cfgNum := jsoniter.Config{
+			EscapeHTML: true,
+			AllowNaN:   true,
+			UseNumber:  true,
+		}.Froze()
+		iterNum := jsoniter.ParseString(cfgNum, tc.json+",")
+		if res := iterNum.ReadNumber(); iterNum.Error != nil || string(res) != tc.json {
+			t.Errorf("expected to get %s as string, but got %v (%v)", tc.json, res, iterNum.Error)
+		}
+	}
+
+	// those strings should result in an error
+	invalid := []string{"NAN", "None", "Infinite", "nan", "infinity"}
+	for _, str := range invalid {
+		iter := jsoniter.ParseString(jsoniter.ConfigDefault, str+",")
+		if res := iter.ReadFloat64(); iter.Error == nil {
+			t.Errorf("expected %s result in error, got %f", str, res)
+		}
+	}
+}
 
 func Test_read_float(t *testing.T) {
 	inputs := []string{
