@@ -177,7 +177,6 @@ func (stream *Stream) WriteEmptyObject() {
 func (stream *Stream) WriteMore() {
 	stream.writeByte(',')
 	stream.writeIndention(0)
-	stream.Flush()
 }
 
 // WriteArrayStart write [ with possible indention
