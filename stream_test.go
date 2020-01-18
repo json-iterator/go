@@ -1,8 +1,9 @@
 package jsoniter
 
 import (
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func Test_writeByte_should_grow_buffer(t *testing.T) {
@@ -65,5 +66,10 @@ func Test_flush_buffer_should_stop_grow_buffer(t *testing.T) {
 	writer := new(NopWriter)
 	NewEncoder(writer).Encode(make([]int, 10000000))
 	should := require.New(t)
-	should.Equal(8, writer.bufferSize)
+
+	// 512 is the internal buffer size set in NewEncoder
+	//
+	// Flush is called after each array element, so only the first 8 bytes of it
+	// is ever used, and it is never extended. Capacity remains 512.
+	should.Equal(512, writer.bufferSize)
 }
