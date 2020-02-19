@@ -145,7 +145,7 @@ func (encoder *structEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteObjectStart()
 	isNotFirst := false
 	for _, field := range encoder.fields {
-		if field.encoder.omitempty && field.encoder.IsEmpty(ptr) {
+		if (stream.cfg.omitEmpty || field.encoder.omitempty) && field.encoder.IsEmpty(ptr) {
 			continue
 		}
 		if field.encoder.IsEmbeddedPtrNil(ptr) {
