@@ -194,6 +194,11 @@ func init() {
 			C: 21,
 			d: time.NewTimer(10 * time.Second),
 		},
+		struct {
+			_UnderscoreField string
+		}{
+			"should not marshal",
+		},
 	)
 }
 

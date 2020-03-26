@@ -55,9 +55,11 @@ func Test_set_naming_strategy_with_private_field(t *testing.T) {
 	output, err := jsoniter.Marshal(struct {
 		UserName string
 		userId   int
+		_UserAge int
 	}{
 		UserName: "allen",
 		userId:   100,
+		_UserAge: 30,
 	})
 	should.Nil(err)
 	should.Equal(`{"user_name":"allen"}`, string(output))
