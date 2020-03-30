@@ -27,13 +27,5 @@ func init() {
 			return &pi
 		},
 		input: "null",
-	}, unmarshalCase{
-		obj: func() interface{} {
-			var i int
-			pi := &i
-			ppi := &pi
-			return &ppi
-		},
-		input: "null",
 	})
 }
