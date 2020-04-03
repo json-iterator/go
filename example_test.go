@@ -90,7 +90,15 @@ func ExampleConfigFastest_Unmarshal() {
 
 func ExampleGet() {
 	val := []byte(`{"ID":1,"Name":"Reds","Colors":["Crimson","Red","Ruby","Maroon"]}`)
-	fmt.Printf(Get(val, "Colors", 0).ToString())
+
+	v := Get(val, "Colors", 0).ToString()
+	fmt.Printf(v)
+
+	v2 := Get(val, []interface{}{"Colors",0}).ToString()
+	fmt.Println(v2)
+
+	v3 := Gets(val, []interface{}{"Colors",0}).ToString()
+	fmt.Println(v3)
 	// Output:
 	// Crimson
 }

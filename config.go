@@ -38,6 +38,7 @@ type API interface {
 	UnmarshalFromString(str string, v interface{}) error
 	Unmarshal(data []byte, v interface{}) error
 	Get(data []byte, path ...interface{}) Any
+	Gets(data []byte,path []interface{}) Any
 	NewEncoder(writer io.Writer) *Encoder
 	NewDecoder(reader io.Reader) *Decoder
 	Valid(data []byte) bool
@@ -341,6 +342,15 @@ func (cfg *frozenConfig) Get(data []byte, path ...interface{}) Any {
 	defer cfg.ReturnIterator(iter)
 	return locatePath(iter, path)
 }
+
+func (cfg *frozenConfig) Gets(data []byte, path []interface{}) Any {
+	iter := cfg.BorrowIterator(data)
+	defer cfg.ReturnIterator(iter)
+	return locatePath(iter, path)
+}
+
+
+
 
 func (cfg *frozenConfig) Unmarshal(data []byte, v interface{}) error {
 	iter := cfg.BorrowIterator(data)

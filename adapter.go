@@ -26,6 +26,10 @@ func Get(data []byte, path ...interface{}) Any {
 	return ConfigDefault.Get(data, path...)
 }
 
+func Gets(data[] byte,path []interface{}) Any{
+	return ConfigDefault.Gets(data,path)
+}
+
 // Marshal adapts to json/encoding Marshal API
 //
 // Marshal returns the JSON encoding of v, adapts to json/encoding Marshal API
