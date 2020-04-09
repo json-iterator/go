@@ -1,8 +1,9 @@
 package jsoniter
 
 import (
-	"fmt"
+	"errors"
 	"reflect"
+	"strings"
 	"unsafe"
 
 	"github.com/modern-go/reflect2"
@@ -183,7 +184,9 @@ func _createDecoderOfType(ctx *ctx, typ reflect2.Type) ValDecoder {
 	case reflect.Ptr:
 		return decoderOfOptional(ctx, typ)
 	default:
-		return &lazyErrorDecoder{err: fmt.Errorf("%s%s is unsupported type", ctx.prefix, typ.String())}
+		return &lazyErrorDecoder{err: errors.New(strings.Join([]string{
+			ctx.prefix, typ.String(), " is unsupported type",
+		}, ""))}
 	}
 }
 
@@ -282,7 +285,9 @@ func _createEncoderOfType(ctx *ctx, typ reflect2.Type) ValEncoder {
 	case reflect.Ptr:
 		return encoderOfOptional(ctx, typ)
 	default:
-		return &lazyErrorEncoder{err: fmt.Errorf("%s%s is unsupported type", ctx.prefix, typ.String())}
+		return &lazyErrorEncoder{err: errors.New(strings.Join([]string{
+			ctx.prefix, typ.String(), " is unsupported type",
+		}, ""))}
 	}
 }
 

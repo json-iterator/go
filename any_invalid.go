@@ -1,6 +1,9 @@
 package jsoniter
 
-import "fmt"
+import (
+	"fmt"
+	"errors"
+)
 
 type invalidAny struct {
 	baseAny
@@ -8,7 +11,7 @@ type invalidAny struct {
 }
 
 func newInvalidAny(path []interface{}) *invalidAny {
-	return &invalidAny{baseAny{}, fmt.Errorf("%v not found", path)}
+	return &invalidAny{baseAny{}, errors.New(fmt.Sprintf("%v not found", path))}
 }
 
 func (any *invalidAny) LastError() error {
@@ -68,9 +71,9 @@ func (any *invalidAny) WriteTo(stream *Stream) {
 
 func (any *invalidAny) Get(path ...interface{}) Any {
 	if any.err == nil {
-		return &invalidAny{baseAny{}, fmt.Errorf("get %v from invalid", path)}
+		return &invalidAny{baseAny{}, errors.New(fmt.Sprintf("get %v from invalid", path))}
 	}
-	return &invalidAny{baseAny{}, fmt.Errorf("%v, get %v from invalid", any.err, path)}
+	return &invalidAny{baseAny{}, errors.New(fmt.Sprintf("%v, get %v from invalid", any.err, path))}
 }
 
 func (any *invalidAny) Parse() *Iterator {

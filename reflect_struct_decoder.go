@@ -5,6 +5,7 @@ import (
 	"io"
 	"strings"
 	"unsafe"
+	"errors"
 
 	"github.com/modern-go/reflect2"
 )
@@ -508,7 +509,7 @@ func (decoder *generalStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) 
 		decoder.decodeOneField(ptr, iter)
 	}
 	if iter.Error != nil && iter.Error != io.EOF && len(decoder.typ.Type1().Name()) != 0 {
-		iter.Error = fmt.Errorf("%v.%s", decoder.typ, iter.Error.Error())
+		iter.Error = errors.New(fmt.Sprintf("%v.%s", decoder.typ, iter.Error.Error()))
 	}
 	if c != '}' {
 		iter.ReportError("struct Decode", `expect }, but found `+string([]byte{c}))
@@ -589,7 +590,7 @@ func (decoder *oneFieldStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterator)
 		}
 	}
 	if iter.Error != nil && iter.Error != io.EOF && len(decoder.typ.Type1().Name()) != 0 {
-		iter.Error = fmt.Errorf("%v.%s", decoder.typ, iter.Error.Error())
+		iter.Error = errors.New(fmt.Sprintf("%v.%s", decoder.typ, iter.Error.Error()))
 	}
 	iter.decrementDepth()
 }
@@ -623,7 +624,7 @@ func (decoder *twoFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterator
 		}
 	}
 	if iter.Error != nil && iter.Error != io.EOF && len(decoder.typ.Type1().Name()) != 0 {
-		iter.Error = fmt.Errorf("%v.%s", decoder.typ, iter.Error.Error())
+		iter.Error = errors.New(fmt.Sprintf("%v.%s", decoder.typ, iter.Error.Error()))
 	}
 	iter.decrementDepth()
 }
@@ -661,7 +662,7 @@ func (decoder *threeFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterat
 		}
 	}
 	if iter.Error != nil && iter.Error != io.EOF && len(decoder.typ.Type1().Name()) != 0 {
-		iter.Error = fmt.Errorf("%v.%s", decoder.typ, iter.Error.Error())
+		iter.Error = errors.New(fmt.Sprintf("%v.%s", decoder.typ, iter.Error.Error()))
 	}
 	iter.decrementDepth()
 }
@@ -703,7 +704,7 @@ func (decoder *fourFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterato
 		}
 	}
 	if iter.Error != nil && iter.Error != io.EOF && len(decoder.typ.Type1().Name()) != 0 {
-		iter.Error = fmt.Errorf("%v.%s", decoder.typ, iter.Error.Error())
+		iter.Error = errors.New(fmt.Sprintf("%v.%s", decoder.typ, iter.Error.Error()))
 	}
 	iter.decrementDepth()
 }
@@ -749,7 +750,7 @@ func (decoder *fiveFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterato
 		}
 	}
 	if iter.Error != nil && iter.Error != io.EOF && len(decoder.typ.Type1().Name()) != 0 {
-		iter.Error = fmt.Errorf("%v.%s", decoder.typ, iter.Error.Error())
+		iter.Error = errors.New(fmt.Sprintf("%v.%s", decoder.typ, iter.Error.Error()))
 	}
 	iter.decrementDepth()
 }
@@ -799,7 +800,7 @@ func (decoder *sixFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterator
 		}
 	}
 	if iter.Error != nil && iter.Error != io.EOF && len(decoder.typ.Type1().Name()) != 0 {
-		iter.Error = fmt.Errorf("%v.%s", decoder.typ, iter.Error.Error())
+		iter.Error = errors.New(fmt.Sprintf("%v.%s", decoder.typ, iter.Error.Error()))
 	}
 	iter.decrementDepth()
 }
@@ -853,7 +854,7 @@ func (decoder *sevenFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterat
 		}
 	}
 	if iter.Error != nil && iter.Error != io.EOF && len(decoder.typ.Type1().Name()) != 0 {
-		iter.Error = fmt.Errorf("%v.%s", decoder.typ, iter.Error.Error())
+		iter.Error = errors.New(fmt.Sprintf("%v.%s", decoder.typ, iter.Error.Error()))
 	}
 	iter.decrementDepth()
 }
@@ -911,7 +912,7 @@ func (decoder *eightFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterat
 		}
 	}
 	if iter.Error != nil && iter.Error != io.EOF && len(decoder.typ.Type1().Name()) != 0 {
-		iter.Error = fmt.Errorf("%v.%s", decoder.typ, iter.Error.Error())
+		iter.Error = errors.New(fmt.Sprintf("%v.%s", decoder.typ, iter.Error.Error()))
 	}
 	iter.decrementDepth()
 }
@@ -973,7 +974,7 @@ func (decoder *nineFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterato
 		}
 	}
 	if iter.Error != nil && iter.Error != io.EOF && len(decoder.typ.Type1().Name()) != 0 {
-		iter.Error = fmt.Errorf("%v.%s", decoder.typ, iter.Error.Error())
+		iter.Error = errors.New(fmt.Sprintf("%v.%s", decoder.typ, iter.Error.Error()))
 	}
 	iter.decrementDepth()
 }
@@ -1039,7 +1040,7 @@ func (decoder *tenFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterator
 		}
 	}
 	if iter.Error != nil && iter.Error != io.EOF && len(decoder.typ.Type1().Name()) != 0 {
-		iter.Error = fmt.Errorf("%v.%s", decoder.typ, iter.Error.Error())
+		iter.Error = errors.New(fmt.Sprintf("%v.%s", decoder.typ, iter.Error.Error()))
 	}
 	iter.decrementDepth()
 }
@@ -1053,7 +1054,7 @@ func (decoder *structFieldDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	fieldPtr := decoder.field.UnsafeGet(ptr)
 	decoder.fieldDecoder.Decode(fieldPtr, iter)
 	if iter.Error != nil && iter.Error != io.EOF {
-		iter.Error = fmt.Errorf("%s: %s", decoder.field.Name(), iter.Error.Error())
+		iter.Error = errors.New(fmt.Sprintf("%s: %s", decoder.field.Name(), iter.Error.Error()))
 	}
 }
 

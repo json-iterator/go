@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"sort"
 	"unsafe"
+	"errors"
 )
 
 func decoderOfMap(ctx *ctx, typ reflect2.Type) ValDecoder {
@@ -88,7 +89,7 @@ func decoderOfMapKey(ctx *ctx, typ reflect2.Type) ValDecoder {
 				valType: typ,
 			}
 		}
-		return &lazyErrorDecoder{err: fmt.Errorf("unsupported map key type: %v", typ)}
+		return &lazyErrorDecoder{err: errors.New(fmt.Sprintf("unsupported map key type: %v", typ))}
 	}
 }
 
@@ -131,7 +132,7 @@ func encoderOfMapKey(ctx *ctx, typ reflect2.Type) ValEncoder {
 		if typ.Kind() == reflect.Interface {
 			return &dynamicMapKeyEncoder{ctx, typ}
 		}
-		return &lazyErrorEncoder{err: fmt.Errorf("unsupported map key type: %v", typ)}
+		return &lazyErrorEncoder{err: errors.New(fmt.Sprintf("unsupported map key type: %v", typ))}
 	}
 }
 

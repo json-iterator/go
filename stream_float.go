@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+	"errors"
 )
 
 var pow10 []uint64
@@ -15,7 +16,7 @@ func init() {
 // WriteFloat32 write float32 to stream
 func (stream *Stream) WriteFloat32(val float32) {
 	if math.IsInf(float64(val), 0) || math.IsNaN(float64(val)) {
-		stream.Error = fmt.Errorf("unsupported value: %f", val)
+		stream.Error = errors.New(fmt.Sprintf("unsupported value: %f", val))
 		return
 	}
 	abs := math.Abs(float64(val))
@@ -32,7 +33,7 @@ func (stream *Stream) WriteFloat32(val float32) {
 // WriteFloat32Lossy write float32 to stream with ONLY 6 digits precision although much much faster
 func (stream *Stream) WriteFloat32Lossy(val float32) {
 	if math.IsInf(float64(val), 0) || math.IsNaN(float64(val)) {
-		stream.Error = fmt.Errorf("unsupported value: %f", val)
+		stream.Error = errors.New(fmt.Sprintf("unsupported value: %f", val))
 		return
 	}
 	if val < 0 {
@@ -64,7 +65,7 @@ func (stream *Stream) WriteFloat32Lossy(val float32) {
 // WriteFloat64 write float64 to stream
 func (stream *Stream) WriteFloat64(val float64) {
 	if math.IsInf(val, 0) || math.IsNaN(val) {
-		stream.Error = fmt.Errorf("unsupported value: %f", val)
+		stream.Error = errors.New(fmt.Sprintf("unsupported value: %f", val))
 		return
 	}
 	abs := math.Abs(val)
@@ -81,7 +82,7 @@ func (stream *Stream) WriteFloat64(val float64) {
 // WriteFloat64Lossy write float64 to stream with ONLY 6 digits precision although much much faster
 func (stream *Stream) WriteFloat64Lossy(val float64) {
 	if math.IsInf(val, 0) || math.IsNaN(val) {
-		stream.Error = fmt.Errorf("unsupported value: %f", val)
+		stream.Error = errors.New(fmt.Sprintf("unsupported value: %f", val))
 		return
 	}
 	if val < 0 {
