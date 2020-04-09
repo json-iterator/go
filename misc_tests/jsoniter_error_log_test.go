@@ -1,11 +1,11 @@
 package misc_tests
 
 import (
-	"testing"
-	"fmt"
 	"errors"
-	"strings"
+	"fmt"
 	"strconv"
+	"strings"
+	"testing"
 )
 
 // 7793382               152 ns/op              40 B/op          3 allocs/op
