@@ -20,35 +20,70 @@ func (iter *Iterator) ReadString() (ret string) {
 			} else if c < ' ' {
 				iter.ReportError("ReadString",
 					fmt.Sprintf(`invalid control character found: %d`, c))
-				return
+				return ""
 			}
 		}
-		return iter.readStringSlowPath()
+		ret = string(iter.readStringSlowPath(nil))
+		return ret
 	} else if c == 'n' {
 		iter.skipThreeBytes('u', 'l', 'l')
 		return ""
 	}
 	iter.ReportError("ReadString", `expects " or n, but found `+string([]byte{c}))
-	return
+	return ""
 }
 
-func (iter *Iterator) readStringSlowPath() (ret string) {
-	var str []byte
+// ReadStringIntoBuffer reads a string, storing it into b. If b doesn't have
+// enough capacity, it will be enlarged, but otherwise no allocations will be
+// done. The possibly-enlarged buffer will be returned. Passing nil will cause
+// a buffer to be allocated.
+func (iter *Iterator) ReadStringIntoBuffer(b []byte) []byte {
+	c := iter.nextToken()
+	if c == '"' {
+		for i := iter.head; i < iter.tail; i++ {
+			c := iter.buf[i]
+			if c == '"' {
+				b = append(b, iter.buf[iter.head:i]...)
+				iter.head = i + 1
+				return b
+			} else if c == '\\' {
+				break
+			} else if c < ' ' {
+				iter.ReportError("ReadStringIntoBuffer",
+					fmt.Sprintf(`invalid control character found: %d`, c))
+				return b
+			}
+		}
+		b = iter.readStringSlowPath(b)
+		return b
+	} else if c == 'n' {
+		iter.skipThreeBytes('u', 'l', 'l')
+		return b
+	}
+	iter.ReportError("ReadStringIntoBuffer", `expects " or n, but found `+string([]byte{c}))
+	return b
+}
+
+func (iter *Iterator) readStringSlowPath(dest []byte) []byte {
+	dn := len(dest)
 	var c byte
 	for iter.Error == nil {
 		c = iter.readByte()
 		if c == '"' {
-			return string(str)
+			return dest
 		}
 		if c == '\\' {
 			c = iter.readByte()
-			str = iter.readEscapedChar(c, str)
+			dest = iter.readEscapedChar(c, dest)
 		} else {
-			str = append(str, c)
+			dest = append(dest, c)
 		}
 	}
 	iter.ReportError("readStringSlowPath", "unexpected end of input")
-	return
+	if len(dest) > dn {
+		dest = dest[:dn]
+	}
+	return dest
 }
 
 func (iter *Iterator) readEscapedChar(c byte, str []byte) []byte {

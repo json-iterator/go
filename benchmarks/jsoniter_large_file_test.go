@@ -1,11 +1,13 @@
 package test
 
 import (
+	"bytes"
 	"encoding/json"
-	"github.com/json-iterator/go"
 	"io/ioutil"
 	"os"
 	"testing"
+
+	jsoniter "github.com/json-iterator/go"
 )
 
 //func Test_large_file(t *testing.T) {
@@ -155,4 +157,87 @@ func Benchmark_json_large_file(b *testing.B) {
 			b.Error(err)
 		}
 	}
+}
+
+func scan(iter *jsoniter.Iterator) {
+	next := iter.WhatIsNext()
+	switch next {
+	case jsoniter.InvalidValue:
+		iter.Skip()
+	case jsoniter.StringValue:
+		iter.Skip()
+	case jsoniter.NumberValue:
+		iter.Skip()
+	case jsoniter.NilValue:
+		iter.Skip()
+	case jsoniter.BoolValue:
+		iter.Skip()
+	case jsoniter.ArrayValue:
+		iter.ReadArrayCB(func(iter *jsoniter.Iterator) bool {
+			scan(iter)
+			return true
+		})
+	case jsoniter.ObjectValue:
+		iter.ReadMapCB(func(iter *jsoniter.Iterator, key string) bool {
+			scan(iter)
+			return true
+		})
+	default:
+		iter.Skip()
+	}
+}
+
+func scanBytes(iter *jsoniter.Iterator, buf []byte) []byte {
+	next := iter.WhatIsNext()
+	switch next {
+	case jsoniter.InvalidValue:
+		iter.Skip()
+	case jsoniter.StringValue:
+		iter.Skip()
+	case jsoniter.NumberValue:
+		iter.Skip()
+	case jsoniter.NilValue:
+		iter.Skip()
+	case jsoniter.BoolValue:
+		iter.Skip()
+	case jsoniter.ArrayValue:
+		iter.ReadArrayCB(func(iter *jsoniter.Iterator) bool {
+			buf = scanBytes(iter, buf)
+			return true
+		})
+	case jsoniter.ObjectValue:
+		iter.ReadMapCBFieldAsBytes(buf, func(iter *jsoniter.Iterator, field []byte) bool {
+			buf = scanBytes(iter, field)
+			return true
+		})
+	default:
+		iter.Skip()
+	}
+	return buf
+}
+
+func Benchmark_custom_scan(b *testing.B) {
+	file, _ := os.Open("/tmp/large-file.json")
+	fb, _ := ioutil.ReadAll(file)
+	file.Close()
+
+	// Benchmark_scan_string/string-12                           100000             15429 ns/op            4952 B/op         76 allocs/op
+	// Benchmark_scan_string/bytes-12                            100000             12741 ns/op            4312 B/op          6 allocs/op
+
+	b.Run("string", func(b *testing.B) {
+		b.ReportAllocs()
+		b.ResetTimer()
+		for n := 0; n < b.N; n++ {
+			iter := jsoniter.Parse(jsoniter.ConfigDefault, bytes.NewReader(fb), 4096)
+			scan(iter)
+		}
+	})
+	b.Run("bytes", func(b *testing.B) {
+		b.ReportAllocs()
+		b.ResetTimer()
+		for n := 0; n < b.N; n++ {
+			iter := jsoniter.Parse(jsoniter.ConfigDefault, bytes.NewReader(fb), 4096)
+			scanBytes(iter, nil)
+		}
+	})
 }

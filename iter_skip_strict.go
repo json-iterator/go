@@ -84,7 +84,7 @@ func (iter *Iterator) trySkipString() bool {
 
 func (iter *Iterator) skipObject() {
 	iter.unreadByte()
-	iter.ReadObjectCB(func(iter *Iterator, field string) bool {
+	iter.ReadMapCBFieldAsBytes(nil, func(iter *Iterator, field []byte) bool {
 		iter.Skip()
 		return true
 	})
