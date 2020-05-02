@@ -37,7 +37,7 @@ type Any interface {
 type baseAny struct{}
 
 func (any *baseAny) Get(path ...interface{}) Any {
-	return &invalidAny{baseAny{}, fmt.Errorf("GetIndex %v from simple value", path)}
+	return &invalidAny{baseAny{}, errors.New(fmt.Sprintf("GetIndex %v from simple value", path))}
 }
 
 func (any *baseAny) Size() int {
@@ -142,7 +142,7 @@ func Wrap(val interface{}) Any {
 		}
 		return &falseAny{}
 	}
-	return &invalidAny{baseAny{}, fmt.Errorf("unsupported type: %v", typ)}
+	return &invalidAny{baseAny{}, errors.New(fmt.Sprintf("unsupported type: %v", typ))}
 }
 
 // ReadAny read next JSON element as an Any object. It is a better json.RawMessage.

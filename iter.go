@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"errors"
 )
 
 // ValueType the type for JSON element
@@ -221,8 +222,8 @@ func (iter *Iterator) ReportError(operation string, msg string) {
 		contextEnd = iter.tail
 	}
 	context := string(iter.buf[contextStart:contextEnd])
-	iter.Error = fmt.Errorf("%s: %s, error found in #%v byte of ...|%s|..., bigger context ...|%s|...",
-		operation, msg, iter.head-peekStart, parsing, context)
+	iter.Error = errors.New(fmt.Sprintf("%s: %s, error found in #%v byte of ...|%s|..., bigger context ...|%s|...",
+		operation, msg, iter.head-peekStart, parsing, context))
 }
 
 // CurrentBuffer gets current buffer as string for debugging purpose

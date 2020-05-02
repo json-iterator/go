@@ -6,6 +6,8 @@ import (
 	"io"
 	"reflect"
 	"unsafe"
+	"errors"
+	"strings"
 )
 
 func encoderOfStruct(ctx *ctx, typ reflect2.Type) ValEncoder {
@@ -66,7 +68,7 @@ func createCheckIsEmpty(ctx *ctx, typ reflect2.Type) checkIsEmpty {
 	case reflect.Ptr:
 		return &OptionalEncoder{}
 	default:
-		return &lazyErrorEncoder{err: fmt.Errorf("unsupported type: %v", typ)}
+		return &lazyErrorEncoder{err: errors.New(fmt.Sprintf("unsupported type: %v", typ))}
 	}
 }
 
@@ -109,7 +111,7 @@ func (encoder *structFieldEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	fieldPtr := encoder.field.UnsafeGet(ptr)
 	encoder.fieldEncoder.Encode(fieldPtr, stream)
 	if stream.Error != nil && stream.Error != io.EOF {
-		stream.Error = fmt.Errorf("%s: %s", encoder.field.Name(), stream.Error.Error())
+		stream.Error = errors.New(strings.Join([]string{encoder.field.Name(), stream.Error.Error()}, ": "))
 	}
 }
 
@@ -160,7 +162,7 @@ func (encoder *structEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	}
 	stream.WriteObjectEnd()
 	if stream.Error != nil && stream.Error != io.EOF {
-		stream.Error = fmt.Errorf("%v.%s", encoder.typ, stream.Error.Error())
+		stream.Error = errors.New(fmt.Sprintf("%v.%s", encoder.typ, stream.Error.Error()))
 	}
 }
 

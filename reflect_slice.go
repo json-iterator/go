@@ -5,6 +5,7 @@ import (
 	"github.com/modern-go/reflect2"
 	"io"
 	"unsafe"
+	"errors"
 )
 
 func decoderOfSlice(ctx *ctx, typ reflect2.Type) ValDecoder {
@@ -43,7 +44,7 @@ func (encoder *sliceEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	}
 	stream.WriteArrayEnd()
 	if stream.Error != nil && stream.Error != io.EOF {
-		stream.Error = fmt.Errorf("%v: %s", encoder.sliceType, stream.Error.Error())
+		stream.Error = errors.New(fmt.Sprintf("%v: %s", encoder.sliceType, stream.Error.Error()))
 	}
 }
 
@@ -59,7 +60,7 @@ type sliceDecoder struct {
 func (decoder *sliceDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	decoder.doDecode(ptr, iter)
 	if iter.Error != nil && iter.Error != io.EOF {
-		iter.Error = fmt.Errorf("%v: %s", decoder.sliceType, iter.Error.Error())
+		iter.Error = errors.New(fmt.Sprintf("%v: %s", decoder.sliceType, iter.Error.Error()))
 	}
 }
 
