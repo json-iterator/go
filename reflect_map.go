@@ -103,6 +103,19 @@ func encoderOfMapKey(ctx *ctx, typ reflect2.Type) ValEncoder {
 			return encoder
 		}
 	}
+
+	if typ == textMarshalerType {
+		return &directTextMarshalerEncoder{
+			stringEncoder: ctx.EncoderOf(reflect2.TypeOf("")),
+		}
+	}
+	if typ.Implements(textMarshalerType) {
+		return &textMarshalerEncoder{
+			valType:       typ,
+			stringEncoder: ctx.EncoderOf(reflect2.TypeOf("")),
+		}
+	}
+
 	switch typ.Kind() {
 	case reflect.String:
 		return encoderOfType(ctx, reflect2.DefaultTypeOfKind(reflect.String))
@@ -117,17 +130,6 @@ func encoderOfMapKey(ctx *ctx, typ reflect2.Type) ValEncoder {
 		typ = reflect2.DefaultTypeOfKind(typ.Kind())
 		return &numericMapKeyEncoder{encoderOfType(ctx, typ)}
 	default:
-		if typ == textMarshalerType {
-			return &directTextMarshalerEncoder{
-				stringEncoder: ctx.EncoderOf(reflect2.TypeOf("")),
-			}
-		}
-		if typ.Implements(textMarshalerType) {
-			return &textMarshalerEncoder{
-				valType:       typ,
-				stringEncoder: ctx.EncoderOf(reflect2.TypeOf("")),
-			}
-		}
 		if typ.Kind() == reflect.Interface {
 			return &dynamicMapKeyEncoder{ctx, typ}
 		}

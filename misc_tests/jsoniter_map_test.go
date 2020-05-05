@@ -50,3 +50,20 @@ func Test_encode_nil_map(t *testing.T) {
 	should.NoError(err)
 	should.Equal(`null`, output)
 }
+
+func Test_WhenMapKeyIsCustomType_AndImplementsTextMarshaler_MarshalTextIsUsed(t *testing.T) {
+	should := require.New(t)
+	input := map[customKey]string{customKey(1): "bar"}
+	jsoniterOutput, err := jsoniter.Marshal(input)
+	encodingJSONOutput, err := json.Marshal(input)
+
+	should.NoError(err)
+	should.Equal(encodingJSONOutput, jsoniterOutput)
+	should.Equal(`{"foo":"bar"}`, string(jsoniterOutput))
+}
+
+type customKey int32
+
+func (c customKey) MarshalText() ([]byte, error) {
+	return []byte("foo"), nil
+}
