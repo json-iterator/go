@@ -49,6 +49,33 @@ func decoderOfMapKey(ctx *ctx, typ reflect2.Type) ValDecoder {
 			return decoder
 		}
 	}
+
+	ptrType := reflect2.PtrTo(typ)
+	if ptrType.Implements(unmarshalerType) {
+		return &referenceDecoder{
+			&unmarshalerDecoder{
+				valType: ptrType,
+			},
+		}
+	}
+	if typ.Implements(unmarshalerType) {
+		return &unmarshalerDecoder{
+			valType: typ,
+		}
+	}
+	if ptrType.Implements(textUnmarshalerType) {
+		return &referenceDecoder{
+			&textUnmarshalerDecoder{
+				valType: ptrType,
+			},
+		}
+	}
+	if typ.Implements(textUnmarshalerType) {
+		return &textUnmarshalerDecoder{
+			valType: typ,
+		}
+	}
+
 	switch typ.Kind() {
 	case reflect.String:
 		return decoderOfType(ctx, reflect2.DefaultTypeOfKind(reflect.String))
@@ -63,31 +90,6 @@ func decoderOfMapKey(ctx *ctx, typ reflect2.Type) ValDecoder {
 		typ = reflect2.DefaultTypeOfKind(typ.Kind())
 		return &numericMapKeyDecoder{decoderOfType(ctx, typ)}
 	default:
-		ptrType := reflect2.PtrTo(typ)
-		if ptrType.Implements(unmarshalerType) {
-			return &referenceDecoder{
-				&unmarshalerDecoder{
-					valType: ptrType,
-				},
-			}
-		}
-		if typ.Implements(unmarshalerType) {
-			return &unmarshalerDecoder{
-				valType: typ,
-			}
-		}
-		if ptrType.Implements(textUnmarshalerType) {
-			return &referenceDecoder{
-				&textUnmarshalerDecoder{
-					valType: ptrType,
-				},
-			}
-		}
-		if typ.Implements(textUnmarshalerType) {
-			return &textUnmarshalerDecoder{
-				valType: typ,
-			}
-		}
 		return &lazyErrorDecoder{err: fmt.Errorf("unsupported map key type: %v", typ)}
 	}
 }
