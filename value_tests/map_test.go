@@ -31,6 +31,7 @@ func init() {
 		map[string]*json.RawMessage{"hello": pRawMessage(json.RawMessage("[]"))},
 		map[Date]bool{{}: true},
 		map[Date2]bool{{}: true},
+		map[customKey]string{customKey(1): "bar"},
 	)
 	unmarshalCases = append(unmarshalCases, unmarshalCase{
 		ptr:   (*map[string]string)(nil),
@@ -55,6 +56,9 @@ func init() {
         "2018-12-13": true,
         "2018-12-14": true
     	}`,
+	}, unmarshalCase{
+		ptr: (*map[customKey]string)(nil),
+		input: `{"foo": "bar"}`,
 	})
 }
 
@@ -114,4 +118,15 @@ func (d Date2) UnmarshalJSON(b []byte) error {
 
 func (d Date2) MarshalJSON() ([]byte, error) {
 	return []byte(d.Time.Format("2006-01-02")), nil
+}
+
+type customKey int32
+
+func (c customKey) MarshalText() ([]byte, error) {
+	return []byte("foo"), nil
+}
+
+func (c *customKey) UnmarshalText(value []byte) error {
+	*c = 1
+	return nil
 }
