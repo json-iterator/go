@@ -103,18 +103,44 @@ func Test_invalid_float(t *testing.T) {
 }
 
 func Test_chan(t *testing.T) {
-	t.Skip("do not support chan")
-
 	type TestObject struct {
 		MyChan  chan bool
 		MyField int
 	}
 
-	should := require.New(t)
 	obj := TestObject{}
-	str, err := json.Marshal(obj)
-	should.Nil(err)
-	should.Equal(``, str)
+
+	t.Run("Encode channel", func(t *testing.T) {
+		should := require.New(t)
+		str, err := jsoniter.Marshal(obj)
+		should.NotNil(err)
+		should.Nil(str)
+	})
+
+	t.Run("Encode channel using compatible configuration", func(t *testing.T) {
+		should := require.New(t)
+		str, err := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(obj)
+		should.NotNil(err)
+		should.Nil(str)
+	})
+}
+
+func Test_invalid_in_map(t *testing.T) {
+	testMap := map[string]interface{}{"chan": make(chan interface{})}
+
+	t.Run("Encode map with invalid content", func(t *testing.T) {
+		should := require.New(t)
+		str, err := jsoniter.Marshal(testMap)
+		should.NotNil(err)
+		should.Nil(str)
+	})
+
+	t.Run("Encode map with invalid content using compatible configuration", func(t *testing.T) {
+		should := require.New(t)
+		str, err := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(testMap)
+		should.NotNil(err)
+		should.Nil(str)
+	})
 }
 
 func Test_invalid_number(t *testing.T) {

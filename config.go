@@ -11,9 +11,6 @@ import (
 	"github.com/modern-go/reflect2"
 )
 
-// limit maximum depth of nesting, as allowed by https://tools.ietf.org/html/rfc7159#section-9
-const defaultMaxDepth = 10000
-
 // Config customize how the API should behave.
 // The API is created from Config by Froze.
 type Config struct {
@@ -28,7 +25,6 @@ type Config struct {
 	ValidateJsonRawMessage        bool
 	ObjectFieldMustBeSimpleString bool
 	CaseSensitive                 bool
-	MaxDepth                      int
 	AllowOmitEmptyStruct          bool
 }
 
@@ -61,7 +57,6 @@ var ConfigCompatibleWithStandardLibrary = Config{
 	EscapeHTML:             true,
 	SortMapKeys:            true,
 	ValidateJsonRawMessage: true,
-	MaxDepth:               -1, // encoding/json has no max depth (stack overflow at 2581101)
 }.Froze()
 
 // ConfigFastest marshals float with only 6 digits precision
@@ -86,7 +81,6 @@ type frozenConfig struct {
 	streamPool                    *sync.Pool
 	iteratorPool                  *sync.Pool
 	caseSensitive                 bool
-	maxDepth                      int
 	allowOmitEmptyStruct          bool
 }
 
@@ -135,9 +129,6 @@ func addFrozenConfigToCache(cfg Config, frozenConfig *frozenConfig) {
 
 // Froze forge API from config
 func (cfg Config) Froze() API {
-	if cfg.MaxDepth == 0 {
-		cfg.MaxDepth = defaultMaxDepth
-	}
 	api := &frozenConfig{
 		sortMapKeys:                   cfg.SortMapKeys,
 		indentionStep:                 cfg.IndentionStep,
@@ -145,7 +136,6 @@ func (cfg Config) Froze() API {
 		onlyTaggedField:               cfg.OnlyTaggedField,
 		disallowUnknownFields:         cfg.DisallowUnknownFields,
 		caseSensitive:                 cfg.CaseSensitive,
-		maxDepth:                      cfg.MaxDepth,
 		allowOmitEmptyStruct:          cfg.AllowOmitEmptyStruct,
 	}
 	api.streamPool = &sync.Pool{
@@ -196,11 +186,11 @@ func (cfg *frozenConfig) validateJsonRawMessage(extension EncoderExtension) {
 	encoder := &funcEncoder{func(ptr unsafe.Pointer, stream *Stream) {
 		rawMessage := *(*json.RawMessage)(ptr)
 		iter := cfg.BorrowIterator([]byte(rawMessage))
+		defer cfg.ReturnIterator(iter)
 		iter.Read()
-		if iter.Error != nil {
+		if iter.Error != nil && iter.Error != io.EOF {
 			stream.WriteRaw("null")
 		} else {
-			cfg.ReturnIterator(iter)
 			stream.WriteRaw(string(rawMessage))
 		}
 	}, func(ptr unsafe.Pointer) bool {
