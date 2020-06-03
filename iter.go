@@ -235,6 +235,11 @@ func (iter *Iterator) CurrentBuffer() string {
 		string(iter.buf[peekStart:iter.head]), string(iter.buf[0:iter.tail]))
 }
 
+// CurrentBufferSize gets the number if bytes currently in the buffer
+func (iter *Iterator) CurrentBufferSize() int {
+	return iter.tail - iter.head
+}
+
 func (iter *Iterator) readByte() (ret byte) {
 	if iter.head == iter.tail {
 		if iter.loadMore() {
