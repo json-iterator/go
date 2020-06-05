@@ -3,7 +3,7 @@ package extra
 import (
 	"testing"
 
-	"github.com/json-iterator/go"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/stretchr/testify/require"
 )
 
@@ -325,6 +325,54 @@ func Test_any_to_float64(t *testing.T) {
 	should.NotNil(jsoniter.UnmarshalFromString("[]", &val))
 }
 
+func Test_any_to_bool(t *testing.T) {
+	should := require.New(t)
+	var val bool
+
+	// number to bool
+	should.Nil(jsoniter.UnmarshalFromString(`10`, &val))
+	should.Equal(true, val)
+	should.Nil(jsoniter.UnmarshalFromString(`10.1`, &val))
+	should.Equal(true, val)
+	should.Nil(jsoniter.UnmarshalFromString(`0`, &val))
+	should.Equal(false, val)
+	should.Nil(jsoniter.UnmarshalFromString(`0.0`, &val))
+	should.Equal(false, val)
+	should.Nil(jsoniter.UnmarshalFromString(`-10`, &val))
+	should.Equal(true, val)
+	should.Nil(jsoniter.UnmarshalFromString(`-10.1`, &val))
+	should.Equal(true, val)
+
+	// string to bool
+	should.Nil(jsoniter.UnmarshalFromString(`""`, &val))
+	should.Equal(false, val)
+	should.Nil(jsoniter.UnmarshalFromString(`"0"`, &val))
+	should.Equal(false, val)
+	should.Nil(jsoniter.UnmarshalFromString(`"false"`, &val))
+	should.Equal(true, val)
+	should.Nil(jsoniter.UnmarshalFromString(`"string"`, &val))
+	should.Equal(true, val)
+
+	// bool to bool
+	should.Nil(jsoniter.UnmarshalFromString(`false`, &val))
+	should.Equal(false, val)
+	should.Nil(jsoniter.UnmarshalFromString(`true`, &val))
+	should.Equal(true, val)
+
+	// // TODO, according to other tests
+	// // object to bool
+	// should.Nil(jsoniter.UnmarshalFromString(`{}`, &val))
+	// should.Equal(true, val)
+	// should.Nil(jsoniter.UnmarshalFromString(`{"key":"value"}`, &val))
+	// should.Equal(true, val)
+
+	// // array to bool
+	// should.Nil(jsoniter.UnmarshalFromString(`[]`, &val))
+	// should.Equal(false, val)
+	// should.Nil(jsoniter.UnmarshalFromString(`["item"]`, &val))
+	// should.Equal(true, val)
+}
+
 func Test_empty_array_as_map(t *testing.T) {
 	should := require.New(t)
 	var val map[string]interface{}
@@ -388,6 +436,14 @@ func Test_null_to_float64(t *testing.T) {
 	should := require.New(t)
 	body := []byte(`null`)
 	var message float64
+	err := jsoniter.Unmarshal(body, &message)
+	should.NoError(err)
+}
+
+func Test_null_to_bool(t *testing.T) {
+	should := require.New(t)
+	body := []byte(`null`)
+	var message bool
 	err := jsoniter.Unmarshal(body, &message)
 	should.NoError(err)
 }
