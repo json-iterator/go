@@ -359,18 +359,21 @@ func Test_any_to_bool(t *testing.T) {
 	should.Nil(jsoniter.UnmarshalFromString(`true`, &val))
 	should.Equal(true, val)
 
-	// // TODO, according to other tests
-	// // object to bool
+	// object to bool
+	// TODO, according to other decoders' tests
 	// should.Nil(jsoniter.UnmarshalFromString(`{}`, &val))
 	// should.Equal(true, val)
 	// should.Nil(jsoniter.UnmarshalFromString(`{"key":"value"}`, &val))
 	// should.Equal(true, val)
+	should.NotNil(jsoniter.UnmarshalFromString(`{}`, &val))
 
-	// // array to bool
+	// array to bool
+	// TODO, according to other decoders' tests
 	// should.Nil(jsoniter.UnmarshalFromString(`[]`, &val))
 	// should.Equal(false, val)
 	// should.Nil(jsoniter.UnmarshalFromString(`["item"]`, &val))
 	// should.Equal(true, val)
+	should.NotNil(jsoniter.UnmarshalFromString(`[]`, &val))
 }
 
 func Test_empty_array_as_map(t *testing.T) {
