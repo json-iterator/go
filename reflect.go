@@ -30,6 +30,12 @@ type ValEncoder interface {
 	Encode(ptr unsafe.Pointer, stream *Stream)
 }
 
+// OmitByValueEncoder for some value we treat like omitempty behavior
+// but not based on tag but based on its value
+type OmitByValueEncoder interface {
+	IsOmitByValue(ptr unsafe.Pointer) bool
+}
+
 type checkIsEmpty interface {
 	IsEmpty(ptr unsafe.Pointer) bool
 }

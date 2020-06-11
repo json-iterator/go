@@ -151,6 +151,14 @@ func (encoder *structEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 		if field.encoder.IsEmbeddedPtrNil(ptr) {
 			continue
 		}
+
+		omitByValueEncoder, shouldOmitByValue := field.encoder.fieldEncoder.(OmitByValueEncoder)
+		if shouldOmitByValue {
+			if omitByValueEncoder.IsOmitByValue(ptr) {
+				continue
+			}
+		}
+
 		if isNotFirst {
 			stream.WriteMore()
 		}

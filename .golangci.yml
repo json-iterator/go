@@ -1,0 +1,13 @@
+run:
+  timeout: 3m
+
+linters-settings:
+  gofmt:
+    simplify: false
+
+linters:
+  disable-all: true
+  enable:
+    - golint
+    - govet
+    - gofmt
