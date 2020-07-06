@@ -179,17 +179,17 @@ func (encoder *emptyStructEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	return false
 }
 
-type stringModeNumberEncoder struct {
+type stringModeNonStringEncoder struct {
 	elemEncoder ValEncoder
 }
 
-func (encoder *stringModeNumberEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
+func (encoder *stringModeNonStringEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.writeByte('"')
 	encoder.elemEncoder.Encode(ptr, stream)
 	stream.writeByte('"')
 }
 
-func (encoder *stringModeNumberEncoder) IsEmpty(ptr unsafe.Pointer) bool {
+func (encoder *stringModeNonStringEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	return encoder.elemEncoder.IsEmpty(ptr)
 }
 

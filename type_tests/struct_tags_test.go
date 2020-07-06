@@ -139,6 +139,11 @@ func init() {
 			F2 uint32 `json:"F2,string"`
 		})(nil),
 		(*struct {
+			F1 []int 		`json:"F1,string"`
+			F2 map[int]int	`json:"F2,string"`
+			F3 bool			`json:"F3,string"`
+		})(nil),
+		(*struct {
 			A           string            `json:"a,omitempty"`
 			B           string            `json:"b,omitempty"`
 			Annotations map[string]string `json:"annotations,omitempty"`
