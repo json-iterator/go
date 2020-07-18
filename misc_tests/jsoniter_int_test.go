@@ -5,7 +5,9 @@ package misc_tests
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"io/ioutil"
+	"math/rand"
 	"strconv"
 	"testing"
 
@@ -68,6 +70,95 @@ func Test_float_as_int(t *testing.T) {
 	should := require.New(t)
 	var i int
 	should.NotNil(jsoniter.Unmarshal([]byte(`1.1`), &i))
+}
+
+// chunkedData is io.Reader which returns random amount of data in range [1, chunkedData.chunkSize].
+// It simulates chunked data on from HTTP server, which is commonly used by net/http package.
+type chunkedData struct {
+	chunkSize int
+	data      []byte
+	head      int
+}
+
+// Read is implementation of the io.Reader which returns random amount of data in range [1, chunkedData.chunkSize].
+func (c *chunkedData) Read(p []byte) (n int, err error) {
+	to := c.head + int(rand.Int31n(int32(c.chunkSize))+1)
+
+	// copy does not copy more data then p can consume
+	n = copy(p, c.data[c.head:to])
+	c.head = c.head + n
+	if c.head >= len(c.data) {
+		err = io.EOF
+	}
+	return n, err
+}
+
+// TestIterator_ReadInt_chunkedInput validates the behaviour of Iterator.ReadInt() method in where:
+// - it reads data from io.Reader,
+// - expected value is 0 (zero)
+// - Iterator.tail == Iterator.head
+// - Iterator.tail < len(Iterator.buf)
+// - value in buffer after Iterator.tail is presented from previous read and has '.' character.
+func TestIterator_ReadInt_chunkedInput(t *testing.T) {
+	should := require.New(t)
+
+	data := &chunkedData{
+		data: jsonFloatIntArray(t, 10),
+	}
+
+	// because this test is rely on randomness of chunkedData, we are doing multiple iterations to
+	// be sure, that we can hit a required case.
+	for data.chunkSize = 3; data.chunkSize <= len(data.data); data.chunkSize++ {
+		data.head = 0
+
+		iter := jsoniter.Parse(jsoniter.ConfigDefault, data, data.chunkSize)
+		i := 0
+		for iter.ReadArray() {
+			// every even item is float, let's just skip it.
+			if i%2 == 0 {
+				iter.Skip()
+				i++
+				continue
+			}
+
+			should.Zero(iter.ReadInt())
+			should.NoError(iter.Error)
+
+			i++
+		}
+	}
+}
+
+// jsonFloatIntArray generates JSON array where every
+//  - even item is float 0.1
+//  - odd item is integer 0
+//
+//  [0.1, 0, 0.1, 0]
+func jsonFloatIntArray(t *testing.T, numberOfItems int) []byte {
+	t.Helper()
+	numbers := make([]jsoniter.Any, numberOfItems)
+	for i := range numbers {
+		switch i % 2 {
+		case 0:
+			numbers[i] = jsoniter.WrapFloat64(0.1)
+		default:
+			numbers[i] = jsoniter.WrapInt64(0)
+		}
+	}
+
+	fixture, err := jsoniter.ConfigFastest.Marshal(numbers)
+	if err != nil {
+		panic(err)
+	}
+
+	b := &bytes.Buffer{}
+
+	require.NoError(
+		t,
+		json.Compact(b, fixture),
+		"json should be compactable",
+	)
+	return b.Bytes()
 }
 
 func Benchmark_jsoniter_encode_int(b *testing.B) {
