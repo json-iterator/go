@@ -81,7 +81,7 @@ func (adapter *Decoder) More() bool {
 	if iter.Error != nil {
 		return false
 	}
-	c := iter.nextToken()
+	c := iter.NextToken()
 	if c == 0 {
 		return false
 	}

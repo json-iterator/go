@@ -5,7 +5,7 @@ import "fmt"
 // ReadNil reads a json object as nil and
 // returns whether it's a nil or not
 func (iter *Iterator) ReadNil() (ret bool) {
-	c := iter.nextToken()
+	c := iter.NextToken()
 	if c == 'n' {
 		iter.skipThreeBytes('u', 'l', 'l') // null
 		return true
@@ -16,7 +16,7 @@ func (iter *Iterator) ReadNil() (ret bool) {
 
 // ReadBool reads a json object as BoolValue
 func (iter *Iterator) ReadBool() (ret bool) {
-	c := iter.nextToken()
+	c := iter.NextToken()
 	if c == 't' {
 		iter.skipThreeBytes('r', 'u', 'e')
 		return true
@@ -70,7 +70,7 @@ func (iter *Iterator) stopCapture() []byte {
 
 // Skip skips a json object and positions to relatively the next json object
 func (iter *Iterator) Skip() {
-	c := iter.nextToken()
+	c := iter.NextToken()
 	switch c {
 	case '"':
 		iter.skipString()

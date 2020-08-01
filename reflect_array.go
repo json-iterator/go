@@ -69,7 +69,7 @@ func (decoder *arrayDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 }
 
 func (decoder *arrayDecoder) doDecode(ptr unsafe.Pointer, iter *Iterator) {
-	c := iter.nextToken()
+	c := iter.NextToken()
 	arrayType := decoder.arrayType
 	if c == 'n' {
 		iter.skipThreeBytes('u', 'l', 'l')
@@ -79,7 +79,7 @@ func (decoder *arrayDecoder) doDecode(ptr unsafe.Pointer, iter *Iterator) {
 		iter.ReportError("decode array", "expect [ or n, but found "+string([]byte{c}))
 		return
 	}
-	c = iter.nextToken()
+	c = iter.NextToken()
 	if c == ']' {
 		return
 	}
@@ -87,7 +87,7 @@ func (decoder *arrayDecoder) doDecode(ptr unsafe.Pointer, iter *Iterator) {
 	elemPtr := arrayType.UnsafeGetIndex(ptr, 0)
 	decoder.elemDecoder.Decode(elemPtr, iter)
 	length := 1
-	for c = iter.nextToken(); c == ','; c = iter.nextToken() {
+	for c = iter.NextToken(); c == ','; c = iter.NextToken() {
 		if length >= arrayType.Len() {
 			iter.Skip()
 			continue

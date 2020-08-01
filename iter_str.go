@@ -7,7 +7,7 @@ import (
 
 // ReadString read string from iterator
 func (iter *Iterator) ReadString() (ret string) {
-	c := iter.nextToken()
+	c := iter.NextToken()
 	if c == '"' {
 		for i := iter.head; i < iter.tail; i++ {
 			c := iter.buf[i]
@@ -114,7 +114,7 @@ func (iter *Iterator) readEscapedChar(c byte, str []byte) []byte {
 // ReadStringAsSlice read string from iterator without copying into string form.
 // The []byte can not be kept, as it will change after next iterator call.
 func (iter *Iterator) ReadStringAsSlice() (ret []byte) {
-	c := iter.nextToken()
+	c := iter.NextToken()
 	if c == '"' {
 		for i := iter.head; i < iter.tail; i++ {
 			// require ascii string and no escape

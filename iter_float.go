@@ -68,7 +68,7 @@ func (iter *Iterator) ReadBigInt() (ret *big.Int) {
 
 //ReadFloat32 read float32
 func (iter *Iterator) ReadFloat32() (ret float32) {
-	c := iter.nextToken()
+	c := iter.NextToken()
 	if c == '-' {
 		return -iter.readPositiveFloat32()
 	}
@@ -205,7 +205,7 @@ func (iter *Iterator) readFloat32SlowPath() (ret float32) {
 
 // ReadFloat64 read float64
 func (iter *Iterator) ReadFloat64() (ret float64) {
-	c := iter.nextToken()
+	c := iter.NextToken()
 	if c == '-' {
 		return -iter.readPositiveFloat64()
 	}

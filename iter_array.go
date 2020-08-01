@@ -2,13 +2,13 @@ package jsoniter
 
 // ReadArray read array element, tells if the array has more element to read.
 func (iter *Iterator) ReadArray() (ret bool) {
-	c := iter.nextToken()
+	c := iter.NextToken()
 	switch c {
 	case 'n':
 		iter.skipThreeBytes('u', 'l', 'l')
 		return false // null
 	case '[':
-		c = iter.nextToken()
+		c = iter.NextToken()
 		if c != ']' {
 			iter.unreadByte()
 			return true
@@ -26,25 +26,25 @@ func (iter *Iterator) ReadArray() (ret bool) {
 
 // ReadArrayCB read array with callback
 func (iter *Iterator) ReadArrayCB(callback func(*Iterator) bool) (ret bool) {
-	c := iter.nextToken()
+	c := iter.NextToken()
 	if c == '[' {
 		if !iter.incrementDepth() {
 			return false
 		}
-		c = iter.nextToken()
+		c = iter.NextToken()
 		if c != ']' {
 			iter.unreadByte()
 			if !callback(iter) {
 				iter.decrementDepth()
 				return false
 			}
-			c = iter.nextToken()
+			c = iter.NextToken()
 			for c == ',' {
 				if !callback(iter) {
 					iter.decrementDepth()
 					return false
 				}
-				c = iter.nextToken()
+				c = iter.NextToken()
 			}
 			if c != ']' {
 				iter.ReportError("ReadArrayCB", "expect ] in the end, but found "+string([]byte{c}))

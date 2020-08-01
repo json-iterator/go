@@ -504,7 +504,7 @@ func (decoder *generalStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) 
 		return
 	}
 	var c byte
-	for c = ','; c == ','; c = iter.nextToken() {
+	for c = ','; c == ','; c = iter.NextToken() {
 		decoder.decodeOneField(ptr, iter)
 	}
 	if iter.Error != nil && iter.Error != io.EOF && len(decoder.typ.Type1().Name()) != 0 {
@@ -538,14 +538,14 @@ func (decoder *generalStructDecoder) decodeOneField(ptr unsafe.Pointer, iter *It
 			msg := "found unknown field: " + field
 			iter.ReportError("ReadObject", msg)
 		}
-		c := iter.nextToken()
+		c := iter.NextToken()
 		if c != ':' {
 			iter.ReportError("ReadObject", "expect : after object field, but found "+string([]byte{c}))
 		}
 		iter.Skip()
 		return
 	}
-	c := iter.nextToken()
+	c := iter.NextToken()
 	if c != ':' {
 		iter.ReportError("ReadObject", "expect : after object field, but found "+string([]byte{c}))
 	}
@@ -1075,7 +1075,7 @@ type stringModeNumberDecoder struct {
 }
 
 func (decoder *stringModeNumberDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
-	c := iter.nextToken()
+	c := iter.NextToken()
 	if c != '"' {
 		iter.ReportError("stringModeNumberDecoder", `expect ", but found `+string([]byte{c}))
 		return

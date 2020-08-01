@@ -151,7 +151,7 @@ func (iter *Iterator) ReadAny() Any {
 }
 
 func (iter *Iterator) readAny() Any {
-	c := iter.nextToken()
+	c := iter.NextToken()
 	switch c {
 	case '"':
 		iter.unreadByte()

@@ -64,7 +64,7 @@ func (decoder *sliceDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 }
 
 func (decoder *sliceDecoder) doDecode(ptr unsafe.Pointer, iter *Iterator) {
-	c := iter.nextToken()
+	c := iter.NextToken()
 	sliceType := decoder.sliceType
 	if c == 'n' {
 		iter.skipThreeBytes('u', 'l', 'l')
@@ -75,7 +75,7 @@ func (decoder *sliceDecoder) doDecode(ptr unsafe.Pointer, iter *Iterator) {
 		iter.ReportError("decode slice", "expect [ or n, but found "+string([]byte{c}))
 		return
 	}
-	c = iter.nextToken()
+	c = iter.NextToken()
 	if c == ']' {
 		sliceType.UnsafeSet(ptr, sliceType.UnsafeMakeSlice(0, 0))
 		return
@@ -85,7 +85,7 @@ func (decoder *sliceDecoder) doDecode(ptr unsafe.Pointer, iter *Iterator) {
 	elemPtr := sliceType.UnsafeGetIndex(ptr, 0)
 	decoder.elemDecoder.Decode(elemPtr, iter)
 	length := 1
-	for c = iter.nextToken(); c == ','; c = iter.nextToken() {
+	for c = iter.NextToken(); c == ','; c = iter.NextToken() {
 		idx := length
 		length += 1
 		sliceType.UnsafeGrow(ptr, length)

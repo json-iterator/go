@@ -193,7 +193,7 @@ func (decoder *unmarshalerDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	valType := decoder.valType
 	obj := valType.UnsafeIndirect(ptr)
 	unmarshaler := obj.(json.Unmarshaler)
-	iter.nextToken()
+	iter.NextToken()
 	iter.unreadByte() // skip spaces
 	bytes := iter.SkipAndReturnBytes()
 	err := unmarshaler.UnmarshalJSON(bytes)

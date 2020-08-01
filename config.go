@@ -325,7 +325,7 @@ func (cfg *frozenConfig) UnmarshalFromString(str string, v interface{}) error {
 	iter := cfg.BorrowIterator(data)
 	defer cfg.ReturnIterator(iter)
 	iter.ReadVal(v)
-	c := iter.nextToken()
+	c := iter.NextToken()
 	if c == 0 {
 		if iter.Error == io.EOF {
 			return nil
@@ -346,7 +346,7 @@ func (cfg *frozenConfig) Unmarshal(data []byte, v interface{}) error {
 	iter := cfg.BorrowIterator(data)
 	defer cfg.ReturnIterator(iter)
 	iter.ReadVal(v)
-	c := iter.nextToken()
+	c := iter.NextToken()
 	if c == 0 {
 		if iter.Error == io.EOF {
 			return nil

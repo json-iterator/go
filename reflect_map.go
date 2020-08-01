@@ -149,7 +149,7 @@ type mapDecoder struct {
 
 func (decoder *mapDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	mapType := decoder.mapType
-	c := iter.nextToken()
+	c := iter.NextToken()
 	if c == 'n' {
 		iter.skipThreeBytes('u', 'l', 'l')
 		*(*unsafe.Pointer)(ptr) = nil
@@ -163,14 +163,14 @@ func (decoder *mapDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 		iter.ReportError("ReadMapCB", `expect { or n, but found `+string([]byte{c}))
 		return
 	}
-	c = iter.nextToken()
+	c = iter.NextToken()
 	if c == '}' {
 		return
 	}
 	iter.unreadByte()
 	key := decoder.keyType.UnsafeNew()
 	decoder.keyDecoder.Decode(key, iter)
-	c = iter.nextToken()
+	c = iter.NextToken()
 	if c != ':' {
 		iter.ReportError("ReadMapCB", "expect : after object field, but found "+string([]byte{c}))
 		return
@@ -178,10 +178,10 @@ func (decoder *mapDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	elem := decoder.elemType.UnsafeNew()
 	decoder.elemDecoder.Decode(elem, iter)
 	decoder.mapType.UnsafeSetIndex(ptr, key, elem)
-	for c = iter.nextToken(); c == ','; c = iter.nextToken() {
+	for c = iter.NextToken(); c == ','; c = iter.NextToken() {
 		key := decoder.keyType.UnsafeNew()
 		decoder.keyDecoder.Decode(key, iter)
-		c = iter.nextToken()
+		c = iter.NextToken()
 		if c != ':' {
 			iter.ReportError("ReadMapCB", "expect : after object field, but found "+string([]byte{c}))
 			return
@@ -200,13 +200,13 @@ type numericMapKeyDecoder struct {
 }
 
 func (decoder *numericMapKeyDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
-	c := iter.nextToken()
+	c := iter.NextToken()
 	if c != '"' {
 		iter.ReportError("ReadMapCB", `expect ", but found `+string([]byte{c}))
 		return
 	}
 	decoder.decoder.Decode(ptr, iter)
-	c = iter.nextToken()
+	c = iter.NextToken()
 	if c != '"' {
 		iter.ReportError("ReadMapCB", `expect ", but found `+string([]byte{c}))
 		return

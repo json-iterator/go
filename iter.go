@@ -148,7 +148,7 @@ func (iter *Iterator) ResetBytes(input []byte) *Iterator {
 
 // WhatIsNext gets ValueType of relatively next json element
 func (iter *Iterator) WhatIsNext() ValueType {
-	valueType := valueTypes[iter.nextToken()]
+	valueType := valueTypes[iter.NextToken()]
 	iter.unreadByte()
 	return valueType
 }
@@ -167,7 +167,7 @@ func (iter *Iterator) skipWhitespacesWithoutLoadMore() bool {
 }
 
 func (iter *Iterator) isObjectEnd() bool {
-	c := iter.nextToken()
+	c := iter.NextToken()
 	if c == ',' {
 		return false
 	}
@@ -178,7 +178,7 @@ func (iter *Iterator) isObjectEnd() bool {
 	return true
 }
 
-func (iter *Iterator) nextToken() byte {
+func (iter *Iterator) NextToken() byte {
 	// a variation of skip whitespaces, returning the next non-whitespace token
 	for {
 		for i := iter.head; i < iter.tail; i++ {
