@@ -3,11 +3,12 @@ package jsoniter
 import (
 	"errors"
 	"fmt"
-	"github.com/modern-go/reflect2"
 	"io"
 	"reflect"
 	"strconv"
 	"unsafe"
+
+	"github.com/modern-go/reflect2"
 )
 
 // Any generic object representation.
@@ -321,5 +322,5 @@ func (codec *directAnyCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
 
 func (codec *directAnyCodec) IsEmpty(ptr unsafe.Pointer) bool {
 	any := *(*Any)(ptr)
-	return any.Size() == 0
+	return any == nil || any.Size() == 0
 }
