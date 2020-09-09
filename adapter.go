@@ -95,6 +95,11 @@ func (adapter *Decoder) Buffered() io.Reader {
 	return bytes.NewReader(remaining)
 }
 
+// InputOffset returns current offset in input stream
+func (adapter *Decoder) InputOffset() int64 {
+	return adapter.iter.InputOffset()
+}
+
 // UseNumber causes the Decoder to unmarshal a number into an interface{} as a
 // Number instead of as a float64.
 func (adapter *Decoder) UseNumber() {
