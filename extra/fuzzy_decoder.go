@@ -2,9 +2,11 @@ package extra
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"math"
 	"reflect"
+	"strconv"
 	"strings"
 	"unsafe"
 
@@ -20,7 +22,9 @@ const minInt = -maxInt - 1
 // It will handle string/number auto conversation, and treat empty [] as empty struct.
 func RegisterFuzzyDecoders() {
 	jsoniter.RegisterExtension(&tolerateEmptyArrayExtension{})
+	jsoniter.RegisterExtension(&numericKeyedObjectToArrayExtension{})
 	jsoniter.RegisterTypeDecoder("string", &fuzzyStringDecoder{})
+	jsoniter.RegisterTypeDecoder("bool", &fuzzyBoolDecoder{})
 	jsoniter.RegisterTypeDecoder("float32", &fuzzyFloat32Decoder{})
 	jsoniter.RegisterTypeDecoder("float64", &fuzzyFloat64Decoder{})
 	jsoniter.RegisterTypeDecoder("int", &fuzzyIntegerDecoder{func(isFloat bool, ptr unsafe.Pointer, iter *jsoniter.Iterator) {
@@ -171,6 +175,114 @@ func (decoder *tolerateEmptyArrayDecoder) Decode(ptr unsafe.Pointer, iter *jsoni
 	}
 }
 
+type numericKeyedObjectToArrayExtension struct {
+	jsoniter.DummyExtension
+}
+
+func (extension *numericKeyedObjectToArrayExtension) DecorateDecoder(typ reflect2.Type, decoder jsoniter.ValDecoder) jsoniter.ValDecoder {
+	if typ.Kind() == reflect.Slice {
+		sliceType := typ.(*reflect2.UnsafeSliceType)
+		return &numericKeyedObjectToSliceDecoder{valDecoder: decoder, sliceType: sliceType, elemType: sliceType.Elem()}
+	} else if typ.Kind() == reflect.Array {
+		arrayType := typ.(*reflect2.UnsafeArrayType)
+		return &numericKeyedObjectToArrayDecoder{valDecoder: decoder, arrayType: arrayType, elemType: arrayType.Elem()}
+	}
+
+	return decoder
+}
+
+type numericKeyedObjectToSliceDecoder struct {
+	valDecoder jsoniter.ValDecoder
+	sliceType  *reflect2.UnsafeSliceType
+	elemType   reflect2.Type
+}
+
+func (decoder *numericKeyedObjectToSliceDecoder) Decode(ptr unsafe.Pointer, iter *jsoniter.Iterator) {
+	if iter.WhatIsNext() != jsoniter.ObjectValue {
+		decoder.valDecoder.Decode(ptr, iter)
+		return
+	}
+
+	decoder.doDecode(ptr, iter)
+	if iter.Error != nil && iter.Error != io.EOF {
+		iter.Error = fmt.Errorf("%v: %s", decoder.sliceType, iter.Error.Error())
+	}
+}
+
+func (decoder *numericKeyedObjectToSliceDecoder) doDecode(ptr unsafe.Pointer, iter *jsoniter.Iterator) {
+	length := 0
+	lastIndex := -1
+	iter.ReadMapCB(func(iter *jsoniter.Iterator, field string) bool {
+		index, err := strconv.Atoi(field)
+		if err != nil {
+			iter.Error = fmt.Errorf("%v: %s", decoder.sliceType, iter.Error.Error())
+			return false
+		}
+		if index <= lastIndex {
+			iter.Error = fmt.Errorf("%v: %s", decoder.sliceType, "map keys must be strictly increasing")
+			return false
+		}
+		lastIndex = index
+
+		idx := length
+		length += 1
+		decoder.sliceType.UnsafeGrow(ptr, length)
+		elemPtr := decoder.elemType.New()
+		iter.ReadVal(elemPtr)
+		decoder.sliceType.UnsafeSetIndex(ptr, idx, reflect2.PtrOf(elemPtr))
+
+		return true
+	})
+}
+
+type numericKeyedObjectToArrayDecoder struct {
+	valDecoder jsoniter.ValDecoder
+	arrayType  *reflect2.UnsafeArrayType
+	elemType   reflect2.Type
+}
+
+func (decoder *numericKeyedObjectToArrayDecoder) Decode(ptr unsafe.Pointer, iter *jsoniter.Iterator) {
+	if iter.WhatIsNext() != jsoniter.ObjectValue {
+		decoder.valDecoder.Decode(ptr, iter)
+		return
+	}
+
+	decoder.doDecode(ptr, iter)
+	if iter.Error != nil && iter.Error != io.EOF {
+		iter.Error = fmt.Errorf("%v: %s", decoder.arrayType, iter.Error.Error())
+	}
+}
+
+func (decoder *numericKeyedObjectToArrayDecoder) doDecode(ptr unsafe.Pointer, iter *jsoniter.Iterator) {
+	length := 0
+	lastIndex := -1
+	iter.ReadMapCB(func(iter *jsoniter.Iterator, field string) bool {
+		index, err := strconv.Atoi(field)
+		if err != nil {
+			iter.Error = fmt.Errorf("%v: %s", decoder.arrayType, iter.Error.Error())
+			return false
+		}
+		if index <= lastIndex {
+			iter.Error = fmt.Errorf("%v: %s", decoder.arrayType, "map keys must be strictly increasing")
+			return false
+		}
+		lastIndex = index
+
+		if length >= decoder.arrayType.Len() {
+			iter.Skip()
+			return true
+		}
+
+		idx := length
+		length += 1
+		elemPtr := decoder.elemType.New()
+		iter.ReadVal(elemPtr)
+		decoder.arrayType.UnsafeSetIndex(ptr, idx, reflect2.PtrOf(elemPtr))
+
+		return true
+	})
+}
+
 type fuzzyStringDecoder struct {
 }
 
@@ -290,5 +402,37 @@ func (decoder *fuzzyFloat64Decoder) Decode(ptr unsafe.Pointer, iter *jsoniter.It
 		*((*float64)(ptr)) = 0
 	default:
 		iter.ReportError("fuzzyFloat64Decoder", "not number or string")
+	}
+}
+
+type fuzzyBoolDecoder struct {
+}
+
+func (decoder *fuzzyBoolDecoder) Decode(ptr unsafe.Pointer, iter *jsoniter.Iterator) {
+	valueType := iter.WhatIsNext()
+	var str string
+	switch valueType {
+	case jsoniter.BoolValue:
+		*((*bool)(ptr)) = iter.ReadBool()
+	case jsoniter.StringValue:
+		str = iter.ReadString()
+		switch str {
+		case "", "false", "0":
+			*((*bool)(ptr)) = false
+		default:
+			*((*bool)(ptr)) = true
+		}
+	case jsoniter.NumberValue:
+		fl := iter.ReadFloat64()
+		if int64(fl) == 0 {
+			*((*bool)(ptr)) = false
+		} else {
+			*((*bool)(ptr)) = true
+		}
+	case jsoniter.NilValue:
+		iter.Skip()
+		*((*bool)(ptr)) = false
+	default:
+		iter.ReportError("fuzzyBoolDecoder", "not bool, number or string")
 	}
 }
