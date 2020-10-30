@@ -68,6 +68,18 @@ json.Unmarshal(input, &data)
 
 [More documentation](http://jsoniter.com/migrate-from-go-std.html)
 
+# Support Unmarshal string to int/int64/float etc and Unmarshal int/int64/float to string
+
+for example:
+```
+s := `{"i": "1234", s: 4321}
+a := struct {
+    I int32 `json:"i"`
+    S string `json:"s"`
+}
+jsoniter.ConfigConvertStringNumber.UnmarshalFromString(s, &a)
+```
+
 # How to get
 
 ```
