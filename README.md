@@ -72,7 +72,7 @@ json.Unmarshal(input, &data)
 
 for example:
 ```
-s := `{"i": "1234", s: 4321}
+s := `{"i": "1234", "s": 4321}`
 a := struct {
     I int32 `json:"i"`
     S string `json:"s"`
