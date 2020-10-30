@@ -69,6 +69,11 @@ func (iter *Iterator) ReadBigInt() (ret *big.Int) {
 //ReadFloat32 read float32
 func (iter *Iterator) ReadFloat32() (ret float32) {
 	c := iter.nextToken()
+
+	if iter.cfg.convertStringNumber && c == '"' {
+		c = iter.nextToken()
+	}
+
 	if c == '-' {
 		return -iter.readPositiveFloat32()
 	}
@@ -159,6 +164,12 @@ non_decimal_loop:
 func (iter *Iterator) readNumberAsString() (ret string) {
 	strBuf := [16]byte{}
 	str := strBuf[0:0]
+
+	isInteger := true
+	// skip start "
+	if iter.cfg.convertStringNumber && iter.head < iter.tail && iter.buf[iter.head] == '"' {
+		iter.head ++
+	}
 load_loop:
 	for {
 		for i := iter.head; i < iter.tail; i++ {
@@ -166,6 +177,9 @@ load_loop:
 			switch c {
 			case '+', '-', '.', 'e', 'E', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
 				str = append(str, c)
+				if c == 'e' ||c == '.' || c == 'E' {
+					isInteger = false
+				}
 				continue
 			default:
 				iter.head = i
@@ -178,6 +192,14 @@ load_loop:
 	}
 	if iter.Error != nil && iter.Error != io.EOF {
 		return
+	}
+
+	if iter.cfg.allowLongTailCharL && iter.head < iter.tail && iter.buf[iter.head] == 'L' && isInteger {
+		iter.head ++
+	}
+	// skip end "
+	if iter.cfg.convertStringNumber && iter.head < iter.tail && iter.buf[iter.head] == '"' {
+		iter.head ++
 	}
 	if len(str) == 0 {
 		iter.ReportError("readNumberAsString", "invalid number")
@@ -206,6 +228,11 @@ func (iter *Iterator) readFloat32SlowPath() (ret float32) {
 // ReadFloat64 read float64
 func (iter *Iterator) ReadFloat64() (ret float64) {
 	c := iter.nextToken()
+
+	if iter.cfg.convertStringNumber && c == '"' {
+		c = iter.nextToken()
+	}
+
 	if c == '-' {
 		return -iter.readPositiveFloat64()
 	}

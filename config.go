@@ -25,6 +25,8 @@ type Config struct {
 	ValidateJsonRawMessage        bool
 	ObjectFieldMustBeSimpleString bool
 	CaseSensitive                 bool
+	ConvertStringNumber           bool
+	AllowLongTailCharL            bool
 }
 
 // API the public interface of this package.
@@ -65,6 +67,15 @@ var ConfigFastest = Config{
 	ObjectFieldMustBeSimpleString: true, // do not unescape object field
 }.Froze()
 
+// ConfigConvertStringNumber convert string to number, convert number to string as need, allow long integer with L
+var ConfigConvertStringNumber = Config{
+	EscapeHTML:             true,
+	SortMapKeys:            true,
+	ValidateJsonRawMessage: true,
+	ConvertStringNumber:    true,
+	AllowLongTailCharL:     true,
+}.Froze()
+
 type frozenConfig struct {
 	configBeforeFrozen            Config
 	sortMapKeys                   bool
@@ -80,6 +91,8 @@ type frozenConfig struct {
 	streamPool                    *sync.Pool
 	iteratorPool                  *sync.Pool
 	caseSensitive                 bool
+	convertStringNumber           bool
+	allowLongTailCharL            bool
 }
 
 func (cfg *frozenConfig) initCache() {
@@ -134,6 +147,8 @@ func (cfg Config) Froze() API {
 		onlyTaggedField:               cfg.OnlyTaggedField,
 		disallowUnknownFields:         cfg.DisallowUnknownFields,
 		caseSensitive:                 cfg.CaseSensitive,
+		convertStringNumber:           cfg.ConvertStringNumber,
+		allowLongTailCharL:            cfg.AllowLongTailCharL,
 	}
 	api.streamPool = &sync.Pool{
 		New: func() interface{} {
