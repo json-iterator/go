@@ -38,5 +38,6 @@ func (cfg *frozenConfig) BorrowIterator(data []byte) *Iterator {
 func (cfg *frozenConfig) ReturnIterator(iter *Iterator) {
 	iter.Error = nil
 	iter.Attachment = nil
+	iter.ResetBytes(nil)
 	cfg.iteratorPool.Put(iter)
 }
