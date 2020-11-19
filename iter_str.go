@@ -8,6 +8,12 @@ import (
 // ReadString read string from iterator
 func (iter *Iterator) ReadString() (ret string) {
 	c := iter.nextToken()
+	if iter.cfg.convertStringNumber && iter.head < iter.tail &&
+		(intDigits[c] != invalidCharForNumber || c == '+' || c == '-') {
+		iter.unreadByte()
+		return iter.readNumberAsString()
+	}
+
 	if c == '"' {
 		for i := iter.head; i < iter.tail; i++ {
 			c := iter.buf[i]
