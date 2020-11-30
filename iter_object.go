@@ -238,10 +238,8 @@ func (iter *Iterator) readObjectStart() bool {
 func (iter *Iterator) readObjectFieldAsBytes() (ret []byte) {
 	str := iter.ReadStringAsSlice()
 	if iter.skipWhitespacesWithoutLoadMore() {
-		if ret == nil {
-			ret = make([]byte, len(str))
-			copy(ret, str)
-		}
+		ret = make([]byte, len(str))
+		copy(ret, str)
 		if !iter.loadMore() {
 			return
 		}
