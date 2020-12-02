@@ -179,6 +179,11 @@ func (decoder *mapDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	decoder.elemDecoder.Decode(elem, iter)
 	decoder.mapType.UnsafeSetIndex(ptr, key, elem)
 	for c = iter.nextToken(); c == ','; c = iter.nextToken() {
+		if c = iter.nextToken(); c != '"' {
+			iter.ReportError("ReadMapCB", `expect " after , , but found `+string([]byte{c}))
+			return
+		}
+		iter.unreadByte()
 		key := decoder.keyType.UnsafeNew()
 		decoder.keyDecoder.Decode(key, iter)
 		c = iter.nextToken()
