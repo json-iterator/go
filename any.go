@@ -321,5 +321,5 @@ func (codec *directAnyCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
 
 func (codec *directAnyCodec) IsEmpty(ptr unsafe.Pointer) bool {
 	any := *(*Any)(ptr)
-	return any.Size() == 0
+	return any == nil || any.Size() == 0
 }
