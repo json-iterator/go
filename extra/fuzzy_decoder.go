@@ -8,7 +8,7 @@ import (
 	"strings"
 	"unsafe"
 
-	"github.com/json-iterator/go"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/modern-go/reflect2"
 )
 
@@ -143,6 +143,7 @@ func RegisterFuzzyDecoders() {
 			*((*uint64)(ptr)) = iter.ReadUint64()
 		}
 	}})
+	jsoniter.RegisterTypeDecoder("bool", &fuzzyBoolDecoder{})
 }
 
 type tolerateEmptyArrayExtension struct {
@@ -290,5 +291,45 @@ func (decoder *fuzzyFloat64Decoder) Decode(ptr unsafe.Pointer, iter *jsoniter.It
 		*((*float64)(ptr)) = 0
 	default:
 		iter.ReportError("fuzzyFloat64Decoder", "not number or string")
+	}
+}
+
+type fuzzyBoolDecoder struct {
+}
+
+func (decoder *fuzzyBoolDecoder) Decode(ptr unsafe.Pointer, iter *jsoniter.Iterator) {
+	valueType := iter.WhatIsNext()
+	switch valueType {
+	case jsoniter.NumberValue:
+		*((*bool)(ptr)) = iter.ReadFloat64() != 0
+	case jsoniter.StringValue:
+		str := iter.ReadString()
+		switch str {
+		case "", "0":
+			*((*bool)(ptr)) = false
+		default:
+			*((*bool)(ptr)) = true
+		}
+	case jsoniter.BoolValue:
+		*((*bool)(ptr)) = iter.ReadBool()
+	// In order to stay consistent with the other decoders here, leaving arrays and objects out for now.
+	// case jsoniter.ObjectValue:
+	// 	iter.Skip()
+	// 	*((*bool)(ptr)) = true
+	// case jsoniter.ArrayValue:
+	// 	var nonEmptyArray bool
+	// 	iter.ReadArrayCB(
+	// 		func(*jsoniter.Iterator) bool {
+	// 			iter.Skip()
+	// 			nonEmptyArray = true
+	// 			return true
+	// 		},
+	// 	)
+	// 	*((*bool)(ptr)) = nonEmptyArray
+	case jsoniter.NilValue:
+		iter.Skip()
+		*((*bool)(ptr)) = false
+	default:
+		iter.ReportError("fuzzyBoolDecoder", "not number, string or bool")
 	}
 }
