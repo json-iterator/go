@@ -2,10 +2,11 @@ package jsoniter
 
 import (
 	"fmt"
-	"github.com/modern-go/reflect2"
 	"io"
 	"reflect"
 	"unsafe"
+
+	"github.com/modern-go/reflect2"
 )
 
 func encoderOfStruct(ctx *ctx, typ reflect2.Type) ValEncoder {
@@ -32,7 +33,7 @@ func encoderOfStruct(ctx *ctx, typ reflect2.Type) ValEncoder {
 		}
 	}
 	if len(orderedBindings) == 0 {
-		return &emptyStructEncoder{}
+		return &emptyStructEncoder{ctx.frozenConfig.allowOmitEmptyStruct}
 	}
 	finalOrderedFields := []structFieldTo{}
 	for _, bindingTo := range orderedBindings {
@@ -43,7 +44,7 @@ func encoderOfStruct(ctx *ctx, typ reflect2.Type) ValEncoder {
 			})
 		}
 	}
-	return &structEncoder{typ, finalOrderedFields}
+	return &structEncoder{typ, finalOrderedFields, ctx.frozenConfig.allowOmitEmptyStruct}
 }
 
 func createCheckIsEmpty(ctx *ctx, typ reflect2.Type) checkIsEmpty {
@@ -132,8 +133,9 @@ type IsEmbeddedPtrNil interface {
 }
 
 type structEncoder struct {
-	typ    reflect2.Type
-	fields []structFieldTo
+	typ        reflect2.Type
+	fields     []structFieldTo
+	allowEmpty bool
 }
 
 type structFieldTo struct {
@@ -165,10 +167,19 @@ func (encoder *structEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 }
 
 func (encoder *structEncoder) IsEmpty(ptr unsafe.Pointer) bool {
-	return false
+	if !encoder.allowEmpty {
+		return false
+	}
+	for _, field := range encoder.fields {
+		if !field.encoder.IsEmpty(ptr) {
+			return false
+		}
+	}
+	return true
 }
 
 type emptyStructEncoder struct {
+	allowEmpty bool
 }
 
 func (encoder *emptyStructEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
@@ -176,7 +187,7 @@ func (encoder *emptyStructEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 }
 
 func (encoder *emptyStructEncoder) IsEmpty(ptr unsafe.Pointer) bool {
-	return false
+	return encoder.allowEmpty
 }
 
 type stringModeNumberEncoder struct {
