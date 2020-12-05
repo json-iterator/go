@@ -1,8 +1,10 @@
 package test
 
 import (
+	"bytes"
 	"encoding/json"
-	"github.com/json-iterator/go"
+	"github.com/apersson/json-iterator-go"
+	"io"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -23,6 +25,99 @@ import (
 //		t.Fatal(count)
 //	}
 //}
+
+const rawObject = `
+{
+  "id": "d50887ca-a6ce-4e59-b89f-14f0b5d03b03",
+  "name": {
+    "fullName": "Leonid Bugaev",
+    "givenName": "Leonid",
+    "familyName": "Bugaev"
+  },
+  "email": "leonsbox@gmail.com",
+  "gender": "male",
+  "location": "Saint Petersburg, Saint Petersburg, RU",
+  "geo": {
+    "city": "Saint Petersburg",
+    "state": "Saint Petersburg",
+    "country": "Russia",
+    "lat": 59.9342802,
+    "lng": 30.3350986
+  },
+  "bio": "Senior engineer at Granify.com",
+  "site": "http://flickfaver.com",
+  "avatar": "https://d1ts43dypk8bqh.cloudfront.net/v1/avatars/d50887ca-a6ce-4e59-b89f-14f0b5d03b03",
+  "employment": {
+    "name": "www.latera.ru",
+    "title": "Software Engineer",
+    "domain": "gmail.com"
+  },
+  "facebook": {
+    "handle": "leonid.bugaev"
+  },
+  "github": {
+    "handle": "buger",
+    "id": 14009,
+    "avatar": "https://avatars.githubusercontent.com/u/14009?v=3",
+    "company": "Granify",
+    "blog": "http://leonsbox.com",
+    "followers": 95,
+    "following": 10
+  },
+  "twitter": {
+    "handle": "flickfaver",
+    "id": 77004410,
+    "bio": null,
+    "followers": 2,
+    "following": 1,
+    "statuses": 5,
+    "favorites": 0,
+    "location": "",
+    "site": "http://flickfaver.com",
+    "avatar": null
+  },
+  "linkedin": {
+    "handle": "in/leonidbugaev"
+  },
+  "googleplus": {
+    "handle": null
+  },
+  "angellist": {
+    "handle": "leonid-bugaev",
+    "id": 61541,
+    "bio": "Senior engineer at Granify.com",
+    "blog": "http://buger.github.com",
+    "site": "http://buger.github.com",
+    "followers": 41,
+    "avatar": "https://d1qb2nb5cznatu.cloudfront.net/users/61541-medium_jpg?1405474390"
+  },
+  "klout": {
+    "handle": null,
+    "score": null
+  },
+  "foursquare": {
+    "handle": null
+  },
+  "aboutme": {
+    "handle": "leonid.bugaev",
+    "bio": null,
+    "avatar": null
+  },
+  "gravatar": {
+    "handle": "buger",
+    "urls": [
+    ],
+    "avatar": "http://1.gravatar.com/avatar/f7c8edd577d13b8930d5522f28123510",
+    "avatars": [
+      {
+        "url": "http://1.gravatar.com/avatar/f7c8edd577d13b8930d5522f28123510",
+        "type": "thumbnail"
+      }
+    ]
+  },
+  "fuzzy": false
+}
+`
 
 func init() {
 	ioutil.WriteFile("/tmp/large-file.json", []byte(`[{
@@ -132,11 +227,33 @@ func Benchmark_jsoniter_large_file(b *testing.B) {
 		count := 0
 		iter.ReadArrayCB(func(iter *jsoniter.Iterator) bool {
 			// Skip() is strict by default, use --tags jsoniter-sloppy to skip without validation
-			iter.Skip()
+			iter.ReadObjectCB(func(iter *jsoniter.Iterator, s string) bool {
+				iter.Skip()
+				return true
+			})
 			count++
 			return true
 		})
 		file.Close()
+		if iter.Error != nil {
+			b.Error(iter.Error)
+		}
+	}
+}
+
+func Benchmark_jsoniter_object(b *testing.B) {
+	b.ReportAllocs()
+
+	br := bytes.NewReader([]byte(rawObject))
+	count := 0
+	for n := 0; n < b.N; n++ {
+		br.Seek(0, io.SeekStart)
+		iter := jsoniter.Parse(jsoniter.ConfigDefault, br, 4096)
+		iter.ReadObjectCBWithSliceKey(func(iter *jsoniter.Iterator, s []byte) bool {
+			iter.Skip()
+			count++
+			return true
+		})
 		if iter.Error != nil {
 			b.Error(iter.Error)
 		}
