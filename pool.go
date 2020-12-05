@@ -26,6 +26,8 @@ func (cfg *frozenConfig) ReturnStream(stream *Stream) {
 	stream.out = nil
 	stream.Error = nil
 	stream.Attachment = nil
+	stream.indention = 0
+	stream.depth = 0
 	cfg.streamPool.Put(stream)
 }
 
