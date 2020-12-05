@@ -523,16 +523,15 @@ func (decoder *generalStructDecoder) decodeOneField(ptr unsafe.Pointer, iter *It
 		fieldBytes := iter.ReadStringAsSlice()
 		field = *(*string)(unsafe.Pointer(&fieldBytes))
 		fieldDecoder = decoder.fields[field]
-		if fieldDecoder == nil && !iter.cfg.caseSensitive {
-			fieldDecoder = decoder.fields[strings.ToLower(field)]
-		}
 	} else {
 		field = iter.ReadString()
 		fieldDecoder = decoder.fields[field]
-		if fieldDecoder == nil && !iter.cfg.caseSensitive {
-			fieldDecoder = decoder.fields[strings.ToLower(field)]
-		}
 	}
+	
+	if fieldDecoder == nil && !iter.cfg.caseSensitive {
+		fieldDecoder = decoder.fields[strings.ToLower(field)]
+	}
+	
 	if fieldDecoder == nil {
 		if decoder.disallowUnknownFields {
 			msg := "found unknown field: " + field
