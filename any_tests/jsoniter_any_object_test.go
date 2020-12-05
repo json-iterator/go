@@ -119,3 +119,22 @@ func Test_object_wrapper_any_get_all(t *testing.T) {
 	should.Contains(any.Keys(), "Field2")
 	should.NotContains(any.Keys(), "Field3")
 }
+
+func Test_object_wrapper_readany(t *testing.T) {
+	type testStruct struct {
+		Field1 string
+		Field2 int
+		Field3 bool
+	}
+	var t5 testStruct
+	testIter := jsoniter.NewIterator(jsoniter.ConfigDefault)
+	testIter.ResetBytes([]byte(`{}`))
+	lazyAny := testIter.ReadAny()
+	lazyAny.ToVal(&t5)
+	should := require.New(t)
+	should.Equal(testStruct{"", 0, false}, t5)
+	testIter.ResetBytes([]byte(`{"Field1": "abc", "Field2": 100, "Field3": true}`))
+	lazyAny = testIter.ReadAny()
+	lazyAny.ToVal(&t5)
+	should.Equal(testStruct{"abc", 100, true}, t5)
+}
