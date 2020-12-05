@@ -4,10 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/json-iterator/go"
-	"testing"
 	"github.com/stretchr/testify/require"
+	"testing"
 )
-
 
 type Foo struct {
 	Bar interface{}
@@ -19,11 +18,10 @@ func (f Foo) MarshalJSON() ([]byte, error) {
 	return buf.Bytes(), err
 }
 
-
 // Standard Encoder has trailing newline.
 func TestEncodeMarshalJSON(t *testing.T) {
 
-	foo := Foo {
+	foo := Foo{
 		Bar: 123,
 	}
 	should := require.New(t)

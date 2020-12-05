@@ -61,6 +61,79 @@ func Test_customize_map_key_encoder(t *testing.T) {
 	should.Equal(map[int]int{1: 2}, m)
 }
 
+// Test using custom encoder with sorted map keys.
+// Keys should be numerically sorted AFTER the custom key encoder runs.
+func Test_customize_map_key_encoder_with_sorted_keys(t *testing.T) {
+	should := require.New(t)
+	cfg := jsoniter.Config{
+		SortMapKeys: true,
+	}.Froze()
+	cfg.RegisterExtension(&testMapKeyExtension{})
+	m := map[int]int{
+		3: 3,
+		1: 9,
+	}
+	output, err := cfg.MarshalToString(m)
+	should.NoError(err)
+	should.Equal(`{"2":9,"4":3}`, output)
+	m2 := map[int]int{}
+	should.NoError(cfg.UnmarshalFromString(output, &m2))
+	should.Equal(map[int]int{
+		1: 9,
+		3: 3,
+	}, m2)
+}
+
+func Test_customize_map_key_sorter(t *testing.T) {
+	should := require.New(t)
+	cfg := jsoniter.Config{
+		SortMapKeys: true,
+	}.Froze()
+
+	cfg.RegisterExtension(&testMapKeySorterExtension{
+		sorter: &testKeySorter{},
+	})
+
+	m := map[string]int{
+		"a":   1,
+		"foo": 2,
+		"b":   3,
+	}
+	output, err := cfg.MarshalToString(m)
+	should.NoError(err)
+	should.Equal(`{"foo":2,"a":1,"b":3}`, output)
+	m = map[string]int{}
+	should.NoError(cfg.UnmarshalFromString(output, &m))
+	should.Equal(map[string]int{
+		"foo": 2,
+		"a":   1,
+		"b":   3,
+	}, m)
+}
+
+type testKeySorter struct {
+}
+
+func (sorter *testKeySorter) Sort(keyA string, keyB string) bool {
+	// Prioritize "foo" over other keys, otherwise alpha-sort
+	if keyA == "foo" {
+		return true
+	} else if keyB == "foo" {
+		return false
+	} else {
+		return keyA < keyB
+	}
+}
+
+type testMapKeySorterExtension struct {
+	jsoniter.DummyExtension
+	sorter jsoniter.MapKeySorter
+}
+
+func (extension *testMapKeySorterExtension) CreateMapKeySorter() jsoniter.MapKeySorter {
+	return extension.sorter
+}
+
 type testMapKeyExtension struct {
 	jsoniter.DummyExtension
 }

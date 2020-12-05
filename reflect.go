@@ -30,6 +30,11 @@ type ValEncoder interface {
 	Encode(ptr unsafe.Pointer, stream *Stream)
 }
 
+// MapKeySorter is used to define a custom function for sorting the keys of maps
+type MapKeySorter interface {
+	Sort(keyA string, keyB string) bool
+}
+
 type checkIsEmpty interface {
 	IsEmpty(ptr unsafe.Pointer) bool
 }
