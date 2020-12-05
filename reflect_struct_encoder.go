@@ -156,12 +156,15 @@ func (encoder *structEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 		}
 		stream.WriteObjectField(field.toName)
 		field.encoder.Encode(ptr, stream)
+		if stream.Error != nil {
+			if stream.Error != io.EOF {
+				stream.Error = fmt.Errorf("%v.%s", encoder.typ, stream.Error.Error())
+			}
+			return
+		}
 		isNotFirst = true
 	}
 	stream.WriteObjectEnd()
-	if stream.Error != nil && stream.Error != io.EOF {
-		stream.Error = fmt.Errorf("%v.%s", encoder.typ, stream.Error.Error())
-	}
 }
 
 func (encoder *structEncoder) IsEmpty(ptr unsafe.Pointer) bool {
