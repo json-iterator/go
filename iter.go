@@ -59,6 +59,8 @@ func init() {
 	valueTypes['7'] = NumberValue
 	valueTypes['8'] = NumberValue
 	valueTypes['9'] = NumberValue
+	valueTypes['N'] = NumberValue
+	valueTypes['I'] = NumberValue
 	valueTypes['t'] = BoolValue
 	valueTypes['f'] = BoolValue
 	valueTypes['n'] = NilValue

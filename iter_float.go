@@ -156,6 +156,52 @@ non_decimal_loop:
 	return iter.readFloat32SlowPath()
 }
 
+var nanBytes = []byte("NaN")
+
+func (iter *Iterator) readNaN() (ret []byte) {
+	for _, b := range nanBytes {
+		if iter.readByte() != b {
+			iter.ReportError("readNaN", "expect NaN")
+			return
+		}
+	}
+	if !iter.cfg.configBeforeFrozen.AllowNaN {
+		iter.ReportError("readInfinity", "invalid number, AllowNaN is not set")
+		return
+	}
+	return nanBytes
+}
+
+var infinityBytes = []byte("Infinity")
+
+func (iter *Iterator) readInfinity() (ret []byte) {
+	for _, b := range infinityBytes {
+		if iter.readByte() != b {
+			iter.ReportError("readInfinity", "expect Infinity")
+			return
+		}
+	}
+	if !iter.cfg.configBeforeFrozen.AllowNaN {
+		iter.ReportError("readInfinity", "invalid number, AllowNaN is not set")
+		return
+	}
+	return infinityBytes
+}
+
+func (iter *Iterator) readNaNOrInf(str []byte) []byte {
+	switch iter.buf[iter.head] {
+	case 'N':
+		if len(str) == 0 {
+			str = iter.readNaN()
+		}
+	case 'I':
+		if len(str) == 0 || len(str) == 1 && str[0] == '-' {
+			str = append(str, iter.readInfinity()...)
+		}
+	}
+	return str
+}
+
 func (iter *Iterator) readNumberAsString() (ret string) {
 	strBuf := [16]byte{}
 	str := strBuf[0:0]
@@ -167,6 +213,10 @@ load_loop:
 			case '+', '-', '.', 'e', 'E', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
 				str = append(str, c)
 				continue
+			case 'N', 'I':
+				iter.head = i
+				str = iter.readNaNOrInf(str)
+				break load_loop
 			default:
 				iter.head = i
 				break load_loop
