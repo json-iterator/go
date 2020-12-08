@@ -163,6 +163,7 @@ func (iter *Iterator) skipWhitespacesWithoutLoadMore() bool {
 		iter.head = i
 		return false
 	}
+	iter.head = iter.tail
 	return true
 }
 
@@ -274,7 +275,9 @@ func (iter *Iterator) loadMore() bool {
 		} else {
 			iter.head = 0
 			iter.tail = n
-			return true
+			if !iter.skipWhitespacesWithoutLoadMore() {
+				return true
+			}
 		}
 	}
 }

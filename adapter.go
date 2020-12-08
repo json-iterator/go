@@ -62,6 +62,7 @@ type Decoder struct {
 
 // Decode decode JSON into interface{}
 func (adapter *Decoder) Decode(obj interface{}) error {
+	adapter.iter.skipWhitespacesWithoutLoadMore()
 	if adapter.iter.head == adapter.iter.tail && adapter.iter.reader != nil {
 		if !adapter.iter.loadMore() {
 			return io.EOF
