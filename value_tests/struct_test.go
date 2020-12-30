@@ -28,6 +28,11 @@ func init() {
 		input: `{"field": null}`,
 	}, unmarshalCase{
 		ptr: (*struct {
+			Field int `json:"field,string"`
+		})(nil),
+		input: `{"field": null}`,
+	}, unmarshalCase{
+		ptr: (*struct {
 			ID      int                    `json:"id"`
 			Payload map[string]interface{} `json:"payload"`
 			buf     *bytes.Buffer
