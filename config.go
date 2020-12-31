@@ -7,7 +7,6 @@ import (
 	"sync"
 	"unsafe"
 
-	"github.com/modern-go/concurrent"
 	"github.com/modern-go/reflect2"
 )
 
@@ -72,8 +71,8 @@ type frozenConfig struct {
 	objectFieldMustBeSimpleString bool
 	onlyTaggedField               bool
 	disallowUnknownFields         bool
-	decoderCache                  *concurrent.Map
-	encoderCache                  *concurrent.Map
+	decoderCache                  *sync.Map
+	encoderCache                  *sync.Map
 	encoderExtension              Extension
 	decoderExtension              Extension
 	extraExtensions               []Extension
@@ -83,8 +82,8 @@ type frozenConfig struct {
 }
 
 func (cfg *frozenConfig) initCache() {
-	cfg.decoderCache = concurrent.NewMap()
-	cfg.encoderCache = concurrent.NewMap()
+	cfg.decoderCache = new(sync.Map)
+	cfg.encoderCache = new(sync.Map)
 }
 
 func (cfg *frozenConfig) addDecoderToCache(cacheKey uintptr, decoder ValDecoder) {
@@ -111,7 +110,7 @@ func (cfg *frozenConfig) getEncoderFromCache(cacheKey uintptr) ValEncoder {
 	return nil
 }
 
-var cfgCache = concurrent.NewMap()
+var cfgCache = new(sync.Map)
 
 func getFrozenConfigFromCache(cfg Config) *frozenConfig {
 	obj, found := cfgCache.Load(cfg)
