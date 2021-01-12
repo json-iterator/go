@@ -2,6 +2,7 @@ package jsoniter
 
 import (
 	"fmt"
+	"strings"
 	"unicode/utf16"
 )
 
@@ -33,82 +34,83 @@ func (iter *Iterator) ReadString() (ret string) {
 }
 
 func (iter *Iterator) readStringSlowPath() (ret string) {
-	var str []byte
+	sb := &strings.Builder{}
 	var c byte
 	for iter.Error == nil {
 		c = iter.readByte()
 		if c == '"' {
-			return string(str)
+			return sb.String()
 		}
 		if c == '\\' {
 			c = iter.readByte()
-			str = iter.readEscapedChar(c, str)
+			iter.readEscapedChar(c, sb)
 		} else {
-			str = append(str, c)
+			sb.WriteByte(c)
 		}
 	}
 	iter.ReportError("readStringSlowPath", "unexpected end of input")
 	return
 }
 
-func (iter *Iterator) readEscapedChar(c byte, str []byte) []byte {
+func (iter *Iterator) readEscapedChar(c byte, sb *strings.Builder) {
 	switch c {
 	case 'u':
 		r := iter.readU4()
 		if utf16.IsSurrogate(r) {
 			c = iter.readByte()
 			if iter.Error != nil {
-				return nil
+				return
 			}
 			if c != '\\' {
 				iter.unreadByte()
-				str = appendRune(str, r)
-				return str
+				sb.WriteRune(r)
+				return
 			}
 			c = iter.readByte()
 			if iter.Error != nil {
-				return nil
+				return
 			}
 			if c != 'u' {
-				str = appendRune(str, r)
-				return iter.readEscapedChar(c, str)
+				sb.WriteRune(r)
+				iter.readEscapedChar(c, sb)
+				return
 			}
 			r2 := iter.readU4()
 			if iter.Error != nil {
-				return nil
+				return
 			}
 			combined := utf16.DecodeRune(r, r2)
 			if combined == '\uFFFD' {
-				str = appendRune(str, r)
-				str = appendRune(str, r2)
+				sb.WriteRune(r)
+				sb.WriteRune(r2)
 			} else {
-				str = appendRune(str, combined)
+				sb.WriteRune(combined)
 			}
 		} else {
-			str = appendRune(str, r)
+			sb.WriteRune(r)
 		}
 	case '"':
-		str = append(str, '"')
+		sb.WriteByte('"')
 	case '\\':
-		str = append(str, '\\')
+		sb.WriteByte('\\')
 	case '/':
-		str = append(str, '/')
+		sb.WriteByte('/')
 	case 'b':
-		str = append(str, '\b')
+		sb.WriteByte('\b')
 	case 'f':
-		str = append(str, '\f')
+		sb.WriteByte('\f')
 	case 'n':
-		str = append(str, '\n')
+		sb.WriteByte('\n')
 	case 'r':
-		str = append(str, '\r')
+		sb.WriteByte('\r')
 	case 't':
-		str = append(str, '\t')
+		sb.WriteByte('\t')
 	default:
 		iter.ReportError("readEscapedChar",
 			`invalid escape char after \`)
-		return nil
+		return
 	}
-	return str
+	return
 }
 
 // ReadStringAsSlice read string from iterator without copying into string form.

@@ -1,4 +1,4 @@
-// +build go1.15
+// +build go1.16
 // remove these tests temporarily until https://github.com/golang/go/issues/38105 and
 // https://github.com/golang/go/issues/38940 is fixed
 
@@ -27,8 +27,10 @@ func (k *stringKeyType) UnmarshalText(text []byte) error {
 	return nil
 }
 
-var _ encoding.TextMarshaler = stringKeyType("")
-var _ encoding.TextUnmarshaler = new(stringKeyType)
+var (
+	_ encoding.TextMarshaler   = stringKeyType("")
+	_ encoding.TextUnmarshaler = new(stringKeyType)
+)
 
 type structKeyType struct {
 	X string
@@ -43,5 +45,7 @@ func (k *structKeyType) UnmarshalText(text []byte) error {
 	return nil
 }
 
-var _ encoding.TextMarshaler = structKeyType{}
-var _ encoding.TextUnmarshaler = &structKeyType{}
+var (
+	_ encoding.TextMarshaler   = structKeyType{}
+	_ encoding.TextUnmarshaler = &structKeyType{}
+)
