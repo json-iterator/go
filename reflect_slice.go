@@ -16,16 +16,21 @@ func decoderOfSlice(ctx *ctx, typ reflect2.Type) ValDecoder {
 func encoderOfSlice(ctx *ctx, typ reflect2.Type) ValEncoder {
 	sliceType := typ.(*reflect2.UnsafeSliceType)
 	encoder := encoderOfType(ctx.append("[sliceElem]"), sliceType.Elem())
-	return &sliceEncoder{sliceType, encoder}
+	return &sliceEncoder{sliceType, encoder, ctx.nilSafeCollection}
 }
 
 type sliceEncoder struct {
-	sliceType   *reflect2.UnsafeSliceType
-	elemEncoder ValEncoder
+	sliceType         *reflect2.UnsafeSliceType
+	elemEncoder       ValEncoder
+	nilSafeCollection bool
 }
 
 func (encoder *sliceEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	if encoder.sliceType.UnsafeIsNil(ptr) {
+		if encoder.nilSafeCollection {
+			stream.WriteEmptyArray()
+			return
+		}
 		stream.WriteNil()
 		return
 	}
