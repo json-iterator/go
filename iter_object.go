@@ -236,7 +236,7 @@ func (iter *Iterator) readObjectStart() bool {
 }
 
 func (iter *Iterator) readObjectFieldAsBytes() (ret []byte) {
-	str := iter.ReadStringAsSlice()
+	str := iter.ReadStringAsSlice(true)
 	if iter.skipWhitespacesWithoutLoadMore() {
 		if ret == nil {
 			ret = make([]byte, len(str))
