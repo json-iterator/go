@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/json-iterator/go"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/stretchr/testify/require"
 )
 
@@ -21,7 +21,7 @@ func Test_bad_case(t *testing.T) {
 			for iter.ReadArray() {
 				for field := iter.ReadObject(); field != ""; field = iter.ReadObject() {
 					if field == "Bit" {
-						iter.ReadStringAsSlice()
+						iter.ReadStringAsSlice(true)
 					} else {
 						if field != "Size" && field != "EndIndex" && field != "EndMask" && field != "Good" && field != "Flush" {
 							t.Fatal(field)
@@ -62,6 +62,57 @@ func Test_iterator_without_number(t *testing.T) {
 			expected, err := strconv.ParseInt(input, 10, 32)
 			should.Nil(err)
 			should.Equal(float64(expected), iter.Read())
+		})
+	}
+}
+
+func Test_iterator_ReadStringAsSlice(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected []byte
+	}{
+		{"null", `null`, nil},
+		{"empty string", `""`, []byte{}},
+		{"printable chars", `"abc-qwe"`, []byte("abc-qwe")},
+		{"escaped chars", `"\\\b\f\n\r\t\u263a\""`, []byte("\\\b\f\n\r\t\u263a\"")},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			should := require.New(t)
+			iter := jsoniter.ParseString(jsoniter.ConfigDefault, tt.input)
+			actual := iter.ReadStringAsSlice(false)
+			should.NoError(iter.Error)
+			should.Equal(tt.expected, actual)
+		})
+	}
+}
+
+func Test_iterator_ReadStringAsSlice_ascii_and_noescape(t *testing.T) {
+	tests := []struct {
+		name        string
+		input       string
+		expected    []byte
+		expectedErr bool
+	}{
+		{"null", `null`, nil, true},
+		{"empty string", `""`, []byte{}, false},
+		{"printable chars", `"abc-qwe"`, []byte("abc-qwe"), false},
+		{"escaped chars", `"\\\b\f\n\r\t\u263a\""`, []byte(`\\\b\f\n\r\t\u263a\`), false},
+		{"backslash", `"\"abcd"`, []byte(`\`), false},
+		{"space", `" "abcd"`, []byte(` `), false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			should := require.New(t)
+			iter := jsoniter.ParseString(jsoniter.ConfigDefault, tt.input)
+			actual := iter.ReadStringAsSlice(true)
+			should.Equal(tt.expected, actual)
+			if tt.expectedErr {
+				should.Error(iter.Error)
+			} else {
+				should.NoError(iter.Error)
+			}
 		})
 	}
 }
