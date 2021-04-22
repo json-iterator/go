@@ -61,7 +61,7 @@ var ConfigCompatibleWithStandardLibrary = Config{
 // ConfigFastest marshals float with only 6 digits precision
 var ConfigFastest = Config{
 	EscapeHTML:                    false,
-	MarshalFloatWith6Digits:       true, // will lose precession
+	MarshalFloatWith6Digits:       true, // will lose precision
 	ObjectFieldMustBeSimpleString: true, // do not unescape object field
 }.Froze()
 
