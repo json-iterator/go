@@ -25,6 +25,9 @@ type Config struct {
 	ValidateJsonRawMessage        bool
 	ObjectFieldMustBeSimpleString bool
 	CaseSensitive                 bool
+
+	TypeEncoders map[string]ValEncoder
+	TypeDecoders map[string]ValDecoder
 }
 
 // API the public interface of this package.
@@ -80,6 +83,9 @@ type frozenConfig struct {
 	streamPool                    *sync.Pool
 	iteratorPool                  *sync.Pool
 	caseSensitive                 bool
+
+	typeEncoders map[string]ValEncoder
+	typeDecoders map[string]ValDecoder
 }
 
 func (cfg *frozenConfig) initCache() {
@@ -127,6 +133,14 @@ func addFrozenConfigToCache(cfg Config, frozenConfig *frozenConfig) {
 
 // Froze forge API from config
 func (cfg Config) Froze() API {
+	typeDecoders := make(map[string]ValDecoder)
+	typeEncoders := make(map[string]ValEncoder)
+	if cfg.TypeDecoders != nil {
+		typeDecoders = cfg.TypeDecoders
+	}
+	if cfg.TypeEncoders != nil {
+		typeEncoders = cfg.TypeEncoders
+	}
 	api := &frozenConfig{
 		sortMapKeys:                   cfg.SortMapKeys,
 		indentionStep:                 cfg.IndentionStep,
@@ -134,6 +148,8 @@ func (cfg Config) Froze() API {
 		onlyTaggedField:               cfg.OnlyTaggedField,
 		disallowUnknownFields:         cfg.DisallowUnknownFields,
 		caseSensitive:                 cfg.CaseSensitive,
+		typeDecoders:                  typeDecoders,
+		typeEncoders:                  typeEncoders,
 	}
 	api.streamPool = &sync.Pool{
 		New: func() interface{} {
@@ -272,13 +288,11 @@ func (cfg *frozenConfig) escapeHTML(encoderExtension EncoderExtension) {
 }
 
 func (cfg *frozenConfig) cleanDecoders() {
-	typeDecoders = map[string]ValDecoder{}
 	fieldDecoders = map[string]ValDecoder{}
 	*cfg = *(cfg.configBeforeFrozen.Froze().(*frozenConfig))
 }
 
 func (cfg *frozenConfig) cleanEncoders() {
-	typeEncoders = map[string]ValEncoder{}
 	fieldEncoders = map[string]ValEncoder{}
 	*cfg = *(cfg.configBeforeFrozen.Froze().(*frozenConfig))
 }
