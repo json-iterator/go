@@ -5,14 +5,13 @@ import (
 	"strconv"
 )
 
-var intDigits []int8
+var intDigits [256]int8
 
 const uint32SafeToMultiply10 = uint32(0xffffffff)/10 - 1
 const uint64SafeToMultiple10 = uint64(0xffffffffffffffff)/10 - 1
 const maxFloat64 = 1<<53 - 1
 
 func init() {
-	intDigits = make([]int8, 256)
 	for i := 0; i < len(intDigits); i++ {
 		intDigits[i] = invalidCharForNumber
 	}
