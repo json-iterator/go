@@ -26,11 +26,10 @@ const (
 	ObjectValue
 )
 
-var hexDigits []byte
-var valueTypes []ValueType
+var hexDigits [256]byte
+var valueTypes [256]ValueType
 
 func init() {
-	hexDigits = make([]byte, 256)
 	for i := 0; i < len(hexDigits); i++ {
 		hexDigits[i] = 255
 	}
@@ -43,7 +42,6 @@ func init() {
 	for i := 'A'; i <= 'F'; i++ {
 		hexDigits[i] = byte((i - 'A') + 10)
 	}
-	valueTypes = make([]ValueType, 256)
 	for i := 0; i < len(valueTypes); i++ {
 		valueTypes[i] = InvalidValue
 	}

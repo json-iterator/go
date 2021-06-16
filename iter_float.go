@@ -9,14 +9,13 @@ import (
 	"unsafe"
 )
 
-var floatDigits []int8
+var floatDigits [256]int8
 
 const invalidCharForNumber = int8(-1)
 const endOfNumber = int8(-2)
 const dotInNumber = int8(-3)
 
 func init() {
-	floatDigits = make([]int8, 256)
 	for i := 0; i < len(floatDigits); i++ {
 		floatDigits[i] = invalidCharForNumber
 	}
