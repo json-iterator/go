@@ -2,11 +2,12 @@ package jsoniter
 
 import (
 	"fmt"
-	"github.com/modern-go/reflect2"
 	"io"
 	"reflect"
 	"sort"
 	"unsafe"
+
+	"github.com/modern-go/reflect2"
 )
 
 func decoderOfMap(ctx *ctx, typ reflect2.Type) ValDecoder {
@@ -290,6 +291,7 @@ func (encoder *sortKeysMapEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteObjectStart()
 	mapIter := encoder.mapType.UnsafeIterate(ptr)
 	subStream := stream.cfg.BorrowStream(nil)
+	subStream.SetIndention(stream.indention)
 	subStream.Attachment = stream.Attachment
 	subIter := stream.cfg.BorrowIterator(nil)
 	keyValues := encodedKeyValues{}

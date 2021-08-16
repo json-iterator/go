@@ -37,12 +37,18 @@ func (stream *Stream) Pool() StreamPool {
 // Reset reuse this stream instance by assign a new writer
 func (stream *Stream) Reset(out io.Writer) {
 	stream.out = out
+	stream.indention = 0
 	stream.buf = stream.buf[:0]
 }
 
 // Available returns how many bytes are unused in the buffer.
 func (stream *Stream) Available() int {
 	return cap(stream.buf) - len(stream.buf)
+}
+
+// SetIndention init indention before being used.
+func (stream *Stream) SetIndention(i int) {
+	stream.indention = i
 }
 
 // Buffered returns the number of bytes that have been written into the current buffer.
@@ -162,7 +168,9 @@ func (stream *Stream) WriteObjectField(field string) {
 
 // WriteObjectEnd write } with possible indention
 func (stream *Stream) WriteObjectEnd() {
-	stream.writeIndention(stream.cfg.indentionStep)
+	if !stream.revertObjectStartIndention() {
+		stream.writeIndention(stream.cfg.indentionStep)
+	}
 	stream.indention -= stream.cfg.indentionStep
 	stream.writeByte('}')
 }
@@ -207,4 +215,20 @@ func (stream *Stream) writeIndention(delta int) {
 	for i := 0; i < toWrite; i++ {
 		stream.buf = append(stream.buf, ' ')
 	}
+}
+
+// revertObjectStartIndention reverts the redundantly introduced indention when
+//  writing object start if there are no writable fields.
+func (stream *Stream) revertObjectStartIndention() (reverted bool) {
+	if stream.indention == 0 {
+		return false
+	}
+	// No writes after object start if the last byte is an indention character.
+	lastBytePos := stream.Buffered() - 1
+	if lastBytePos >= 0 && stream.buf[lastBytePos] == ' ' {
+		revertedLen := stream.Buffered() - 1 - stream.indention
+		stream.buf = stream.buf[:revertedLen]
+		return true
+	}
+	return false
 }
