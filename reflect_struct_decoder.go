@@ -46,12 +46,7 @@ func decoderOfStruct(ctx *ctx, typ reflect2.Type) ValDecoder {
 
 func createStructDecoder(ctx *ctx, typ reflect2.Type, fields map[string]*structFieldDecoder) ValDecoder {
 	if ctx.disallowUnknownFields || ctx.disallowDuplicateFields || !ctx.caseSensitive() {
-		return &generalStructDecoder{
-			typ:                     typ,
-			fields:                  fields,
-			disallowUnknownFields:   ctx.disallowUnknownFields,
-			disallowDuplicateFields: ctx.disallowDuplicateFields,
-		}
+		return &generalStructDecoder{typ, fields}
 	}
 	knownHash := map[int64]struct{}{
 		0: {},
@@ -65,7 +60,7 @@ func createStructDecoder(ctx *ctx, typ reflect2.Type, fields map[string]*structF
 			fieldHash := calcHash(fieldName)
 			_, known := knownHash[fieldHash]
 			if known {
-				return &generalStructDecoder{typ, fields, false, false}
+				return &generalStructDecoder{typ, fields}
 			}
 			knownHash[fieldHash] = struct{}{}
 			return &oneFieldStructDecoder{typ, fieldHash, fieldDecoder}
@@ -79,7 +74,7 @@ func createStructDecoder(ctx *ctx, typ reflect2.Type, fields map[string]*structF
 			fieldHash := calcHash(fieldName)
 			_, known := knownHash[fieldHash]
 			if known {
-				return &generalStructDecoder{typ, fields, false, false}
+				return &generalStructDecoder{typ, fields}
 			}
 			knownHash[fieldHash] = struct{}{}
 			if fieldHash1 == 0 {
@@ -102,7 +97,7 @@ func createStructDecoder(ctx *ctx, typ reflect2.Type, fields map[string]*structF
 			fieldHash := calcHash(fieldName)
 			_, known := knownHash[fieldHash]
 			if known {
-				return &generalStructDecoder{typ, fields, false, false}
+				return &generalStructDecoder{typ, fields}
 			}
 			knownHash[fieldHash] = struct{}{}
 			if fieldName1 == 0 {
@@ -133,7 +128,7 @@ func createStructDecoder(ctx *ctx, typ reflect2.Type, fields map[string]*structF
 			fieldHash := calcHash(fieldName)
 			_, known := knownHash[fieldHash]
 			if known {
-				return &generalStructDecoder{typ, fields, false, false}
+				return &generalStructDecoder{typ, fields}
 			}
 			knownHash[fieldHash] = struct{}{}
 			if fieldName1 == 0 {
@@ -170,7 +165,7 @@ func createStructDecoder(ctx *ctx, typ reflect2.Type, fields map[string]*structF
 			fieldHash := calcHash(fieldName)
 			_, known := knownHash[fieldHash]
 			if known {
-				return &generalStructDecoder{typ, fields, false, false}
+				return &generalStructDecoder{typ, fields}
 			}
 			knownHash[fieldHash] = struct{}{}
 			if fieldName1 == 0 {
@@ -213,7 +208,7 @@ func createStructDecoder(ctx *ctx, typ reflect2.Type, fields map[string]*structF
 			fieldHash := calcHash(fieldName)
 			_, known := knownHash[fieldHash]
 			if known {
-				return &generalStructDecoder{typ, fields, false, false}
+				return &generalStructDecoder{typ, fields}
 			}
 			knownHash[fieldHash] = struct{}{}
 			if fieldName1 == 0 {
@@ -262,7 +257,7 @@ func createStructDecoder(ctx *ctx, typ reflect2.Type, fields map[string]*structF
 			fieldHash := calcHash(fieldName)
 			_, known := knownHash[fieldHash]
 			if known {
-				return &generalStructDecoder{typ, fields, false, false}
+				return &generalStructDecoder{typ, fields}
 			}
 			knownHash[fieldHash] = struct{}{}
 			if fieldName1 == 0 {
@@ -317,7 +312,7 @@ func createStructDecoder(ctx *ctx, typ reflect2.Type, fields map[string]*structF
 			fieldHash := calcHash(fieldName)
 			_, known := knownHash[fieldHash]
 			if known {
-				return &generalStructDecoder{typ, fields, false, false}
+				return &generalStructDecoder{typ, fields}
 			}
 			knownHash[fieldHash] = struct{}{}
 			if fieldName1 == 0 {
@@ -378,7 +373,7 @@ func createStructDecoder(ctx *ctx, typ reflect2.Type, fields map[string]*structF
 			fieldHash := calcHash(fieldName)
 			_, known := knownHash[fieldHash]
 			if known {
-				return &generalStructDecoder{typ, fields, false, false}
+				return &generalStructDecoder{typ, fields}
 			}
 			knownHash[fieldHash] = struct{}{}
 			if fieldName1 == 0 {
@@ -445,7 +440,7 @@ func createStructDecoder(ctx *ctx, typ reflect2.Type, fields map[string]*structF
 			fieldHash := calcHash(fieldName)
 			_, known := knownHash[fieldHash]
 			if known {
-				return &generalStructDecoder{typ, fields, false, false}
+				return &generalStructDecoder{typ, fields}
 			}
 			knownHash[fieldHash] = struct{}{}
 			if fieldName1 == 0 {
@@ -492,14 +487,12 @@ func createStructDecoder(ctx *ctx, typ reflect2.Type, fields map[string]*structF
 			fieldName9, fieldDecoder9,
 			fieldName10, fieldDecoder10}
 	}
-	return &generalStructDecoder{typ, fields, false, false}
+	return &generalStructDecoder{typ, fields}
 }
 
 type generalStructDecoder struct {
-	typ                     reflect2.Type
-	fields                  map[string]*structFieldDecoder
-	disallowUnknownFields   bool
-	disallowDuplicateFields bool
+	typ    reflect2.Type
+	fields map[string]*structFieldDecoder
 }
 
 func (decoder *generalStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
@@ -510,7 +503,7 @@ func (decoder *generalStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) 
 		return
 	}
 	var seenFields map[string]struct{}
-	if decoder.disallowDuplicateFields {
+	if iter.cfg.disallowDuplicateFields {
 		seenFields = make(map[string]struct{}, len(decoder.fields))
 	}
 	var c byte
@@ -528,23 +521,20 @@ func (decoder *generalStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) 
 
 func (decoder *generalStructDecoder) decodeOneField(ptr unsafe.Pointer, iter *Iterator, seenFields map[string]struct{}) {
 	var field string
-	var fieldDecoder *structFieldDecoder
 	if iter.cfg.objectFieldMustBeSimpleString {
 		fieldBytes := iter.ReadStringAsSlice()
 		field = *(*string)(unsafe.Pointer(&fieldBytes))
-		fieldDecoder = decoder.fields[field]
-		if fieldDecoder == nil && !iter.cfg.caseSensitive {
-			fieldDecoder = decoder.fields[strings.ToLower(field)]
-		}
 	} else {
 		field = iter.ReadString()
-		fieldDecoder = decoder.fields[field]
-		if fieldDecoder == nil && !iter.cfg.caseSensitive {
-			fieldDecoder = decoder.fields[strings.ToLower(field)]
-		}
 	}
+
+	fieldDecoder := decoder.fields[field]
+	if fieldDecoder == nil && !iter.cfg.caseSensitive {
+		fieldDecoder = decoder.fields[strings.ToLower(field)]
+	}
+
 	isDuplicate := false
-	if decoder.disallowDuplicateFields {
+	if iter.cfg.disallowDuplicateFields {
 		seenField := field
 		if !iter.cfg.caseSensitive {
 			seenField = strings.ToLower(seenField)
@@ -556,7 +546,7 @@ func (decoder *generalStructDecoder) decodeOneField(ptr unsafe.Pointer, iter *It
 	}
 
 	if fieldDecoder == nil || isDuplicate {
-		if decoder.disallowUnknownFields {
+		if iter.cfg.disallowUnknownFields {
 			msg := "found unknown field: " + field
 			iter.ReportError("ReadObject", msg)
 		}

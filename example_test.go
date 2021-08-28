@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func ExampleMarshal() {
@@ -218,4 +221,30 @@ func Example_noDuplicateFieldsInCaseSensitive() {
 	// Case-sensitiveness means no duplicates: 'fieldA' = "val2", err = <nil>
 	// Got duplicates in struct field: 'fieldA' = "val2", err = <nil>
 	// Got duplicates not in struct field: 'fieldA' = "val2", err = <nil>
+}
+
+func TestEncoder(t *testing.T) {
+	api := Config{
+		CaseSensitive:           true,
+		DisallowDuplicateFields: true,
+	}.Froze()
+
+	type target2 struct {
+		B Target `json:"b"`
+		A Target `json:"a"`
+	}
+
+	data := `{"a": {"fieldA": "bla"}, "b": {"fieldA": "bar"}}`
+	data += data
+
+	d := api.NewDecoder(strings.NewReader(data))
+	obj := &target2{}
+	assert.Nil(t, d.Decode(obj))
+	assert.Equal(t, "bla", obj.A.FieldA)
+	assert.Equal(t, "bar", obj.B.FieldA)
+
+	obj = &target2{}
+	assert.Nil(t, d.Decode(obj))
+	assert.Equal(t, "bla", obj.A.FieldA)
+	assert.Equal(t, "bar", obj.B.FieldA)
 }
