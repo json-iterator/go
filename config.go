@@ -11,6 +11,15 @@ import (
 	"github.com/modern-go/reflect2"
 )
 
+type FieldNameCase int
+
+const (
+	FieldNameCaseDefault FieldNameCase = iota
+	FieldNameCaseLowerFirstCamel
+	FieldNameCaseLowerSnake
+	FieldNameCaseUpperSnake
+)
+
 // Config customize how the API should behave.
 // The API is created from Config by Froze.
 type Config struct {
@@ -25,6 +34,7 @@ type Config struct {
 	ValidateJsonRawMessage        bool
 	ObjectFieldMustBeSimpleString bool
 	CaseSensitive                 bool
+	DefaultFieldNameCase          FieldNameCase
 }
 
 // API the public interface of this package.
@@ -80,6 +90,7 @@ type frozenConfig struct {
 	streamPool                    *sync.Pool
 	iteratorPool                  *sync.Pool
 	caseSensitive                 bool
+	defaultFieldNameCase          FieldNameCase
 }
 
 func (cfg *frozenConfig) initCache() {
@@ -134,6 +145,7 @@ func (cfg Config) Froze() API {
 		onlyTaggedField:               cfg.OnlyTaggedField,
 		disallowUnknownFields:         cfg.DisallowUnknownFields,
 		caseSensitive:                 cfg.CaseSensitive,
+		defaultFieldNameCase:          cfg.DefaultFieldNameCase,
 	}
 	api.streamPool = &sync.Pool{
 		New: func() interface{} {
