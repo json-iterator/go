@@ -8,7 +8,7 @@
 
 A high-performance 100% compatible drop-in replacement of "encoding/json"
 
-You can also use thrift like JSON using [thrift-iterator](https://github.com/thrift-iterator/go)
+incompatible with Go 1.18 (https://github.com/golang/go/issues/48238), use with CAUTION.
 
 # Benchmark
 
