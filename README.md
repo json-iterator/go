@@ -8,8 +8,6 @@
 
 A high-performance 100% compatible drop-in replacement of "encoding/json"
 
-incompatible with Go 1.18 (https://github.com/golang/go/issues/48238), use with CAUTION.
-
 # Benchmark
 
 ![benchmark](http://jsoniter.com/benchmarks/go-benchmark.png)
