@@ -23,6 +23,7 @@ type Config struct {
 	TagKey                        string
 	OnlyTaggedField               bool
 	ValidateJsonRawMessage        bool
+	ErrorOnInvalidJsonRawMessage  bool
 	ObjectFieldMustBeSimpleString bool
 	CaseSensitive                 bool
 }
@@ -53,9 +54,10 @@ var ConfigDefault = Config{
 
 // ConfigCompatibleWithStandardLibrary tries to be 100% compatible with standard library behavior
 var ConfigCompatibleWithStandardLibrary = Config{
-	EscapeHTML:             true,
-	SortMapKeys:            true,
-	ValidateJsonRawMessage: true,
+	EscapeHTML:                   true,
+	SortMapKeys:                  true,
+	ValidateJsonRawMessage:       true,
+	ErrorOnInvalidJsonRawMessage: true,
 }.Froze()
 
 // ConfigFastest marshals float with only 6 digits precision
@@ -158,7 +160,7 @@ func (cfg Config) Froze() API {
 		api.useNumber(decoderExtension)
 	}
 	if cfg.ValidateJsonRawMessage {
-		api.validateJsonRawMessage(encoderExtension)
+		api.validateJsonRawMessage(encoderExtension, cfg.ErrorOnInvalidJsonRawMessage)
 	}
 	api.encoderExtension = encoderExtension
 	api.decoderExtension = decoderExtension
@@ -179,14 +181,23 @@ func (cfg Config) frozeWithCacheReuse(extraExtensions []Extension) *frozenConfig
 	return api
 }
 
-func (cfg *frozenConfig) validateJsonRawMessage(extension EncoderExtension) {
+func (cfg *frozenConfig) validateJsonRawMessage(extension EncoderExtension, errorOnInvalid bool) {
 	encoder := &funcEncoder{func(ptr unsafe.Pointer, stream *Stream) {
 		rawMessage := *(*json.RawMessage)(ptr)
+		if rawMessage == nil {
+			stream.WriteRaw("null")
+			return
+		}
+
 		iter := cfg.BorrowIterator([]byte(rawMessage))
 		defer cfg.ReturnIterator(iter)
 		iter.Read()
 		if iter.Error != nil && iter.Error != io.EOF {
-			stream.WriteRaw("null")
+			if errorOnInvalid {
+				stream.Error = iter.Error
+			} else {
+				stream.WriteRaw("null")
+			}
 		} else {
 			stream.WriteRaw(string(rawMessage))
 		}
