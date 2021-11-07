@@ -10,7 +10,7 @@ import (
 
 func Test_jsoniter_RawMessage(t *testing.T) {
 	should := require.New(t)
-	var data jsoniter.RawMessage
+	var data json.RawMessage
 	should.Nil(jsoniter.Unmarshal([]byte(`[1,2,3]`), &data))
 	should.Equal(`[1,2,3]`, string(data))
 	str, err := jsoniter.MarshalToString(data)
@@ -20,8 +20,8 @@ func Test_jsoniter_RawMessage(t *testing.T) {
 
 func Test_encode_map_of_jsoniter_raw_message(t *testing.T) {
 	should := require.New(t)
-	type RawMap map[string]*jsoniter.RawMessage
-	value := jsoniter.RawMessage("[]")
+	type RawMap map[string]*json.RawMessage
+	value := json.RawMessage("[]")
 	rawMap := RawMap{"hello": &value}
 	output, err := jsoniter.MarshalToString(rawMap)
 	should.Nil(err)
@@ -44,7 +44,7 @@ func Test_marshal_invalid_json_raw_message(t *testing.T) {
 
 func Test_marshal_nil_json_raw_message(t *testing.T) {
 	type A struct {
-		Nil1 jsoniter.RawMessage `json:"raw1"`
+		Nil1 json.RawMessage `json:"raw1"`
 		Nil2 json.RawMessage     `json:"raw2"`
 	}
 
@@ -72,9 +72,9 @@ func Test_raw_message_memory_not_copied_issue(t *testing.T) {
 		BiddingMax  *float32             `json:"bidding_max"`
 		BiddingMin  *float32             `json:"bidding_min"`
 		BiddingType *string              `json:"bidding_type"`
-		Freq        *jsoniter.RawMessage `json:"freq"`
-		Targeting   *jsoniter.RawMessage `json:"targeting"`
-		Url         *jsoniter.RawMessage `json:"url"`
+		Freq        *json.RawMessage `json:"freq"`
+		Targeting   *json.RawMessage `json:"targeting"`
+		Url         *json.RawMessage `json:"url"`
 		Speed       *int                 `json:"speed" db:"speed"`
 	}
 

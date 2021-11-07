@@ -2,11 +2,12 @@ package jsoniter
 
 import (
 	"bytes"
+	"encoding/json"
 	"io"
 )
 
 // RawMessage to make replace json with jsoniter
-type RawMessage []byte
+type RawMessage = json.RawMessage
 
 // Unmarshal adapts to json/encoding Unmarshal API
 //
