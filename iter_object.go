@@ -5,6 +5,47 @@ import (
 	"strings"
 )
 
+// ReadStringAsSlice read one field from object without copying into string form.
+// If object ended, returns nil.
+// Otherwise, returns the field name.
+// The []byte can not be kept, as it will change after next iterator call.
+func (iter *Iterator) ReadObjectAsSlice() (ret []byte) {
+	c := iter.nextToken()
+	switch c {
+	case 'n':
+		iter.skipThreeBytes('u', 'l', 'l')
+		return nil // null
+	case '{':
+		c = iter.nextToken()
+		if c == '"' {
+			iter.unreadByte()
+			field := iter.ReadStringAsSlice()
+			c = iter.nextToken()
+			if c != ':' {
+				iter.ReportError("ReadObjectAsSlice", "expect : after object field, but found "+string([]byte{c}))
+			}
+			return field
+		}
+		if c == '}' {
+			return nil // end of object
+		}
+		iter.ReportError("ReadObjectAsSlice", `expect " after {, but found `+string([]byte{c}))
+		return
+	case ',':
+		field := iter.ReadStringAsSlice()
+		c = iter.nextToken()
+		if c != ':' {
+			iter.ReportError("ReadObjectAsSlice", "expect : after object field, but found "+string([]byte{c}))
+		}
+		return field
+	case '}':
+		return nil // end of object
+	default:
+		iter.ReportError("ReadObjectAsSlice", fmt.Sprintf(`expect { or , or } or n, but found %s`, string([]byte{c})))
+		return
+	}
+}
+
 // ReadObject read one field from object.
 // If object ended, returns empty string.
 // Otherwise, returns the field name.

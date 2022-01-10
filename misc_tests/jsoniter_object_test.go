@@ -14,7 +14,7 @@ import (
 func Test_empty_object(t *testing.T) {
 	should := require.New(t)
 	iter := jsoniter.ParseString(jsoniter.ConfigDefault, `{}`)
-	field := iter.ReadObject()
+	field := string(iter.ReadObjectAsSlice())
 	should.Equal("", field)
 	iter = jsoniter.ParseString(jsoniter.ConfigDefault, `{}`)
 	iter.ReadObjectCB(func(iter *jsoniter.Iterator, field string) bool {
@@ -30,7 +30,7 @@ func Test_one_field(t *testing.T) {
 	should.Equal("a", field)
 	value := iter.ReadString()
 	should.Equal("stream", value)
-	field = iter.ReadObject()
+	field = string(iter.ReadObjectAsSlice())
 	should.Equal("", field)
 	iter = jsoniter.ParseString(jsoniter.ConfigDefault, `{"a": "stream"}`)
 	should.True(iter.ReadObjectCB(func(iter *jsoniter.Iterator, field string) bool {
