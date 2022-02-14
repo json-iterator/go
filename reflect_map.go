@@ -2,11 +2,12 @@ package jsoniter
 
 import (
 	"fmt"
-	"github.com/modern-go/reflect2"
 	"io"
 	"reflect"
 	"sort"
 	"unsafe"
+
+	"github.com/modern-go/reflect2"
 )
 
 func decoderOfMap(ctx *ctx, typ reflect2.Type) ValDecoder {
@@ -63,6 +64,13 @@ func decoderOfMapKey(ctx *ctx, typ reflect2.Type) ValDecoder {
 			valType: typ,
 		}
 	}
+
+	// String map keys don't use text unmarshaller. See
+	// https://github.com/golang/go/issues/38940
+	if typ.Kind() == reflect.String {
+		return decoderOfType(ctx, reflect2.DefaultTypeOfKind(reflect.String))
+	}
+
 	if ptrType.Implements(textUnmarshalerType) {
 		return &referenceDecoder{
 			&textUnmarshalerDecoder{
@@ -77,8 +85,6 @@ func decoderOfMapKey(ctx *ctx, typ reflect2.Type) ValDecoder {
 	}
 
 	switch typ.Kind() {
-	case reflect.String:
-		return decoderOfType(ctx, reflect2.DefaultTypeOfKind(reflect.String))
 	case reflect.Bool,
 		reflect.Uint8, reflect.Int8,
 		reflect.Uint16, reflect.Int16,
@@ -106,6 +112,12 @@ func encoderOfMapKey(ctx *ctx, typ reflect2.Type) ValEncoder {
 		}
 	}
 
+	// String map keys don't use text marshaller. See
+	// https://github.com/golang/go/issues/38940
+	if typ.Kind() == reflect.String {
+		return encoderOfType(ctx, reflect2.DefaultTypeOfKind(reflect.String))
+	}
+
 	if typ == textMarshalerType {
 		return &directTextMarshalerEncoder{
 			stringEncoder: ctx.EncoderOf(reflect2.TypeOf("")),
@@ -119,8 +131,6 @@ func encoderOfMapKey(ctx *ctx, typ reflect2.Type) ValEncoder {
 	}
 
 	switch typ.Kind() {
-	case reflect.String:
-		return encoderOfType(ctx, reflect2.DefaultTypeOfKind(reflect.String))
 	case reflect.Bool,
 		reflect.Uint8, reflect.Int8,
 		reflect.Uint16, reflect.Int16,
