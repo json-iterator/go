@@ -11,9 +11,11 @@ import (
 
 var floatDigits []int8
 
-const invalidCharForNumber = int8(-1)
-const endOfNumber = int8(-2)
-const dotInNumber = int8(-3)
+const (
+	invalidCharForNumber = int8(-1)
+	endOfNumber          = int8(-2)
+	dotInNumber          = int8(-3)
+)
 
 func init() {
 	floatDigits = make([]int8, 256)
@@ -66,7 +68,7 @@ func (iter *Iterator) ReadBigInt() (ret *big.Int) {
 	return ret
 }
 
-//ReadFloat32 read float32
+// ReadFloat32 read float32
 func (iter *Iterator) ReadFloat32() (ret float32) {
 	c := iter.nextToken()
 	if c == '-' {
@@ -185,11 +187,39 @@ load_loop:
 	return *(*string)(unsafe.Pointer(&str))
 }
 
+func (iter *Iterator) appendNumber(buf []byte) []byte {
+load_loop:
+	for {
+		for i := iter.head; i < iter.tail; i++ {
+			c := iter.buf[i]
+			switch c {
+			case '+', '-', '.', 'e', 'E', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+				buf = append(buf, c)
+				continue
+			default:
+				iter.head = i
+				break load_loop
+			}
+		}
+		if !iter.loadMore() {
+			break
+		}
+	}
+	if iter.Error != nil && iter.Error != io.EOF {
+		return buf
+	}
+	if len(buf) == 0 {
+		iter.ReportError("readNumberAsString", "invalid number")
+	}
+	return buf
+}
+
 func (iter *Iterator) readFloat32SlowPath() (ret float32) {
-	str := iter.readNumberAsString()
+	iter.scratch = iter.appendNumber(iter.scratch[:0])
 	if iter.Error != nil && iter.Error != io.EOF {
 		return
 	}
+	str := *(*string)(unsafe.Pointer(&iter.scratch))
 	errMsg := validateFloat(str)
 	if errMsg != "" {
 		iter.ReportError("readFloat32SlowPath", errMsg)
@@ -297,10 +327,11 @@ non_decimal_loop:
 }
 
 func (iter *Iterator) readFloat64SlowPath() (ret float64) {
-	str := iter.readNumberAsString()
+	iter.scratch = iter.appendNumber(iter.scratch[:0])
 	if iter.Error != nil && iter.Error != io.EOF {
 		return
 	}
+	str := *(*string)(unsafe.Pointer(&iter.scratch))
 	errMsg := validateFloat(str)
 	if errMsg != "" {
 		iter.ReportError("readFloat64SlowPath", errMsg)
