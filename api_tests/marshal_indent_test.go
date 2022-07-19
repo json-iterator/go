@@ -34,3 +34,14 @@ func Test_marshal_indent_map(t *testing.T) {
 	should.Nil(err)
 	should.Equal("{\n  \"1\": 2\n}", string(output))
 }
+
+func Test_marshal_indent_nested_sorted(t *testing.T) {
+	should := require.New(t)
+	obj := map[int]interface{}{
+		1: map[int]int{2: 3},
+	}
+	ji := jsoniter.Config{SortMapKeys: true}.Froze()
+	output, err := ji.MarshalIndent(obj, "", "  ")
+	should.Nil(err)
+	should.Equal("{\n  \"1\": {\n    \"2\": 3\n  }\n}", string(output))
+}
