@@ -25,6 +25,8 @@ type Config struct {
 	ValidateJsonRawMessage        bool
 	ObjectFieldMustBeSimpleString bool
 	CaseSensitive                 bool
+	// AllowNaN parses input that contains non-standard NaN and Infinity values
+	AllowNaN bool
 }
 
 // API the public interface of this package.
@@ -49,6 +51,7 @@ type API interface {
 // ConfigDefault the default API
 var ConfigDefault = Config{
 	EscapeHTML: true,
+	AllowNaN:   true,
 }.Froze()
 
 // ConfigCompatibleWithStandardLibrary tries to be 100% compatible with standard library behavior
