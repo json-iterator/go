@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/json-iterator/go"
-	"github.com/stretchr/testify/require"
 	"strconv"
 	"testing"
+
+	jsoniter "github.com/json-iterator/go"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_read_float(t *testing.T) {
@@ -86,9 +87,13 @@ func Test_write_float32(t *testing.T) {
 	should.Nil(stream.Error)
 	should.Equal("abcdefg1.123456", buf.String())
 
+	val := float32(0.0000001)
 	stream = jsoniter.NewStream(jsoniter.ConfigDefault, nil, 0)
-	stream.WriteFloat32(float32(0.0000001))
-	should.Equal("1e-07", string(stream.Buffer()))
+	stream.WriteFloat32(val)
+	output, err := json.Marshal(val)
+	should.Nil(err)
+	should.Equal("1e-7", string(stream.Buffer()))
+	should.Equal(string(output), string(stream.Buffer()))
 }
 
 func Test_write_float64(t *testing.T) {
@@ -123,7 +128,11 @@ func Test_write_float64(t *testing.T) {
 	should.Nil(stream.Error)
 	should.Equal("abcdefg1.123456", buf.String())
 
+	val := float64(0.0000001)
 	stream = jsoniter.NewStream(jsoniter.ConfigDefault, nil, 0)
-	stream.WriteFloat64(float64(0.0000001))
-	should.Equal("1e-07", string(stream.Buffer()))
+	stream.WriteFloat64(val)
+	output, err := json.Marshal(val)
+	should.Nil(err)
+	should.Equal("1e-7", string(stream.Buffer()))
+	should.Equal(string(output), string(stream.Buffer()))
 }

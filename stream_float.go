@@ -12,6 +12,18 @@ func init() {
 	pow10 = []uint64{1, 10, 100, 1000, 10000, 100000, 1000000}
 }
 
+func (stream *Stream) cleanupZero(b []byte, fmt byte) []byte {
+	if fmt == 'e' {
+		// clean up e-09 to e-9
+		n := len(b)
+		if n >= 4 && b[n-4] == 'e' && b[n-3] == '-' && b[n-2] == '0' {
+			b[n-2] = b[n-1]
+			b = b[:n-1]
+		}
+	}
+	return b
+}
+
 // WriteFloat32 write float32 to stream
 func (stream *Stream) WriteFloat32(val float32) {
 	if math.IsInf(float64(val), 0) || math.IsNaN(float64(val)) {
@@ -27,6 +39,7 @@ func (stream *Stream) WriteFloat32(val float32) {
 		}
 	}
 	stream.buf = strconv.AppendFloat(stream.buf, float64(val), fmt, -1, 32)
+	stream.buf = stream.cleanupZero(stream.buf, fmt)
 }
 
 // WriteFloat32Lossy write float32 to stream with ONLY 6 digits precision although much much faster
@@ -76,6 +89,7 @@ func (stream *Stream) WriteFloat64(val float64) {
 		}
 	}
 	stream.buf = strconv.AppendFloat(stream.buf, float64(val), fmt, -1, 64)
+	stream.buf = stream.cleanupZero(stream.buf, fmt)
 }
 
 // WriteFloat64Lossy write float64 to stream with ONLY 6 digits precision although much much faster
