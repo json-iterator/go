@@ -18,7 +18,7 @@ type namingStrategyExtension struct {
 
 func (extension *namingStrategyExtension) UpdateStructDescriptor(structDescriptor *jsoniter.StructDescriptor) {
 	for _, binding := range structDescriptor.Fields {
-		if unicode.IsLower(rune(binding.Field.Name()[0])) || binding.Field.Name()[0] == '_'{
+		if unicode.IsLower(rune(binding.Field.Name()[0])) || binding.Field.Name()[0] == '_' {
 			continue
 		}
 		tag, hastag := binding.Field.Tag().Lookup("json")
@@ -49,6 +49,19 @@ func LowerCaseWithUnderscores(name string) string {
 			} else {
 				newName = append(newName, c)
 			}
+		}
+	}
+	return string(newName)
+}
+
+// FirstCaseToLower one strategy to SetNamingStrategy for. It will change HelloWorld to helloWorld.
+func FirstCaseToLower(name string) string {
+	newName := []rune{}
+	for i, c := range name {
+		if i == 0 {
+			newName = append(newName, unicode.ToLower(c))
+		} else {
+			newName = append(newName, c)
 		}
 	}
 	return string(newName)

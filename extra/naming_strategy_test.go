@@ -64,3 +64,22 @@ func Test_set_naming_strategy_with_private_field(t *testing.T) {
 	should.Nil(err)
 	should.Equal(`{"user_name":"allen"}`, string(output))
 }
+
+func Test_first_case_to_lower(t *testing.T) {
+	should := require.New(t)
+	should.Equal("helloWorld", FirstCaseToLower("HelloWorld"))
+	should.Equal("hello_World", FirstCaseToLower("Hello_World"))
+}
+
+func Test_first_case_to_lower_with_first_case_already_lowercase(t *testing.T) {
+	should := require.New(t)
+	should.Equal("helloWorld", FirstCaseToLower("helloWorld"))
+}
+
+func Test_first_case_to_lower_with_first_case_be_anything(t *testing.T) {
+	should := require.New(t)
+	should.Equal("_HelloWorld", FirstCaseToLower("_HelloWorld"))
+	should.Equal("*HelloWorld", FirstCaseToLower("*HelloWorld"))
+	should.Equal("?HelloWorld", FirstCaseToLower("?HelloWorld"))
+	should.Equal(".HelloWorld", FirstCaseToLower(".HelloWorld"))
+}
