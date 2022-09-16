@@ -25,6 +25,30 @@ func Test_any_to_string(t *testing.T) {
 	should.NotNil(jsoniter.UnmarshalFromString("{}", &val))
 	should.NotNil(jsoniter.UnmarshalFromString("[]", &val))
 }
+
+func Test_any_to_bool(t *testing.T) {
+	should := require.New(t)
+	var val bool
+	should.Nil(jsoniter.UnmarshalFromString(`"1"`, &val))
+	should.Equal(true, val)
+	should.Nil(jsoniter.UnmarshalFromString(`"true"`, &val))
+	should.Equal(true, val)
+	should.Nil(jsoniter.UnmarshalFromString(`""`, &val))
+	should.Equal(false, val)
+	should.Nil(jsoniter.UnmarshalFromString(`"0"`, &val))
+	should.Equal(false, val)
+	should.Nil(jsoniter.UnmarshalFromString(`"false"`, &val))
+	should.Equal(false, val)
+	should.Nil(jsoniter.UnmarshalFromString("1", &val))
+	should.Equal(true, val)
+	should.Nil(jsoniter.UnmarshalFromString("0", &val))
+	should.Equal(false, val)
+	should.Nil(jsoniter.UnmarshalFromString("null", &val))
+	should.Equal(false, val)
+	should.NotNil(jsoniter.UnmarshalFromString("{}", &val))
+	should.NotNil(jsoniter.UnmarshalFromString("[]", &val))
+}
+
 func Test_any_to_int64(t *testing.T) {
 	should := require.New(t)
 	var val int64
@@ -337,6 +361,24 @@ func Test_empty_array_as_object(t *testing.T) {
 	var val struct{}
 	should.Nil(jsoniter.UnmarshalFromString(`[]`, &val))
 	should.Equal(struct{}{}, val)
+}
+
+func Test_numeric_indexed_object_as_array(t *testing.T) {
+	should := require.New(t)
+	var val [1]string
+	should.Nil(jsoniter.UnmarshalFromString(`{"0":"a","2":"c"}`, &val))
+	should.Equal([1]string{"a"}, val)
+
+	should.Error(jsoniter.UnmarshalFromString(`{"2":"c","0":"a"}`, &val))
+}
+
+func Test_numeric_indexed_object_as_slice(t *testing.T) {
+	should := require.New(t)
+	var val []string
+	should.Nil(jsoniter.UnmarshalFromString(`{"0":"a","2":"c"}`, &val))
+	should.Equal([]string{"a", "c"}, val)
+
+	should.Error(jsoniter.UnmarshalFromString(`{"2":"c","0":"a"}`, &val))
 }
 
 func Test_bad_case(t *testing.T) {
