@@ -2,10 +2,11 @@ package misc_tests
 
 import (
 	"encoding/json"
-	"github.com/json-iterator/go"
-	"github.com/stretchr/testify/require"
 	"strings"
 	"testing"
+
+	jsoniter "github.com/json-iterator/go"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_jsoniter_RawMessage(t *testing.T) {
@@ -28,7 +29,7 @@ func Test_encode_map_of_jsoniter_raw_message(t *testing.T) {
 	should.Equal(`{"hello":[]}`, output)
 }
 
-func Test_marshal_invalid_json_raw_message(t *testing.T) {
+func Test_marshal_nil_json_raw_message(t *testing.T) {
 	type A struct {
 		Raw json.RawMessage `json:"raw"`
 	}
@@ -42,7 +43,7 @@ func Test_marshal_invalid_json_raw_message(t *testing.T) {
 	should.Nil(aouterr)
 }
 
-func Test_marshal_nil_json_raw_message(t *testing.T) {
+func Test_marshal_invalid_json_raw_message_default(t *testing.T) {
 	type A struct {
 		Nil1 jsoniter.RawMessage `json:"raw1"`
 		Nil2 json.RawMessage     `json:"raw2"`
@@ -57,6 +58,29 @@ func Test_marshal_nil_json_raw_message(t *testing.T) {
 	a.Nil1 = []byte(`Any`)
 	a.Nil2 = []byte(`Any`)
 	should.Nil(jsoniter.Unmarshal(aout, &a))
+	should.Nil(a.Nil1)
+	should.Nil(a.Nil2)
+}
+
+func Test_marshal_invalid_json_raw_message_stdcompat(t *testing.T) {
+	type A struct {
+		Nil1 jsoniter.RawMessage `json:"raw1"`
+		Nil2 json.RawMessage     `json:"raw2"`
+	}
+
+	a := A{}
+	should := require.New(t)
+	aout, aouterr := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(&a)
+	should.Equal(`{"raw1":null,"raw2":null}`, string(aout))
+	should.Nil(aouterr)
+
+	a.Nil1 = []byte(`Any`)
+	a.Nil2 = []byte(`Any`)
+	aout, aouterr = jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(&a)
+	should.Error(aouterr)
+
+	aout = []byte(`{"raw1":null,"raw2":null}`)
+	should.NoError(jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(aout, &a))
 	should.Nil(a.Nil1)
 	should.Nil(a.Nil2)
 }
