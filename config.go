@@ -20,6 +20,7 @@ type Config struct {
 	SortMapKeys                   bool
 	UseNumber                     bool
 	DisallowUnknownFields         bool
+	DisallowDuplicateFields       bool
 	TagKey                        string
 	OnlyTaggedField               bool
 	ValidateJsonRawMessage        bool
@@ -72,6 +73,7 @@ type frozenConfig struct {
 	objectFieldMustBeSimpleString bool
 	onlyTaggedField               bool
 	disallowUnknownFields         bool
+	disallowDuplicateFields       bool
 	decoderCache                  *concurrent.Map
 	encoderCache                  *concurrent.Map
 	encoderExtension              Extension
@@ -133,6 +135,7 @@ func (cfg Config) Froze() API {
 		objectFieldMustBeSimpleString: cfg.ObjectFieldMustBeSimpleString,
 		onlyTaggedField:               cfg.OnlyTaggedField,
 		disallowUnknownFields:         cfg.DisallowUnknownFields,
+		disallowDuplicateFields:       cfg.DisallowDuplicateFields,
 		caseSensitive:                 cfg.CaseSensitive,
 	}
 	api.streamPool = &sync.Pool{

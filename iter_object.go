@@ -2,7 +2,6 @@ package jsoniter
 
 import (
 	"fmt"
-	"strings"
 )
 
 // ReadObject read one field from object.
@@ -95,10 +94,7 @@ func (iter *Iterator) readFieldHash() int64 {
 	}
 }
 
-func calcHash(str string, caseSensitive bool) int64 {
-	if !caseSensitive {
-		str = strings.ToLower(str)
-	}
+func calcHash(str string) int64 {
 	hash := int64(0x811c9dc5)
 	for _, b := range []byte(str) {
 		hash ^= int64(b)

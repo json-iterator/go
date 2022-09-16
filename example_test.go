@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func ExampleMarshal() {
@@ -118,4 +121,130 @@ func (m *MyKey) MarshalText() ([]byte, error) {
 func (m *MyKey) UnmarshalText(text []byte) error {
 	*m = MyKey(text[:3])
 	return nil
+}
+
+type Target struct {
+	FieldA string `json:"fieldA"`
+}
+
+func Example_duplicateFieldsCaseSensitive() {
+	api := Config{
+		CaseSensitive:           true,
+		DisallowDuplicateFields: true,
+	}.Froze()
+
+	t := &Target{}
+	err := api.Unmarshal([]byte(`{"fieldA": "value", "fielda": "val2"}`), t)
+	fmt.Printf("Case-sensitiveness means no duplicates: 'fieldA' = %q, err = %v\n", t.FieldA, err)
+
+	t = &Target{}
+	err = api.Unmarshal([]byte(`{"fieldA": "value", "fieldA": "val2"}`), t)
+	fmt.Printf("Got duplicates in struct field: 'fieldA' = %q, err = %v\n", t.FieldA, err)
+
+	t = &Target{}
+	err = api.Unmarshal([]byte(`{"fielda": "value", "fielda": "val2"}`), t)
+	fmt.Printf("Got duplicates not in struct field: 'fieldA' = %q, err = %v\n", t.FieldA, err)
+
+	// Output:
+	// Case-sensitiveness means no duplicates: 'fieldA' = "value", err = <nil>
+	// Got duplicates in struct field: 'fieldA' = "value", err = jsoniter.Target.ReadObject: found duplicate field: fieldA, error found in #10 byte of ...|, "fieldA": "val2"}|..., bigger context ...|{"fieldA": "value", "fieldA": "val2"}|...
+	// Got duplicates not in struct field: 'fieldA' = "", err = jsoniter.Target.ReadObject: found duplicate field: fielda, error found in #10 byte of ...|, "fielda": "val2"}|..., bigger context ...|{"fielda": "value", "fielda": "val2"}|...
+}
+
+func Example_noDuplicateFieldsCaseSensitive() {
+	api := Config{
+		CaseSensitive:           true,
+		DisallowDuplicateFields: false,
+	}.Froze()
+
+	t := &Target{}
+	err := api.Unmarshal([]byte(`{"fieldA": "value", "fielda": "val2"}`), t)
+	fmt.Printf("Case-sensitiveness means no duplicates: 'fieldA' = %q, err = %v\n", t.FieldA, err)
+
+	t = &Target{}
+	err = api.Unmarshal([]byte(`{"fieldA": "value", "fieldA": "val2"}`), t)
+	fmt.Printf("Got duplicates in struct field: 'fieldA' = %q, err = %v\n", t.FieldA, err)
+
+	t = &Target{}
+	err = api.Unmarshal([]byte(`{"fielda": "value", "fielda": "val2"}`), t)
+	fmt.Printf("Got duplicates not in struct field: 'fieldA' = %q, err = %v\n", t.FieldA, err)
+
+	// Output:
+	// Case-sensitiveness means no duplicates: 'fieldA' = "value", err = <nil>
+	// Got duplicates in struct field: 'fieldA' = "val2", err = <nil>
+	// Got duplicates not in struct field: 'fieldA' = "", err = <nil>
+}
+
+func Example_duplicateFieldsInCaseSensitive() {
+	api := Config{
+		CaseSensitive:           false,
+		DisallowDuplicateFields: true,
+	}.Froze()
+
+	t := &Target{}
+	err := api.Unmarshal([]byte(`{"fieldA": "value", "fielda": "val2"}`), t)
+	fmt.Printf("In-case-sensitive duplicates: 'fieldA' = %q, err = %v\n", t.FieldA, err)
+
+	t = &Target{}
+	err = api.Unmarshal([]byte(`{"fieldA": "value", "fieldA": "val2"}`), t)
+	fmt.Printf("Got duplicates in exact struct field match: 'fieldA' = %q, err = %v\n", t.FieldA, err)
+
+	t = &Target{}
+	err = api.Unmarshal([]byte(`{"fielda": "value", "fielda": "val2"}`), t)
+	fmt.Printf("Got duplicates not in notexact struct field match: 'fieldA' = %q, err = %v\n", t.FieldA, err)
+
+	// Output:
+	// In-case-sensitive duplicates: 'fieldA' = "value", err = jsoniter.Target.ReadObject: found duplicate field: fielda, error found in #10 byte of ...|, "fielda": "val2"}|..., bigger context ...|{"fieldA": "value", "fielda": "val2"}|...
+	// Got duplicates in exact struct field match: 'fieldA' = "value", err = jsoniter.Target.ReadObject: found duplicate field: fieldA, error found in #10 byte of ...|, "fieldA": "val2"}|..., bigger context ...|{"fieldA": "value", "fieldA": "val2"}|...
+	// Got duplicates not in notexact struct field match: 'fieldA' = "value", err = jsoniter.Target.ReadObject: found duplicate field: fielda, error found in #10 byte of ...|, "fielda": "val2"}|..., bigger context ...|{"fielda": "value", "fielda": "val2"}|...
+}
+
+func Example_noDuplicateFieldsInCaseSensitive() {
+	api := Config{
+		CaseSensitive:           false,
+		DisallowDuplicateFields: false,
+	}.Froze()
+
+	t := &Target{}
+	err := api.Unmarshal([]byte(`{"fieldA": "value", "fielda": "val2"}`), t)
+	fmt.Printf("Case-sensitiveness means no duplicates: 'fieldA' = %q, err = %v\n", t.FieldA, err)
+
+	t = &Target{}
+	err = api.Unmarshal([]byte(`{"fieldA": "value", "fieldA": "val2"}`), t)
+	fmt.Printf("Got duplicates in struct field: 'fieldA' = %q, err = %v\n", t.FieldA, err)
+
+	t = &Target{}
+	err = api.Unmarshal([]byte(`{"fielda": "value", "fielda": "val2"}`), t)
+	fmt.Printf("Got duplicates not in struct field: 'fieldA' = %q, err = %v\n", t.FieldA, err)
+
+	// Output:
+	// Case-sensitiveness means no duplicates: 'fieldA' = "val2", err = <nil>
+	// Got duplicates in struct field: 'fieldA' = "val2", err = <nil>
+	// Got duplicates not in struct field: 'fieldA' = "val2", err = <nil>
+}
+
+func TestEncoder(t *testing.T) {
+	api := Config{
+		CaseSensitive:           true,
+		DisallowDuplicateFields: true,
+	}.Froze()
+
+	type target2 struct {
+		B Target `json:"b"`
+		A Target `json:"a"`
+	}
+
+	data := `{"a": {"fieldA": "bla"}, "b": {"fieldA": "bar"}}`
+	data += data
+
+	d := api.NewDecoder(strings.NewReader(data))
+	obj := &target2{}
+	assert.Nil(t, d.Decode(obj))
+	assert.Equal(t, "bla", obj.A.FieldA)
+	assert.Equal(t, "bar", obj.B.FieldA)
+
+	obj = &target2{}
+	assert.Nil(t, d.Decode(obj))
+	assert.Equal(t, "bla", obj.A.FieldA)
+	assert.Equal(t, "bar", obj.B.FieldA)
 }
