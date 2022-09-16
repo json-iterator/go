@@ -26,8 +26,10 @@ const (
 	ObjectValue
 )
 
-var hexDigits []byte
-var valueTypes []ValueType
+var (
+	hexDigits  []byte
+	valueTypes []ValueType
+)
 
 func init() {
 	hexDigits = make([]byte, 256)
@@ -78,6 +80,7 @@ type Iterator struct {
 	captureStartedAt int
 	captured         []byte
 	Error            error
+	scratch          []byte
 	Attachment       interface{} // open for customized decoder
 }
 
