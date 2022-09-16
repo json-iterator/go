@@ -1,9 +1,8 @@
 package jsoniter
 
-var digits []uint32
+var digits [1000]uint32
 
 func init() {
-	digits = make([]uint32, 1000)
 	for i := uint32(0); i < 1000; i++ {
 		digits[i] = (((i / 100) + '0') << 16) + ((((i / 10) % 10) + '0') << 8) + i%10 + '0'
 		if i < 10 {
