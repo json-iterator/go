@@ -2,12 +2,14 @@ package jsoniter
 
 import (
 	"fmt"
-	"github.com/modern-go/reflect2"
 	"reflect"
 	"sort"
 	"strings"
 	"unicode"
 	"unsafe"
+
+	"github.com/gobeam/stringy"
+	"github.com/modern-go/reflect2"
 )
 
 var typeDecoders = map[string]ValDecoder{}
@@ -373,7 +375,7 @@ func describeStruct(ctx *ctx, typ reflect2.Type) *StructDescriptor {
 				}
 			}
 		}
-		fieldNames := calcFieldNames(field.Name(), tagParts[0], tag)
+		fieldNames := calcFieldNames(field.Name(), tagParts[0], tag, ctx.frozenConfig)
 		fieldCacheKey := fmt.Sprintf("%s/%s", typ.String(), field.Name())
 		decoder := fieldDecoders[fieldCacheKey]
 		if decoder == nil {
@@ -462,7 +464,7 @@ func processTags(structDescriptor *StructDescriptor, cfg *frozenConfig) {
 	}
 }
 
-func calcFieldNames(originalFieldName string, tagProvidedFieldName string, wholeTag string) []string {
+func calcFieldNames(originalFieldName string, tagProvidedFieldName string, wholeTag string, config *frozenConfig) []string {
 	// ignore?
 	if wholeTag == "-" {
 		return []string{}
@@ -470,7 +472,16 @@ func calcFieldNames(originalFieldName string, tagProvidedFieldName string, whole
 	// rename?
 	var fieldNames []string
 	if tagProvidedFieldName == "" {
-		fieldNames = []string{originalFieldName}
+		switch config.defaultFieldNameCase {
+		case FieldNameCaseDefault:
+			fieldNames = []string{originalFieldName}
+		case FieldNameCaseLowerFirstCamel:
+			fieldNames = []string{stringy.New(originalFieldName).LcFirst()}
+		case FieldNameCaseLowerSnake:
+			fieldNames = []string{stringy.New(originalFieldName).SnakeCase().ToLower()}
+		case FieldNameCaseUpperSnake:
+			fieldNames = []string{stringy.New(originalFieldName).SnakeCase().ToUpper()}
+		}
 	} else {
 		fieldNames = []string{tagProvidedFieldName}
 	}
