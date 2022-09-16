@@ -294,6 +294,7 @@ func (encoder *sortKeysMapEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	mapIter := encoder.mapType.UnsafeIterate(ptr)
 	subStream := stream.cfg.BorrowStream(nil)
 	subStream.Attachment = stream.Attachment
+	subStream.indention = stream.indention
 	subIter := stream.cfg.BorrowIterator(nil)
 	keyValues := encodedKeyValues{}
 	for mapIter.HasNext() {
