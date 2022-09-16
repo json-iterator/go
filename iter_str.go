@@ -113,17 +113,29 @@ func (iter *Iterator) readEscapedChar(c byte, str []byte) []byte {
 
 // ReadStringAsSlice read string from iterator without copying into string form.
 // The []byte can not be kept, as it will change after next iterator call.
-func (iter *Iterator) ReadStringAsSlice() (ret []byte) {
+func (iter *Iterator) ReadStringAsSlice(alphabetOnly bool) (ret []byte) {
 	c := iter.nextToken()
 	if c == '"' {
 		for i := iter.head; i < iter.tail; i++ {
 			// require ascii string and no escape
 			// for: field name, base64, number
-			if iter.buf[i] == '"' {
+			c := iter.buf[i]
+			if c == '"' {
 				// fast path: reuse the underlying buffer
 				ret = iter.buf[iter.head:i]
 				iter.head = i + 1
 				return ret
+			}
+			if alphabetOnly {
+				continue
+			}
+			if c == '\\' {
+				return iter.readStringAsSliceSlowPath()
+			}
+			if c < ' ' {
+				iter.ReportError("ReadStringAsSlice",
+					fmt.Sprintf(`invalid control character found: %d`, c))
+				return
 			}
 		}
 		readLen := iter.tail - iter.head
@@ -138,8 +150,30 @@ func (iter *Iterator) ReadStringAsSlice() (ret []byte) {
 			copied = append(copied, c)
 		}
 		return copied
+	} else if !alphabetOnly && c == 'n' {
+		iter.skipThreeBytes('u', 'l', 'l')
+		return
 	}
 	iter.ReportError("ReadStringAsSlice", `expects " or n, but found `+string([]byte{c}))
+	return
+}
+
+func (iter *Iterator) readStringAsSliceSlowPath() (ret []byte) {
+	var str []byte
+	var c byte
+	for iter.Error == nil {
+		c = iter.readByte()
+		if c == '"' {
+			return str
+		}
+		if c == '\\' {
+			c = iter.readByte()
+			str = iter.readEscapedChar(c, str)
+		} else {
+			str = append(str, c)
+		}
+	}
+	iter.ReportError("readStringAsSliceSlowPath", "unexpected end of input")
 	return
 }
 

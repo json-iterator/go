@@ -136,7 +136,7 @@ type binaryAsStringCodec struct {
 }
 
 func (codec *binaryAsStringCodec) Decode(ptr unsafe.Pointer, iter *jsoniter.Iterator) {
-	rawBytes := iter.ReadStringAsSlice()
+	rawBytes := iter.ReadStringAsSlice(true)
 	bytes := make([]byte, 0, len(rawBytes))
 	for i := 0; i < len(rawBytes); i++ {
 		b := rawBytes[i]
