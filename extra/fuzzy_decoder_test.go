@@ -65,6 +65,8 @@ func Test_any_to_int(t *testing.T) {
 	should.Equal(10, val)
 	should.Nil(jsoniter.UnmarshalFromString(`10`, &val))
 	should.Equal(10, val)
+	should.Nil(jsoniter.UnmarshalFromString(`""`, &val))
+	should.Equal(0, val)
 
 	// bool part
 	should.Nil(jsoniter.UnmarshalFromString(`false`, &val))
@@ -89,6 +91,8 @@ func Test_any_to_int16(t *testing.T) {
 	should.Equal(int16(10), val)
 	should.Nil(jsoniter.UnmarshalFromString(`10`, &val))
 	should.Equal(int16(10), val)
+	should.Nil(jsoniter.UnmarshalFromString(`""`, &val))
+	should.Equal(int16(0), val)
 
 	// bool part
 	should.Nil(jsoniter.UnmarshalFromString(`false`, &val))
@@ -113,6 +117,8 @@ func Test_any_to_int32(t *testing.T) {
 	should.Equal(int32(10), val)
 	should.Nil(jsoniter.UnmarshalFromString(`10`, &val))
 	should.Equal(int32(10), val)
+	should.Nil(jsoniter.UnmarshalFromString(`""`, &val))
+	should.Equal(int32(0), val)
 
 	// bool part
 	should.Nil(jsoniter.UnmarshalFromString(`false`, &val))
@@ -137,6 +143,8 @@ func Test_any_to_int8(t *testing.T) {
 	should.Equal(int8(10), val)
 	should.Nil(jsoniter.UnmarshalFromString(`10`, &val))
 	should.Equal(int8(10), val)
+	should.Nil(jsoniter.UnmarshalFromString(`""`, &val))
+	should.Equal(int8(0), val)
 
 	// bool part
 	should.Nil(jsoniter.UnmarshalFromString(`false`, &val))
@@ -161,6 +169,8 @@ func Test_any_to_uint8(t *testing.T) {
 	should.Equal(uint8(10), val)
 	should.Nil(jsoniter.UnmarshalFromString(`10`, &val))
 	should.Equal(uint8(10), val)
+	should.Nil(jsoniter.UnmarshalFromString(`""`, &val))
+	should.Equal(uint8(0), val)
 
 	// bool part
 	should.Nil(jsoniter.UnmarshalFromString(`false`, &val))
@@ -186,6 +196,8 @@ func Test_any_to_uint64(t *testing.T) {
 	should.Equal(uint64(10), val)
 	should.Nil(jsoniter.UnmarshalFromString(`10`, &val))
 	should.Equal(uint64(10), val)
+	should.Nil(jsoniter.UnmarshalFromString(`""`, &val))
+	should.Equal(uint64(0), val)
 
 	// bool part
 	should.Nil(jsoniter.UnmarshalFromString(`false`, &val))
@@ -213,6 +225,8 @@ func Test_any_to_uint32(t *testing.T) {
 	should.Equal(uint32(10), val)
 	should.Nil(jsoniter.UnmarshalFromString(`10`, &val))
 	should.Equal(uint32(10), val)
+	should.Nil(jsoniter.UnmarshalFromString(`""`, &val))
+	should.Equal(uint32(0), val)
 
 	// bool part
 	should.Nil(jsoniter.UnmarshalFromString(`false`, &val))
@@ -240,6 +254,8 @@ func Test_any_to_uint16(t *testing.T) {
 	should.Equal(uint16(10), val)
 	should.Nil(jsoniter.UnmarshalFromString(`10`, &val))
 	should.Equal(uint16(10), val)
+	should.Nil(jsoniter.UnmarshalFromString(`""`, &val))
+	should.Equal(uint16(0), val)
 
 	// bool part
 	should.Nil(jsoniter.UnmarshalFromString(`false`, &val))
@@ -266,6 +282,8 @@ func Test_any_to_uint(t *testing.T) {
 	should.Equal(uint(10), val)
 	should.Nil(jsoniter.UnmarshalFromString(`10`, &val))
 	should.Equal(uint(10), val)
+	should.Nil(jsoniter.UnmarshalFromString(`""`, &val))
+	should.Equal(uint(0), val)
 
 	should.Nil(jsoniter.UnmarshalFromString(`false`, &val))
 	should.Equal(uint(0), val)
@@ -290,6 +308,8 @@ func Test_any_to_float32(t *testing.T) {
 	should.Equal(float32(10.1), val)
 	should.Nil(jsoniter.UnmarshalFromString(`10`, &val))
 	should.Equal(float32(10), val)
+	should.Nil(jsoniter.UnmarshalFromString(`""`, &val))
+	should.Equal(float32(0), val)
 
 	// bool part
 	should.Nil(jsoniter.UnmarshalFromString(`false`, &val))
@@ -314,6 +334,8 @@ func Test_any_to_float64(t *testing.T) {
 	should.Equal(float64(10.1), val)
 	should.Nil(jsoniter.UnmarshalFromString(`10`, &val))
 	should.Equal(float64(10), val)
+	should.Nil(jsoniter.UnmarshalFromString(`""`, &val))
+	should.Equal(float64(0), val)
 
 	// bool part
 	should.Nil(jsoniter.UnmarshalFromString(`false`, &val))

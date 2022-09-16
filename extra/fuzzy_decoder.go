@@ -240,6 +240,9 @@ func (decoder *fuzzyFloat32Decoder) Decode(ptr unsafe.Pointer, iter *jsoniter.It
 		*((*float32)(ptr)) = iter.ReadFloat32()
 	case jsoniter.StringValue:
 		str = iter.ReadString()
+		if len(str) == 0 {
+			str = "0"
+		}
 		newIter := iter.Pool().BorrowIterator([]byte(str))
 		defer iter.Pool().ReturnIterator(newIter)
 		*((*float32)(ptr)) = newIter.ReadFloat32()
@@ -272,6 +275,9 @@ func (decoder *fuzzyFloat64Decoder) Decode(ptr unsafe.Pointer, iter *jsoniter.It
 		*((*float64)(ptr)) = iter.ReadFloat64()
 	case jsoniter.StringValue:
 		str = iter.ReadString()
+		if len(str) == 0 {
+			str = "0"
+		}
 		newIter := iter.Pool().BorrowIterator([]byte(str))
 		defer iter.Pool().ReturnIterator(newIter)
 		*((*float64)(ptr)) = newIter.ReadFloat64()
