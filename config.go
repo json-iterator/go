@@ -15,6 +15,7 @@ import (
 // The API is created from Config by Froze.
 type Config struct {
 	IndentionStep                 int
+	IndentionChar                 byte
 	MarshalFloatWith6Digits       bool
 	EscapeHTML                    bool
 	SortMapKeys                   bool
@@ -49,6 +50,7 @@ type API interface {
 // ConfigDefault the default API
 var ConfigDefault = Config{
 	EscapeHTML: true,
+	IndentionChar: ' ',
 }.Froze()
 
 // ConfigCompatibleWithStandardLibrary tries to be 100% compatible with standard library behavior
@@ -56,6 +58,7 @@ var ConfigCompatibleWithStandardLibrary = Config{
 	EscapeHTML:             true,
 	SortMapKeys:            true,
 	ValidateJsonRawMessage: true,
+	IndentionChar: ' ',
 }.Froze()
 
 // ConfigFastest marshals float with only 6 digits precision
@@ -63,12 +66,14 @@ var ConfigFastest = Config{
 	EscapeHTML:                    false,
 	MarshalFloatWith6Digits:       true, // will lose precession
 	ObjectFieldMustBeSimpleString: true, // do not unescape object field
+	IndentionChar: ' ',
 }.Froze()
 
 type frozenConfig struct {
 	configBeforeFrozen            Config
 	sortMapKeys                   bool
 	indentionStep                 int
+	indentionChar                 byte
 	objectFieldMustBeSimpleString bool
 	onlyTaggedField               bool
 	disallowUnknownFields         bool
@@ -130,6 +135,7 @@ func (cfg Config) Froze() API {
 	api := &frozenConfig{
 		sortMapKeys:                   cfg.SortMapKeys,
 		indentionStep:                 cfg.IndentionStep,
+		indentionChar:                 cfg.IndentionChar,
 		objectFieldMustBeSimpleString: cfg.ObjectFieldMustBeSimpleString,
 		onlyTaggedField:               cfg.OnlyTaggedField,
 		disallowUnknownFields:         cfg.DisallowUnknownFields,
@@ -307,15 +313,26 @@ func (cfg *frozenConfig) Marshal(v interface{}) ([]byte, error) {
 }
 
 func (cfg *frozenConfig) MarshalIndent(v interface{}, prefix, indent string) ([]byte, error) {
+	var useTabs bool
 	if prefix != "" {
 		panic("prefix is not supported")
 	}
+	// some rudimentary error checking
+	newCfg := cfg.configBeforeFrozen
+	newCfg.IndentionChar = ' '
 	for _, r := range indent {
-		if r != ' ' {
-			panic("indent can only be space")
+		if r != ' ' && r != '\t' {
+			panic("indent can only be space or tabs")
+		}
+		if r == ' ' && useTabs {
+			panic("indent cannot be mixed space and tabs")
+		}
+		if r == '\t' {
+			useTabs = true
+			newCfg.IndentionChar = '\t'
 		}
 	}
-	newCfg := cfg.configBeforeFrozen
+
 	newCfg.IndentionStep = len(indent)
 	return newCfg.frozeWithCacheReuse(cfg.extraExtensions).Marshal(v)
 }
