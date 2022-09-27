@@ -107,10 +107,13 @@ func calcHash(str string, caseSensitive bool) int64 {
 	return int64(hash)
 }
 
-// ReadObjectCB read object with callback, the key is ascii only and field name not copied
-func (iter *Iterator) ReadObjectCB(callback func(*Iterator, string) bool) bool {
+// ReadObjectCBWithoutCopy read object with callback, the key is ascii only,
+// and it will be changed in the next iterator call. The callback function must
+// make a copy of the key if needs to live beyond the scope of the callback.
+func (iter *Iterator) ReadObjectCBWithoutCopy(callback func(*Iterator,
+	[]byte) bool) bool {
 	c := iter.nextToken()
-	var field string
+	var field []byte
 	if c == '{' {
 		if !iter.incrementDepth() {
 			return false
@@ -118,7 +121,7 @@ func (iter *Iterator) ReadObjectCB(callback func(*Iterator, string) bool) bool {
 		c = iter.nextToken()
 		if c == '"' {
 			iter.unreadByte()
-			field = iter.ReadString()
+			field = iter.ReadStringAsSlice()
 			c = iter.nextToken()
 			if c != ':' {
 				iter.ReportError("ReadObject", "expect : after object field, but found "+string([]byte{c}))
@@ -129,7 +132,7 @@ func (iter *Iterator) ReadObjectCB(callback func(*Iterator, string) bool) bool {
 			}
 			c = iter.nextToken()
 			for c == ',' {
-				field = iter.ReadString()
+				field = iter.ReadStringAsSlice()
 				c = iter.nextToken()
 				if c != ':' {
 					iter.ReportError("ReadObject", "expect : after object field, but found "+string([]byte{c}))
@@ -160,6 +163,13 @@ func (iter *Iterator) ReadObjectCB(callback func(*Iterator, string) bool) bool {
 	}
 	iter.ReportError("ReadObjectCB", `expect { or n, but found `+string([]byte{c}))
 	return false
+}
+
+// ReadObjectCB read object with callback, the key is ascii only.
+func (iter *Iterator) ReadObjectCB(callback func(*Iterator, string) bool) bool {
+	return iter.ReadObjectCBNoCopy(func(it *Iterator, field []byte) bool {
+		return callback(it, string(field))
+	})
 }
 
 // ReadMapCB read map with callback, the key can be any string
