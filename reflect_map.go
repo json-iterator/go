@@ -29,6 +29,7 @@ func encoderOfMap(ctx *ctx, typ reflect2.Type) ValEncoder {
 		return &sortKeysMapEncoder{
 			mapType:     mapType,
 			keyEncoder:  encoderOfMapKey(ctx.append("[mapKey]"), mapType.Key()),
+			keySorter:   sorterOfMapKey(ctx),
 			elemEncoder: encoderOfType(ctx.append("[mapElem]"), mapType.Elem()),
 		}
 	}
@@ -37,6 +38,23 @@ func encoderOfMap(ctx *ctx, typ reflect2.Type) ValEncoder {
 		keyEncoder:  encoderOfMapKey(ctx.append("[mapKey]"), mapType.Key()),
 		elemEncoder: encoderOfType(ctx.append("[mapElem]"), mapType.Elem()),
 	}
+}
+
+type defaultMapKeySorter struct {
+}
+
+func (sorter defaultMapKeySorter) Sort(keyA string, keyB string) bool {
+	return keyA < keyB
+}
+
+func sorterOfMapKey(ctx *ctx) MapKeySorter {
+	for _, extension := range ctx.extraExtensions {
+		sorter := extension.CreateMapKeySorter()
+		if sorter != nil {
+			return sorter
+		}
+	}
+	return defaultMapKeySorter{}
 }
 
 func decoderOfMapKey(ctx *ctx, typ reflect2.Type) ValDecoder {
@@ -282,6 +300,7 @@ func (encoder *mapEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 type sortKeysMapEncoder struct {
 	mapType     *reflect2.UnsafeMapType
 	keyEncoder  ValEncoder
+	keySorter   MapKeySorter
 	elemEncoder ValEncoder
 }
 
@@ -295,7 +314,7 @@ func (encoder *sortKeysMapEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	subStream := stream.cfg.BorrowStream(nil)
 	subStream.Attachment = stream.Attachment
 	subIter := stream.cfg.BorrowIterator(nil)
-	keyValues := encodedKeyValues{}
+	keyValues := []encodedKV{}
 	for mapIter.HasNext() {
 		key, elem := mapIter.UnsafeNext()
 		subStreamIndex := subStream.Buffered()
@@ -317,7 +336,11 @@ func (encoder *sortKeysMapEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 			keyValue: subStream.Buffer()[subStreamIndex:],
 		})
 	}
-	sort.Sort(keyValues)
+	keyValueWrapper := encodedKeyValues{
+		keySorter: encoder.keySorter,
+		values:    keyValues,
+	}
+	sort.Sort(keyValueWrapper)
 	for i, keyValue := range keyValues {
 		if i != 0 {
 			stream.WriteMore()
@@ -337,13 +360,18 @@ func (encoder *sortKeysMapEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	return !iter.HasNext()
 }
 
-type encodedKeyValues []encodedKV
+type encodedKeyValues struct {
+	keySorter MapKeySorter
+	values    []encodedKV
+}
 
 type encodedKV struct {
 	key      string
 	keyValue []byte
 }
 
-func (sv encodedKeyValues) Len() int           { return len(sv) }
-func (sv encodedKeyValues) Swap(i, j int)      { sv[i], sv[j] = sv[j], sv[i] }
-func (sv encodedKeyValues) Less(i, j int) bool { return sv[i].key < sv[j].key }
+func (sv encodedKeyValues) Len() int      { return len(sv.values) }
+func (sv encodedKeyValues) Swap(i, j int) { sv.values[i], sv.values[j] = sv.values[j], sv.values[i] }
+func (sv encodedKeyValues) Less(i, j int) bool {
+	return sv.keySorter.Sort(sv.values[i].key, sv.values[j].key)
+}
