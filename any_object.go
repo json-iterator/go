@@ -68,6 +68,7 @@ func (any *objectLazyAny) ToVal(obj interface{}) {
 	iter := any.cfg.BorrowIterator(any.buf)
 	defer any.cfg.ReturnIterator(iter)
 	iter.ReadVal(obj)
+	any.err = iter.Error
 }
 
 func (any *objectLazyAny) Get(path ...interface{}) Any {
