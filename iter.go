@@ -77,6 +77,7 @@ type Iterator struct {
 	depth            int
 	captureStartedAt int
 	captured         []byte
+	inputOffset      int64
 	Error            error
 	Attachment       interface{} // open for customized decoder
 }
@@ -84,36 +85,39 @@ type Iterator struct {
 // NewIterator creates an empty Iterator instance
 func NewIterator(cfg API) *Iterator {
 	return &Iterator{
-		cfg:    cfg.(*frozenConfig),
-		reader: nil,
-		buf:    nil,
-		head:   0,
-		tail:   0,
-		depth:  0,
+		cfg:         cfg.(*frozenConfig),
+		reader:      nil,
+		buf:         nil,
+		head:        0,
+		tail:        0,
+		depth:       0,
+		inputOffset: 0,
 	}
 }
 
 // Parse creates an Iterator instance from io.Reader
 func Parse(cfg API, reader io.Reader, bufSize int) *Iterator {
 	return &Iterator{
-		cfg:    cfg.(*frozenConfig),
-		reader: reader,
-		buf:    make([]byte, bufSize),
-		head:   0,
-		tail:   0,
-		depth:  0,
+		cfg:         cfg.(*frozenConfig),
+		reader:      reader,
+		buf:         make([]byte, bufSize),
+		head:        0,
+		tail:        0,
+		depth:       0,
+		inputOffset: 0,
 	}
 }
 
 // ParseBytes creates an Iterator instance from byte array
 func ParseBytes(cfg API, input []byte) *Iterator {
 	return &Iterator{
-		cfg:    cfg.(*frozenConfig),
-		reader: nil,
-		buf:    input,
-		head:   0,
-		tail:   len(input),
-		depth:  0,
+		cfg:         cfg.(*frozenConfig),
+		reader:      nil,
+		buf:         input,
+		head:        0,
+		tail:        len(input),
+		depth:       0,
+		inputOffset: 0,
 	}
 }
 
@@ -133,6 +137,7 @@ func (iter *Iterator) Reset(reader io.Reader) *Iterator {
 	iter.head = 0
 	iter.tail = 0
 	iter.depth = 0
+	iter.inputOffset = 0
 	return iter
 }
 
@@ -143,6 +148,7 @@ func (iter *Iterator) ResetBytes(input []byte) *Iterator {
 	iter.head = 0
 	iter.tail = len(input)
 	iter.depth = 0
+	iter.inputOffset = 0
 	return iter
 }
 
@@ -151,6 +157,11 @@ func (iter *Iterator) WhatIsNext() ValueType {
 	valueType := valueTypes[iter.nextToken()]
 	iter.unreadByte()
 	return valueType
+}
+
+// InputOffset returns current offset in the input stream
+func (iter *Iterator) InputOffset() int64 {
+	return iter.inputOffset + int64(iter.head)
 }
 
 func (iter *Iterator) skipWhitespacesWithoutLoadMore() bool {
@@ -272,6 +283,7 @@ func (iter *Iterator) loadMore() bool {
 				return false
 			}
 		} else {
+			iter.inputOffset += int64(iter.tail)
 			iter.head = 0
 			iter.tail = n
 			return true
