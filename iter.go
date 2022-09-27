@@ -196,6 +196,10 @@ func (iter *Iterator) nextToken() byte {
 	}
 }
 
+func (iter *Iterator) NextToken() byte {
+	return iter.nextToken()
+}
+
 // ReportError record a error in iterator instance with current position.
 func (iter *Iterator) ReportError(operation string, msg string) {
 	if iter.Error != nil {
