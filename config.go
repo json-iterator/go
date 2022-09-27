@@ -9,7 +9,11 @@ import (
 
 	"github.com/modern-go/concurrent"
 	"github.com/modern-go/reflect2"
+	"errors"
 )
+
+const DefaultMaxRecursiveLevel = 1000
+var MarshalLevelTooDeepErr = errors.New("JSON marshal level too deep")
 
 // Config customize how the API should behave.
 // The API is created from Config by Froze.

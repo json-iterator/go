@@ -12,6 +12,7 @@ type Stream struct {
 	buf        []byte
 	Error      error
 	indention  int
+	depth      int
 	Attachment interface{} // open for customized encoder
 }
 
@@ -26,6 +27,7 @@ func NewStream(cfg API, out io.Writer, bufSize int) *Stream {
 		buf:       make([]byte, 0, bufSize),
 		Error:     nil,
 		indention: 0,
+		depth:	   0,
 	}
 }
 
@@ -146,6 +148,10 @@ func (stream *Stream) WriteBool(val bool) {
 // WriteObjectStart write { with possible indention
 func (stream *Stream) WriteObjectStart() {
 	stream.indention += stream.cfg.indentionStep
+	stream.depth += 1
+	if stream.depth > DefaultMaxRecursiveLevel {
+		stream.Error = MarshalLevelTooDeepErr
+	}
 	stream.writeByte('{')
 	stream.writeIndention(0)
 }
@@ -164,6 +170,7 @@ func (stream *Stream) WriteObjectField(field string) {
 func (stream *Stream) WriteObjectEnd() {
 	stream.writeIndention(stream.cfg.indentionStep)
 	stream.indention -= stream.cfg.indentionStep
+	stream.depth -= 1
 	stream.writeByte('}')
 }
 
@@ -182,6 +189,11 @@ func (stream *Stream) WriteMore() {
 // WriteArrayStart write [ with possible indention
 func (stream *Stream) WriteArrayStart() {
 	stream.indention += stream.cfg.indentionStep
+	stream.depth += 1
+	if stream.depth > DefaultMaxRecursiveLevel{
+		stream.Error = MarshalLevelTooDeepErr
+		return
+	}
 	stream.writeByte('[')
 	stream.writeIndention(0)
 }
@@ -195,6 +207,7 @@ func (stream *Stream) WriteEmptyArray() {
 func (stream *Stream) WriteArrayEnd() {
 	stream.writeIndention(stream.cfg.indentionStep)
 	stream.indention -= stream.cfg.indentionStep
+	stream.depth -= 1
 	stream.writeByte(']')
 }
 
