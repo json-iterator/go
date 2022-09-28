@@ -61,10 +61,10 @@ func encoderOfMap(ctx *ctx, typ reflect2.Type) ValEncoder {
 
 	var enc ValEncoder
 	if ctx.sortMapKeys {
-		enc = &sortKeysMapEncoder{
-			mapType:     c.MapType,
-			keyEncoder:  c.KeyEncoder,
-			elemEncoder: c.ElemEncoder,
+		enc = &SortKeysMapEncoder{
+			MapType:     c.MapType,
+			KeyEncoder:  c.KeyEncoder,
+			ElemEncoder: c.ElemEncoder,
 		}
 	} else {
 		enc = &mapEncoder{
@@ -316,19 +316,20 @@ func (encoder *mapEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	return !iter.HasNext()
 }
 
-type sortKeysMapEncoder struct {
-	mapType     *reflect2.UnsafeMapType
-	keyEncoder  ValEncoder
-	elemEncoder ValEncoder
+type SortKeysMapEncoder struct {
+	MapType     *reflect2.UnsafeMapType
+	KeyEncoder  ValEncoder
+	ElemEncoder ValEncoder
+	KeyLess     func(ki, kj string) bool
 }
 
-func (encoder *sortKeysMapEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
+func (encoder *SortKeysMapEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	if *(*unsafe.Pointer)(ptr) == nil {
 		stream.WriteNil()
 		return
 	}
 	stream.WriteObjectStart()
-	mapIter := encoder.mapType.UnsafeIterate(ptr)
+	mapIter := encoder.MapType.UnsafeIterate(ptr)
 	subStream := stream.cfg.BorrowStream(nil)
 	subStream.Attachment = stream.Attachment
 	subIter := stream.cfg.BorrowIterator(nil)
@@ -336,7 +337,7 @@ func (encoder *sortKeysMapEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	for mapIter.HasNext() {
 		key, elem := mapIter.UnsafeNext()
 		subStreamIndex := subStream.Buffered()
-		encoder.keyEncoder.Encode(key, subStream)
+		encoder.KeyEncoder.Encode(key, subStream)
 		if subStream.Error != nil && subStream.Error != io.EOF && stream.Error == nil {
 			stream.Error = subStream.Error
 		}
@@ -348,13 +349,19 @@ func (encoder *sortKeysMapEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 		} else {
 			subStream.writeByte(':')
 		}
-		encoder.elemEncoder.Encode(elem, subStream)
+		encoder.ElemEncoder.Encode(elem, subStream)
 		keyValues = append(keyValues, encodedKV{
 			key:      decodedKey,
 			keyValue: subStream.Buffer()[subStreamIndex:],
 		})
 	}
-	sort.Sort(keyValues)
+	if encoder.KeyLess == nil {
+		sort.Sort(keyValues)
+	} else {
+		sort.Slice(keyValues, func(i, j int) bool {
+			return encoder.KeyLess(keyValues[i].key, keyValues[j].key)
+		})
+	}
 	for i, keyValue := range keyValues {
 		if i != 0 {
 			stream.WriteMore()
@@ -369,8 +376,8 @@ func (encoder *sortKeysMapEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.cfg.ReturnIterator(subIter)
 }
 
-func (encoder *sortKeysMapEncoder) IsEmpty(ptr unsafe.Pointer) bool {
-	iter := encoder.mapType.UnsafeIterate(ptr)
+func (encoder *SortKeysMapEncoder) IsEmpty(ptr unsafe.Pointer) bool {
+	iter := encoder.MapType.UnsafeIterate(ptr)
 	return !iter.HasNext()
 }
 
