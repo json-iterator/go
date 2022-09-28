@@ -2,9 +2,10 @@ package jsoniter
 
 import (
 	"fmt"
-	"github.com/modern-go/reflect2"
 	"io"
 	"unsafe"
+
+	"github.com/modern-go/reflect2"
 )
 
 func decoderOfArray(ctx *ctx, typ reflect2.Type) ValDecoder {
@@ -13,13 +14,43 @@ func decoderOfArray(ctx *ctx, typ reflect2.Type) ValDecoder {
 	return &arrayDecoder{arrayType, decoder}
 }
 
+type ArrayEncoderConstructor struct {
+	ArrayType    *reflect2.UnsafeArrayType
+	ElemEncoder  ValEncoder
+	API          API
+	DecorateFunc func(arrayEncoder ValEncoder) ValEncoder
+}
+
+func updateArrayEncoderConstructor(v *ArrayEncoderConstructor, exts ...Extension) {
+	for _, ext := range exts {
+		if e, ok := ext.(interface {
+			UpdateArrayEncoderConstructor(v *ArrayEncoderConstructor)
+		}); ok {
+			e.UpdateArrayEncoderConstructor(v)
+		}
+	}
+}
+
 func encoderOfArray(ctx *ctx, typ reflect2.Type) ValEncoder {
 	arrayType := typ.(*reflect2.UnsafeArrayType)
 	if arrayType.Len() == 0 {
 		return emptyArrayEncoder{}
 	}
-	encoder := encoderOfType(ctx.append("[arrayElem]"), arrayType.Elem())
-	return &arrayEncoder{arrayType, encoder}
+	elemEncoder := encoderOfType(ctx.append("[arrayElem]"), arrayType.Elem())
+
+	c := &ArrayEncoderConstructor{
+		ArrayType:   arrayType,
+		ElemEncoder: elemEncoder,
+		API:         ctx,
+		DecorateFunc: func(arrayEncoder ValEncoder) ValEncoder {
+			return arrayEncoder
+		},
+	}
+	updateArrayEncoderConstructor(c, extensions...)
+	updateArrayEncoderConstructor(c, ctx.encoderExtension)
+	updateArrayEncoderConstructor(c, ctx.extraExtensions...)
+	enc := &arrayEncoder{arrayType, c.ElemEncoder}
+	return c.DecorateFunc(enc)
 }
 
 type emptyArrayEncoder struct{}

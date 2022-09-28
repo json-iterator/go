@@ -2,12 +2,13 @@ package jsoniter
 
 import (
 	"fmt"
-	"github.com/modern-go/reflect2"
 	"reflect"
 	"sort"
 	"strings"
 	"unicode"
 	"unsafe"
+
+	"github.com/modern-go/reflect2"
 )
 
 var typeDecoders = map[string]ValDecoder{}
@@ -395,10 +396,49 @@ func describeStruct(ctx *ctx, typ reflect2.Type) *StructDescriptor {
 	}
 	return createStructDescriptor(ctx, typ, bindings, embeddedBindings)
 }
+
+type StructDescriptorConstructor struct {
+	Type               reflect2.Type
+	Bindings           []*Binding
+	EmbeddedBindings   []*Binding
+	API                API
+	DescribeStructFunc func(typ reflect2.Type) *StructDescriptor
+}
+
+func updateStructDescriptorConstructor(v *StructDescriptorConstructor, exts ...Extension) {
+	for _, ext := range exts {
+		if e, ok := ext.(interface {
+			UpdateStructDescriptorConstructor(v *StructDescriptorConstructor)
+		}); ok {
+			e.UpdateStructDescriptorConstructor(v)
+		}
+	}
+}
+
+func createStructDescriptorConstructor(ctx *ctx, typ reflect2.Type, bindings []*Binding, embeddedBindings []*Binding) *StructDescriptorConstructor {
+	v := &StructDescriptorConstructor{
+		Type:             typ,
+		Bindings:         bindings,
+		EmbeddedBindings: embeddedBindings,
+
+		API: ctx,
+		DescribeStructFunc: func(typ reflect2.Type) *StructDescriptor {
+			return describeStruct(ctx, typ)
+		},
+	}
+	updateStructDescriptorConstructor(v, extensions...)
+	updateStructDescriptorConstructor(v, ctx.encoderExtension)
+	updateStructDescriptorConstructor(v, ctx.decoderExtension)
+	updateStructDescriptorConstructor(v, ctx.extraExtensions...)
+	return v
+}
+
 func createStructDescriptor(ctx *ctx, typ reflect2.Type, bindings []*Binding, embeddedBindings []*Binding) *StructDescriptor {
+	constructor := createStructDescriptorConstructor(ctx, typ, bindings, embeddedBindings)
+
 	structDescriptor := &StructDescriptor{
-		Type:   typ,
-		Fields: bindings,
+		Type:   constructor.Type,
+		Fields: constructor.Bindings,
 	}
 	for _, extension := range extensions {
 		extension.UpdateStructDescriptor(structDescriptor)
@@ -410,7 +450,7 @@ func createStructDescriptor(ctx *ctx, typ reflect2.Type, bindings []*Binding, em
 	}
 	processTags(structDescriptor, ctx.frozenConfig)
 	// merge normal & embedded bindings & sort with original order
-	allBindings := sortableBindings(append(embeddedBindings, structDescriptor.Fields...))
+	allBindings := sortableBindings(append(constructor.EmbeddedBindings, structDescriptor.Fields...))
 	sort.Sort(allBindings)
 	structDescriptor.Fields = allBindings
 	return structDescriptor

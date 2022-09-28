@@ -23,20 +23,57 @@ func decoderOfMap(ctx *ctx, typ reflect2.Type) ValDecoder {
 	}
 }
 
-func encoderOfMap(ctx *ctx, typ reflect2.Type) ValEncoder {
-	mapType := typ.(*reflect2.UnsafeMapType)
-	if ctx.sortMapKeys {
-		return &sortKeysMapEncoder{
-			mapType:     mapType,
-			keyEncoder:  encoderOfMapKey(ctx.append("[mapKey]"), mapType.Key()),
-			elemEncoder: encoderOfType(ctx.append("[mapElem]"), mapType.Elem()),
+type MapEncoderConstructor struct {
+	MapType      *reflect2.UnsafeMapType
+	KeyEncoder   ValEncoder
+	ElemEncoder  ValEncoder
+	API          API
+	DecorateFunc func(mapEncoder ValEncoder) ValEncoder
+}
+
+func updateMapEncoderConstructor(v *MapEncoderConstructor, exts ...Extension) {
+	for _, ext := range exts {
+		if e, ok := ext.(interface {
+			UpdateMapEncoderConstructor(v *MapEncoderConstructor)
+		}); ok {
+			e.UpdateMapEncoderConstructor(v)
 		}
 	}
-	return &mapEncoder{
-		mapType:     mapType,
-		keyEncoder:  encoderOfMapKey(ctx.append("[mapKey]"), mapType.Key()),
-		elemEncoder: encoderOfType(ctx.append("[mapElem]"), mapType.Elem()),
+}
+
+func encoderOfMap(ctx *ctx, typ reflect2.Type) ValEncoder {
+	mapType := typ.(*reflect2.UnsafeMapType)
+
+	keyEncoder := encoderOfMapKey(ctx.append("[mapKey]"), mapType.Key())
+	elemEncoder := encoderOfType(ctx.append("[mapElem]"), mapType.Elem())
+	c := &MapEncoderConstructor{
+		MapType:     mapType,
+		KeyEncoder:  keyEncoder,
+		ElemEncoder: elemEncoder,
+		API:         ctx,
+		DecorateFunc: func(mapEncoder ValEncoder) ValEncoder {
+			return mapEncoder
+		},
 	}
+	updateMapEncoderConstructor(c, extensions...)
+	updateMapEncoderConstructor(c, ctx.encoderExtension)
+	updateMapEncoderConstructor(c, ctx.extraExtensions...)
+
+	var enc ValEncoder
+	if ctx.sortMapKeys {
+		enc = &sortKeysMapEncoder{
+			mapType:     c.MapType,
+			keyEncoder:  c.KeyEncoder,
+			elemEncoder: c.ElemEncoder,
+		}
+	} else {
+		enc = &mapEncoder{
+			mapType:     c.MapType,
+			keyEncoder:  c.KeyEncoder,
+			elemEncoder: c.ElemEncoder,
+		}
+	}
+	return c.DecorateFunc(enc)
 }
 
 func decoderOfMapKey(ctx *ctx, typ reflect2.Type) ValDecoder {
