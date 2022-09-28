@@ -36,7 +36,7 @@ func (structDescriptor *StructDescriptor) GetField(fieldName string) *Binding {
 
 // Binding describe how should we encode/decode the struct field
 type Binding struct {
-	levels    []int
+	Levels    []int
 	Field     reflect2.StructField
 	FromNames []string
 	ToNames   []string
@@ -350,10 +350,10 @@ func describeStruct(ctx *ctx, typ reflect2.Type) *StructDescriptor {
 			if field.Type().Kind() == reflect.Struct {
 				structDescriptor := describeStruct(ctx, field.Type())
 				for _, binding := range structDescriptor.Fields {
-					binding.levels = append([]int{i}, binding.levels...)
-					omitempty := binding.Encoder.(*structFieldEncoder).omitempty
-					binding.Encoder = &structFieldEncoder{field, binding.Encoder, omitempty}
-					binding.Decoder = &structFieldDecoder{field, binding.Decoder}
+					binding.Levels = append([]int{i}, binding.Levels...)
+					omitempty := binding.Encoder.(*StructFieldEncoder).OmitEmpty
+					binding.Encoder = &StructFieldEncoder{field, binding.Encoder, omitempty}
+					binding.Decoder = &StructFieldDecoder{field, binding.Decoder}
 					embeddedBindings = append(embeddedBindings, binding)
 				}
 				continue
@@ -362,12 +362,12 @@ func describeStruct(ctx *ctx, typ reflect2.Type) *StructDescriptor {
 				if ptrType.Elem().Kind() == reflect.Struct {
 					structDescriptor := describeStruct(ctx, ptrType.Elem())
 					for _, binding := range structDescriptor.Fields {
-						binding.levels = append([]int{i}, binding.levels...)
-						omitempty := binding.Encoder.(*structFieldEncoder).omitempty
+						binding.Levels = append([]int{i}, binding.Levels...)
+						omitempty := binding.Encoder.(*StructFieldEncoder).OmitEmpty
 						binding.Encoder = &dereferenceEncoder{binding.Encoder}
-						binding.Encoder = &structFieldEncoder{field, binding.Encoder, omitempty}
+						binding.Encoder = &StructFieldEncoder{field, binding.Encoder, omitempty}
 						binding.Decoder = &dereferenceDecoder{ptrType.Elem(), binding.Decoder}
-						binding.Decoder = &structFieldDecoder{field, binding.Decoder}
+						binding.Decoder = &StructFieldDecoder{field, binding.Decoder}
 						embeddedBindings = append(embeddedBindings, binding)
 					}
 					continue
@@ -391,7 +391,7 @@ func describeStruct(ctx *ctx, typ reflect2.Type) *StructDescriptor {
 			Decoder:   decoder,
 			Encoder:   encoder,
 		}
-		binding.levels = []int{i}
+		binding.Levels = []int{i}
 		bindings = append(bindings, binding)
 	}
 	return createStructDescriptor(ctx, typ, bindings, embeddedBindings)
@@ -463,8 +463,8 @@ func (bindings sortableBindings) Len() int {
 }
 
 func (bindings sortableBindings) Less(i, j int) bool {
-	left := bindings[i].levels
-	right := bindings[j].levels
+	left := bindings[i].Levels
+	right := bindings[j].Levels
 	k := 0
 	for {
 		if left[k] < right[k] {
@@ -497,8 +497,8 @@ func processTags(structDescriptor *StructDescriptor, cfg *frozenConfig) {
 				}
 			}
 		}
-		binding.Decoder = &structFieldDecoder{binding.Field, binding.Decoder}
-		binding.Encoder = &structFieldEncoder{binding.Field, binding.Encoder, shouldOmitEmpty}
+		binding.Decoder = &StructFieldDecoder{binding.Field, binding.Decoder}
+		binding.Encoder = &StructFieldEncoder{binding.Field, binding.Encoder, shouldOmitEmpty}
 	}
 }
 

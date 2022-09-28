@@ -2,10 +2,11 @@ package jsoniter
 
 import (
 	"fmt"
-	"github.com/modern-go/reflect2"
 	"io"
 	"reflect"
 	"unsafe"
+
+	"github.com/modern-go/reflect2"
 )
 
 func encoderOfStruct(ctx *ctx, typ reflect2.Type) ValEncoder {
@@ -38,7 +39,7 @@ func encoderOfStruct(ctx *ctx, typ reflect2.Type) ValEncoder {
 	for _, bindingTo := range orderedBindings {
 		if !bindingTo.ignored {
 			finalOrderedFields = append(finalOrderedFields, structFieldTo{
-				encoder: bindingTo.binding.Encoder.(*structFieldEncoder),
+				encoder: bindingTo.binding.Encoder.(*StructFieldEncoder),
 				toName:  bindingTo.toName,
 			})
 		}
@@ -75,9 +76,9 @@ func resolveConflictBinding(cfg *frozenConfig, old, new *Binding) (ignoreOld, ig
 	oldTagged := old.Field.Tag().Get(cfg.getTagKey()) != ""
 	if newTagged {
 		if oldTagged {
-			if len(old.levels) > len(new.levels) {
+			if len(old.Levels) > len(new.Levels) {
 				return true, false
-			} else if len(new.levels) > len(old.levels) {
+			} else if len(new.Levels) > len(old.Levels) {
 				return false, true
 			} else {
 				return true, true
@@ -89,9 +90,9 @@ func resolveConflictBinding(cfg *frozenConfig, old, new *Binding) (ignoreOld, ig
 		if oldTagged {
 			return true, false
 		}
-		if len(old.levels) > len(new.levels) {
+		if len(old.Levels) > len(new.Levels) {
 			return true, false
-		} else if len(new.levels) > len(old.levels) {
+		} else if len(new.Levels) > len(old.Levels) {
 			return false, true
 		} else {
 			return true, true
@@ -99,31 +100,31 @@ func resolveConflictBinding(cfg *frozenConfig, old, new *Binding) (ignoreOld, ig
 	}
 }
 
-type structFieldEncoder struct {
-	field        reflect2.StructField
-	fieldEncoder ValEncoder
-	omitempty    bool
+type StructFieldEncoder struct {
+	Field        reflect2.StructField
+	FieldEncoder ValEncoder
+	OmitEmpty    bool
 }
 
-func (encoder *structFieldEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
-	fieldPtr := encoder.field.UnsafeGet(ptr)
-	encoder.fieldEncoder.Encode(fieldPtr, stream)
+func (encoder *StructFieldEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
+	fieldPtr := encoder.Field.UnsafeGet(ptr)
+	encoder.FieldEncoder.Encode(fieldPtr, stream)
 	if stream.Error != nil && stream.Error != io.EOF {
-		stream.Error = fmt.Errorf("%s: %s", encoder.field.Name(), stream.Error.Error())
+		stream.Error = fmt.Errorf("%s: %s", encoder.Field.Name(), stream.Error.Error())
 	}
 }
 
-func (encoder *structFieldEncoder) IsEmpty(ptr unsafe.Pointer) bool {
-	fieldPtr := encoder.field.UnsafeGet(ptr)
-	return encoder.fieldEncoder.IsEmpty(fieldPtr)
+func (encoder *StructFieldEncoder) IsEmpty(ptr unsafe.Pointer) bool {
+	fieldPtr := encoder.Field.UnsafeGet(ptr)
+	return encoder.FieldEncoder.IsEmpty(fieldPtr)
 }
 
-func (encoder *structFieldEncoder) IsEmbeddedPtrNil(ptr unsafe.Pointer) bool {
-	isEmbeddedPtrNil, converted := encoder.fieldEncoder.(IsEmbeddedPtrNil)
+func (encoder *StructFieldEncoder) IsEmbeddedPtrNil(ptr unsafe.Pointer) bool {
+	isEmbeddedPtrNil, converted := encoder.FieldEncoder.(IsEmbeddedPtrNil)
 	if !converted {
 		return false
 	}
-	fieldPtr := encoder.field.UnsafeGet(ptr)
+	fieldPtr := encoder.Field.UnsafeGet(ptr)
 	return isEmbeddedPtrNil.IsEmbeddedPtrNil(fieldPtr)
 }
 
@@ -137,7 +138,7 @@ type structEncoder struct {
 }
 
 type structFieldTo struct {
-	encoder *structFieldEncoder
+	encoder *StructFieldEncoder
 	toName  string
 }
 
@@ -145,7 +146,7 @@ func (encoder *structEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	stream.WriteObjectStart()
 	isNotFirst := false
 	for _, field := range encoder.fields {
-		if field.encoder.omitempty && field.encoder.IsEmpty(ptr) {
+		if field.encoder.OmitEmpty && field.encoder.IsEmpty(ptr) {
 			continue
 		}
 		if field.encoder.IsEmbeddedPtrNil(ptr) {

@@ -28,15 +28,15 @@ func decoderOfStruct(ctx *ctx, typ reflect2.Type) ValDecoder {
 			}
 		}
 	}
-	fields := map[string]*structFieldDecoder{}
+	fields := map[string]*StructFieldDecoder{}
 	for k, binding := range bindings {
-		fields[k] = binding.Decoder.(*structFieldDecoder)
+		fields[k] = binding.Decoder.(*StructFieldDecoder)
 	}
 
 	if !ctx.caseSensitive() {
 		for k, binding := range bindings {
 			if _, found := fields[strings.ToLower(k)]; !found {
-				fields[strings.ToLower(k)] = binding.Decoder.(*structFieldDecoder)
+				fields[strings.ToLower(k)] = binding.Decoder.(*StructFieldDecoder)
 			}
 		}
 	}
@@ -44,7 +44,7 @@ func decoderOfStruct(ctx *ctx, typ reflect2.Type) ValDecoder {
 	return createStructDecoder(ctx, typ, fields)
 }
 
-func createStructDecoder(ctx *ctx, typ reflect2.Type, fields map[string]*structFieldDecoder) ValDecoder {
+func createStructDecoder(ctx *ctx, typ reflect2.Type, fields map[string]*StructFieldDecoder) ValDecoder {
 	if ctx.disallowUnknownFields {
 		return &generalStructDecoder{typ: typ, fields: fields, disallowUnknownFields: true}
 	}
@@ -68,8 +68,8 @@ func createStructDecoder(ctx *ctx, typ reflect2.Type, fields map[string]*structF
 	case 2:
 		var fieldHash1 int64
 		var fieldHash2 int64
-		var fieldDecoder1 *structFieldDecoder
-		var fieldDecoder2 *structFieldDecoder
+		var fieldDecoder1 *StructFieldDecoder
+		var fieldDecoder2 *StructFieldDecoder
 		for fieldName, fieldDecoder := range fields {
 			fieldHash := calcHash(fieldName, ctx.caseSensitive())
 			_, known := knownHash[fieldHash]
@@ -90,9 +90,9 @@ func createStructDecoder(ctx *ctx, typ reflect2.Type, fields map[string]*structF
 		var fieldName1 int64
 		var fieldName2 int64
 		var fieldName3 int64
-		var fieldDecoder1 *structFieldDecoder
-		var fieldDecoder2 *structFieldDecoder
-		var fieldDecoder3 *structFieldDecoder
+		var fieldDecoder1 *StructFieldDecoder
+		var fieldDecoder2 *StructFieldDecoder
+		var fieldDecoder3 *StructFieldDecoder
 		for fieldName, fieldDecoder := range fields {
 			fieldHash := calcHash(fieldName, ctx.caseSensitive())
 			_, known := knownHash[fieldHash]
@@ -120,10 +120,10 @@ func createStructDecoder(ctx *ctx, typ reflect2.Type, fields map[string]*structF
 		var fieldName2 int64
 		var fieldName3 int64
 		var fieldName4 int64
-		var fieldDecoder1 *structFieldDecoder
-		var fieldDecoder2 *structFieldDecoder
-		var fieldDecoder3 *structFieldDecoder
-		var fieldDecoder4 *structFieldDecoder
+		var fieldDecoder1 *StructFieldDecoder
+		var fieldDecoder2 *StructFieldDecoder
+		var fieldDecoder3 *StructFieldDecoder
+		var fieldDecoder4 *StructFieldDecoder
 		for fieldName, fieldDecoder := range fields {
 			fieldHash := calcHash(fieldName, ctx.caseSensitive())
 			_, known := knownHash[fieldHash]
@@ -156,11 +156,11 @@ func createStructDecoder(ctx *ctx, typ reflect2.Type, fields map[string]*structF
 		var fieldName3 int64
 		var fieldName4 int64
 		var fieldName5 int64
-		var fieldDecoder1 *structFieldDecoder
-		var fieldDecoder2 *structFieldDecoder
-		var fieldDecoder3 *structFieldDecoder
-		var fieldDecoder4 *structFieldDecoder
-		var fieldDecoder5 *structFieldDecoder
+		var fieldDecoder1 *StructFieldDecoder
+		var fieldDecoder2 *StructFieldDecoder
+		var fieldDecoder3 *StructFieldDecoder
+		var fieldDecoder4 *StructFieldDecoder
+		var fieldDecoder5 *StructFieldDecoder
 		for fieldName, fieldDecoder := range fields {
 			fieldHash := calcHash(fieldName, ctx.caseSensitive())
 			_, known := knownHash[fieldHash]
@@ -198,12 +198,12 @@ func createStructDecoder(ctx *ctx, typ reflect2.Type, fields map[string]*structF
 		var fieldName4 int64
 		var fieldName5 int64
 		var fieldName6 int64
-		var fieldDecoder1 *structFieldDecoder
-		var fieldDecoder2 *structFieldDecoder
-		var fieldDecoder3 *structFieldDecoder
-		var fieldDecoder4 *structFieldDecoder
-		var fieldDecoder5 *structFieldDecoder
-		var fieldDecoder6 *structFieldDecoder
+		var fieldDecoder1 *StructFieldDecoder
+		var fieldDecoder2 *StructFieldDecoder
+		var fieldDecoder3 *StructFieldDecoder
+		var fieldDecoder4 *StructFieldDecoder
+		var fieldDecoder5 *StructFieldDecoder
+		var fieldDecoder6 *StructFieldDecoder
 		for fieldName, fieldDecoder := range fields {
 			fieldHash := calcHash(fieldName, ctx.caseSensitive())
 			_, known := knownHash[fieldHash]
@@ -246,13 +246,13 @@ func createStructDecoder(ctx *ctx, typ reflect2.Type, fields map[string]*structF
 		var fieldName5 int64
 		var fieldName6 int64
 		var fieldName7 int64
-		var fieldDecoder1 *structFieldDecoder
-		var fieldDecoder2 *structFieldDecoder
-		var fieldDecoder3 *structFieldDecoder
-		var fieldDecoder4 *structFieldDecoder
-		var fieldDecoder5 *structFieldDecoder
-		var fieldDecoder6 *structFieldDecoder
-		var fieldDecoder7 *structFieldDecoder
+		var fieldDecoder1 *StructFieldDecoder
+		var fieldDecoder2 *StructFieldDecoder
+		var fieldDecoder3 *StructFieldDecoder
+		var fieldDecoder4 *StructFieldDecoder
+		var fieldDecoder5 *StructFieldDecoder
+		var fieldDecoder6 *StructFieldDecoder
+		var fieldDecoder7 *StructFieldDecoder
 		for fieldName, fieldDecoder := range fields {
 			fieldHash := calcHash(fieldName, ctx.caseSensitive())
 			_, known := knownHash[fieldHash]
@@ -300,14 +300,14 @@ func createStructDecoder(ctx *ctx, typ reflect2.Type, fields map[string]*structF
 		var fieldName6 int64
 		var fieldName7 int64
 		var fieldName8 int64
-		var fieldDecoder1 *structFieldDecoder
-		var fieldDecoder2 *structFieldDecoder
-		var fieldDecoder3 *structFieldDecoder
-		var fieldDecoder4 *structFieldDecoder
-		var fieldDecoder5 *structFieldDecoder
-		var fieldDecoder6 *structFieldDecoder
-		var fieldDecoder7 *structFieldDecoder
-		var fieldDecoder8 *structFieldDecoder
+		var fieldDecoder1 *StructFieldDecoder
+		var fieldDecoder2 *StructFieldDecoder
+		var fieldDecoder3 *StructFieldDecoder
+		var fieldDecoder4 *StructFieldDecoder
+		var fieldDecoder5 *StructFieldDecoder
+		var fieldDecoder6 *StructFieldDecoder
+		var fieldDecoder7 *StructFieldDecoder
+		var fieldDecoder8 *StructFieldDecoder
 		for fieldName, fieldDecoder := range fields {
 			fieldHash := calcHash(fieldName, ctx.caseSensitive())
 			_, known := knownHash[fieldHash]
@@ -360,15 +360,15 @@ func createStructDecoder(ctx *ctx, typ reflect2.Type, fields map[string]*structF
 		var fieldName7 int64
 		var fieldName8 int64
 		var fieldName9 int64
-		var fieldDecoder1 *structFieldDecoder
-		var fieldDecoder2 *structFieldDecoder
-		var fieldDecoder3 *structFieldDecoder
-		var fieldDecoder4 *structFieldDecoder
-		var fieldDecoder5 *structFieldDecoder
-		var fieldDecoder6 *structFieldDecoder
-		var fieldDecoder7 *structFieldDecoder
-		var fieldDecoder8 *structFieldDecoder
-		var fieldDecoder9 *structFieldDecoder
+		var fieldDecoder1 *StructFieldDecoder
+		var fieldDecoder2 *StructFieldDecoder
+		var fieldDecoder3 *StructFieldDecoder
+		var fieldDecoder4 *StructFieldDecoder
+		var fieldDecoder5 *StructFieldDecoder
+		var fieldDecoder6 *StructFieldDecoder
+		var fieldDecoder7 *StructFieldDecoder
+		var fieldDecoder8 *StructFieldDecoder
+		var fieldDecoder9 *StructFieldDecoder
 		for fieldName, fieldDecoder := range fields {
 			fieldHash := calcHash(fieldName, ctx.caseSensitive())
 			_, known := knownHash[fieldHash]
@@ -426,16 +426,16 @@ func createStructDecoder(ctx *ctx, typ reflect2.Type, fields map[string]*structF
 		var fieldName8 int64
 		var fieldName9 int64
 		var fieldName10 int64
-		var fieldDecoder1 *structFieldDecoder
-		var fieldDecoder2 *structFieldDecoder
-		var fieldDecoder3 *structFieldDecoder
-		var fieldDecoder4 *structFieldDecoder
-		var fieldDecoder5 *structFieldDecoder
-		var fieldDecoder6 *structFieldDecoder
-		var fieldDecoder7 *structFieldDecoder
-		var fieldDecoder8 *structFieldDecoder
-		var fieldDecoder9 *structFieldDecoder
-		var fieldDecoder10 *structFieldDecoder
+		var fieldDecoder1 *StructFieldDecoder
+		var fieldDecoder2 *StructFieldDecoder
+		var fieldDecoder3 *StructFieldDecoder
+		var fieldDecoder4 *StructFieldDecoder
+		var fieldDecoder5 *StructFieldDecoder
+		var fieldDecoder6 *StructFieldDecoder
+		var fieldDecoder7 *StructFieldDecoder
+		var fieldDecoder8 *StructFieldDecoder
+		var fieldDecoder9 *StructFieldDecoder
+		var fieldDecoder10 *StructFieldDecoder
 		for fieldName, fieldDecoder := range fields {
 			fieldHash := calcHash(fieldName, ctx.caseSensitive())
 			_, known := knownHash[fieldHash]
@@ -492,7 +492,7 @@ func createStructDecoder(ctx *ctx, typ reflect2.Type, fields map[string]*structF
 
 type generalStructDecoder struct {
 	typ                   reflect2.Type
-	fields                map[string]*structFieldDecoder
+	fields                map[string]*StructFieldDecoder
 	disallowUnknownFields bool
 }
 
@@ -518,7 +518,7 @@ func (decoder *generalStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) 
 
 func (decoder *generalStructDecoder) decodeOneField(ptr unsafe.Pointer, iter *Iterator) {
 	var field string
-	var fieldDecoder *structFieldDecoder
+	var fieldDecoder *StructFieldDecoder
 	if iter.cfg.objectFieldMustBeSimpleString {
 		fieldBytes := iter.ReadStringAsSlice()
 		field = *(*string)(unsafe.Pointer(&fieldBytes))
@@ -568,7 +568,7 @@ func (decoder *skipObjectDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 type oneFieldStructDecoder struct {
 	typ          reflect2.Type
 	fieldHash    int64
-	fieldDecoder *structFieldDecoder
+	fieldDecoder *StructFieldDecoder
 }
 
 func (decoder *oneFieldStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
@@ -597,9 +597,9 @@ func (decoder *oneFieldStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterator)
 type twoFieldsStructDecoder struct {
 	typ           reflect2.Type
 	fieldHash1    int64
-	fieldDecoder1 *structFieldDecoder
+	fieldDecoder1 *StructFieldDecoder
 	fieldHash2    int64
-	fieldDecoder2 *structFieldDecoder
+	fieldDecoder2 *StructFieldDecoder
 }
 
 func (decoder *twoFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
@@ -631,11 +631,11 @@ func (decoder *twoFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterator
 type threeFieldsStructDecoder struct {
 	typ           reflect2.Type
 	fieldHash1    int64
-	fieldDecoder1 *structFieldDecoder
+	fieldDecoder1 *StructFieldDecoder
 	fieldHash2    int64
-	fieldDecoder2 *structFieldDecoder
+	fieldDecoder2 *StructFieldDecoder
 	fieldHash3    int64
-	fieldDecoder3 *structFieldDecoder
+	fieldDecoder3 *StructFieldDecoder
 }
 
 func (decoder *threeFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
@@ -669,13 +669,13 @@ func (decoder *threeFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterat
 type fourFieldsStructDecoder struct {
 	typ           reflect2.Type
 	fieldHash1    int64
-	fieldDecoder1 *structFieldDecoder
+	fieldDecoder1 *StructFieldDecoder
 	fieldHash2    int64
-	fieldDecoder2 *structFieldDecoder
+	fieldDecoder2 *StructFieldDecoder
 	fieldHash3    int64
-	fieldDecoder3 *structFieldDecoder
+	fieldDecoder3 *StructFieldDecoder
 	fieldHash4    int64
-	fieldDecoder4 *structFieldDecoder
+	fieldDecoder4 *StructFieldDecoder
 }
 
 func (decoder *fourFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
@@ -711,15 +711,15 @@ func (decoder *fourFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterato
 type fiveFieldsStructDecoder struct {
 	typ           reflect2.Type
 	fieldHash1    int64
-	fieldDecoder1 *structFieldDecoder
+	fieldDecoder1 *StructFieldDecoder
 	fieldHash2    int64
-	fieldDecoder2 *structFieldDecoder
+	fieldDecoder2 *StructFieldDecoder
 	fieldHash3    int64
-	fieldDecoder3 *structFieldDecoder
+	fieldDecoder3 *StructFieldDecoder
 	fieldHash4    int64
-	fieldDecoder4 *structFieldDecoder
+	fieldDecoder4 *StructFieldDecoder
 	fieldHash5    int64
-	fieldDecoder5 *structFieldDecoder
+	fieldDecoder5 *StructFieldDecoder
 }
 
 func (decoder *fiveFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
@@ -757,17 +757,17 @@ func (decoder *fiveFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterato
 type sixFieldsStructDecoder struct {
 	typ           reflect2.Type
 	fieldHash1    int64
-	fieldDecoder1 *structFieldDecoder
+	fieldDecoder1 *StructFieldDecoder
 	fieldHash2    int64
-	fieldDecoder2 *structFieldDecoder
+	fieldDecoder2 *StructFieldDecoder
 	fieldHash3    int64
-	fieldDecoder3 *structFieldDecoder
+	fieldDecoder3 *StructFieldDecoder
 	fieldHash4    int64
-	fieldDecoder4 *structFieldDecoder
+	fieldDecoder4 *StructFieldDecoder
 	fieldHash5    int64
-	fieldDecoder5 *structFieldDecoder
+	fieldDecoder5 *StructFieldDecoder
 	fieldHash6    int64
-	fieldDecoder6 *structFieldDecoder
+	fieldDecoder6 *StructFieldDecoder
 }
 
 func (decoder *sixFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
@@ -807,19 +807,19 @@ func (decoder *sixFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterator
 type sevenFieldsStructDecoder struct {
 	typ           reflect2.Type
 	fieldHash1    int64
-	fieldDecoder1 *structFieldDecoder
+	fieldDecoder1 *StructFieldDecoder
 	fieldHash2    int64
-	fieldDecoder2 *structFieldDecoder
+	fieldDecoder2 *StructFieldDecoder
 	fieldHash3    int64
-	fieldDecoder3 *structFieldDecoder
+	fieldDecoder3 *StructFieldDecoder
 	fieldHash4    int64
-	fieldDecoder4 *structFieldDecoder
+	fieldDecoder4 *StructFieldDecoder
 	fieldHash5    int64
-	fieldDecoder5 *structFieldDecoder
+	fieldDecoder5 *StructFieldDecoder
 	fieldHash6    int64
-	fieldDecoder6 *structFieldDecoder
+	fieldDecoder6 *StructFieldDecoder
 	fieldHash7    int64
-	fieldDecoder7 *structFieldDecoder
+	fieldDecoder7 *StructFieldDecoder
 }
 
 func (decoder *sevenFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
@@ -861,21 +861,21 @@ func (decoder *sevenFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterat
 type eightFieldsStructDecoder struct {
 	typ           reflect2.Type
 	fieldHash1    int64
-	fieldDecoder1 *structFieldDecoder
+	fieldDecoder1 *StructFieldDecoder
 	fieldHash2    int64
-	fieldDecoder2 *structFieldDecoder
+	fieldDecoder2 *StructFieldDecoder
 	fieldHash3    int64
-	fieldDecoder3 *structFieldDecoder
+	fieldDecoder3 *StructFieldDecoder
 	fieldHash4    int64
-	fieldDecoder4 *structFieldDecoder
+	fieldDecoder4 *StructFieldDecoder
 	fieldHash5    int64
-	fieldDecoder5 *structFieldDecoder
+	fieldDecoder5 *StructFieldDecoder
 	fieldHash6    int64
-	fieldDecoder6 *structFieldDecoder
+	fieldDecoder6 *StructFieldDecoder
 	fieldHash7    int64
-	fieldDecoder7 *structFieldDecoder
+	fieldDecoder7 *StructFieldDecoder
 	fieldHash8    int64
-	fieldDecoder8 *structFieldDecoder
+	fieldDecoder8 *StructFieldDecoder
 }
 
 func (decoder *eightFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
@@ -919,23 +919,23 @@ func (decoder *eightFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterat
 type nineFieldsStructDecoder struct {
 	typ           reflect2.Type
 	fieldHash1    int64
-	fieldDecoder1 *structFieldDecoder
+	fieldDecoder1 *StructFieldDecoder
 	fieldHash2    int64
-	fieldDecoder2 *structFieldDecoder
+	fieldDecoder2 *StructFieldDecoder
 	fieldHash3    int64
-	fieldDecoder3 *structFieldDecoder
+	fieldDecoder3 *StructFieldDecoder
 	fieldHash4    int64
-	fieldDecoder4 *structFieldDecoder
+	fieldDecoder4 *StructFieldDecoder
 	fieldHash5    int64
-	fieldDecoder5 *structFieldDecoder
+	fieldDecoder5 *StructFieldDecoder
 	fieldHash6    int64
-	fieldDecoder6 *structFieldDecoder
+	fieldDecoder6 *StructFieldDecoder
 	fieldHash7    int64
-	fieldDecoder7 *structFieldDecoder
+	fieldDecoder7 *StructFieldDecoder
 	fieldHash8    int64
-	fieldDecoder8 *structFieldDecoder
+	fieldDecoder8 *StructFieldDecoder
 	fieldHash9    int64
-	fieldDecoder9 *structFieldDecoder
+	fieldDecoder9 *StructFieldDecoder
 }
 
 func (decoder *nineFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
@@ -981,25 +981,25 @@ func (decoder *nineFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterato
 type tenFieldsStructDecoder struct {
 	typ            reflect2.Type
 	fieldHash1     int64
-	fieldDecoder1  *structFieldDecoder
+	fieldDecoder1  *StructFieldDecoder
 	fieldHash2     int64
-	fieldDecoder2  *structFieldDecoder
+	fieldDecoder2  *StructFieldDecoder
 	fieldHash3     int64
-	fieldDecoder3  *structFieldDecoder
+	fieldDecoder3  *StructFieldDecoder
 	fieldHash4     int64
-	fieldDecoder4  *structFieldDecoder
+	fieldDecoder4  *StructFieldDecoder
 	fieldHash5     int64
-	fieldDecoder5  *structFieldDecoder
+	fieldDecoder5  *StructFieldDecoder
 	fieldHash6     int64
-	fieldDecoder6  *structFieldDecoder
+	fieldDecoder6  *StructFieldDecoder
 	fieldHash7     int64
-	fieldDecoder7  *structFieldDecoder
+	fieldDecoder7  *StructFieldDecoder
 	fieldHash8     int64
-	fieldDecoder8  *structFieldDecoder
+	fieldDecoder8  *StructFieldDecoder
 	fieldHash9     int64
-	fieldDecoder9  *structFieldDecoder
+	fieldDecoder9  *StructFieldDecoder
 	fieldHash10    int64
-	fieldDecoder10 *structFieldDecoder
+	fieldDecoder10 *StructFieldDecoder
 }
 
 func (decoder *tenFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
@@ -1044,16 +1044,16 @@ func (decoder *tenFieldsStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterator
 	iter.decrementDepth()
 }
 
-type structFieldDecoder struct {
-	field        reflect2.StructField
-	fieldDecoder ValDecoder
+type StructFieldDecoder struct {
+	Field        reflect2.StructField
+	FieldDecoder ValDecoder
 }
 
-func (decoder *structFieldDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
-	fieldPtr := decoder.field.UnsafeGet(ptr)
-	decoder.fieldDecoder.Decode(fieldPtr, iter)
+func (decoder *StructFieldDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
+	fieldPtr := decoder.Field.UnsafeGet(ptr)
+	decoder.FieldDecoder.Decode(fieldPtr, iter)
 	if iter.Error != nil && iter.Error != io.EOF {
-		iter.Error = fmt.Errorf("%s: %s", decoder.field.Name(), iter.Error.Error())
+		iter.Error = fmt.Errorf("%s: %s", decoder.Field.Name(), iter.Error.Error())
 	}
 }
 
