@@ -100,7 +100,7 @@ func (adapter *Decoder) Buffered() io.Reader {
 func (adapter *Decoder) UseNumber() {
 	cfg := adapter.iter.cfg.configBeforeFrozen
 	cfg.UseNumber = true
-	adapter.iter.cfg = cfg.frozeWithCacheReuse(adapter.iter.cfg.extraExtensions)
+	adapter.iter.cfg = cfg.frozeWithCacheReuse(adapter.iter.cfg)
 }
 
 // DisallowUnknownFields causes the Decoder to return an error when the destination
@@ -109,7 +109,7 @@ func (adapter *Decoder) UseNumber() {
 func (adapter *Decoder) DisallowUnknownFields() {
 	cfg := adapter.iter.cfg.configBeforeFrozen
 	cfg.DisallowUnknownFields = true
-	adapter.iter.cfg = cfg.frozeWithCacheReuse(adapter.iter.cfg.extraExtensions)
+	adapter.iter.cfg = cfg.frozeWithCacheReuse(adapter.iter.cfg)
 }
 
 // NewEncoder same as json.NewEncoder
@@ -134,14 +134,14 @@ func (adapter *Encoder) Encode(val interface{}) error {
 func (adapter *Encoder) SetIndent(prefix, indent string) {
 	config := adapter.stream.cfg.configBeforeFrozen
 	config.IndentionStep = len(indent)
-	adapter.stream.cfg = config.frozeWithCacheReuse(adapter.stream.cfg.extraExtensions)
+	adapter.stream.cfg = config.frozeWithCacheReuse(adapter.stream.cfg)
 }
 
 // SetEscapeHTML escape html by default, set to false to disable
 func (adapter *Encoder) SetEscapeHTML(escapeHTML bool) {
 	config := adapter.stream.cfg.configBeforeFrozen
 	config.EscapeHTML = escapeHTML
-	adapter.stream.cfg = config.frozeWithCacheReuse(adapter.stream.cfg.extraExtensions)
+	adapter.stream.cfg = config.frozeWithCacheReuse(adapter.stream.cfg)
 }
 
 // Valid reports whether data is a valid JSON encoding.
