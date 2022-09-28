@@ -29,6 +29,11 @@ func NewStream(cfg API, out io.Writer, bufSize int) *Stream {
 	}
 }
 
+// API returns API
+func (stream *Stream) API() API {
+	return stream.cfg
+}
+
 // Pool returns a pool can provide more stream with same configuration
 func (stream *Stream) Pool() StreamPool {
 	return stream.cfg

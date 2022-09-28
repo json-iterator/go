@@ -379,3 +379,7 @@ func (cfg *frozenConfig) Valid(data []byte) bool {
 	iter.Skip()
 	return iter.Error == nil
 }
+
+func (cfg *frozenConfig) GetConfig() Config {
+	return cfg.configBeforeFrozen
+}
