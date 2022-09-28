@@ -113,16 +113,16 @@ func (cfg *frozenConfig) getEncoderFromCache(cacheKey uintptr) ValEncoder {
 
 var cfgCache = concurrent.NewMap()
 
-func getFrozenConfigFromCache(cfg Config) *frozenConfig {
-	obj, found := cfgCache.Load(cfg)
+func getFrozenConfigFromCache(key interface{}) *frozenConfig {
+	obj, found := cfgCache.Load(key)
 	if found {
 		return obj.(*frozenConfig)
 	}
 	return nil
 }
 
-func addFrozenConfigToCache(cfg Config, frozenConfig *frozenConfig) {
-	cfgCache.Store(cfg, frozenConfig)
+func addFrozenConfigToCache(key interface{}, frozenConfig *frozenConfig) {
+	cfgCache.Store(key, frozenConfig)
 }
 
 // Froze forge API from config
@@ -166,16 +166,22 @@ func (cfg Config) Froze() API {
 	return api
 }
 
-func (cfg Config) frozeWithCacheReuse(extraExtensions []Extension) *frozenConfig {
-	api := getFrozenConfigFromCache(cfg)
+type configKey struct {
+	Config
+	cause *frozenConfig
+}
+
+func (cfg Config) frozeWithCacheReuse(cause *frozenConfig) *frozenConfig {
+	key := configKey{cfg, cause}
+	api := getFrozenConfigFromCache(key)
 	if api != nil {
 		return api
 	}
 	api = cfg.Froze().(*frozenConfig)
-	for _, extension := range extraExtensions {
+	for _, extension := range cause.extraExtensions {
 		api.RegisterExtension(extension)
 	}
-	addFrozenConfigToCache(cfg, api)
+	addFrozenConfigToCache(key, api)
 	return api
 }
 
@@ -317,7 +323,7 @@ func (cfg *frozenConfig) MarshalIndent(v interface{}, prefix, indent string) ([]
 	}
 	newCfg := cfg.configBeforeFrozen
 	newCfg.IndentionStep = len(indent)
-	return newCfg.frozeWithCacheReuse(cfg.extraExtensions).Marshal(v)
+	return newCfg.frozeWithCacheReuse(cfg).Marshal(v)
 }
 
 func (cfg *frozenConfig) UnmarshalFromString(str string, v interface{}) error {
