@@ -113,7 +113,12 @@ func (cfg *frozenConfig) getEncoderFromCache(cacheKey uintptr) ValEncoder {
 
 var cfgCache = concurrent.NewMap()
 
-func getFrozenConfigFromCache(key interface{}) *frozenConfig {
+type cfgKey struct {
+	Config
+	cause *frozenConfig
+}
+
+func getFrozenConfigFromCache(key cfgKey) *frozenConfig {
 	obj, found := cfgCache.Load(key)
 	if found {
 		return obj.(*frozenConfig)
@@ -121,7 +126,7 @@ func getFrozenConfigFromCache(key interface{}) *frozenConfig {
 	return nil
 }
 
-func addFrozenConfigToCache(key interface{}, frozenConfig *frozenConfig) {
+func addFrozenConfigToCache(key cfgKey, frozenConfig *frozenConfig) {
 	cfgCache.Store(key, frozenConfig)
 }
 
@@ -166,13 +171,8 @@ func (cfg Config) Froze() API {
 	return api
 }
 
-type configKey struct {
-	Config
-	cause *frozenConfig
-}
-
 func (cfg Config) frozeWithCacheReuse(cause *frozenConfig) *frozenConfig {
-	key := configKey{cfg, cause}
+	key := cfgKey{cfg, cause}
 	api := getFrozenConfigFromCache(key)
 	if api != nil {
 		return api
