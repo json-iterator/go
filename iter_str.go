@@ -3,7 +3,13 @@ package jsoniter
 import (
 	"fmt"
 	"unicode/utf16"
+	"unsafe"
 )
+
+// bytesToString convert []byte to string
+func bytesToString(b []byte) string {
+	return *(*string)(unsafe.Pointer(&b))
+}
 
 // ReadString read string from iterator
 func (iter *Iterator) ReadString() (ret string) {
@@ -12,7 +18,7 @@ func (iter *Iterator) ReadString() (ret string) {
 		for i := iter.head; i < iter.tail; i++ {
 			c := iter.buf[i]
 			if c == '"' {
-				ret = string(iter.buf[iter.head:i])
+				ret = bytesToString(iter.buf[iter.head:i])
 				iter.head = i + 1
 				return ret
 			} else if c == '\\' {
