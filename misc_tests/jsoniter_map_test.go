@@ -50,3 +50,12 @@ func Test_encode_nil_map(t *testing.T) {
 	should.NoError(err)
 	should.Equal(`null`, output)
 }
+
+func Test_encode_nil_as_empty_map(t *testing.T) {
+	should := require.New(t)
+	json := jsoniter.Config{EmptyCollections: true}.Froze()
+	var nilMap map[string]string
+	output, err := json.MarshalToString(nilMap)
+	should.NoError(err)
+	should.Equal(`{}`, output)
+}

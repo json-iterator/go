@@ -27,15 +27,17 @@ func encoderOfMap(ctx *ctx, typ reflect2.Type) ValEncoder {
 	mapType := typ.(*reflect2.UnsafeMapType)
 	if ctx.sortMapKeys {
 		return &sortKeysMapEncoder{
-			mapType:     mapType,
-			keyEncoder:  encoderOfMapKey(ctx.append("[mapKey]"), mapType.Key()),
-			elemEncoder: encoderOfType(ctx.append("[mapElem]"), mapType.Elem()),
+			mapType:          mapType,
+			keyEncoder:       encoderOfMapKey(ctx.append("[mapKey]"), mapType.Key()),
+			elemEncoder:      encoderOfType(ctx.append("[mapElem]"), mapType.Elem()),
+			emptyCollections: ctx.emptyCollections,
 		}
 	}
 	return &mapEncoder{
-		mapType:     mapType,
-		keyEncoder:  encoderOfMapKey(ctx.append("[mapKey]"), mapType.Key()),
-		elemEncoder: encoderOfType(ctx.append("[mapElem]"), mapType.Elem()),
+		mapType:          mapType,
+		keyEncoder:       encoderOfMapKey(ctx.append("[mapKey]"), mapType.Key()),
+		elemEncoder:      encoderOfType(ctx.append("[mapElem]"), mapType.Elem()),
+		emptyCollections: ctx.emptyCollections,
 	}
 }
 
@@ -246,13 +248,18 @@ func (encoder *dynamicMapKeyEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 }
 
 type mapEncoder struct {
-	mapType     *reflect2.UnsafeMapType
-	keyEncoder  ValEncoder
-	elemEncoder ValEncoder
+	mapType          *reflect2.UnsafeMapType
+	keyEncoder       ValEncoder
+	elemEncoder      ValEncoder
+	emptyCollections bool
 }
 
 func (encoder *mapEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	if *(*unsafe.Pointer)(ptr) == nil {
+		if encoder.emptyCollections {
+			stream.WriteEmptyObject()
+			return
+		}
 		stream.WriteNil()
 		return
 	}
@@ -280,13 +287,18 @@ func (encoder *mapEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 }
 
 type sortKeysMapEncoder struct {
-	mapType     *reflect2.UnsafeMapType
-	keyEncoder  ValEncoder
-	elemEncoder ValEncoder
+	mapType          *reflect2.UnsafeMapType
+	keyEncoder       ValEncoder
+	elemEncoder      ValEncoder
+	emptyCollections bool
 }
 
 func (encoder *sortKeysMapEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	if *(*unsafe.Pointer)(ptr) == nil {
+		if encoder.emptyCollections {
+			stream.WriteEmptyObject()
+			return
+		}
 		stream.WriteNil()
 		return
 	}
