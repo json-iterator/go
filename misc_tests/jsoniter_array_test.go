@@ -226,6 +226,23 @@ func Test_decode_large_slice(t *testing.T) {
 	should.Equal([]int{1, 2, 3, 4, 5, 6, 7, 8, 9}, slice)
 }
 
+func Test_encode_nil_slice(t *testing.T) {
+	should := require.New(t)
+	var nilSlice []string
+	output, err := jsoniter.MarshalToString(nilSlice)
+	should.NoError(err)
+	should.Equal(`null`, output)
+}
+
+func Test_encode_nil_as_empty_slice(t *testing.T) {
+	should := require.New(t)
+	json := jsoniter.Config{EmptyCollections: true}.Froze()
+	var nilSlice []string
+	output, err := json.MarshalToString(nilSlice)
+	should.NoError(err)
+	should.Equal(`[]`, output)
+}
+
 func Benchmark_jsoniter_array(b *testing.B) {
 	b.ReportAllocs()
 	input := []byte(`[1,2,3,4,5,6,7,8,9]`)
