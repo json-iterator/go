@@ -149,6 +149,32 @@ func init() {
 		(*struct {
 			Field bool `json:"中文"`
 		})(nil),
+		(*struct {
+			Foo string `json:"Bar"`
+			Bar string
+		})(nil),
+		(*struct {
+			Foo string `json:"Bar"`
+			Bar string `json:"Foo"`
+		})(nil),
+		(*struct {
+			Foo string
+			Bar string `json:"Foo"`
+		})(nil),
+		(*struct {
+			Foo string `json:"Bar"`
+			Bar string `json:"Bar"`
+		})(nil),
+		(*struct {
+			Foo string `json:"Bar"`
+			Bar string
+			Baz string `json:"Bar"`
+		})(nil),
+		(*struct {
+			Foo string
+			F   string
+			EmbeddedOmitEmptyE
+		})(nil),
 	)
 }
 
