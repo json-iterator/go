@@ -2,48 +2,125 @@ package jsoniter
 
 import (
 	"fmt"
-	"github.com/modern-go/reflect2"
 	"io"
 	"reflect"
+	"sort"
+	"strings"
 	"unsafe"
+
+	"github.com/modern-go/reflect2"
 )
 
+type binding struct {
+	binding *Binding
+	name    string
+	hasTag  bool
+}
+
 func encoderOfStruct(ctx *ctx, typ reflect2.Type) ValEncoder {
-	type bindingTo struct {
-		binding *Binding
-		toName  string
-		ignored bool
-	}
-	orderedBindings := []*bindingTo{}
+
+	orderedBindings := []*binding{}
 	structDescriptor := describeStruct(ctx, typ)
-	for _, binding := range structDescriptor.Fields {
-		for _, toName := range binding.ToNames {
-			new := &bindingTo{
-				binding: binding,
-				toName:  toName,
-			}
-			for _, old := range orderedBindings {
-				if old.toName != toName {
-					continue
-				}
-				old.ignored, new.ignored = resolveConflictBinding(ctx.frozenConfig, old.binding, new.binding)
-			}
-			orderedBindings = append(orderedBindings, new)
-		}
-	}
+
+	fields := flattenTo(structDescriptor.Fields, ctx.frozenConfig)
+
+	orderedBindings = resolveBindings(fields)
+
 	if len(orderedBindings) == 0 {
 		return &emptyStructEncoder{}
 	}
+
 	finalOrderedFields := []structFieldTo{}
 	for _, bindingTo := range orderedBindings {
-		if !bindingTo.ignored {
-			finalOrderedFields = append(finalOrderedFields, structFieldTo{
-				encoder: bindingTo.binding.Encoder.(*structFieldEncoder),
-				toName:  bindingTo.toName,
+		finalOrderedFields = append(finalOrderedFields, structFieldTo{
+			encoder: bindingTo.binding.Encoder.(*structFieldEncoder),
+			toName:  bindingTo.name,
+		})
+	}
+
+	return &structEncoder{typ, finalOrderedFields}
+}
+
+func flattenTo(bindings []*Binding, cfg *frozenConfig) []*binding {
+	flattened := make([]*binding, 0, len(bindings))
+
+	for _, b := range bindings {
+		for _, toName := range b.ToNames {
+			flattened = append(flattened, &binding{
+				binding: b,
+				name:    toName,
+				hasTag:  hasTag(b, cfg),
 			})
 		}
 	}
-	return &structEncoder{typ, finalOrderedFields}
+
+	return flattened
+}
+
+func hasTag(b *Binding, cfg *frozenConfig) bool {
+	before, _, _ := strings.Cut(b.Field.Tag().Get(cfg.getTagKey()), ",")
+	return before != ""
+}
+
+func resolveBindings(fields []*binding) []*binding {
+	sort.SliceStable(fields, func(i, j int) bool {
+		// As per std's encoding/json,
+		// it sorts fields by names, index depth(here we call it levels) and tags.
+		// We've already sorted fields by index order in describeStruct.
+		// By using stable sorting, we avoid sorting them again.
+		if fields[i].name != fields[j].name {
+			return fields[i].name < fields[j].name
+		}
+		if len(fields[i].binding.levels) != len(fields[j].binding.levels) {
+			return len(fields[i].binding.levels) < len(fields[j].binding.levels)
+		}
+		if fields[i].hasTag != fields[j].hasTag {
+			return fields[i].hasTag
+		}
+		return true // equal.
+	})
+
+	orderedBindings := trimOverlappingBindings(fields)
+
+	sort.Slice(orderedBindings, func(i, j int) bool {
+		left := orderedBindings[i].binding.levels
+		right := orderedBindings[j].binding.levels
+		k := 0
+		for {
+			if left[k] < right[k] {
+				return true
+			} else if left[k] > right[k] {
+				return false
+			}
+			k++
+		}
+	})
+
+	return orderedBindings
+}
+
+func trimOverlappingBindings(bindings []*binding) []*binding {
+	out := bindings[:0]
+	for nameRange, i := 0, 0; i < len(bindings); i += nameRange {
+		for nameRange = 1; i+nameRange < len(bindings); nameRange++ {
+			endOfRange := bindings[i+nameRange]
+			if endOfRange.name != bindings[i].name {
+				break
+			}
+		}
+		if nameRange == 1 { // only one field for that name
+			out = append(out, bindings[i])
+		} else {
+			fields := bindings[i : i+nameRange]
+			if len(fields[0].binding.levels) == len(fields[1].binding.levels) &&
+				fields[0].hasTag == fields[1].hasTag {
+				continue
+			}
+			out = append(out, fields[0])
+		}
+	}
+
+	return out
 }
 
 func createCheckIsEmpty(ctx *ctx, typ reflect2.Type) checkIsEmpty {
