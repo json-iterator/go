@@ -61,6 +61,9 @@ func init() {
 		(*SameLevel2Tagged)(nil),
 		(*EmbeddedPtr)(nil),
 		(*UnnamedLiteral)(nil),
+		(*EmbeddedRecursive)(nil),
+		(*EmbeddedRecursive2)(nil),
+		(*EmbeddedRecursive3)(nil),
 	)
 }
 
@@ -235,4 +238,43 @@ type EmbeddedPtr struct {
 
 type UnnamedLiteral struct {
 	_ struct{}
+}
+
+type EmbeddedRecursive struct {
+	Foo string
+	Recursive1
+}
+
+type Recursive1 struct {
+	R string
+	Recursive2
+}
+
+type Recursive2 struct {
+	Foo string
+	R   string
+	RR  string
+	*EmbeddedRecursive
+}
+
+type EmbeddedRecursive2 struct {
+	Foo string
+	Recursive1
+	Recursive3
+}
+
+type Recursive3 struct {
+	Foo string
+	RR  string
+	*EmbeddedRecursive2
+}
+
+type Recursive4 struct {
+	Bar string
+	Recursive3
+}
+
+type EmbeddedRecursive3 struct {
+	Foo string
+	*EmbeddedRecursive3
 }
