@@ -2,12 +2,13 @@ package jsoniter
 
 import (
 	"fmt"
-	"github.com/modern-go/reflect2"
 	"reflect"
 	"sort"
 	"strings"
 	"unicode"
 	"unsafe"
+
+	"github.com/modern-go/reflect2"
 )
 
 var typeDecoders = map[string]ValDecoder{}
@@ -332,6 +333,10 @@ func _getTypeEncoderFromExtension(ctx *ctx, typ reflect2.Type) ValEncoder {
 }
 
 func describeStruct(ctx *ctx, typ reflect2.Type) *StructDescriptor {
+	return _describeStruct(ctx, typ, nil)
+}
+
+func _describeStruct(ctx *ctx, typ reflect2.Type, parents []reflect2.Type) *StructDescriptor {
 	structType := typ.(*reflect2.UnsafeStructType)
 	embeddedBindings := []*Binding{}
 	bindings := []*Binding{}
@@ -347,7 +352,16 @@ func describeStruct(ctx *ctx, typ reflect2.Type) *StructDescriptor {
 		tagParts := strings.Split(tag, ",")
 		if field.Anonymous() && (tag == "" || tagParts[0] == "") {
 			if field.Type().Kind() == reflect.Struct {
-				structDescriptor := describeStruct(ctx, field.Type())
+				if isRecursive(parents, field.Type()) {
+					return nil
+				}
+				parents = append(parents, field.Type())
+
+				structDescriptor := _describeStruct(ctx, field.Type(), parents)
+				if structDescriptor == nil {
+					continue
+				}
+
 				for _, binding := range structDescriptor.Fields {
 					binding.levels = append([]int{i}, binding.levels...)
 					omitempty := binding.Encoder.(*structFieldEncoder).omitempty
@@ -359,7 +373,16 @@ func describeStruct(ctx *ctx, typ reflect2.Type) *StructDescriptor {
 			} else if field.Type().Kind() == reflect.Ptr {
 				ptrType := field.Type().(*reflect2.UnsafePtrType)
 				if ptrType.Elem().Kind() == reflect.Struct {
-					structDescriptor := describeStruct(ctx, ptrType.Elem())
+					if isRecursive(parents, field.Type()) {
+						return nil
+					}
+					parents = append(parents, field.Type())
+
+					structDescriptor := _describeStruct(ctx, ptrType.Elem(), parents)
+					if structDescriptor == nil {
+						continue
+					}
+
 					for _, binding := range structDescriptor.Fields {
 						binding.levels = append([]int{i}, binding.levels...)
 						omitempty := binding.Encoder.(*structFieldEncoder).omitempty
@@ -395,6 +418,16 @@ func describeStruct(ctx *ctx, typ reflect2.Type) *StructDescriptor {
 	}
 	return createStructDescriptor(ctx, typ, bindings, embeddedBindings)
 }
+
+func isRecursive(parents []reflect2.Type, parent reflect2.Type) bool {
+	for _, p := range parents {
+		if p == parent {
+			return true
+		}
+	}
+	return false
+}
+
 func createStructDescriptor(ctx *ctx, typ reflect2.Type, bindings []*Binding, embeddedBindings []*Binding) *StructDescriptor {
 	structDescriptor := &StructDescriptor{
 		Type:   typ,
