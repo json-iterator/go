@@ -12,22 +12,15 @@ import (
 func decoderOfStruct(ctx *ctx, typ reflect2.Type) ValDecoder {
 	bindings := map[string]*Binding{}
 	structDescriptor := describeStruct(ctx, typ)
-	for _, binding := range structDescriptor.Fields {
-		for _, fromName := range binding.FromNames {
-			old := bindings[fromName]
-			if old == nil {
-				bindings[fromName] = binding
-				continue
-			}
-			ignoreOld, ignoreNew := resolveConflictBinding(ctx.frozenConfig, old, binding)
-			if ignoreOld {
-				delete(bindings, fromName)
-			}
-			if !ignoreNew {
-				bindings[fromName] = binding
-			}
-		}
+
+	flattenedBindings := flattenFrom(structDescriptor.Fields, ctx.frozenConfig)
+
+	orderedBindings := resolveBindings(flattenedBindings)
+
+	for _, b := range orderedBindings {
+		bindings[b.name] = b.binding
 	}
+
 	fields := map[string]*structFieldDecoder{}
 	for k, binding := range bindings {
 		fields[k] = binding.Decoder.(*structFieldDecoder)
@@ -42,6 +35,22 @@ func decoderOfStruct(ctx *ctx, typ reflect2.Type) ValDecoder {
 	}
 
 	return createStructDecoder(ctx, typ, fields)
+}
+
+func flattenFrom(bindings []*Binding, cfg *frozenConfig) []*binding {
+	flattened := make([]*binding, 0, len(bindings))
+
+	for _, b := range bindings {
+		for _, fromName := range b.FromNames {
+			flattened = append(flattened, &binding{
+				binding: b,
+				name:    fromName,
+				hasTag:  hasTag(b, cfg),
+			})
+		}
+	}
+
+	return flattened
 }
 
 func createStructDecoder(ctx *ctx, typ reflect2.Type, fields map[string]*structFieldDecoder) ValDecoder {
