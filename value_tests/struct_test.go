@@ -105,6 +105,18 @@ func init() {
 			Asks      [][2]float64 `json:"asks"`
 		})(nil),
 		input: `{"key_string": "KEYSTRING","type": "TYPE","asks": [[1e+66,1]]}`,
+	}, unmarshalCase{
+		ptr:   (*quote)(nil),
+		input: `{"Str":null,"F32":null,"F64":null,"Int":null,"Uint":null,"I16":null,"I32":null,"I64":null,"U8":null,"U16":null,"U32":null,"U64":null,"Uptr":null,"Bool":null}`,
+	}, unmarshalCase{
+		ptr:   (*quote)(nil),
+		input: `{"Str":"\"foo\""}`,
+	}, unmarshalCase{
+		ptr: (*struct {
+			AnyStr interface{} `json:",string"`
+			AnyInt interface{} `json:",string"`
+		})(nil),
+		input: `{"AnyStr":"foo","AnyInt":123}`,
 	})
 	marshalCases = append(marshalCases,
 		struct {
@@ -204,6 +216,14 @@ func init() {
 		}{
 			"should not marshal",
 		},
+		quote{},
+		struct {
+			AnyStr interface{} `json:",string"`
+			AnyInt interface{} `json:",string"`
+		}{
+			AnyStr: "foo",
+			AnyInt: 123,
+		},
 	)
 }
 
@@ -244,4 +264,24 @@ type structOrder struct {
 	Field3 string
 	orderB
 	Field7 string
+}
+
+type quote struct {
+	// The ,string option applies only to fields of string, floating point, integer,
+	// or boolean types as per https://pkg.go.dev/encoding/json@go1.20.1.
+	// It is poorly or not totally documented that json.Marshal does not quote null.
+	Str  *string  `json:",string"`
+	F32  *float32 `json:",string"`
+	F64  *float64 `json:",string"`
+	Int  *int     `json:",string"`
+	Uint *uint    `json:",string"`
+	I16  *int16   `json:",string"`
+	I32  *int32   `json:",string"`
+	I64  *int64   `json:",string"`
+	U8   *uint8   `json:",string"`
+	U16  *uint16  `json:",string"`
+	U32  *uint32  `json:",string"`
+	U64  *uint64  `json:",string"`
+	Uptr *uintptr `json:",string"`
+	Bool *bool    `json:",string"`
 }
