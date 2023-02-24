@@ -2,12 +2,13 @@ package jsoniter
 
 import (
 	"fmt"
-	"github.com/modern-go/reflect2"
 	"reflect"
 	"sort"
 	"strings"
 	"unicode"
 	"unsafe"
+
+	"github.com/modern-go/reflect2"
 )
 
 var typeDecoders = map[string]ValDecoder{}
@@ -448,12 +449,22 @@ func processTags(structDescriptor *StructDescriptor, cfg *frozenConfig) {
 			if tagPart == "omitempty" {
 				shouldOmitEmpty = true
 			} else if tagPart == "string" {
-				if binding.Field.Type().Kind() == reflect.String {
-					binding.Decoder = &stringModeStringDecoder{binding.Decoder, cfg}
-					binding.Encoder = &stringModeStringEncoder{binding.Encoder, cfg}
-				} else {
+				fieldType := binding.Field.Type()
+				isPointer := false
+				if fieldType.Kind() == reflect.Pointer {
+					isPointer = true
+					fieldType = reflect2.Type2(fieldType.Type1().Elem())
+				}
+				switch fieldType.Kind() {
+				case reflect.String:
+					binding.Decoder = &stringModeStringDecoder{isPointer, binding.Decoder, cfg}
+					binding.Encoder = &stringModeStringEncoder{isPointer, binding.Encoder, cfg}
+				case reflect.Float32, reflect.Float64,
+					reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+					reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr,
+					reflect.Bool:
 					binding.Decoder = &stringModeNumberDecoder{binding.Decoder}
-					binding.Encoder = &stringModeNumberEncoder{binding.Encoder}
+					binding.Encoder = &stringModeNumberEncoder{isPointer, binding.Encoder}
 				}
 			}
 		}

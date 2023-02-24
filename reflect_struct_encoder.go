@@ -2,10 +2,11 @@ package jsoniter
 
 import (
 	"fmt"
-	"github.com/modern-go/reflect2"
 	"io"
 	"reflect"
 	"unsafe"
+
+	"github.com/modern-go/reflect2"
 )
 
 func encoderOfStruct(ctx *ctx, typ reflect2.Type) ValEncoder {
@@ -180,13 +181,22 @@ func (encoder *emptyStructEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 }
 
 type stringModeNumberEncoder struct {
+	isPointer   bool
 	elemEncoder ValEncoder
 }
 
 func (encoder *stringModeNumberEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
-	stream.writeByte('"')
+	shouldQuote := true
+	if encoder.isPointer && (ptr == nil || *(*unsafe.Pointer)(ptr) == nil) {
+		shouldQuote = false
+	}
+	if shouldQuote {
+		stream.writeByte('"')
+	}
 	encoder.elemEncoder.Encode(ptr, stream)
-	stream.writeByte('"')
+	if shouldQuote {
+		stream.writeByte('"')
+	}
 }
 
 func (encoder *stringModeNumberEncoder) IsEmpty(ptr unsafe.Pointer) bool {
@@ -194,11 +204,17 @@ func (encoder *stringModeNumberEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 }
 
 type stringModeStringEncoder struct {
+	isPointer   bool
 	elemEncoder ValEncoder
 	cfg         *frozenConfig
 }
 
 func (encoder *stringModeStringEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
+	if encoder.isPointer && (ptr == nil || *(*unsafe.Pointer)(ptr) == nil) {
+		encoder.elemEncoder.Encode(ptr, stream)
+		return
+	}
+
 	tempStream := encoder.cfg.BorrowStream(nil)
 	tempStream.Attachment = stream.Attachment
 	defer encoder.cfg.ReturnStream(tempStream)
