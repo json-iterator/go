@@ -1058,16 +1058,59 @@ func (decoder *structFieldDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 }
 
 type stringModeStringDecoder struct {
+	isPointer   bool // true indicates *string field type.
 	elemDecoder ValDecoder
 	cfg         *frozenConfig
 }
 
 func (decoder *stringModeStringDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	decoder.elemDecoder.Decode(ptr, iter)
-	str := *((*string)(ptr))
+
+	if iter.Error != nil {
+		return
+	}
+
+	var str string
+	if decoder.isPointer {
+		if *((**string)(ptr)) == nil {
+			return
+		}
+		str = **((**string)(ptr))
+	} else {
+		str = *((*string)(ptr))
+	}
+
+	if len(str) < 2 {
+		iter.ReportError(
+			"stringModeStringDecoder",
+			`expect len(s) >= 2, but found `+str,
+		)
+		return
+	}
+	if str[0] != '"' || str[len(str)-1] != '"' {
+		var idx int
+		if str[0] == '"' {
+			idx = len(str) - 1
+		}
+		iter.ReportError(
+			"stringModeStringDecoder",
+			`expect ", but found `+string(str[idx]),
+		)
+		return
+	}
+
 	tempIter := decoder.cfg.BorrowIterator([]byte(str))
 	defer decoder.cfg.ReturnIterator(tempIter)
-	*((*string)(ptr)) = tempIter.ReadString()
+
+	if decoder.isPointer {
+		**((**string)(ptr)) = tempIter.ReadString()
+	} else {
+		*((*string)(ptr)) = tempIter.ReadString()
+	}
+
+	if tempIter.Error != nil {
+		iter.Error = tempIter.Error
+	}
 }
 
 type stringModeNumberDecoder struct {

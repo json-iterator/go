@@ -147,6 +147,28 @@ func init() {
 			Field bool `json:",omitempty,string"`
 		})(nil),
 		(*struct {
+			Str  *string  `json:",string"`
+			F32  *float32 `json:",string"`
+			F64  *float64 `json:",string"`
+			Int  *int     `json:",string"`
+			Uint *uint    `json:",string"`
+			I16  *int16   `json:",string"`
+			I32  *int32   `json:",string"`
+			I64  *int64   `json:",string"`
+			U8   *uint8   `json:",string"`
+			U16  *uint16  `json:",string"`
+			U32  *uint32  `json:",string"`
+			U64  *uint64  `json:",string"`
+			Uptr *uintptr `json:",string"`
+			Bool *bool    `json:",string"`
+		})(nil),
+		(*struct {
+			Struct struct{ Foo string } `json:",string"`
+			Arr    [2]int               `json:",string"`
+			Slice  []string             `json:",string"`
+			Map    map[int]int          `json:",string"`
+		})(nil),
+		(*struct {
 			Field bool `json:"中文"`
 		})(nil),
 	)
