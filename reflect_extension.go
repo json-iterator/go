@@ -493,7 +493,7 @@ func processTags(structDescriptor *StructDescriptor, cfg *frozenConfig) {
 					binding.Encoder = &stringModeStringEncoder{binding.Encoder, cfg}
 				} else {
 					binding.Decoder = &stringModeNumberDecoder{binding.Decoder}
-					binding.Encoder = &stringModeNumberEncoder{binding.Encoder}
+					binding.Encoder = &stringModeNumberEncoder{binding.Encoder, cfg}
 				}
 			}
 		}

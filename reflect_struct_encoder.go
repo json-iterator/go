@@ -182,12 +182,22 @@ func (encoder *emptyStructEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 
 type stringModeNumberEncoder struct {
 	elemEncoder ValEncoder
+	cfg         *frozenConfig
 }
 
 func (encoder *stringModeNumberEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
-	stream.writeByte('"')
-	encoder.elemEncoder.Encode(ptr, stream)
-	stream.writeByte('"')
+	tempStream := encoder.cfg.BorrowStream(nil)
+	tempStream.Attachment = stream.Attachment
+	defer encoder.cfg.ReturnStream(tempStream)
+	encoder.elemEncoder.Encode(ptr, tempStream)
+	buf := tempStream.Buffer()
+	if len(buf) >= 2 && buf[0] == '"' && buf[len(buf)-1] == '"' {
+		stream.Write(buf)
+	} else {
+		stream.writeByte('"')
+		stream.Write(buf)
+		stream.writeByte('"')
+	}
 }
 
 func (encoder *stringModeNumberEncoder) IsEmpty(ptr unsafe.Pointer) bool {
