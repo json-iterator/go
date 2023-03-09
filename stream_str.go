@@ -315,7 +315,7 @@ func (stream *Stream) WriteString(s string) {
 	i := 0
 	for ; i < valLen; i++ {
 		c := s[i]
-		if c > 31 && c != '"' && c != '\\' {
+		if c < utf8.RuneSelf && safeSet[c] {
 			stream.buf = append(stream.buf, c)
 		} else {
 			break
