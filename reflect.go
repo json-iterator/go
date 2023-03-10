@@ -3,6 +3,7 @@ package jsoniter
 import (
 	"fmt"
 	"reflect"
+	"sync"
 	"unsafe"
 
 	"github.com/modern-go/reflect2"
@@ -36,9 +37,36 @@ type checkIsEmpty interface {
 
 type ctx struct {
 	*frozenConfig
-	prefix   string
-	encoders map[reflect2.Type]ValEncoder
-	decoders map[reflect2.Type]ValDecoder
+	prefix string
+	//encoders map[reflect2.Type]ValEncoder
+	//decoders map[reflect2.Type]ValDecoder
+
+	encoders *sync.Map
+	decoders *sync.Map
+}
+
+func (c *ctx) getEncoder(t reflect2.Type) ValEncoder {
+	encoder, found := c.encoders.Load(t)
+	if found {
+		return encoder.(ValEncoder)
+	}
+	return nil
+}
+
+func (c *ctx) addEncoder(t reflect2.Type, v ValEncoder) {
+	c.encoders.Store(t, v)
+}
+
+func (c *ctx) getDecoder(t reflect2.Type) ValDecoder {
+	encoder, found := c.encoders.Load(t)
+	if found {
+		return encoder.(ValDecoder)
+	}
+	return nil
+}
+
+func (c *ctx) addDecoder(t reflect2.Type, v ValDecoder) {
+	c.encoders.Store(t, v)
 }
 
 func (b *ctx) caseSensitive() bool {
@@ -107,8 +135,8 @@ func (cfg *frozenConfig) DecoderOf(typ reflect2.Type) ValDecoder {
 	ctx := &ctx{
 		frozenConfig: cfg,
 		prefix:       "",
-		decoders:     map[reflect2.Type]ValDecoder{},
-		encoders:     map[reflect2.Type]ValEncoder{},
+		decoders:     &sync.Map{},
+		encoders:     &sync.Map{},
 	}
 	ptrType := typ.(*reflect2.UnsafePtrType)
 	decoder = decoderOfType(ctx, ptrType.Elem())
@@ -133,14 +161,14 @@ func decoderOfType(ctx *ctx, typ reflect2.Type) ValDecoder {
 }
 
 func createDecoderOfType(ctx *ctx, typ reflect2.Type) ValDecoder {
-	decoder := ctx.decoders[typ]
+	decoder := ctx.getDecoder(typ)
 	if decoder != nil {
 		return decoder
 	}
 	placeholder := &placeholderDecoder{}
-	ctx.decoders[typ] = placeholder
 	decoder = _createDecoderOfType(ctx, typ)
 	placeholder.decoder = decoder
+	ctx.addDecoder(typ, placeholder)
 	return decoder
 }
 
@@ -196,8 +224,8 @@ func (cfg *frozenConfig) EncoderOf(typ reflect2.Type) ValEncoder {
 	ctx := &ctx{
 		frozenConfig: cfg,
 		prefix:       "",
-		decoders:     map[reflect2.Type]ValDecoder{},
-		encoders:     map[reflect2.Type]ValEncoder{},
+		decoders:     &sync.Map{},
+		encoders:     &sync.Map{},
 	}
 	encoder = encoderOfType(ctx, typ)
 	if typ.LikePtr() {
@@ -236,14 +264,14 @@ func encoderOfType(ctx *ctx, typ reflect2.Type) ValEncoder {
 }
 
 func createEncoderOfType(ctx *ctx, typ reflect2.Type) ValEncoder {
-	encoder := ctx.encoders[typ]
+	encoder := ctx.getEncoder(typ)
 	if encoder != nil {
 		return encoder
 	}
 	placeholder := &placeholderEncoder{}
-	ctx.encoders[typ] = placeholder
 	encoder = _createEncoderOfType(ctx, typ)
 	placeholder.encoder = encoder
+	ctx.addEncoder(typ, placeholder)
 	return encoder
 }
 func _createEncoderOfType(ctx *ctx, typ reflect2.Type) ValEncoder {
