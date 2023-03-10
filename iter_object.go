@@ -162,60 +162,35 @@ func (iter *Iterator) ReadObjectCB(callback func(*Iterator, string) bool) bool {
 	return false
 }
 
-// ReadMapCB read map with callback, the key can be any string
+// ReadMapCB reads a map with a callback where the key can be any string.
 func (iter *Iterator) ReadMapCB(callback func(*Iterator, string) bool) bool {
 	c := iter.nextToken()
-	if c == '{' {
-		if !iter.incrementDepth() {
-			return false
-		}
+	if c != '{' {
+		iter.ReportError("ReadMapCB", "expect {")
+		return false
+	}
+	if !iter.incrementDepth() {
+		return false
+	}
+	for {
 		c = iter.nextToken()
-		if c == '"' {
-			iter.unreadByte()
-			field := iter.ReadString()
-			if iter.nextToken() != ':' {
-				iter.ReportError("ReadMapCB", "expect : after object field, but found "+string([]byte{c}))
-				iter.decrementDepth()
-				return false
-			}
-			if !callback(iter, field) {
-				iter.decrementDepth()
-				return false
-			}
-			c = iter.nextToken()
-			for c == ',' {
-				field = iter.ReadString()
-				if iter.nextToken() != ':' {
-					iter.ReportError("ReadMapCB", "expect : after object field, but found "+string([]byte{c}))
-					iter.decrementDepth()
-					return false
-				}
-				if !callback(iter, field) {
-					iter.decrementDepth()
-					return false
-				}
-				c = iter.nextToken()
-			}
-			if c != '}' {
-				iter.ReportError("ReadMapCB", `object not ended with }`)
-				iter.decrementDepth()
-				return false
-			}
-			return iter.decrementDepth()
-		}
 		if c == '}' {
 			return iter.decrementDepth()
 		}
-		iter.ReportError("ReadMapCB", `expect " after {, but found `+string([]byte{c}))
-		iter.decrementDepth()
-		return false
+		if c != ',' {
+			iter.unreadByte()
+		}
+		field := iter.ReadString()
+		if iter.nextToken() != ':' {
+			iter.ReportError("ReadMapCB", "expect : after object field, but found "+string([]byte{c}))
+			iter.decrementDepth()
+			return false
+		}
+		if !callback(iter, field) {
+			iter.decrementDepth()
+			return false
+		}
 	}
-	if c == 'n' {
-		iter.skipThreeBytes('u', 'l', 'l')
-		return true // null
-	}
-	iter.ReportError("ReadMapCB", `expect { or n, but found `+string([]byte{c}))
-	return false
 }
 
 func (iter *Iterator) readObjectStart() bool {
