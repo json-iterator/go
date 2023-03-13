@@ -315,7 +315,7 @@ func (stream *Stream) WriteString(s string) {
 	i := 0
 	for ; i < valLen; i++ {
 		c := s[i]
-		if c > 31 && c != '"' && c != '\\' {
+		if c < utf8.RuneSelf && safeSet[c] {
 			stream.buf = append(stream.buf, c)
 		} else {
 			break
@@ -362,8 +362,34 @@ func writeStringSlowPath(stream *Stream, i int, s string, valLen int) {
 			start = i
 			continue
 		}
-		i++
-		continue
+		c, size := utf8.DecodeRuneInString(s[i:])
+		if c == utf8.RuneError && size == 1 {
+			if start < i {
+				stream.WriteRaw(s[start:i])
+			}
+			stream.WriteRaw(`\ufffd`)
+			i++
+			start = i
+			continue
+		}
+		// U+2028 is LINE SEPARATOR.
+		// U+2029 is PARAGRAPH SEPARATOR.
+		// They are both technically valid characters in JSON strings,
+		// but don't work in JSONP, which has to be evaluated as JavaScript,
+		// and can lead to security holes there. It is valid JSON to
+		// escape them, so we do so unconditionally.
+		// See http://timelessrepo.com/json-isnt-a-javascript-subset for discussion.
+		if c == '\u2028' || c == '\u2029' {
+			if start < i {
+				stream.WriteRaw(s[start:i])
+			}
+			stream.WriteRaw(`\u202`)
+			stream.writeByte(hex[c&0xF])
+			i += size
+			start = i
+			continue
+		}
+		i += size
 	}
 	if start < len(s) {
 		stream.WriteRaw(s[start:])
