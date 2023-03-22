@@ -130,6 +130,9 @@ func (iter *Iterator) Pool() IteratorPool {
 // Reset reuse iterator instance by specifying another reader
 func (iter *Iterator) Reset(reader io.Reader) *Iterator {
 	iter.reader = reader
+	if iter.buf == nil {
+		iter.buf = make([]byte, 512)
+	}
 	iter.head = 0
 	iter.tail = 0
 	iter.depth = 0
