@@ -34,10 +34,12 @@ func (iter *Iterator) ReadString() (ret string) {
 	return
 }
 
+var byteBufPool = bytebufferpool.Pool{}
+
 func (iter *Iterator) readStringSlowPath() (ret string) {
 	// reduce runtime.growslice
-	b := bytebufferpool.Get()
-	defer bytebufferpool.Put(b)
+	b := byteBufPool.Get()
+	defer byteBufPool.Put(b)
 
 	var c byte
 	for iter.Error == nil {
