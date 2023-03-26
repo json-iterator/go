@@ -2,12 +2,13 @@ package jsoniter
 
 import (
 	"fmt"
-	"github.com/modern-go/reflect2"
 	"reflect"
 	"sort"
 	"strings"
 	"unicode"
 	"unsafe"
+
+	"github.com/modern-go/reflect2"
 )
 
 var typeDecoders = map[string]ValDecoder{}
@@ -363,9 +364,7 @@ func describeStruct(ctx *ctx, typ reflect2.Type) *StructDescriptor {
 					for _, binding := range structDescriptor.Fields {
 						binding.levels = append([]int{i}, binding.levels...)
 						omitempty := binding.Encoder.(*structFieldEncoder).omitempty
-						binding.Encoder = &dereferenceEncoder{binding.Encoder}
 						binding.Encoder = &structFieldEncoder{field, binding.Encoder, omitempty}
-						binding.Decoder = &dereferenceDecoder{ptrType.Elem(), binding.Decoder}
 						binding.Decoder = &structFieldDecoder{field, binding.Decoder}
 						embeddedBindings = append(embeddedBindings, binding)
 					}
