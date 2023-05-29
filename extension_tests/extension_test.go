@@ -1,13 +1,14 @@
 package test
 
 import (
-	"github.com/json-iterator/go"
-	"github.com/modern-go/reflect2"
-	"github.com/stretchr/testify/require"
 	"reflect"
 	"strconv"
 	"testing"
 	"unsafe"
+
+	jsoniter "github.com/json-iterator/go"
+	"github.com/modern-go/reflect2"
+	"github.com/stretchr/testify/require"
 )
 
 type TestObject1 struct {
@@ -59,6 +60,19 @@ func Test_customize_map_key_encoder(t *testing.T) {
 	m = map[int]int{}
 	should.NoError(cfg.UnmarshalFromString(output, &m))
 	should.Equal(map[int]int{1: 2}, m)
+
+	b, err := cfg.MarshalIndent(m, "", "  ")
+	should.NoError(err)
+	should.Equal(`{
+  "2": 2
+}`, string(b))
+
+	cfg = jsoniter.Config{}.Froze() // without testMapKeyExtension
+	b, err = cfg.MarshalIndent(m, "", "  ")
+	should.NoError(err)
+	should.Equal(`{
+  "1": 2
+}`, string(b))
 }
 
 type testMapKeyExtension struct {

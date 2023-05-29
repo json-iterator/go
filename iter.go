@@ -122,6 +122,11 @@ func ParseString(cfg API, input string) *Iterator {
 	return ParseBytes(cfg, []byte(input))
 }
 
+// API returns API
+func (iter *Iterator) API() API {
+	return iter.cfg
+}
+
 // Pool returns a pool can provide more iterator with same configuration
 func (iter *Iterator) Pool() IteratorPool {
 	return iter.cfg
@@ -247,6 +252,15 @@ func (iter *Iterator) readByte() (ret byte) {
 	ret = iter.buf[iter.head]
 	iter.head++
 	return ret
+}
+
+func (iter *Iterator) NextToken() (ret byte) {
+	return iter.nextToken()
+}
+
+func (iter *Iterator) UnreadByte() error {
+	iter.unreadByte()
+	return nil
 }
 
 func (iter *Iterator) loadMore() bool {

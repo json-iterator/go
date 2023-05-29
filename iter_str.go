@@ -3,6 +3,8 @@ package jsoniter
 import (
 	"fmt"
 	"unicode/utf16"
+
+	"github.com/valyala/bytebufferpool"
 )
 
 // ReadString read string from iterator
@@ -32,19 +34,24 @@ func (iter *Iterator) ReadString() (ret string) {
 	return
 }
 
+var byteBufPool = bytebufferpool.Pool{}
+
 func (iter *Iterator) readStringSlowPath() (ret string) {
-	var str []byte
+	// reduce runtime.growslice
+	b := byteBufPool.Get()
+	defer byteBufPool.Put(b)
+
 	var c byte
 	for iter.Error == nil {
 		c = iter.readByte()
 		if c == '"' {
-			return string(str)
+			return string(b.B)
 		}
 		if c == '\\' {
 			c = iter.readByte()
-			str = iter.readEscapedChar(c, str)
+			b.B = iter.readEscapedChar(c, b.B)
 		} else {
-			str = append(str, c)
+			b.WriteByte(c)
 		}
 	}
 	iter.ReportError("readStringSlowPath", "unexpected end of input")

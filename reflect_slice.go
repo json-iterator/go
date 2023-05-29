@@ -2,9 +2,10 @@ package jsoniter
 
 import (
 	"fmt"
-	"github.com/modern-go/reflect2"
 	"io"
 	"unsafe"
+
+	"github.com/modern-go/reflect2"
 )
 
 func decoderOfSlice(ctx *ctx, typ reflect2.Type) ValDecoder {
@@ -13,10 +14,39 @@ func decoderOfSlice(ctx *ctx, typ reflect2.Type) ValDecoder {
 	return &sliceDecoder{sliceType, decoder}
 }
 
+type SliceEncoderConstructor struct {
+	SliceType    *reflect2.UnsafeSliceType
+	ElemEncoder  ValEncoder
+	API          API
+	DecorateFunc func(sliceEncoder ValEncoder) ValEncoder
+}
+
+func updateSliceEncoderConstructor(v *SliceEncoderConstructor, exts ...Extension) {
+	for _, ext := range exts {
+		if e, ok := ext.(interface {
+			UpdateSliceEncoderConstructor(v *SliceEncoderConstructor)
+		}); ok {
+			e.UpdateSliceEncoderConstructor(v)
+		}
+	}
+}
+
 func encoderOfSlice(ctx *ctx, typ reflect2.Type) ValEncoder {
 	sliceType := typ.(*reflect2.UnsafeSliceType)
-	encoder := encoderOfType(ctx.append("[sliceElem]"), sliceType.Elem())
-	return &sliceEncoder{sliceType, encoder}
+	elemEncoder := encoderOfType(ctx.append("[sliceElem]"), sliceType.Elem())
+	c := &SliceEncoderConstructor{
+		SliceType:   sliceType,
+		ElemEncoder: elemEncoder,
+		API:         ctx,
+		DecorateFunc: func(sliceEncoder ValEncoder) ValEncoder {
+			return sliceEncoder
+		},
+	}
+	updateSliceEncoderConstructor(c, extensions...)
+	updateSliceEncoderConstructor(c, ctx.encoderExtension)
+	updateSliceEncoderConstructor(c, ctx.extraExtensions...)
+	enc := &sliceEncoder{sliceType, c.ElemEncoder}
+	return c.DecorateFunc(enc)
 }
 
 type sliceEncoder struct {
