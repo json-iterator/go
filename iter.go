@@ -258,6 +258,11 @@ func (iter *Iterator) NextToken() (ret byte) {
 	return iter.nextToken()
 }
 
+func (iter *Iterator) UnreadByte() error {
+	iter.unreadByte()
+	return nil
+}
+
 func (iter *Iterator) loadMore() bool {
 	if iter.reader == nil {
 		if iter.Error == nil {
