@@ -12,7 +12,7 @@ func (iter *Iterator) ReadString() (ret string) {
 		for i := iter.head; i < iter.tail; i++ {
 			c := iter.buf[i]
 			if c == '"' {
-				ret = string(iter.buf[iter.head:i])
+				ret = b2s(iter.buf[iter.head:i])
 				iter.head = i + 1
 				return ret
 			} else if c == '\\' {
@@ -38,7 +38,7 @@ func (iter *Iterator) readStringSlowPath() (ret string) {
 	for iter.Error == nil {
 		c = iter.readByte()
 		if c == '"' {
-			return string(str)
+			return b2s(str)
 		}
 		if c == '\\' {
 			c = iter.readByte()
