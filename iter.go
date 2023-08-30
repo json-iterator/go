@@ -93,6 +93,19 @@ func NewIterator(cfg API) *Iterator {
 	}
 }
 
+// An IteratorError is a typed description of an Iterator error with additional context fields about the error
+type IteratorError struct {
+	Offset    int
+	Operation string
+	Msg       string
+	Peek      string
+	Context   string
+}
+
+func (e *IteratorError) Error() string {
+	return fmt.Sprintf("%s: %s, error found in #%v byte of ...|%s|..., bigger context ...|%s|...", e.Operation, e.Msg, e.Offset, e.Peek, e.Context)
+}
+
 // Parse creates an Iterator instance from io.Reader
 func Parse(cfg API, reader io.Reader, bufSize int) *Iterator {
 	return &Iterator{
@@ -221,8 +234,13 @@ func (iter *Iterator) ReportError(operation string, msg string) {
 		contextEnd = iter.tail
 	}
 	context := string(iter.buf[contextStart:contextEnd])
-	iter.Error = fmt.Errorf("%s: %s, error found in #%v byte of ...|%s|..., bigger context ...|%s|...",
-		operation, msg, iter.head-peekStart, parsing, context)
+	iter.Error = &IteratorError{
+		Offset:    iter.head - peekStart,
+		Operation: operation,
+		Msg:       msg,
+		Peek:      parsing,
+		Context:   context,
+	}
 }
 
 // CurrentBuffer gets current buffer as string for debugging purpose
