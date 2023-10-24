@@ -38,7 +38,7 @@ func TestEncodeEscape(t *testing.T) {
 	stdenc.SetEscapeHTML(false)
 	err = stdenc.Encode(container)
 	should.Nil(err)
-	stdout := string(stdbuf.Bytes())
+	stdout := stdbuf.String()
 	if stdout[len(stdout)-1:] == "\n" {
 		stdout = stdout[:len(stdout)-1]
 	}
