@@ -60,7 +60,7 @@ type Decoder struct {
 	iter *Iterator
 }
 
-// Decode decode JSON into interface{}
+// Decode JSON into interface{}
 func (adapter *Decoder) Decode(obj interface{}) error {
 	if adapter.iter.head == adapter.iter.tail && adapter.iter.reader != nil {
 		if !adapter.iter.loadMore() {
