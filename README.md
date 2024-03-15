@@ -12,7 +12,7 @@ A high-performance 100% compatible drop-in replacement of "encoding/json"
 
 ![benchmark](http://jsoniter.com/benchmarks/go-benchmark.png)
 
-Source code: [!Link](https://github.com/json-iterator/go-benchmark/blob/master/src/github.com/json-iterator/go-benchmark/benchmark_medium_payload_test.go)
+Source code: https://github.com/json-iterator/go-benchmark/blob/master/src/github.com/json-iterator/go-benchmark/benchmark_medium_payload_test.go
 
 Raw Result (easyjson requires static code generation)
 
