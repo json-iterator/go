@@ -30,7 +30,7 @@ tutorials:
 
 Here's how to get started with your code contribution:
 
-1.  Create your own fork of go
+1.  Create your own fork of go(json-iterator/go)
 2.  Do the changes in your fork
 3.  If you like the change and think the project could use it, send a
     pull request
