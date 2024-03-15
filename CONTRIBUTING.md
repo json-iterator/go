@@ -55,7 +55,7 @@ When filing an issue, make sure to answer these four questions:
 1.  What version of go(json-iterator) are you using?
 2.  What did you do?
 3.  What did you expect to see?
-4  What did you see instead?
+4.  What did you see instead?
 
 ## Suggest a feature or enhancement
 
