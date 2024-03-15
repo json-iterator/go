@@ -78,10 +78,8 @@ Please see [out contributing guidelines](CONTRIBUTING.md) to help us improve thi
 
 # Contributors
 
-- [thockin](https://github.com/thockin)
-- [mattn](https://github.com/mattn)
-- [cch123](https://github.com/cch123)
-- [Oleg Shaldybin](https://github.com/olegshaldybin)
-- [Jason Toffaletti](https://github.com/toffaletti)
+Thanks to all the people who already contributed!
 
-Report issue or pull request, or email taowen@gmail.com, or [![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/json-iterator/Lobby)
+<a href="https://github.com/json-iterator/go/graphs/contributors">
+  <img src="https://contributors-img.web.app/image?repo=json-iterator/go" />
+</a>
