@@ -74,7 +74,11 @@ go get github.com/json-iterator/go
 
 # Contribution Welcomed !
 
-Contributors
+## Contributing
+
+Please see [out contributing guidelines](CONTRIBUTING.md) to help us improve this library!
+
+# Contributors
 
 - [thockin](https://github.com/thockin)
 - [mattn](https://github.com/mattn)
