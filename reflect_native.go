@@ -206,7 +206,8 @@ type stringCodec struct {
 }
 
 func (codec *stringCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
-	*((*string)(ptr)) = iter.ReadString()
+	data := iter.ReadStringAsSlice()
+	*((*string)(ptr)) = string(data)
 }
 
 func (codec *stringCodec) Encode(ptr unsafe.Pointer, stream *Stream) {
@@ -417,8 +418,8 @@ func (codec *base64Codec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	}
 	switch iter.WhatIsNext() {
 	case StringValue:
-		src := iter.ReadString()
-		dst, err := base64.StdEncoding.DecodeString(src)
+		src := iter.ReadStringAsSlice()
+		dst, err := base64.StdEncoding.DecodeString(string(src))
 		if err != nil {
 			iter.ReportError("decode base64", err.Error())
 		} else {

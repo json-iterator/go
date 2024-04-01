@@ -1,10 +1,12 @@
 package extra
 
 import (
-	"github.com/json-iterator/go"
-	"github.com/modern-go/reflect2"
 	"unicode/utf8"
 	"unsafe"
+
+	"github.com/modern-go/reflect2"
+
+	"github.com/json-iterator/go"
 )
 
 // safeSet holds the value true if the ASCII character with the given array
@@ -142,19 +144,14 @@ func (codec *binaryAsStringCodec) Decode(ptr unsafe.Pointer, iter *jsoniter.Iter
 		b := rawBytes[i]
 		if b == '\\' {
 			b2 := rawBytes[i+1]
-			if b2 != '\\' {
-				iter.ReportError("decode binary as string", `\\x is only supported escape`)
+			if b2 != 'x' {
+				iter.ReportError("decode binary as string", `\x is only supported escape`)
 				return
 			}
 			b3 := rawBytes[i+2]
-			if b3 != 'x' {
-				iter.ReportError("decode binary as string", `\\x is only supported escape`)
-				return
-			}
 			b4 := rawBytes[i+3]
-			b5 := rawBytes[i+4]
-			i += 4
-			b = readHex(iter, b4, b5)
+			i += 3
+			b = readHex(iter, b3, b4)
 		}
 		bytes = append(bytes, b)
 	}

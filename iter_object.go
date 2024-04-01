@@ -59,7 +59,7 @@ func (iter *Iterator) readFieldHash() int64 {
 			b := iter.buf[i]
 			if b == '\\' {
 				iter.head = i
-				for _, b := range iter.readStringSlowPath() {
+				for _, b := range iter.readStringSlowPathAsSlice() {
 					if 'A' <= b && b <= 'Z' && !iter.cfg.caseSensitive {
 						b += 'a' - 'A'
 					}
@@ -110,7 +110,6 @@ func calcHash(str string, caseSensitive bool) int64 {
 // ReadObjectCB read object with callback, the key is ascii only and field name not copied
 func (iter *Iterator) ReadObjectCB(callback func(*Iterator, string) bool) bool {
 	c := iter.nextToken()
-	var field string
 	if c == '{' {
 		if !iter.incrementDepth() {
 			return false
@@ -118,23 +117,23 @@ func (iter *Iterator) ReadObjectCB(callback func(*Iterator, string) bool) bool {
 		c = iter.nextToken()
 		if c == '"' {
 			iter.unreadByte()
-			field = iter.ReadString()
+			field := iter.ReadStringAsSlice()
 			c = iter.nextToken()
 			if c != ':' {
 				iter.ReportError("ReadObject", "expect : after object field, but found "+string([]byte{c}))
 			}
-			if !callback(iter, field) {
+			if !callback(iter, string(field)) {
 				iter.decrementDepth()
 				return false
 			}
 			c = iter.nextToken()
 			for c == ',' {
-				field = iter.ReadString()
+				field = iter.ReadStringAsSlice()
 				c = iter.nextToken()
 				if c != ':' {
 					iter.ReportError("ReadObject", "expect : after object field, but found "+string([]byte{c}))
 				}
-				if !callback(iter, field) {
+				if !callback(iter, string(field)) {
 					iter.decrementDepth()
 					return false
 				}
@@ -172,25 +171,25 @@ func (iter *Iterator) ReadMapCB(callback func(*Iterator, string) bool) bool {
 		c = iter.nextToken()
 		if c == '"' {
 			iter.unreadByte()
-			field := iter.ReadString()
+			field := iter.ReadStringAsSlice()
 			if iter.nextToken() != ':' {
 				iter.ReportError("ReadMapCB", "expect : after object field, but found "+string([]byte{c}))
 				iter.decrementDepth()
 				return false
 			}
-			if !callback(iter, field) {
+			if !callback(iter, string(field)) {
 				iter.decrementDepth()
 				return false
 			}
 			c = iter.nextToken()
 			for c == ',' {
-				field = iter.ReadString()
+				field = iter.ReadStringAsSlice()
 				if iter.nextToken() != ':' {
 					iter.ReportError("ReadMapCB", "expect : after object field, but found "+string([]byte{c}))
 					iter.decrementDepth()
 					return false
 				}
-				if !callback(iter, field) {
+				if !callback(iter, string(field)) {
 					iter.decrementDepth()
 					return false
 				}

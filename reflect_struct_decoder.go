@@ -517,21 +517,10 @@ func (decoder *generalStructDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) 
 }
 
 func (decoder *generalStructDecoder) decodeOneField(ptr unsafe.Pointer, iter *Iterator) {
-	var field string
-	var fieldDecoder *structFieldDecoder
-	if iter.cfg.objectFieldMustBeSimpleString {
-		fieldBytes := iter.ReadStringAsSlice()
-		field = *(*string)(unsafe.Pointer(&fieldBytes))
-		fieldDecoder = decoder.fields[field]
-		if fieldDecoder == nil && !iter.cfg.caseSensitive {
-			fieldDecoder = decoder.fields[strings.ToLower(field)]
-		}
-	} else {
-		field = iter.ReadString()
-		fieldDecoder = decoder.fields[field]
-		if fieldDecoder == nil && !iter.cfg.caseSensitive {
-			fieldDecoder = decoder.fields[strings.ToLower(field)]
-		}
+	field := string(iter.ReadStringAsSlice())
+	fieldDecoder := decoder.fields[field]
+	if fieldDecoder == nil && !iter.cfg.caseSensitive {
+		fieldDecoder = decoder.fields[strings.ToLower(field)]
 	}
 	if fieldDecoder == nil {
 		if decoder.disallowUnknownFields {
@@ -1067,7 +1056,8 @@ func (decoder *stringModeStringDecoder) Decode(ptr unsafe.Pointer, iter *Iterato
 	str := *((*string)(ptr))
 	tempIter := decoder.cfg.BorrowIterator([]byte(str))
 	defer decoder.cfg.ReturnIterator(tempIter)
-	*((*string)(ptr)) = tempIter.ReadString()
+	data := tempIter.ReadStringAsSlice()
+	*((*string)(ptr)) = string(data)
 }
 
 type stringModeNumberDecoder struct {

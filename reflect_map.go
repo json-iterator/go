@@ -305,7 +305,7 @@ func (encoder *sortKeysMapEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 		}
 		encodedKey := subStream.Buffer()[subStreamIndex:]
 		subIter.ResetBytes(encodedKey)
-		decodedKey := subIter.ReadString()
+		decodedKey := string(subIter.ReadStringAsSlice())
 		if stream.indention > 0 {
 			subStream.writeTwoBytes(byte(':'), byte(' '))
 		} else {

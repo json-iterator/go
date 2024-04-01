@@ -1,4 +1,5 @@
-//+build !jsoniter_sloppy
+//go:build !jsoniter_sloppy
+// +build !jsoniter_sloppy
 
 package jsoniter
 
@@ -61,7 +62,7 @@ func (iter *Iterator) trySkipNumber() bool {
 func (iter *Iterator) skipString() {
 	if !iter.trySkipString() {
 		iter.unreadByte()
-		iter.ReadString()
+		iter.ReadStringAsSlice()
 	}
 }
 

@@ -2,9 +2,10 @@ package jsoniter
 
 import (
 	"encoding/json"
-	"github.com/modern-go/reflect2"
 	"strconv"
 	"unsafe"
+
+	"github.com/modern-go/reflect2"
 )
 
 type Number string
@@ -61,7 +62,7 @@ type jsonNumberCodec struct {
 func (codec *jsonNumberCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	switch iter.WhatIsNext() {
 	case StringValue:
-		*((*json.Number)(ptr)) = json.Number(iter.ReadString())
+		*((*json.Number)(ptr)) = json.Number(iter.ReadStringAsSlice())
 	case NilValue:
 		iter.skipFourBytes('n', 'u', 'l', 'l')
 		*((*json.Number)(ptr)) = ""
@@ -89,12 +90,14 @@ type jsoniterNumberCodec struct {
 func (codec *jsoniterNumberCodec) Decode(ptr unsafe.Pointer, iter *Iterator) {
 	switch iter.WhatIsNext() {
 	case StringValue:
-		*((*Number)(ptr)) = Number(iter.ReadString())
+		num := iter.ReadStringAsSlice()
+		*((*Number)(ptr)) = Number(string(num))
 	case NilValue:
 		iter.skipFourBytes('n', 'u', 'l', 'l')
 		*((*Number)(ptr)) = ""
 	default:
-		*((*Number)(ptr)) = Number([]byte(iter.readNumberAsString()))
+		num := iter.ReadStringAsSlice()
+		*((*Number)(ptr)) = Number(string(num))
 	}
 }
 

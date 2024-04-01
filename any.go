@@ -3,11 +3,12 @@ package jsoniter
 import (
 	"errors"
 	"fmt"
-	"github.com/modern-go/reflect2"
 	"io"
 	"reflect"
 	"strconv"
 	"unsafe"
+
+	"github.com/modern-go/reflect2"
 )
 
 // Any generic object representation.
@@ -155,7 +156,7 @@ func (iter *Iterator) readAny() Any {
 	switch c {
 	case '"':
 		iter.unreadByte()
-		return &stringAny{baseAny{}, iter.ReadString()}
+		return &stringAny{baseAny{}, string(iter.ReadStringAsSlice())}
 	case 'n':
 		iter.skipThreeBytes('u', 'l', 'l') // null
 		return &nilAny{}

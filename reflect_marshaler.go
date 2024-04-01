@@ -217,8 +217,8 @@ func (decoder *textUnmarshalerDecoder) Decode(ptr unsafe.Pointer, iter *Iterator
 		obj = valType.UnsafeIndirect(ptr)
 	}
 	unmarshaler := (obj).(encoding.TextUnmarshaler)
-	str := iter.ReadString()
-	err := unmarshaler.UnmarshalText([]byte(str))
+	str := iter.ReadStringAsSlice()
+	err := unmarshaler.UnmarshalText(str)
 	if err != nil {
 		iter.ReportError("textUnmarshalerDecoder", err.Error())
 	}

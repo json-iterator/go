@@ -7,38 +7,44 @@ import (
 
 // ReadString read string from iterator
 func (iter *Iterator) ReadString() (ret string) {
+	return string(iter.ReadStringAsSlice())
+}
+
+// ReadStringAsSlice read string from iterator without copying into string form.
+// The []byte can not be kept, as it will change after next iterator call.
+func (iter *Iterator) ReadStringAsSlice() (ret []byte) {
 	c := iter.nextToken()
 	if c == '"' {
 		for i := iter.head; i < iter.tail; i++ {
 			c := iter.buf[i]
 			if c == '"' {
-				ret = string(iter.buf[iter.head:i])
+				head := iter.head
 				iter.head = i + 1
-				return ret
+				return iter.buf[head:i]
 			} else if c == '\\' {
 				break
 			} else if c < ' ' {
-				iter.ReportError("ReadString",
+				iter.ReportError("ReadStringAsSlice",
 					fmt.Sprintf(`invalid control character found: %d`, c))
 				return
 			}
 		}
-		return iter.readStringSlowPath()
+		return iter.readStringSlowPathAsSlice()
 	} else if c == 'n' {
 		iter.skipThreeBytes('u', 'l', 'l')
-		return ""
+		return
 	}
-	iter.ReportError("ReadString", `expects " or n, but found `+string([]byte{c}))
+	iter.ReportError("ReadStringAsSlice", `expects " or n, but found `+string([]byte{c}))
 	return
 }
 
-func (iter *Iterator) readStringSlowPath() (ret string) {
+func (iter *Iterator) readStringSlowPathAsSlice() (ret []byte) {
 	var str []byte
 	var c byte
 	for iter.Error == nil {
 		c = iter.readByte()
 		if c == '"' {
-			return string(str)
+			return str
 		}
 		if c == '\\' {
 			c = iter.readByte()
@@ -47,7 +53,7 @@ func (iter *Iterator) readStringSlowPath() (ret string) {
 			str = append(str, c)
 		}
 	}
-	iter.ReportError("readStringSlowPath", "unexpected end of input")
+	iter.ReportError("readStringSlowPathAsSlice", "unexpected end of input")
 	return
 }
 
@@ -109,38 +115,6 @@ func (iter *Iterator) readEscapedChar(c byte, str []byte) []byte {
 		return nil
 	}
 	return str
-}
-
-// ReadStringAsSlice read string from iterator without copying into string form.
-// The []byte can not be kept, as it will change after next iterator call.
-func (iter *Iterator) ReadStringAsSlice() (ret []byte) {
-	c := iter.nextToken()
-	if c == '"' {
-		for i := iter.head; i < iter.tail; i++ {
-			// require ascii string and no escape
-			// for: field name, base64, number
-			if iter.buf[i] == '"' {
-				// fast path: reuse the underlying buffer
-				ret = iter.buf[iter.head:i]
-				iter.head = i + 1
-				return ret
-			}
-		}
-		readLen := iter.tail - iter.head
-		copied := make([]byte, readLen, readLen*2)
-		copy(copied, iter.buf[iter.head:iter.tail])
-		iter.head = iter.tail
-		for iter.Error == nil {
-			c := iter.readByte()
-			if c == '"' {
-				return copied
-			}
-			copied = append(copied, c)
-		}
-		return copied
-	}
-	iter.ReportError("ReadStringAsSlice", `expects " or n, but found `+string([]byte{c}))
-	return
 }
 
 func (iter *Iterator) readU4() (ret rune) {
