@@ -2,10 +2,11 @@ package misc_tests
 
 import (
 	"encoding/json"
-	"github.com/json-iterator/go"
-	"github.com/stretchr/testify/require"
 	"strings"
 	"testing"
+
+	jsoniter "github.com/json-iterator/go"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_jsoniter_RawMessage(t *testing.T) {
@@ -58,7 +59,26 @@ func Test_marshal_nil_json_raw_message(t *testing.T) {
 	a.Nil2 = []byte(`Any`)
 	should.Nil(jsoniter.Unmarshal(aout, &a))
 	should.Nil(a.Nil1)
-	should.Nil(a.Nil2)
+	should.Equal(a.Nil2, json.RawMessage("null"))
+}
+
+func Test_unmarshal_nil_json_raw_message_compatibility(t *testing.T) {
+	type A struct {
+		Nil1 json.RawMessage `json:"raw1"`
+		Nil2 json.RawMessage `json:"raw2"`
+	}
+
+	a1 := A{}
+	a2 := A{}
+	should := require.New(t)
+	data := []byte(`{"raw1":null}`)
+	err1 := json.Unmarshal(data, &a1)
+	err2 := jsoniter.Unmarshal(data, &a2)
+	should.Equal(a1.Nil1, a2.Nil1)
+	should.Nil(a1.Nil2)
+	should.Nil(a2.Nil2)
+	should.Nil(err1)
+	should.Nil(err2)
 }
 
 func Test_raw_message_memory_not_copied_issue(t *testing.T) {
