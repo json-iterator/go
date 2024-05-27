@@ -16,6 +16,8 @@ const maxUint = ^uint(0)
 const maxInt = int(maxUint >> 1)
 const minInt = -maxInt - 1
 
+var unmarshalerType = reflect2.TypeOfPtr((*json.Unmarshaler)(nil)).Elem()
+
 // RegisterFuzzyDecoders decode input from PHP with tolerance.
 // It will handle string/number auto conversation, and treat empty [] as empty struct.
 func RegisterFuzzyDecoders() {
@@ -150,6 +152,10 @@ type tolerateEmptyArrayExtension struct {
 }
 
 func (extension *tolerateEmptyArrayExtension) DecorateDecoder(typ reflect2.Type, decoder jsoniter.ValDecoder) jsoniter.ValDecoder {
+	ptrType := reflect2.PtrTo(typ)
+	if ptrType.Implements(unmarshalerType) || typ.Implements(unmarshalerType) {
+		return decoder
+	}
 	if typ.Kind() == reflect.Struct || typ.Kind() == reflect.Map {
 		return &tolerateEmptyArrayDecoder{decoder}
 	}
