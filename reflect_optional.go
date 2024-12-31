@@ -1,8 +1,9 @@
 package jsoniter
 
 import (
-	"github.com/modern-go/reflect2"
 	"unsafe"
+
+	"github.com/modern-go/reflect2"
 )
 
 func decoderOfOptional(ctx *ctx, typ reflect2.Type) ValDecoder {
@@ -16,7 +17,7 @@ func encoderOfOptional(ctx *ctx, typ reflect2.Type) ValEncoder {
 	ptrType := typ.(*reflect2.UnsafePtrType)
 	elemType := ptrType.Elem()
 	elemEncoder := encoderOfType(ctx, elemType)
-	encoder := &OptionalEncoder{elemEncoder}
+	encoder := &OptionalEncoder{ValueEncoder: elemEncoder, seen: make(map[unsafe.Pointer]bool, 1)}
 	return encoder
 }
 
@@ -61,13 +62,22 @@ func (decoder *dereferenceDecoder) Decode(ptr unsafe.Pointer, iter *Iterator) {
 
 type OptionalEncoder struct {
 	ValueEncoder ValEncoder
+	seen         map[unsafe.Pointer]bool
 }
 
 func (encoder *OptionalEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
-	if *((*unsafe.Pointer)(ptr)) == nil {
+	ptr = *((*unsafe.Pointer)(ptr))
+	if encoder.seen[ptr] {
+		stream.Error = ErrEncounterCycle
+		return
+	}
+	encoder.seen[ptr] = true
+	defer delete(encoder.seen, ptr)
+
+	if ptr == nil {
 		stream.WriteNil()
 	} else {
-		encoder.ValueEncoder.Encode(*((*unsafe.Pointer)(ptr)), stream)
+		encoder.ValueEncoder.Encode(ptr, stream)
 	}
 }
 

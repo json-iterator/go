@@ -1,8 +1,11 @@
 package jsoniter
 
 import (
+	"errors"
 	"io"
 )
+
+var ErrEncounterCycle = errors.New("encountered a cycle")
 
 // stream is a io.Writer like object, with JSON specific write functions.
 // Error is not returned as return value, but stored as Error member on this stream instance.

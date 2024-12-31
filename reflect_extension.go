@@ -2,12 +2,13 @@ package jsoniter
 
 import (
 	"fmt"
-	"github.com/modern-go/reflect2"
 	"reflect"
 	"sort"
 	"strings"
 	"unicode"
 	"unsafe"
+
+	"github.com/modern-go/reflect2"
 )
 
 var typeDecoders = map[string]ValDecoder{}
@@ -325,7 +326,7 @@ func _getTypeEncoderFromExtension(ctx *ctx, typ reflect2.Type) ValEncoder {
 		typePtr := typ.(*reflect2.UnsafePtrType)
 		encoder := typeEncoders[typePtr.Elem().String()]
 		if encoder != nil {
-			return &OptionalEncoder{encoder}
+			return &OptionalEncoder{ValueEncoder: encoder, seen: make(map[unsafe.Pointer]bool, 1)}
 		}
 	}
 	return nil

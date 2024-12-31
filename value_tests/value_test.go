@@ -3,10 +3,11 @@ package test
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/json-iterator/go"
+	"testing"
+
+	jsoniter "github.com/json-iterator/go"
 	"github.com/modern-go/reflect2"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 type unmarshalCase struct {
@@ -21,6 +22,8 @@ var unmarshalCases []unmarshalCase
 var marshalCases = []interface{}{
 	nil,
 }
+
+var marshalSelfRecursiveCases = []interface{}{}
 
 type selectedMarshalCase struct {
 	marshalCase interface{}
@@ -75,6 +78,18 @@ func Test_marshal(t *testing.T) {
 			output2, err2 := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(testCase)
 			should.NoError(err2, "jsoniter")
 			should.Equal(string(output1), string(output2))
+		})
+	}
+}
+
+func Test_marshal_self_recursive(t *testing.T) {
+	for i, testCase := range marshalSelfRecursiveCases {
+		t.Run(fmt.Sprintf("[%v]%s", i, reflect2.TypeOf(testCase).String()), func(t *testing.T) {
+			should := require.New(t)
+			_, err1 := json.Marshal(testCase)
+			should.ErrorContains(err1, "encountered a cycle")
+			_, err2 := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(testCase)
+			should.ErrorContains(err2, "encountered a cycle")
 		})
 	}
 }

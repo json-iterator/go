@@ -2,10 +2,11 @@ package jsoniter
 
 import (
 	"fmt"
-	"github.com/modern-go/reflect2"
 	"io"
 	"reflect"
 	"unsafe"
+
+	"github.com/modern-go/reflect2"
 )
 
 func encoderOfStruct(ctx *ctx, typ reflect2.Type) ValEncoder {
@@ -54,7 +55,7 @@ func createCheckIsEmpty(ctx *ctx, typ reflect2.Type) checkIsEmpty {
 	kind := typ.Kind()
 	switch kind {
 	case reflect.Interface:
-		return &dynamicEncoder{typ}
+		return &dynamicEncoder{valType: typ, seen: make(map[unsafe.Pointer]bool, 1)}
 	case reflect.Struct:
 		return &structEncoder{typ: typ}
 	case reflect.Array:

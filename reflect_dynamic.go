@@ -1,16 +1,25 @@
 package jsoniter
 
 import (
-	"github.com/modern-go/reflect2"
 	"reflect"
 	"unsafe"
+
+	"github.com/modern-go/reflect2"
 )
 
 type dynamicEncoder struct {
 	valType reflect2.Type
+	seen    map[unsafe.Pointer]bool
 }
 
 func (encoder *dynamicEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
+	if encoder.seen[ptr] {
+		stream.Error = ErrEncounterCycle
+		return
+	}
+	encoder.seen[ptr] = true
+	defer delete(encoder.seen, ptr)
+
 	obj := encoder.valType.UnsafeIndirect(ptr)
 	stream.WriteVal(obj)
 }

@@ -24,4 +24,8 @@ func init() {
 		ptr:   (*[]byte)(nil),
 		input: `"c3ViamVjdHM\/X2Q9MQ=="`,
 	})
+
+	selfRecursive := []interface{}{nil}
+	selfRecursive[0] = selfRecursive
+	marshalSelfRecursiveCases = append(marshalSelfRecursiveCases, selfRecursive)
 }

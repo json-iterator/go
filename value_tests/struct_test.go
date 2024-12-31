@@ -205,6 +205,10 @@ func init() {
 			"should not marshal",
 		},
 	)
+
+	selfRecursive := &structRecursive{}
+	selfRecursive.Me = selfRecursive
+	marshalSelfRecursiveCases = append(marshalSelfRecursiveCases, selfRecursive)
 }
 
 type StructVarious struct {
