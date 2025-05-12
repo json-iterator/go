@@ -11,7 +11,7 @@ import (
 func Benchmark_stream_encode_big_object(b *testing.B) {
 	var buf bytes.Buffer
 	var stream = jsoniter.NewStream(jsoniter.ConfigDefault, &buf, 100)
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		buf.Reset()
 		stream.Reset(&buf)
 		encodeObject(stream)

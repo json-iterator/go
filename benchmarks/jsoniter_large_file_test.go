@@ -2,10 +2,11 @@ package test
 
 import (
 	"encoding/json"
-	"github.com/json-iterator/go"
 	"io/ioutil"
 	"os"
 	"testing"
+
+	jsoniter "github.com/json-iterator/go"
 )
 
 //func Test_large_file(t *testing.T) {
@@ -126,7 +127,7 @@ func init() {
 */
 func Benchmark_jsoniter_large_file(b *testing.B) {
 	b.ReportAllocs()
-	for n := 0; n < b.N; n++ {
+	for b.Loop() {
 		file, _ := os.Open("/tmp/large-file.json")
 		iter := jsoniter.Parse(jsoniter.ConfigDefault, file, 4096)
 		count := 0
@@ -145,7 +146,7 @@ func Benchmark_jsoniter_large_file(b *testing.B) {
 
 func Benchmark_json_large_file(b *testing.B) {
 	b.ReportAllocs()
-	for n := 0; n < b.N; n++ {
+	for b.Loop() {
 		file, _ := os.Open("/tmp/large-file.json")
 		bytes, _ := ioutil.ReadAll(file)
 		file.Close()
