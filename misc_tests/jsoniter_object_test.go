@@ -3,12 +3,12 @@ package misc_tests
 import (
 	"bytes"
 	"reflect"
-	"testing"
-
-	"github.com/json-iterator/go"
-	"github.com/stretchr/testify/require"
 	"strings"
+	"testing"
 	"time"
+
+	jsoniter "github.com/json-iterator/go"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_empty_object(t *testing.T) {
@@ -81,6 +81,51 @@ func Test_write_object(t *testing.T) {
 	stream.Flush()
 	should.Nil(stream.Error)
 	should.Equal("{\n  \"hello\": 1,\n  \"world\": 2\n}", buf.String())
+}
+
+func Test_ReadStringAsSlice(t *testing.T) {
+	testCase := `{"a": "{object \"a\": \"b\"}"}`
+	should := require.New(t)
+	iter := jsoniter.ParseString(jsoniter.ConfigDefault, testCase)
+	field := iter.ReadObject()
+	should.Equal("a", field)
+	value := iter.ReadStringAsSlice()
+	should.Equal("{object \"a\": \"b\"}", string(value))
+	field = iter.ReadObject()
+	should.Equal("", field)
+
+	iter = jsoniter.ParseString(jsoniter.ConfigDefault, testCase)
+	should.True(iter.ReadObjectCB(func(iter *jsoniter.Iterator, field string) bool {
+		should.Equal("a", field)
+		iter.Skip()
+		return true
+	}))
+
+}
+
+func Test_ReadStringAsSlice_escapes(t *testing.T) {
+	should := require.New(t)
+
+	testCases := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{"simple_string", `"hello"`, "hello"},
+		{"escaped_quotes", `"say \"hello\""`, `say "hello"`},
+		{"escaped_backslash", `"path\\to\\file"`, `path\to\file`},
+		{"escaped_newline", `"line1\nline2"`, "line1\nline2"},
+		{"escaped_tab", `"col1\tcol2"`, "col1\tcol2"},
+		{"complex_escape", `"\"quotes\" and \\backslashes\\"`, `"quotes" and \backslashes\`},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			iter := jsoniter.ParseString(jsoniter.ConfigDefault, tc.input)
+			value := iter.ReadStringAsSlice()
+			should.Equal(tc.expected, string(value), "Failed for input: %s", tc.input)
+		})
+	}
 }
 
 func Test_reader_and_load_more(t *testing.T) {
