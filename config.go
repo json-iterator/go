@@ -284,26 +284,35 @@ func (cfg *frozenConfig) cleanEncoders() {
 }
 
 func (cfg *frozenConfig) MarshalToString(v interface{}) (string, error) {
-	stream := cfg.BorrowStream(nil)
-	defer cfg.ReturnStream(stream)
-	stream.WriteVal(v)
-	if stream.Error != nil {
-		return "", stream.Error
+	result, err := cfg.marshalToStream(v)
+	if err != nil {
+		return "", err
 	}
-	return string(stream.Buffer()), nil
+
+	return string(result), nil
 }
 
 func (cfg *frozenConfig) Marshal(v interface{}) ([]byte, error) {
+	result, err := cfg.marshalToStream(v)
+	if err != nil {
+		return nil, err
+	}
+
+	copied := make([]byte, len(result))
+	copy(copied, result)
+	return copied, nil
+}
+
+// marshalToStream writes v to a borrowed stream and returns stream.Buffer() with error.
+func (cfg *frozenConfig) marshalToStream(v interface{}) ([]byte, error) {
 	stream := cfg.BorrowStream(nil)
 	defer cfg.ReturnStream(stream)
+
 	stream.WriteVal(v)
 	if stream.Error != nil {
 		return nil, stream.Error
 	}
-	result := stream.Buffer()
-	copied := make([]byte, len(result))
-	copy(copied, result)
-	return copied, nil
+	return stream.Buffer(), nil
 }
 
 func (cfg *frozenConfig) MarshalIndent(v interface{}, prefix, indent string) ([]byte, error) {
