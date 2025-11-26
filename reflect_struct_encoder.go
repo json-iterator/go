@@ -2,11 +2,23 @@ package jsoniter
 
 import (
 	"fmt"
-	"github.com/modern-go/reflect2"
 	"io"
 	"reflect"
 	"unsafe"
+
+	"github.com/modern-go/reflect2"
 )
+
+// checkIsZero is an interface for checking if a value is zero (for omitzero support)
+type checkIsZero interface {
+	IsZero(ptr unsafe.Pointer) bool
+}
+
+// isZeroer is the interface implemented by types that can report whether their value is zero.
+// This is compatible with Go 1.24's encoding/json omitzero feature.
+type isZeroer interface {
+	IsZero() bool
+}
 
 func encoderOfStruct(ctx *ctx, typ reflect2.Type) ValEncoder {
 	type bindingTo struct {
@@ -70,6 +82,206 @@ func createCheckIsEmpty(ctx *ctx, typ reflect2.Type) checkIsEmpty {
 	}
 }
 
+// isZeroerType is the reflect2.Type for the isZeroer interface
+var isZeroerType = reflect2.TypeOfPtr((*isZeroer)(nil)).Elem()
+
+// createCheckIsZero creates a zero checker for the given type.
+func createCheckIsZero(ctx *ctx, typ reflect2.Type) checkIsZero {
+	// Check if the type implements isZeroer interface
+	if typ.Implements(isZeroerType) {
+		return &directIsZeroerChecker{valType: typ}
+	}
+	// Check if pointer to type implements isZeroer interface
+	ptrType := reflect2.PtrTo(typ)
+	if ptrType.Implements(isZeroerType) {
+		return &ptrIsZeroerChecker{valType: typ}
+	}
+	// Fall back to comparing with zero value
+	return createZeroValueChecker(typ)
+}
+
+// directIsZeroerChecker checks IsZero() for types that directly implement the interface
+type directIsZeroerChecker struct {
+	valType reflect2.Type
+}
+
+func (checker *directIsZeroerChecker) IsZero(ptr unsafe.Pointer) bool {
+	obj := checker.valType.UnsafeIndirect(ptr)
+	if checker.valType.IsNullable() && reflect2.IsNil(obj) {
+		return true
+	}
+	return obj.(isZeroer).IsZero()
+}
+
+// ptrIsZeroerChecker checks IsZero() for types where *T implements the interface
+type ptrIsZeroerChecker struct {
+	valType reflect2.Type
+}
+
+func (checker *ptrIsZeroerChecker) IsZero(ptr unsafe.Pointer) bool {
+	obj := checker.valType.PackEFace(ptr)
+	return obj.(isZeroer).IsZero()
+}
+
+// createZeroValueChecker creates a checker that compares against zero value
+func createZeroValueChecker(typ reflect2.Type) checkIsZero {
+	kind := typ.Kind()
+	switch kind {
+	case reflect.String:
+		return &stringZeroChecker{}
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return &intZeroChecker{typ: typ}
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		return &uintZeroChecker{typ: typ}
+	case reflect.Float32:
+		return &float32ZeroChecker{}
+	case reflect.Float64:
+		return &float64ZeroChecker{}
+	case reflect.Bool:
+		return &boolZeroChecker{}
+	case reflect.Interface, reflect.Ptr:
+		return &nilZeroChecker{}
+	case reflect.Slice, reflect.Map:
+		return &nilZeroChecker{}
+	case reflect.Array:
+		return createArrayZeroChecker(typ)
+	case reflect.Struct:
+		return createStructZeroChecker(typ)
+	default:
+		return nil
+	}
+}
+
+// stringZeroChecker checks if a string is empty
+type stringZeroChecker struct{}
+
+func (checker *stringZeroChecker) IsZero(ptr unsafe.Pointer) bool {
+	return *((*string)(ptr)) == ""
+}
+
+// intZeroChecker checks if an int-like value is zero
+type intZeroChecker struct {
+	typ reflect2.Type
+}
+
+func (checker *intZeroChecker) IsZero(ptr unsafe.Pointer) bool {
+	switch checker.typ.Kind() {
+	case reflect.Int:
+		return *((*int)(ptr)) == 0
+	case reflect.Int8:
+		return *((*int8)(ptr)) == 0
+	case reflect.Int16:
+		return *((*int16)(ptr)) == 0
+	case reflect.Int32:
+		return *((*int32)(ptr)) == 0
+	case reflect.Int64:
+		return *((*int64)(ptr)) == 0
+	}
+	return false
+}
+
+// uintZeroChecker checks if a uint-like value is zero
+type uintZeroChecker struct {
+	typ reflect2.Type
+}
+
+func (checker *uintZeroChecker) IsZero(ptr unsafe.Pointer) bool {
+	switch checker.typ.Kind() {
+	case reflect.Uint:
+		return *((*uint)(ptr)) == 0
+	case reflect.Uint8:
+		return *((*uint8)(ptr)) == 0
+	case reflect.Uint16:
+		return *((*uint16)(ptr)) == 0
+	case reflect.Uint32:
+		return *((*uint32)(ptr)) == 0
+	case reflect.Uint64:
+		return *((*uint64)(ptr)) == 0
+	case reflect.Uintptr:
+		return *((*uintptr)(ptr)) == 0
+	}
+	return false
+}
+
+// float32ZeroChecker checks if a float32 is zero
+type float32ZeroChecker struct{}
+
+func (checker *float32ZeroChecker) IsZero(ptr unsafe.Pointer) bool {
+	return *((*float32)(ptr)) == 0
+}
+
+// float64ZeroChecker checks if a float64 is zero
+type float64ZeroChecker struct{}
+
+func (checker *float64ZeroChecker) IsZero(ptr unsafe.Pointer) bool {
+	return *((*float64)(ptr)) == 0
+}
+
+// boolZeroChecker checks if a bool is false
+type boolZeroChecker struct{}
+
+func (checker *boolZeroChecker) IsZero(ptr unsafe.Pointer) bool {
+	return !*((*bool)(ptr))
+}
+
+// nilZeroChecker checks if a pointer/interface/slice/map is nil
+type nilZeroChecker struct{}
+
+func (checker *nilZeroChecker) IsZero(ptr unsafe.Pointer) bool {
+	return *((*unsafe.Pointer)(ptr)) == nil
+}
+
+// arrayBytesZeroChecker checks if all bytes in the array are zero
+type arrayBytesZeroChecker struct {
+	size uintptr
+}
+
+func (checker *arrayBytesZeroChecker) IsZero(ptr unsafe.Pointer) bool {
+	bytes := (*[1 << 30]byte)(ptr)[:checker.size]
+	for _, b := range bytes {
+		if b != 0 {
+			return false
+		}
+	}
+	return true
+}
+
+func createArrayZeroChecker(typ reflect2.Type) checkIsZero {
+	arrayType := typ.(*reflect2.UnsafeArrayType)
+	elemType := arrayType.Elem()
+	// For simple types, we can use a simpler check
+	if isSimpleZeroType(elemType) {
+		return &arrayBytesZeroChecker{size: typ.Type1().Size()}
+	}
+	return nil // Complex arrays fall back to reflect-based comparison
+}
+
+func isSimpleZeroType(typ reflect2.Type) bool {
+	switch typ.Kind() {
+	case reflect.Bool, reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr,
+		reflect.Float32, reflect.Float64:
+		return true
+	}
+	return false
+}
+
+// structZeroChecker uses reflect to check if a struct is zero
+type structZeroChecker struct {
+	typ reflect2.Type
+}
+
+func createStructZeroChecker(typ reflect2.Type) checkIsZero {
+	return &structZeroChecker{typ: typ}
+}
+
+func (checker *structZeroChecker) IsZero(ptr unsafe.Pointer) bool {
+	// Use reflect to compare with zero value
+	val := checker.typ.UnsafeIndirect(ptr)
+	rv := reflect.ValueOf(val)
+	return rv.IsZero()
+}
+
 func resolveConflictBinding(cfg *frozenConfig, old, new *Binding) (ignoreOld, ignoreNew bool) {
 	newTagged := new.Field.Tag().Get(cfg.getTagKey()) != ""
 	oldTagged := old.Field.Tag().Get(cfg.getTagKey()) != ""
@@ -103,6 +315,8 @@ type structFieldEncoder struct {
 	field        reflect2.StructField
 	fieldEncoder ValEncoder
 	omitempty    bool
+	omitzero     bool
+	zeroChecker  checkIsZero
 }
 
 func (encoder *structFieldEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
@@ -116,6 +330,21 @@ func (encoder *structFieldEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 func (encoder *structFieldEncoder) IsEmpty(ptr unsafe.Pointer) bool {
 	fieldPtr := encoder.field.UnsafeGet(ptr)
 	return encoder.fieldEncoder.IsEmpty(fieldPtr)
+}
+
+// IsZero checks if the field value is zero using the IsZero() method if available,
+// or by comparing with the zero value of the type
+func (encoder *structFieldEncoder) IsZero(ptr unsafe.Pointer) bool {
+	fieldPtr := encoder.field.UnsafeGet(ptr)
+	// First check if field encoder implements IsZero
+	if isZeroer, ok := encoder.fieldEncoder.(checkIsZero); ok {
+		return isZeroer.IsZero(fieldPtr)
+	}
+	// Use the pre-computed zero checker
+	if encoder.zeroChecker != nil {
+		return encoder.zeroChecker.IsZero(fieldPtr)
+	}
+	return false
 }
 
 func (encoder *structFieldEncoder) IsEmbeddedPtrNil(ptr unsafe.Pointer) bool {
@@ -146,6 +375,9 @@ func (encoder *structEncoder) Encode(ptr unsafe.Pointer, stream *Stream) {
 	isNotFirst := false
 	for _, field := range encoder.fields {
 		if field.encoder.omitempty && field.encoder.IsEmpty(ptr) {
+			continue
+		}
+		if field.encoder.omitzero && field.encoder.IsZero(ptr) {
 			continue
 		}
 		if field.encoder.IsEmbeddedPtrNil(ptr) {

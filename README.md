@@ -66,6 +66,23 @@ json.Unmarshal(input, &data)
 
 [More documentation](http://jsoniter.com/migrate-from-go-std.html)
 
+# Struct Tags
+
+## omitzero
+
+The `omitzero` tag option omits a field if it is the zero value of its type. Compatible with Go 1.24+'s `encoding/json`.
+
+- Calls `IsZero() bool` method if implemented (e.g., `time.Time`)
+- Empty slices/maps are NOT omitted (unlike `omitempty`)
+
+```go
+type Config struct {
+    CreatedAt time.Time `json:"created_at,omitzero"` // omitted when zero time
+    Count     int       `json:"count,omitzero"`      // omitted when 0
+    Items     []string  `json:"items,omitzero"`      // omitted when nil, NOT when empty
+}
+```
+
 # How to get
 
 ```
