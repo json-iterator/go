@@ -32,6 +32,7 @@ func writeBuf(buf []byte, v uint32) []byte {
 // WriteUint8 write uint8 to stream
 func (stream *Stream) WriteUint8(val uint8) {
 	stream.buf = writeFirstBuf(stream.buf, digits[val])
+	stream.enforceMaxBytes()
 }
 
 // WriteInt8 write int8 to stream
@@ -44,6 +45,7 @@ func (stream *Stream) WriteInt8(nval int8) {
 		val = uint8(nval)
 	}
 	stream.buf = writeFirstBuf(stream.buf, digits[val])
+	stream.enforceMaxBytes()
 }
 
 // WriteUint16 write uint16 to stream
@@ -56,6 +58,7 @@ func (stream *Stream) WriteUint16(val uint16) {
 	r1 := val - q1*1000
 	stream.buf = writeFirstBuf(stream.buf, digits[q1])
 	stream.buf = writeBuf(stream.buf, digits[r1])
+	stream.enforceMaxBytes()
 	return
 }
 
@@ -76,6 +79,7 @@ func (stream *Stream) WriteUint32(val uint32) {
 	q1 := val / 1000
 	if q1 == 0 {
 		stream.buf = writeFirstBuf(stream.buf, digits[val])
+		stream.enforceMaxBytes()
 		return
 	}
 	r1 := val - q1*1000
@@ -83,6 +87,7 @@ func (stream *Stream) WriteUint32(val uint32) {
 	if q2 == 0 {
 		stream.buf = writeFirstBuf(stream.buf, digits[q1])
 		stream.buf = writeBuf(stream.buf, digits[r1])
+		stream.enforceMaxBytes()
 		return
 	}
 	r2 := q1 - q2*1000
@@ -96,6 +101,7 @@ func (stream *Stream) WriteUint32(val uint32) {
 	}
 	stream.buf = writeBuf(stream.buf, digits[r2])
 	stream.buf = writeBuf(stream.buf, digits[r1])
+	stream.enforceMaxBytes()
 }
 
 // WriteInt32 write int32 to stream
@@ -115,6 +121,7 @@ func (stream *Stream) WriteUint64(val uint64) {
 	q1 := val / 1000
 	if q1 == 0 {
 		stream.buf = writeFirstBuf(stream.buf, digits[val])
+		stream.enforceMaxBytes()
 		return
 	}
 	r1 := val - q1*1000
@@ -122,6 +129,7 @@ func (stream *Stream) WriteUint64(val uint64) {
 	if q2 == 0 {
 		stream.buf = writeFirstBuf(stream.buf, digits[q1])
 		stream.buf = writeBuf(stream.buf, digits[r1])
+		stream.enforceMaxBytes()
 		return
 	}
 	r2 := q1 - q2*1000
@@ -130,6 +138,7 @@ func (stream *Stream) WriteUint64(val uint64) {
 		stream.buf = writeFirstBuf(stream.buf, digits[q2])
 		stream.buf = writeBuf(stream.buf, digits[r2])
 		stream.buf = writeBuf(stream.buf, digits[r1])
+		stream.enforceMaxBytes()
 		return
 	}
 	r3 := q2 - q3*1000
@@ -139,6 +148,7 @@ func (stream *Stream) WriteUint64(val uint64) {
 		stream.buf = writeBuf(stream.buf, digits[r3])
 		stream.buf = writeBuf(stream.buf, digits[r2])
 		stream.buf = writeBuf(stream.buf, digits[r1])
+		stream.enforceMaxBytes()
 		return
 	}
 	r4 := q3 - q4*1000
@@ -149,6 +159,7 @@ func (stream *Stream) WriteUint64(val uint64) {
 		stream.buf = writeBuf(stream.buf, digits[r3])
 		stream.buf = writeBuf(stream.buf, digits[r2])
 		stream.buf = writeBuf(stream.buf, digits[r1])
+		stream.enforceMaxBytes()
 		return
 	}
 	r5 := q4 - q5*1000
@@ -165,6 +176,7 @@ func (stream *Stream) WriteUint64(val uint64) {
 	stream.buf = writeBuf(stream.buf, digits[r3])
 	stream.buf = writeBuf(stream.buf, digits[r2])
 	stream.buf = writeBuf(stream.buf, digits[r1])
+	stream.enforceMaxBytes()
 }
 
 // WriteInt64 write int64 to stream

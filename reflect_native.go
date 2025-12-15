@@ -444,6 +444,7 @@ func (codec *base64Codec) Encode(ptr unsafe.Pointer, stream *Stream) {
 		buf := make([]byte, size)
 		encoding.Encode(buf, src)
 		stream.buf = append(stream.buf, buf...)
+		stream.enforceMaxBytes()
 	}
 	stream.writeByte('"')
 }

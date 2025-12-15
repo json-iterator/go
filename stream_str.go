@@ -233,6 +233,7 @@ func (stream *Stream) WriteStringWithHTMLEscaped(s string) {
 	}
 	if i == valLen {
 		stream.buf = append(stream.buf, '"')
+		stream.enforceMaxBytes()
 		return
 	}
 	writeStringSlowPathWithHTMLEscaped(stream, i, s, valLen)
@@ -323,6 +324,7 @@ func (stream *Stream) WriteString(s string) {
 	}
 	if i == valLen {
 		stream.buf = append(stream.buf, '"')
+		stream.enforceMaxBytes()
 		return
 	}
 	writeStringSlowPath(stream, i, s, valLen)

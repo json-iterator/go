@@ -35,6 +35,7 @@ func (stream *Stream) WriteFloat32(val float32) {
 			stream.buf = stream.buf[:n-1]
 		}
 	}
+	stream.enforceMaxBytes()
 }
 
 // WriteFloat32Lossy write float32 to stream with ONLY 6 digits precision although much much faster
@@ -92,6 +93,7 @@ func (stream *Stream) WriteFloat64(val float64) {
 			stream.buf = stream.buf[:n-1]
 		}
 	}
+	stream.enforceMaxBytes()
 }
 
 // WriteFloat64Lossy write float64 to stream with ONLY 6 digits precision although much much faster

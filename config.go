@@ -25,6 +25,13 @@ type Config struct {
 	ValidateJsonRawMessage        bool
 	ObjectFieldMustBeSimpleString bool
 	CaseSensitive                 bool
+
+	// MaxMarshalledBytes limits the maximum size of the output.
+	//
+	// While it guarantees not to return more bytes than MaxMarshalledBytes,
+	// it does not guarantee that the internal buffer will be smaller than MaxMarshalledBytes.
+	// In most cases, the internal buffer may be larger by only a few bytes.
+	MaxMarshalledBytes uint64
 }
 
 // API the public interface of this package.
@@ -80,6 +87,7 @@ type frozenConfig struct {
 	streamPool                    *sync.Pool
 	iteratorPool                  *sync.Pool
 	caseSensitive                 bool
+	maxMarshalledBytes            uint64
 }
 
 func (cfg *frozenConfig) initCache() {
@@ -134,6 +142,7 @@ func (cfg Config) Froze() API {
 		onlyTaggedField:               cfg.OnlyTaggedField,
 		disallowUnknownFields:         cfg.DisallowUnknownFields,
 		caseSensitive:                 cfg.CaseSensitive,
+		maxMarshalledBytes:            cfg.MaxMarshalledBytes,
 	}
 	api.streamPool = &sync.Pool{
 		New: func() interface{} {
@@ -293,9 +302,22 @@ func (cfg *frozenConfig) MarshalToString(v interface{}) (string, error) {
 	return string(stream.Buffer()), nil
 }
 
-func (cfg *frozenConfig) Marshal(v interface{}) ([]byte, error) {
+func (cfg *frozenConfig) Marshal(v interface{}) (_ []byte, err error) {
 	stream := cfg.BorrowStream(nil)
 	defer cfg.ReturnStream(stream)
+
+	defer func() {
+		// See Stream.enforceMaxBytes() for an explanation of this.
+		if r := recover(); r != nil {
+			if limitError, ok := r.(ExceededMaxMarshalledBytesError); ok {
+				err = limitError
+				return
+			}
+
+			panic(r)
+		}
+	}()
+
 	stream.WriteVal(v)
 	if stream.Error != nil {
 		return nil, stream.Error
